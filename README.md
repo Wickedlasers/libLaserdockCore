@@ -9,6 +9,6 @@ cmake repository for laserdock library
 # How to start:
 
 1) copy dist.local.cmake and rename it to local.cmake
-2) set the path QT_BASE_DIR to your local Qt installation directory
+2) Open local.cmake and set the path QT_BASE_DIR to your local Qt installation directory
 3) Open root CMakeLists.txt with IDE you like. Qt Creator is recommended. Also you should be able to generate solutions for MSVS or Xcode, or open it with CLion.
 4) Compile and run example
