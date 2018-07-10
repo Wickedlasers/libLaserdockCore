@@ -1,15 +1,21 @@
 /**
-**	libLaserdockCore
-**	Copyright(c) 2018 Wicked Lasers
-**
-**	GNU Lesser General Public License
-**	This file may be used under the terms of the GNU Lesser
-**  General Public License version 3 as published by the Free
-**  Software Foundation and appearing in the file LICENSE.LGPLv3 included
-**  in the packaging of this file. Please review the following information
-**  to ensure the GNU Lesser General Public License requirements
-**  will be met: https://www.gnu.org/licenses/lgpl.html
-**
+    libLaserdockCore
+    Copyright(c) 2018 Wicked Lasers
+
+    This file is part of libLaserdockCore.
+
+    libLaserdockCore is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    libLaserdockCore is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
 #include <iostream>

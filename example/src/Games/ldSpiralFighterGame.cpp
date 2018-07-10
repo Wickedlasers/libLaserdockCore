@@ -18,7 +18,6 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-
 #include "ldSpiralFighterGame.h"
 
 #include <QtGui/QKeyEvent>
