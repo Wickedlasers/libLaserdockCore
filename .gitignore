@@ -1,32 +1,14 @@
-# Prerequisites
-*.d
+.DS_Store
+*xcuserdata*
+*~*
+__generated_files
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+.idea
+local.*cmake
 
-# Precompiled Headers
-*.gch
-*.pch
+local.cmake
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+# qt creator local file
+CMakeLists.txt.user
 
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+*.autosave

@@ -1,0 +1,9 @@
+Makefile
+*.pro.user*
+*.qbs.user*
+*~
+*.bak
+*.autosave
+*.save
+doc/html/
+doc/qthelp/

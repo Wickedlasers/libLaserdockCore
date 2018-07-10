@@ -1,0 +1,33 @@
+#ifndef QTQMLTRICKS
+#define QTQMLTRICKS
+
+#include <QQmlEngine>
+#include <qqml.h>
+
+#include "QQuickPolygon"
+#include "QQmlSvgIconHelper"
+#include "QQmlObjectListModel"
+#include "QQmlVariantListModel"
+
+static void registerQtQmlTricksModule (QQmlEngine * engine) {
+    Q_INIT_RESOURCE (components);
+
+    const char * uri = "QtQmlTricks"; // @uri QtQmlTricks
+    const int    maj = 1;
+    const int    min = 0;
+
+    qmlRegisterType<QQuickPolygon>     (uri, maj, min, "Polygon");
+    qmlRegisterType<QQmlSvgIconHelper> (uri, maj, min, "SvgIconHelper");
+
+    qmlRegisterUncreatableType<QAbstractItemModel>   (uri, maj, min, "AbstractItemModel", "!!!");
+    qmlRegisterUncreatableType<QAbstractListModel>   (uri, maj, min, "AbstractListModel", "!!!");
+    qmlRegisterUncreatableType<QQmlVariantListModel> (uri, maj, min, "VariantListModel",  "!!!");
+    qmlRegisterUncreatableType<QQmlObjectListModelBase> (uri, maj, min, "ObjectListModelBase",  "!!!");
+
+    if (engine) {
+        engine->addImportPath ("qrc:/import");
+    }
+}
+
+#endif // QTQMLTRICKS
+
