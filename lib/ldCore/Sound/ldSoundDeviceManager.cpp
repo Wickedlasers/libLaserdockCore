@@ -62,6 +62,8 @@ ldSoundDeviceManager::ldSoundDeviceManager(QObject *parent)
     , m_stubDevice(new ldSoundStubDevice(this))
     , m_playerDevice(new ldAudioDecoder(this))
 {
+    qDebug() << __FUNCTION__;
+
     connect(m_qaudioInputDevice, &ldQAudioInputDevice::soundUpdated, this, &ldSoundDeviceManager::soundUpdated);
     connect(m_qaudioInputDevice, &ldQAudioInputDevice::error, this, &ldSoundDeviceManager::error);
 #ifdef LD_CORE_ENABLE_MIDI

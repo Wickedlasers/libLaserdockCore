@@ -18,6 +18,8 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
+#include <QtCore/QDebug>
+
 #include "ldRendererManager.h"
 #include "ldAbstractRenderer.h"
 #include "ldRendererOpenlase.h"
@@ -33,7 +35,7 @@ ldRendererManager::ldRendererManager(QObject *parent) :
     QObject(parent),
     m_renderers(QList<ldAbstractRenderer *>())
 {
-
+    qDebug() << __FUNCTION__;
 }
 
 ldAbstractRenderer * ldRendererManager::getRenderer(ldRendererType type){

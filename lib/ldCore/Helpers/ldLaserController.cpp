@@ -32,6 +32,8 @@ ldLaserController::ldLaserController(QObject *parent)
     , m_connectedDevices(0)
     , m_isActive(false)
 {
+    qDebug() << __FUNCTION__;
+
     connect(ldCore::instance()->hardwareManager(), &ldHardwareManager::deviceCountChanged, this, &ldLaserController::onHardwareDeviceCountChanged);
     connect(ldCore::instance()->dataDispatcher(), &ldDataDispatcher::activeChanged, this, &ldLaserController::refreshPlayState);
 

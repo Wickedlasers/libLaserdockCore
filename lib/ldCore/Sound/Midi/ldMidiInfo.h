@@ -14,16 +14,18 @@ public:
     static void registerMetaType();
 
     ldMidiInfo() = default;
-    ldMidiInfo(int id, const QString &name);
+    ldMidiInfo(int id, const QString &name, const QVariant &data = QVariant());
 
     int id() const;
     QString name() const;
+    QVariant data() const;
 
     bool isValid() const;
 
 private:
     int m_id = -1;
     QString m_name;
+    QVariant m_data;
 
     friend QDataStream &operator>>(QDataStream &in, ldMidiInfo &myObj);
 };

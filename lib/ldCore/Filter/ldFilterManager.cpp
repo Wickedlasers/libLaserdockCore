@@ -22,7 +22,10 @@
 
 #include <math.h>
 
+#include <QtCore/QDebug>
+
 ldFilterManager::ldFilterManager(QObject *parent) :
     QObject(parent)
 {
+    qDebug() << __FUNCTION__;
 }

@@ -28,9 +28,23 @@ static void printmsg(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwParam
 /////////////////////////
 // internal funcs
 
-bool ldMidiInput::openMidi(int n) {
+bool ldMidiInput::openMidi(const ldMidiInfo &info) {
     if(hMidiDevice) {
         stop();
+    }
+
+    int n = -1;
+    QList<ldMidiInfo> infos = getDevices();
+    for(int i = 0; i < infos.size(); i++) {
+        // name is unique on Windows
+        if(infos[i].name() == info.name()) {
+           n = i;
+           break;
+        }
+    }
+    if(n == -1) {
+       qWarning() << "Can't find midi port" << info.id() << info.name();
+       return false;
     }
 
     DWORD nMidiPort = n;
@@ -151,7 +165,7 @@ static void printmsg(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwParam
 
 /////////////////
 
-QList<ldMidiInfo> ldMidiInput::getDevices() const {
+QList<ldMidiInfo> ldMidiInput::getDevices() {
     QList<ldMidiInfo> list;
     // only show default device
     //bool onlydefault = true;
@@ -172,19 +186,6 @@ QList<ldMidiInfo> ldMidiInput::getDevices() const {
         list << info;
     }
     return list;
-}
-
-int ldMidiInput::getMidiIndex(const ldMidiInfo &info) {
-
-    QList<ldMidiInfo> infos = getDevices();
-    for(int i = 0; i < infos.size(); i++) {
-        // name is unique on Windows
-        if(infos[i].name() == info.name()) {
-            return i;
-        }
-    }
-
-    return -1;
 }
 
 

@@ -36,8 +36,7 @@ signals:
     void messageReceived(const ldMidiCCMessage &message);
 
 private:
-    int getMidiIndex(const ldMidiInfo &info);
-    bool openMidi(int n);
+    bool openMidi(const ldMidiInfo &info);
 
 #ifdef Q_OS_MAC
     MIDIClientRef m_midiClient = 0;

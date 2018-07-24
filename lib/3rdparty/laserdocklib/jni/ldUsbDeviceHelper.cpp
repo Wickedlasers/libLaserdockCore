@@ -5,7 +5,9 @@
 #include <QAndroidJniObject>
 #include <QAndroidJniEnvironment>
 
-const char* USB_DEVICE_HELPER_CLASS_NAME = "com/wickedlasers/laserdocklib/LdUsbDeviceHelper";
+namespace {
+    const char* JAVA_CLASS_NAME = "com/wickedlasers/laserdocklib/LdUsbDeviceHelper";
+}
 
 ldUsbDeviceHelper *ldUsbDeviceHelper::getInstance()
 {
@@ -15,7 +17,7 @@ ldUsbDeviceHelper *ldUsbDeviceHelper::getInstance()
 
 QAndroidJniObject ldUsbDeviceHelper::getLaserdockDevices()
 {
-    return QAndroidJniObject::callStaticObjectMethod(USB_DEVICE_HELPER_CLASS_NAME,
+    return QAndroidJniObject::callStaticObjectMethod(JAVA_CLASS_NAME,
                                                                                 "getLaserdockDevices",
                                                                                 "(Landroid/content/Context;)[Landroid/hardware/usb/UsbDevice;",
                                                                                 QtAndroid::androidActivity().object());
@@ -25,7 +27,7 @@ QAndroidJniObject * ldUsbDeviceHelper::openDevice(jobject usbDevice)
 {
     QAndroidJniEnvironment qjniEnv;
 
-    QAndroidJniObject qobj = QAndroidJniObject::callStaticObjectMethod(USB_DEVICE_HELPER_CLASS_NAME,
+    QAndroidJniObject qobj = QAndroidJniObject::callStaticObjectMethod(JAVA_CLASS_NAME,
                                                          "openDevice",
                                                          "(Landroid/content/Context;Landroid/hardware/usb/UsbDevice;)Landroid/hardware/usb/UsbDeviceConnection;",
                                                          QtAndroid::androidActivity().object(),
@@ -45,7 +47,7 @@ QAndroidJniObject * ldUsbDeviceHelper::openDevice(jobject usbDevice)
 
 int ldUsbDeviceHelper::setupDevice(const QAndroidJniObject &usbdevice)
 {
-    return QAndroidJniObject::callStaticMethod<jint>(USB_DEVICE_HELPER_CLASS_NAME,
+    return QAndroidJniObject::callStaticMethod<jint>(JAVA_CLASS_NAME,
                                                      "setupDevice",
                                                      "(Landroid/content/Context;Landroid/hardware/usb/UsbDevice;)I",
                                                      QtAndroid::androidActivity().object(),
@@ -64,7 +66,7 @@ QAndroidJniObject ldUsbDeviceHelper::getDataConnection() const
 
 QAndroidJniObject ldUsbDeviceHelper::getField(const std::string &fieldName, const std::string &fieldType) const
 {
-    return QAndroidJniObject::getStaticObjectField(USB_DEVICE_HELPER_CLASS_NAME,
+    return QAndroidJniObject::getStaticObjectField(JAVA_CLASS_NAME,
                                                    fieldName.c_str(),
                                                    fieldType.c_str());
 }

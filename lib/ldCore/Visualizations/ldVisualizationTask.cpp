@@ -60,6 +60,8 @@ ldVisualizationTask::ldVisualizationTask(QObject *parent)
   m_currentVisualizer(NULL) ,
   m_tempVisualizer(NULL)
 {
+    qDebug() << __FUNCTION__;
+
 #ifdef LD_CORE_ENABLE_QT_QUICK
     qmlRegisterType<ldVisualizer>();
 #endif
@@ -147,6 +149,9 @@ void ldVisualizationTask::update(quint64 delta, ldFrameBuffer * buffer)
 
 void ldVisualizationTask::setTempVisualizer(ldVisualizer *visualizer)
 {
+    QString visName = visualizer ? visualizer->visualizerName() : "null";
+    qDebug().nospace() << __FUNCTION__ << " \"" << visName << "\"";
+
     if(m_tempVisualizer) {
         m_tempVisualizer->stop();
     }
@@ -164,6 +169,9 @@ void ldVisualizationTask::setTempVisualizer(ldVisualizer *visualizer)
 
 void ldVisualizationTask::setCurrentVisualizer(ldVisualizer *visualizer)
 {
+    QString visName = visualizer ? visualizer->visualizerName() : "null";
+    qDebug().nospace() << __FUNCTION__ << " \"" << visName << "\"";
+
     if(m_currentVisualizer) {
         m_currentVisualizer->stop();
     }

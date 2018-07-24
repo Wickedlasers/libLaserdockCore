@@ -3,6 +3,8 @@
 *~*
 __generated_files
 
+build-*
+
 .idea
 local.*cmake
 

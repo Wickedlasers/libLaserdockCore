@@ -20,11 +20,14 @@
 
 #include "ldHardwareManager.h"
 
+#include <QtCore/QDebug>
+
 #include "ldAbstractHardwareManager.h"
 
 ldHardwareManager::ldHardwareManager(QObject *parent)
     : QObject(parent)
 {
+    qDebug() << __FUNCTION__;
 }
 
 

@@ -20,6 +20,7 @@
 
 #include "ldDataDispatcher.h"
 
+#include <QtCore/QDebug>
 #include <QtCore/QMetaObject>
 #include <QtCore/QTimer>
 
@@ -39,6 +40,8 @@ ldDataDispatcher::ldDataDispatcher(ldBufferManager *bufferManager, ldHardwareMan
   , m_usbDataWorker(new ldUsbDataWorker(bufferManager, hardwareManager, m_simulatorEngine.get()))
   , m_additionalDataWorker(nullptr)
 {
+    qDebug() << __FUNCTION__;
+
     connect(m_usbDataWorker.get(), &ldUsbDataWorker::isActiveTransferChanged, this, [&]() {
         emit activeChanged(
                     (m_additionalDataWorker && m_additionalDataWorker->isActiveTransfer())

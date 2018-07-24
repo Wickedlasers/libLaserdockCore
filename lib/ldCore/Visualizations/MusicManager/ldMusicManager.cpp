@@ -31,6 +31,8 @@
 ldMusicManager::ldMusicManager(QObject* parent)
     : QObject(parent)
 {
+    qDebug() << __FUNCTION__;
+
     // soundgate
     if (isFakeSound) qDebug() << "WARNING!!! ldMusicManager isFakeSound is true! ";
     

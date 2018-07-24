@@ -18,6 +18,42 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
+
+/*
+
+ldRendererOpenlase provides access to the openlase render state and some additional utility functions.
+
+Drawing a custom shape involves calling olBegin(...), adding points with olVertex(...), then olEnd().
+Extended funcitons drawDots(...) and drawCircle(...) are also provided for convenience (these functions
+include the begin and end).
+
+Openlase render parameters may also be set before drawing with setRenderParams(...). Common presets are
+accessible with setRenderParamsDefaultQuality(), etc..
+
+Render params and frame modes apply to the current frame only and should be set in every draw (if used).
+
+- Frame modes
+
+Frame modes are an additional way to interact with the rendering system with setFrameModes(...). These are
+used in order to have stronger control over the final image in special circumstances.
+
+FRAME_MODE_SKIP_TRANSFORM - disables projector-oriented settings such as x/y size, position, etc.
+FRAME_MODE_DISABLE_COLOR_CORRECTION - ignores app color and brightness settings.
+
+FRAME_MODE_UNSAFE_UNDERSCAN - Disables the burn safety, which normally prevents the laser from focusing on a
+single point for too much time. Don't use this unless you know what you're doing.
+FRAME_MODE_UNSAFE_OVERSCAN - Disables the galvanometer safety, which normally prevents sudden large movements in
+in x/y position that can damage the projector's scanner mechanism. Don't use this unless you know what you're doing.
+
+Note that the safety systems are necessarily restrictive and so can cause a frame to be displayed differently
+than expected. Generally this is not an issue when using reasonable render params such as on/off speed and dwell
+values. Also, some projectors have underscan or overscan protections built in. So if you disable these filters in
+order to exceed their limits, the resulting signal may trigger the hardware safety, resulting in blanking or other
+undesired behavior.
+
+*/
+
+
 #ifndef LDRENDEREROPENLASE_H
 #define LDRENDEREROPENLASE_H
 

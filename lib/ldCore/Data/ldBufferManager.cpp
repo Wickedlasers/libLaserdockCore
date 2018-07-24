@@ -30,6 +30,7 @@
 ldBufferManager::ldBufferManager(QObject *parent)
     : QObject(parent)
 {
+    qDebug() << __FUNCTION__;
 }
 
 

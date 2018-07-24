@@ -5,7 +5,7 @@ message(STATUS "CMAKE_GENERATOR: ${CMAKE_GENERATOR}")
 
 # main app configuration
 option(LD_ANDROID_BUILD "Build for Android" OFF)
-option(LD_CORE_BUILD_EXAMPLE "Build Example" ON)
+option(LD_CORE_BUILD_EXAMPLE "Build Example" OFF)
 
 # setup C++
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -36,7 +36,8 @@ endif()
 
 # load local
 if(${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
-include(local.cmake)
+    set(LD_CORE_BUILD_EXAMPLE ON)
+    include(local.cmake)
 endif()
 
 # set desktop qt dir

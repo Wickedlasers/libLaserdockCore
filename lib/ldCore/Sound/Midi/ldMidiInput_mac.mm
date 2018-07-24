@@ -168,20 +168,23 @@ void midiInputCallback (const MIDIPacketList *list,
     }
 }
 
-int ldMidiInput::getMidiIndex(const ldMidiInfo &info) {
+bool ldMidiInput::openMidi(const ldMidiInfo &info) {
 
+    int n = -1;
     QList<ldMidiInfo> infos = ldMidiInput::getDevices();
     for(int i = 0; i < infos.size(); i++) {
-        // id is unique on Windows
+        // id is unique on mac
         if(infos[i].id() == info.id()) {
-            return i;
+            n = i;
+            break;
         }
     }
+    if(n == -1) {
+       qWarning() << "Can't find midi port" << info.id() << info.name();
+       return false;
+    }
 
-    return -1;
-}
 
-bool ldMidiInput::openMidi(int n) {
     OSStatus result;
 
     result = MIDIClientCreate(CFSTR("MIDI client"), NULL, NULL, &m_midiClient);

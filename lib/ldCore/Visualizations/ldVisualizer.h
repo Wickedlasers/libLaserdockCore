@@ -18,6 +18,47 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
+
+/*
+
+Subclass ldVisualizer to create a drawing system for the laser.
+
+Access drawing utility through member m_renderer (ldRendererOpenlase*)
+Access sound response utility through member m_musicManager (ldMusicManager*)
+
+Override the following functions for a basic render loop:
+
+    virtual void draw(void);
+
+This function is called every time a new frame needs to be drawn. The implementation is responsible for
+drawing the frame using the m_renderer object (ldRendererOpenlase). Render parameters and fame modes
+should be set here as well if any non-default values are required.
+
+    virtual void updateWith(ldSoundData *pSoundData, float delta);
+
+This function is called when new audio data is available and processed. Audio data is available by accessing
+pSoundData (ldSoundData) for raw data and m_musicManager (ldMusicManager) for advanced algorithms.
+m_musicManager values are updated once per call to updateWith(), but can also be accessed directly in draw().
+
+Timing notes:
+
+For draw(), the real-time delay between subsequent calls (and display of corresponding frames) is dependant
+on frame sizes and and external settings. The function m_renderer->getLastFrameDeltaSeconds() can be called
+in draw() to get the timing for each frame.
+
+updateWith() is called on a fixed timer, every AUDIO_UPDATE_DELTA_S seconds.
+
+Other useful functions:
+
+override getTargetFPS() to enforce a hard maximum limit on the draw rate. Default value is 30 frames per second.
+Range is 10-100, recommended 30-60. Can be used along with render params (which provides a soft minimum limit)
+to stabilize frame rates when drawing complex scenes.
+
+override getVisualizerName() for name used by the app.
+
+*/
+
+
 #ifndef LDVISUALIZER_H
 #define LDVISUALIZER_H
 

@@ -46,6 +46,7 @@ ldTaskManager::ldTaskManager(ldBufferManager *bufferManager, QObject *parent) :
     QObject(parent),
     m_taskworker(new ldTaskWorker(bufferManager))
 {
+    qDebug() << __FUNCTION__;
     m_taskworker->moveToThread(&m_worker_thread);
     m_worker_thread.start();
     //m_worker_thread.setPriority(QThread::Priority::HighPriority);

@@ -154,6 +154,8 @@ ldCore::~ldCore()
 */
 void ldCore::initialize()
 {
+    qDebug() << "Core initialize...";
+
     // create managers
     m_hardwareManager = new ldHardwareManager(this);
 
@@ -180,6 +182,8 @@ void ldCore::initialize()
     m_taskManager->taskWorker()->startTask();
 
     update_laserController(new ldLaserController(this));
+
+    qDebug() << "Core initialized";
 }
 
 QString ldCore::resourceDir() const

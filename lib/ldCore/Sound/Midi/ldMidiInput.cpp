@@ -30,15 +30,10 @@ void ldMidiInput::start(const ldMidiInfo &info)
         return;
     }
 
-    int index = getMidiIndex(info);
-    if(index != -1) {
-        bool r = openMidi(index);
-        if (r) {
-            m_isActive = true;
-        } else {
-            qWarning() << "Can't open midi" << info.id() << info.name();
-        }
+    bool r = openMidi(info);
+    if (r) {
+        m_isActive = true;
     } else {
-        qWarning() << "Can't find midi port" << info.id() << info.name();
+        qWarning() << "Can't open midi" << info.id() << info.name();
     }
 }
