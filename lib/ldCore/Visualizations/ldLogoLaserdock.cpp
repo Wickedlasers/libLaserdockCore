@@ -33,6 +33,21 @@ LogoPoint::LogoPoint(float _x, float _y) {
 // ---------------------- Logo ---------------------
 
 
+bool Logo::init()
+{
+    return ldVisualizer::init();
+}
+
+void Logo::onShouldStart()
+{
+
+}
+
+void Logo::draw()
+{
+    render(m_renderer);
+}
+
 void Logo::render(ldRendererOpenlase *m_renderer) {
 
     OLRenderParams params;

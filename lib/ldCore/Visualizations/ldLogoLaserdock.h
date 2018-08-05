@@ -23,6 +23,8 @@
 
 #include <QtCore/QList>
 
+#include "ldVisualizer.h"
+
 class ldRendererOpenlase;
 
 // ---------------------- LogoPoint ---------------------
@@ -43,8 +45,21 @@ public:
 
 // ---------------------- Logo ---------------------
 
-class Logo {
+class Logo : public ldVisualizer{
+    Q_OBJECT
 public:
+
+    virtual const char* getInternalName() override { return __FILE__; }
+    virtual const char* visualizerName() override { return "Laserdock Logo"; }
+    bool init();
+
+    bool isFinished() const { return finished; }
+    virtual void onShouldStart() override;
+
+protected:
+    virtual float targetFPS() { return 60; }
+    virtual void draw(void) override;
+
     void render(ldRendererOpenlase* m_renderer);
 
     QList<LogoLine> lines;
@@ -58,6 +73,7 @@ public:
 class LogoLaserdock : public Logo {
 public:
     LogoLaserdock();
+
 };
 
 

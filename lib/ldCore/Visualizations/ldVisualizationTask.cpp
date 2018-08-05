@@ -42,7 +42,6 @@
 
 namespace {
     ldRendererOpenlase * openlase;
-    static LogoLaserdock logo;
 }
 
 /*!
@@ -92,6 +91,14 @@ ldVisualizationTask::~ldVisualizationTask()
 
 */
 
+ldVisualizer * ldVisualizationTask::getActiveVis()
+{
+    ldVisualizer* vis = m_currentVisualizer;
+    if (m_tempVisualizer != nullptr) vis = m_tempVisualizer;
+    if(!m_logo->isFinished()) vis = m_logo.get();
+    return vis;
+}
+
 void ldVisualizationTask::update(quint64 delta, ldFrameBuffer * buffer)
 {       
     // check if running
@@ -100,43 +107,19 @@ void ldVisualizationTask::update(quint64 delta, ldFrameBuffer * buffer)
     // prepare variables
     m_renderstate.buffer = buffer;
     m_renderstate.delta = delta;
-    float fps = 30; // default value used by test frames
 
-    openlase->loadIdentity();
-    openlase->loadIdentity3();
-    // this should be removed, it overrides all local visualizer settings. Looks like some debug stuff from very old time
-//    openlase->setRenderParamsDefaultQuality();
+    float fps = 30; // default value
 
-    bool showIntro = !logo.finished;
-    // don't show intro when working in debug mode
-    if (ldCore::isDebugMode()) {
-        showIntro = false;
-    }
-	
-    static bool needsReset = true;
-    // either draw visualizer or intro
-    if (showIntro) {
-        fps = 60;
-        logo.render(openlase);
-        needsReset = true;
-    } else {
-        ldVisualizer* vis = m_currentVisualizer;
-        if (m_tempVisualizer != nullptr) vis = m_tempVisualizer;
-        // get fps and draw visualizer
-        // make sure visualizer exists
-        if (vis != NULL) {
-            fps = vis->targetFPS();
-            if (needsReset) {
-                // fix visualizer render params after logo
-                vis->start();
-                needsReset = false;
-            }
-            openlase->loadIdentity();
-            openlase->loadIdentity3();
-            openlase->setFrameModes(0);
+    ldVisualizer* vis = getActiveVis();
+    // get fps and draw visualizer
+    // make sure visualizer exists
+    if (vis) {
+        fps = vis->targetFPS();
+        openlase->loadIdentity();
+        openlase->loadIdentity3();
+        openlase->setFrameModes(0);
 
-            vis->visit(); // draw vis with renderer
-        }
+        vis->visit(); // draw vis with renderer
     }
 
     // perform openlase rendering on the frame
@@ -144,7 +127,6 @@ void ldVisualizationTask::update(quint64 delta, ldFrameBuffer * buffer)
         openlase->renderFrame(buffer, fps);
 	
 	//qDebug() << buffer->getFill() << " - " << buffer->getCapacity();
-
 }
 
 void ldVisualizationTask::setTempVisualizer(ldVisualizer *visualizer)
@@ -170,7 +152,7 @@ void ldVisualizationTask::setTempVisualizer(ldVisualizer *visualizer)
 void ldVisualizationTask::setCurrentVisualizer(ldVisualizer *visualizer)
 {
     QString visName = visualizer ? visualizer->visualizerName() : "null";
-    qDebug().nospace() << __FUNCTION__ << " \"" << visName << "\"";
+    qDebug().nospace() << __FUNCTION__ << " " << visName;
 
     if(m_currentVisualizer) {
         m_currentVisualizer->stop();
@@ -234,10 +216,10 @@ void ldVisualizationTask::start()
     m_sounddata.reset(new ldSoundData(format));
     connect(soundinterface, &ldSoundInterface::audioBlockUpdated, this, &ldVisualizationTask::onUpdateAudio);
 
+    if(!m_logo) m_logo.reset(new LogoLaserdock);
     // call updateWith at least once, to make sure visualizer gets m_sounddata pointer before any draw happens
-    ldVisualizer* vis = m_currentVisualizer;
-    if (m_tempVisualizer != nullptr) vis = m_tempVisualizer;
-    if (vis != nullptr) vis->updateWith(m_sounddata.data(), AUDIO_UPDATE_DELTA_S);
+    ldVisualizer* vis = getActiveVis();
+    if(vis != nullptr) vis->updateWith(m_sounddata.data(), AUDIO_UPDATE_DELTA_S);
 }
 
 

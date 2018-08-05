@@ -22,6 +22,11 @@
 
 #include <QtCore/QtDebug>
 
+#ifdef Q_OS_ANDROID
+#include <QAndroidJniEnvironment>
+#include <QAndroidJniObject>
+#endif
+
 #include <libaudiodecoder/include/audiodecoder.h>
 
 #include <ldCore/Sound/ldSoundData.h>
@@ -49,6 +54,7 @@ ldAudioDecoder::~ldAudioDecoder()
     stop();
 }
 
+
 void ldAudioDecoder::start(const QString &filePath, qint64 elapsedTime)
 {
     if(filePath.isEmpty()) {
@@ -58,6 +64,11 @@ void ldAudioDecoder::start(const QString &filePath, qint64 elapsedTime)
 
 #ifdef AUIDIO_DECODER_SUPPORTED
     m_audioDecoder.reset(new AudioDecoder(filePath.toStdString()));
+#ifdef Q_OS_ANDROID
+    QAndroidJniEnvironment qjniEnv;
+    QAndroidJniObject activity = QAndroidJniObject::callStaticObjectMethod("org/qtproject/qt5/android/QtNative", "activity", "()Landroid/app/Activity;");
+    m_audioDecoder->initAndroidEnv(&(*qjniEnv), activity.object());
+#endif
     int error = m_audioDecoder->open();
     if(error != AUDIODECODER_OK) {
         qDebug() << "Error open" << filePath;
@@ -112,7 +123,6 @@ void ldAudioDecoder::timerSlot()
     }
 
     //    qDebug() << elapsedTime << m_duration << elapsedPercent;
-
 
     int sampleIndex = elapsedPercent * m_audioDecoder->numSamples();
     if(sampleIndex + DATA_LENGTH_TO_SEND >= m_audioDecoder->numSamples()) {
