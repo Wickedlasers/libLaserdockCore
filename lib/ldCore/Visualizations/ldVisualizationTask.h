@@ -21,9 +21,12 @@
 #ifndef LDVISUALIZATIONTASK_H
 #define LDVISUALIZATIONTASK_H
 
+#include <memory>
+
 #include <ldCore/Task/ldAbstractTask.h>
 #include <ldCore/Sound/ldSoundData.h>
 
+class LogoLaserdock;
 class ldVisualizer;
 
 class LDCORESHARED_EXPORT ldVisualizationTask : public ldAbstractTask
@@ -34,7 +37,7 @@ class LDCORESHARED_EXPORT ldVisualizationTask : public ldAbstractTask
 
 public:
     typedef struct {
-        bool renderOpenlase = false;
+        bool renderOpenlase = true;
         ldFrameBuffer * buffer;
         quint64 delta;
     } RenderState;
@@ -66,7 +69,10 @@ private:
     ldVisualizer* m_currentVisualizer;
     ldVisualizer* m_tempVisualizer;
     QScopedPointer<ldSoundData> m_sounddata;
-    RenderState m_renderstate; 
+    RenderState m_renderstate;
+
+    std::unique_ptr<LogoLaserdock> m_logo;
+    ldVisualizer * getActiveVis();
 };
 
 #endif // LDVISUALIZATIONTASK_H
