@@ -74,8 +74,16 @@ ldSoundDeviceManager::ldSoundDeviceManager(QObject *parent)
     connect(m_playerDevice, &ldAudioDecoder::bufferUpdated, this, &ldSoundDeviceManager::processAudioBuffer);
     //
     refreshAvailableDevices();
-
-    setDeviceInfo(getAvailableDevices(ldSoundDeviceInfo::Type::QAudioInput).last());
+	    
+	QList<ldSoundDeviceInfo> availableDevices = getAvailableDevices(ldSoundDeviceInfo::Type::QAudioInput);
+	if (availableDevices.count() > 0)
+	{
+		setDeviceInfo(availableDevices.last());
+	}
+	else
+	{
+		qDebug() << "No audio input device found";
+	}
 }
 
 ldSoundDeviceManager::~ldSoundDeviceManager()
