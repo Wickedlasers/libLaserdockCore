@@ -1,6 +1,12 @@
 # libLaserdockCore
 cmake repository for laserdock library
 
+# Supported platforms
+
+Windows (msvc2015)
+macOS (clang)
+Android (library only, arm)
+
 # Prepare to development
 
 1) Download Qt Online installer from https://www.qt.io/download-qt-installer
