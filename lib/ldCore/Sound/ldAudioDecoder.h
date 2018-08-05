@@ -30,9 +30,9 @@
 
 #define STUBFPS (30*2)
 
-#ifndef Q_OS_LINUX
+//#ifndef Q_OS_LINUX
 #define AUIDIO_DECODER_SUPPORTED
-#endif
+//#endif
 
 class QMediaPlayer;
 

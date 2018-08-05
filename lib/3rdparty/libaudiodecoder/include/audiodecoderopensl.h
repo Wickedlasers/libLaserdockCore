@@ -32,51 +32,53 @@
  * Any person wishing to distribute modifications to the Software is
  * requested to send the modifications to the original developer so that
  * they can be incorporated into the canonical version. It is also 
- * requested that these non-binding requests be included along with the 
+ * requested that these non-binding requests be included aint with the 
  * license above.
  */
 
+/**
+ * \file AudioDecoderOpenSL.h
+ * \class AudioDecoderOpenSL
+ */
 
-#ifndef __AUDIODECODER_H__
-#define __AUDIODECODER_H__
+#ifndef AUDIODECODEROPENSL_H
+#define AUDIODECODEROPENSL_H
+
+#include <memory>
 
 #include "audiodecoderbase.h"
 
-#ifdef _WIN32 //Always defined on both Win32 and Win64 - http://msdn.microsoft.com/en-us/library/b0084kay(v=vs.80).aspx
-#include "audiodecodermediafoundation.h"
+#include "../src/android/OpenSLDecoder.hpp"
 
-class DllExport AudioDecoder : public AudioDecoderMediaFoundation
-{
-    public:
-        AudioDecoder(const std::string filename) : AudioDecoderMediaFoundation(filename) {};
-    private:
-        //Disable copy constructor and assignment operator
-        AudioDecoder(const AudioDecoder& that);
-        AudioDecoder& operator=(AudioDecoder const&);
+class AudioDecoderOpenSL : public AudioDecoderBase, public OpenSLDecoderListener {
+public:
+    AudioDecoderOpenSL(const std::string filename);
+    ~AudioDecoderOpenSL();
+
+    void initAndroidEnv(JNIEnv* env, jobject a);
+
+    // Overriding AudioDecoderBase 
+    int open();
+    int seek(int sampleIdx);
+    int read(int size, const SAMPLE *buffer);
+    static std::vector<std::string> supportedFileExtensions();
+
+    void onBufferDecoded(OpenSLDecoder* d, short* buf, int nSamples, SLDataFormat_PCM& format) override;
+    void onComplete(OpenSLDecoder *d) override;
+    void onError(OpenSLDecoder *d) override;
+
+private:
+    std::unique_ptr<OpenSLDecoder> m_decoder;
+    jobject activity;
+    double startTime;
+    JavaVM* vm;
+    JNIEnv* uiEnv;
+
+    void callbackActivity(JNIEnv *env, bool result, double duration);
+    JNIEnv *attachToVm();
+
+    std::vector<short> m_buffer;
 };
 
-#elif __APPLE__
-#include "audiodecodercoreaudio.h"
-class AudioDecoder : public AudioDecoderCoreAudio
-{
-    public:
-        AudioDecoder(const std::string filename) : AudioDecoderCoreAudio(filename) {}
-    private:
-        //Disable copy constructor and assignment operator
-        AudioDecoder(const AudioDecoder& that);
-        AudioDecoder& operator=(AudioDecoder const&);
-};
-#elif __ANDROID__
-#include "audiodecoderopensl.h"
-class AudioDecoder : public AudioDecoderOpenSL
-{
-    public:
-        AudioDecoder(const std::string filename) : AudioDecoderOpenSL(filename) {}
-    private:
-        //Disable copy constructor and assignment operator
-        AudioDecoder(const AudioDecoder& that);
-        AudioDecoder& operator=(AudioDecoder const&);
-};
-#endif
 
-#endif //__AUDIODECODER_H__
+#endif // ifndef AUDIODECODEROPENSL_H

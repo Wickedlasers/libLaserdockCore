@@ -1,24 +1,24 @@
 set(CMAKE_AUTOMOC OFF)
 
-# SOURCES
+# --------- SOURCES ---------
 set(LIBAUDIODECODER_SOURCE_FILES
     ${LIBAUDIODECODER_SOURCE_FILES}
     include/audiodecoder.h
     include/audiodecoderbase.h
     src/audiodecoderbase.cpp
     )
+
 # win
 if(WIN32)
-    set(LIBAUDIODECODER_SOURCE_FILES
-        ${LIBAUDIODECODER_SOURCE_FILES}
+    list(APPEND LIBAUDIODECODER_SOURCE_FILES
         include/audiodecodermediafoundation.h
         src/audiodecodermediafoundation.cpp
         )
 endif()
+
 # apple
 if(APPLE)
-    set(LIBAUDIODECODER_SOURCE_FILES
-        ${LIBAUDIODECODER_SOURCE_FILES}
+    list(APPEND LIBAUDIODECODER_SOURCE_FILES
         include/audiodecodercoreaudio.h
         include/apple/CADebugMacros.h
         include/apple/CAStreamBasicDescription.h
@@ -26,9 +26,28 @@ if(APPLE)
         )
 endif()
 
-# DEPS
+if(ANDROID)
+    find_library(opensl-lib
+        OpenSLES)
+
+    list(APPEND LIBAUDIODECODER_LIBRARIES
+        ${opensl-lib})
+
+    list(APPEND LIBAUDIODECODER_SOURCE_FILES
+        include/audiodecoderopensl.h
+        src/android/AndroidLogging.h
+        src/android/OpenSLDecoder.hpp
+        src/android/OpenSLDecoder.cpp
+        src/android/OpenSLEngine.hpp
+        src/android/OpenSLEngine.cpp
+        src/audiodecoderopensl.cpp
+        )
+endif()
+
+
+# --------- DEPS ---------
 # qdebug only is used
-set(LIBAUDIODECODER_LIBRARIES Qt5::Core)
+list(APPEND LIBAUDIODECODER_LIBRARIES Qt5::Core)
 if(WIN32)
     LIST(APPEND LIBAUDIODECODER_LIBRARIES
         Mf.lib
@@ -50,6 +69,8 @@ if(APPLE)
 
 endif()
 
-# LIBRARY
+
+
+# --------- LIBRARY ---------
 add_library(libaudiodecoder ${LIBAUDIODECODER_SOURCE_FILES})
 target_link_libraries(libaudiodecoder ${LIBAUDIODECODER_LIBRARIES} )
