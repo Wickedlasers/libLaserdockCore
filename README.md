@@ -4,7 +4,9 @@ cmake repository for laserdock library
 # Supported platforms
 
 Windows (msvc2015)
+<br>
 macOS (clang)
+<br>
 Android (library only, arm)
 
 # Prepare to development
@@ -46,25 +48,34 @@ Please try to keep the existing braces style.
 Clasess/structs/functions should have braces on new line:
 
 class ldClass 
+<br>
 {
+<br>
 ...
+<br>
 };
 
 void doSomething() 
+<br>
 {
+<br>
 ...
+<br>
 }
 
 for/while/if should have braces in the end of the first line: 
 
 for(int i = 0; i < size; i++) {
+<br>
 ...
+<br>
 }
 
 It is recommended avoid braces if you have only one line of cycle/if content. Just leave blank line before and after this construction to make it clear.
 
 if(true)
-doSomething();
+<br>
+    doSomething();
 
 
 ##### Classes
