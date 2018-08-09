@@ -57,7 +57,7 @@ public:
     virtual void onShouldStart() override;
 
 protected:
-    virtual float targetFPS() { return 60; }
+    virtual float targetFPS() override { return 60; }
     virtual void draw(void) override;
 
     void render(ldRendererOpenlase* m_renderer);

@@ -74,8 +74,8 @@ ldSoundDeviceManager::ldSoundDeviceManager(QObject *parent)
     connect(m_playerDevice, &ldAudioDecoder::bufferUpdated, this, &ldSoundDeviceManager::processAudioBuffer);
     //
     refreshAvailableDevices();
-	    
-	QList<ldSoundDeviceInfo> availableDevices = getAvailableDevices(ldSoundDeviceInfo::Type::QAudioInput);
+
+    QList<ldSoundDeviceInfo> availableDevices = getAvailableDevices(ldSoundDeviceInfo::Type::QAudioInput);
     if(!availableDevices.isEmpty())
         setDeviceInfo(availableDevices.last());
     else
