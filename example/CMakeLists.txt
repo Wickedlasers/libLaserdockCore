@@ -165,9 +165,9 @@ endif()
 if(APPLE)
     # set correct bundle prefix for Xcode generator
     if(CMAKE_GENERATOR STREQUAL Xcode)
-        set(BUNDLE_SUB_PATH "${CMAKE_CURRENT_BINARY_DIR}/example/\${CONFIGURATION}")
+        set(BUNDLE_SUB_PATH "${CMAKE_CURRENT_BINARY_DIR}/\${CONFIGURATION}")
     else()
-        set(BUNDLE_SUB_PATH ${CMAKE_CURRENT_BINARY_DIR}/example)
+        set(BUNDLE_SUB_PATH ${CMAKE_CURRENT_BINARY_DIR})
     endif()
     # set bundle pathes
     set(BUNDLE_PATH "${BUNDLE_SUB_PATH}/${PROJECT_NAME}.app")
