@@ -23,10 +23,12 @@
 #include "ldGameSparkle.h"
 
 // Constants.
+namespace  {
 const float LIFETIME = 0.25f;
 const float WIDTH_MIN = 0.05f;
 const float WIDTH_MAX = 0.20f;
 const int COLOR = 0xffff00;
+}
 
 ldGameSparkle::ldGameSparkle(Vec2 pos) : ldGameObject() {
     init();

@@ -102,15 +102,10 @@ ldCore *ldCore::instance()
     return m_instance;
 }
 
-bool ldCore::isDebugMode()
+ldCore *ldCore::create(QObject *parent)
 {
-#ifdef LD_BUILD_RELEASE_VERSION
-    return false;
-#else
-    return true;
-#endif
+    return new ldCore(parent);
 }
-
 
 void ldCore::initResources()
 {
@@ -123,18 +118,6 @@ void ldCore::initResources()
     ldSimulatorItem::registerMetatypes();
 #endif
 }
-
-ldCore::ldCore(QObject *parent)
-    : QObject(parent)
-    , m_laserController(nullptr)
-{
-#ifdef LD_CORE_ENABLE_QT_QUICK
-    qmlRegisterType<ldLaserController>();
-#endif
-
-    m_instance = this;
-}
-
 
 /*!
  * \brief removes test dialog and main window upon destruction
@@ -202,6 +185,11 @@ ldDataDispatcher *ldCore::dataDispatcher() const
     return m_dataDispatcher;
 }
 
+ldBufferManager *ldCore::bufferManager() const
+{
+    return m_bufferManager;
+}
+
 ldFilterManager *ldCore::filterManager() const
 {
     return m_filterManager;
@@ -236,3 +224,16 @@ ldTaskManager *ldCore::taskManager() const
 {
     return m_taskManager;
 }
+
+ldCore::ldCore(QObject *parent)
+    : QObject(parent)
+    , m_laserController(nullptr)
+{
+#ifdef LD_CORE_ENABLE_QT_QUICK
+    qmlRegisterType<ldLaserController>();
+#endif
+
+    m_instance = this;
+}
+
+

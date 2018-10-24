@@ -21,11 +21,12 @@
 #include "ldSpiralFighterMissile.h"
 
 // Constants
+namespace  {
 const float WIDTH = 0.05f;
 const float HEIGHT = 0.05f;
 const float SPEED = 1.2f;
 const float LIFETIME = 5.0f;
-
+}
 ldSpiralFighterMissile::ldSpiralFighterMissile(Vec2 direction) : ldGameObject() {
     init();
 

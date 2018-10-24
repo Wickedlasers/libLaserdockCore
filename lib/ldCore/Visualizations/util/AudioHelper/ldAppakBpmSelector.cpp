@@ -35,11 +35,6 @@ static float bpmAppakPeak[buffersize];
 // ldAppakBpmSelector
 ldAppakBpmSelector::ldAppakBpmSelector()
 {
-    bestBpm = 120;
-    lastTrustableBPM = 0;
-    lastSomehowTrustableBPM = 0;
-    lastVeryTrustableBPM = 0;
-    trustableTime = 0;
     for (int i = 0; i < buffersize; i++) {
         bpmAubio[i]=0;
         bpmAppakBeat[i]=0;

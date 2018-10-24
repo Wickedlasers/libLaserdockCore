@@ -27,18 +27,17 @@
 ldSpiralFighterGame::ldSpiralFighterGame(QObject *parent)
     : ldAbstractGame("spiralFighterGame", tr("Spiral Fighter"), parent)
     , m_visualizer(new ldSpiralFighterVisualizer) {
-    m_hotkeys << "Left" << "Rotate Left";
-    m_hotkeys << "Right" << "Rotate Right";
-    m_hotkeys << "Space" << "Fire";
-    m_hotkeys << "Enter" << "Power-up";
+    m_keyDescriptions << "Left" << "Rotate Left";
+    m_keyDescriptions << "Right" << "Rotate Right";
+    m_keyDescriptions << "Space" << "Fire";
+    m_keyDescriptions << "Enter" << "Power-up";
 
-#ifdef TOUCH_KEY_SUPPORT
-    m_keyMap[TouchKey::Left] = Qt::Key_Left;
-    m_keyMap[TouchKey::Right] = Qt::Key_Right;
-    m_keyMap[TouchKey::A] = Qt::Key_Enter;
-    m_keyMap[TouchKey::B] = Qt::Key_Space;
-    initTouchHotkeys();
-#endif
+    QMap<ldGamepad::Button, Qt::Key> keyMap;
+    keyMap[ldGamepad::Button::Left] = Qt::Key_Left;
+    keyMap[ldGamepad::Button::Right] = Qt::Key_Right;
+    keyMap[ldGamepad::Button::A] = Qt::Key_Enter;
+    keyMap[ldGamepad::Button::B] = Qt::Key_Space;
+    get_gamepadCtrl()->init(keyMap, m_keyDescriptions);
 
     connect(m_visualizer.data(), &ldSpiralFighterVisualizer::finished, this, [&]() {
        set_isPaused(false);

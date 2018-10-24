@@ -21,7 +21,7 @@
 #include "ldLaserController.h"
 
 #include <QtCore/QtDebug>
-#include <QtCore/QTimer>
+#include <QtGui/QGuiApplication>
 
 #include "ldCore/ldCore.h"
 #include <ldCore/Hardware/ldHardwareManager.h>
@@ -40,10 +40,22 @@ ldLaserController::ldLaserController(QObject *parent)
     refreshPlayState();
     refreshDeviceState();
 
-#ifdef INCLUDE_SERGEY_AT_WORK
-    if(ldCore::isDebugMode()) {
-        QTimer::singleShot(0, this, &ldLaserController::togglePlay);
-    }
+#ifdef LD_USE_ANDROID_LAYOUT
+    connect(qApp, &QGuiApplication::applicationStateChanged, this, [&](Qt::ApplicationState state) {
+//        qDebug() << "APPLICATION_STATE" << state;
+        switch (state) {
+        case Qt::ApplicationSuspended:
+            if(get_isActive()) togglePlay();
+            break;
+        case Qt::ApplicationHidden:
+            break;
+        case Qt::ApplicationInactive:
+            if(get_isActive()) togglePlay();
+            break;
+        case Qt::ApplicationActive:
+            break;
+        }
+    });
 #endif
 }
 

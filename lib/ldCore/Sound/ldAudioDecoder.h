@@ -49,9 +49,11 @@ public:
 public slots:
     void start(const QString &filePath, qint64 elapsedTime = 0);
     void stop();
-    
+
+    void setElapsedTime(qint64 time);
+
 signals:
-    void bufferUpdated(float *data, int len);
+    void bufferUpdated(float *data, int frames);
 
 protected slots:
     void timerSlot();

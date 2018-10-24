@@ -301,20 +301,34 @@ float ldMaths::rndSign()
 // periodIntervalKeeper
 float ldMaths::periodIntervalKeeper(float x, float min, float max)
 {
-    //
-    float len=max-min;
-    while (x>max) x=x-len;
-    while (x<min) x=x+len;
+    Q_ASSERT(min < max);
+
+    float len = max - min;
+    int xCount = abs(x / len);
+    if(x > max) {
+        x = x - xCount*len;
+    } else if(x < min) {
+        xCount++;
+        x = x + xCount*len;
+    }
+
     return x;
 }
 
 // periodIntervalKeeperInt
 int ldMaths::periodIntervalKeeperInt(int x, int min, int max)
 {
-    //
-    int len=max-min;
-    while (x>max) x=x-len;
-    while (x<min) x=x+len;
+    Q_ASSERT(min < max);
+
+    int len = max - min;
+    int xCount = abs(x / len);
+    if(x > max) {
+        x = x - xCount*len;
+    } else if(x < min) {
+        xCount++;
+        x = x + xCount*len;
+    }
+
     return x;
 }
 

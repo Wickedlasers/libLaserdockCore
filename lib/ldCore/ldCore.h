@@ -36,27 +36,34 @@ class ldSoundDeviceManager;
 class ldTaskManager;
 class ldVisualizationTask;
 
+/** Base class for laserdock usage. Provides access to control laserdock activation/filters/audio processing/visualizations */
 class LDCORESHARED_EXPORT ldCore : public QObject
 {
     Q_OBJECT
 
+    /** Helper high-level class for easier laser control */
     QML_READONLY_PROPERTY(ldLaserController*, laserController)
 
 public:
+    /** Singleton */
     static ldCore* instance();
+    static ldCore* create(QObject *parent);
 
-    static bool isDebugMode();
-
+    /** Init Qt resources. Must be called before QCoreApplication created */
     static void initResources();
 
-    explicit ldCore(QObject *parent = 0);
+    /** destructor */
     virtual ~ldCore();
 
+    /** Initialize ldCore managers. Must be called in order to use it*/
     virtual void initialize();
 
+    /** Path to external resources, like fonts, svgs, etc */
     virtual QString resourceDir() const;
 
+    /** Managers/accessors*/
     ldDataDispatcher *dataDispatcher() const;
+    ldBufferManager *bufferManager() const;
     ldFilterManager *filterManager() const;
     ldHardwareManager *hardwareManager() const;
     ldMusicManager *musicManager() const;
@@ -66,6 +73,8 @@ public:
     ldTaskManager *taskManager() const;
 
 protected:
+    explicit ldCore(QObject *parent = 0);
+
     ldBufferManager *m_bufferManager = nullptr;
     ldDataDispatcher *m_dataDispatcher = nullptr;
     ldFilterManager *m_filterManager = nullptr;

@@ -3,9 +3,12 @@ option(LD_CORE_ENABLE_LIBLZR "Enable liblzr" OFF)
 option(LD_CORE_ENABLE_MIDI "Enable midi" OFF)
 option(LD_CORE_ENABLE_OPENCV "Enable opencv support" OFF)
 option(LD_CORE_ENABLE_QT_QUICK "Enable Qt Quick module" ON) # required for example
+option(LD_SHOW_LASERDOCK_LOGO "Show Laserdock logo on start" ON)
 
 # project
 project(ldCore)
+
+enable_testing()
 
 set(CMAKE_PREFIX_PATH "${QTDIR}/lib/cmake")
 
@@ -30,6 +33,10 @@ set(IGNORE_VARIABLE "${QT_QMAKE_EXECUTABLE}")
 
 if(LD_CORE_ENABLE_QT_QUICK)
     add_definitions(-DLD_CORE_ENABLE_QT_QUICK)
+endif()
+
+if(LD_SHOW_LASERDOCK_LOGO)
+    add_definitions(-DLD_SHOW_LASERDOCK_LOGO)
 endif()
 
 # setup C++
@@ -106,6 +113,10 @@ set(LDCORELIB_SOURCE_FILES
         # ldCore/Games
         ldCore/Games/ldAbstractGame.cpp
         ldCore/Games/ldAbstractGame.h
+        ldCore/Games/ldGamepad.cpp
+        ldCore/Games/ldGamepad.h
+        ldCore/Games/ldGamepadCtrl.cpp
+        ldCore/Games/ldGamepadCtrl.h
         # ldCore/Hardware
         ldCore/Hardware/ldAbstractHardwareManager.cpp
         ldCore/Hardware/ldAbstractHardwareManager.h
@@ -379,13 +390,13 @@ if(LD_CORE_ENABLE_MIDI)
 endif()
 
 # library
-add_library(ldCore SHARED ${LDCORELIB_SOURCE_FILES} )
+add_library(${PROJECT_NAME} SHARED ${LDCORELIB_SOURCE_FILES} )
 
 
 # ---------------------------- DEPENDENCIES  ----------------------
 
-find_package(Qt5 CONFIG REQUIRED Core Gui Multimedia)
-list(APPEND LIBRARIES Qt5::Core Qt5::Gui Qt5::Multimedia)
+find_package(Qt5 CONFIG REQUIRED Core Gui Multimedia Gamepad)
+list(APPEND LIBRARIES Qt5::Core Qt5::Gui Qt5::Multimedia Qt5::Gamepad)
 
 # Qt Quick (optional)
 if(LD_CORE_ENABLE_QT_QUICK)
@@ -445,7 +456,7 @@ if(ANDROID)
 endif()
 
 # link deps
-target_link_libraries(ldCore ${LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 
 
 # ---------------------------- EXAMPLE  ----------------------
@@ -454,3 +465,6 @@ target_link_libraries(ldCore ${LIBRARIES})
 if(${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR} AND LD_CORE_ENABLE_QT_QUICK)
     add_subdirectory(example)
 endif()
+
+# ----------------------------  tests ----------------------
+include(ldCore/Tests/CMakeLists.txt)

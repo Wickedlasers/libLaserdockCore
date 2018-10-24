@@ -62,8 +62,6 @@ public:
 //    TempoTracker *tempoTracker;
 //    ldAppakaBeat *appakaBeat;
 
-    ldMusicManager* m_musicManager;
-
     //
     ldSoundEventUtil();
     ~ldSoundEventUtil();
@@ -79,8 +77,6 @@ public:
     void setSystemEventBusy(int system, int channel, bool busy);
     bool isSystemEvent(int system, int channel);
     bool isSystemEventBusy(int system, int channel);
-
-    float bpm();
 
 private:
     int maxChannelSize;

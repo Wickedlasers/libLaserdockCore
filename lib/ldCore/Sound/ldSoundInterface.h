@@ -44,6 +44,7 @@ public:
     virtual QAudioFormat getAudioFormat() const = 0;
 
     static int s_latencyms;
+    static int s_enableLatency;
 
 signals:
     void audioBlockUpdated(const AudioBlock &block);

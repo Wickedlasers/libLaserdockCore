@@ -25,6 +25,24 @@
 static const int bufferFrames = 4096;  // 4096 ~= 10hz ~= 3 frames@30fps
 static const int BufferSize = bufferFrames*4; // 4096 frames 16bit stereo
 
+QList<QAudioDeviceInfo> ldQAudioInputDevice::getDevices()
+{
+    QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
+
+#ifdef Q_OS_ANDROID
+    auto it = devices.begin();
+    while (it != devices.end()) {
+        if(it->deviceName() == "camcorder"
+                || it->deviceName() == "voicerecognition")
+            it = devices.erase(it);
+        else
+            it++;
+    }
+#endif
+
+    return devices;
+}
+
 ldQAudioInputDevice::ldQAudioInputDevice(QObject *parent)
     : ldSoundInterface(parent)
     , m_buffer(BufferSize, 0)

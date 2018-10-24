@@ -23,9 +23,11 @@
 #include "ldGameSmoke.h"
 
 // Constants.
+namespace  {
 const float LIFETIME = 0.125f;
 const float RADIUS = 0.05f;
 const int COLOR = 0xffffff;
+}
 
 ldGameSmoke::ldGameSmoke(Vec2 pos) : ldGameObject() {
     init();

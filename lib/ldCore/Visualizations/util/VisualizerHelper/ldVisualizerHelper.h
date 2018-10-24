@@ -186,42 +186,26 @@ public:
     void setParams(float _params[MRPARAMS]);
     float process(ldSoundData* p);
 
-    float params[MRPARAMS];
-
     float output;
 
-    float lastInput;
-    StatValue stat;
-    StatValue statLog;
-    StatValue statLinear;
+    bool isSilent2 = true;
+    float isSilent2float = 0.f;
+
     float statOutput;
 
-    BeatSignal signal;    
     float signalOutput;
 
     std::unique_ptr<ldBeatTracker> tracker;
-    float trackerOutput;
 
-    bool spinning;
-    float spinspeed;
     float spindir;
     float spinTurns;
-    float spinTurns4;
     float spinOutput;
     float spinOutput4;
 
-    float walkCounter;
-    float owc;
     float walkerOutput;
     float walkerClickOutput;
 
-    float outputType;
-    float frequencyMid, frequencyRange, slopeFactor, logFactor;
-    float statTime, statType, statParam;
-    float signalMult, signalFloor, signalFade, signalPostFloor;
-    float trackerTime, trackerRangeStart, trackerRange;
     float spinSpeedMult, spinThreshold, spinAngleThreshold;
-    float walkerWobbleFactor, walkerAdvance;
 
 private:
     void processStat(ldSoundData* p, float d);
@@ -231,6 +215,32 @@ private:
     void processWalk();
 
     void updateParams();
+
+    float params[MRPARAMS];
+
+    float lastInput;
+    StatValue stat;
+    StatValue statLog;
+    StatValue statLinear;
+
+    BeatSignal signal;
+
+    float trackerOutput;
+
+    bool spinning;
+    float spinspeed;
+
+    float spinTurns4;
+
+    float walkCounter;
+    float owc;
+
+    float outputType;
+    float frequencyMid, frequencyRange, slopeFactor, logFactor;
+    float statTime, statType, statParam;
+    float signalMult, signalFloor, signalFade, signalPostFloor;
+    float trackerTime, trackerRangeStart, trackerRange;
+    float walkerWobbleFactor, walkerAdvance;
 };
 
 

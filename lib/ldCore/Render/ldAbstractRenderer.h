@@ -20,14 +20,11 @@
 
 #ifndef LDABSTRACTRENDERER_H
 #define LDABSTRACTRENDERER_H
-#include "ldCore/ldCore_global.h"
 
 #include <QtCore/QObject>
+
+#include "ldCore/ldCore_global.h"
 #include "ldCore/Render/ldRendererManager.h"
-
-class ldFrameBuffer;
-
-
 
 class LDCORESHARED_EXPORT ldAbstractRenderer : public QObject
 {
@@ -35,18 +32,9 @@ class LDCORESHARED_EXPORT ldAbstractRenderer : public QObject
 public:
     static const int DEFAULT_RATE;
 
-    explicit ldAbstractRenderer(QObject *parent = 0);
-    ldAbstractRenderer(ldRendererType type, QObject *parent = 0);
+    explicit ldAbstractRenderer(ldRendererType type = ldRendererType::UNINITIALIZED, QObject *parent = 0);
 
-    ldRendererType type() {
-        return m_type;
-    }
-
-    virtual void setBuffer(ldFrameBuffer * buffer){
-        m_buffer = buffer;
-    }
-
-    virtual void render();
+    ldRendererType type();
 
     // 30k or 20k currently
     void setRate(int rate);
@@ -54,10 +42,8 @@ public:
 
 private:
     ldRendererType m_type;
-    ldFrameBuffer * m_buffer;
 
     int m_rate = DEFAULT_RATE;
-
 };
 
 #endif // LDABSTRACTRENDERER_H

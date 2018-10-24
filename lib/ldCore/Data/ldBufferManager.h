@@ -21,13 +21,10 @@
 #ifndef LDBUFFERMANAGER_H
 #define LDBUFFERMANAGER_H
 
-#include "ldCore/ldCore_global.h"
-
 #include <QtCore/QObject>
 
-class ldFilter;
-class ldFilterManager;
-class ldFilterBasicData;
+#include "ldCore/ldCore_global.h"
+
 class ldFrameBuffer;
 
 class LDCORESHARED_EXPORT ldBufferManager : public QObject

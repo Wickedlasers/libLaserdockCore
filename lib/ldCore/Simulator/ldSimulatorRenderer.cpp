@@ -93,15 +93,17 @@ void ldSimulatorRenderer::resizeGL()
 
 void ldSimulatorRenderer::loadEngine()
 {
-    m_dataDispatcher->loadSimulator();
-
     m_engine = m_dataDispatcher->simulatorEngine();
     m_engine->init();
+    m_engine->addListener();
 }
 
 void ldSimulatorRenderer::unloadEngine()
 {
-    m_dataDispatcher->unloadSimulator();
+    if(m_engine) {
+        m_engine->removeListener();
+        m_engine = nullptr;
+    }
     m_engine = nullptr;
 }
 

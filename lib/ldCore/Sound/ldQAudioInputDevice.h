@@ -34,6 +34,8 @@ class ldQAudioInputDevice : public ldSoundInterface
 {
     Q_OBJECT
 public:
+    static QList<QAudioDeviceInfo> getDevices();
+
     explicit ldQAudioInputDevice(QObject *parent);
     ~ldQAudioInputDevice();
 

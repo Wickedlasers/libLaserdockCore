@@ -36,3 +36,9 @@ int ldRandomGenerator::generate(int from, int to)
     std::uniform_int_distribution<int> uni(from, to); // guaranteed unbiased
     return uni(rng);
 }
+
+float ldRandomGenerator::generatef(float from, float to)
+{
+    std::uniform_real_distribution<float> uni(from, to); // guaranteed unbiased
+    return uni(rng);
+}

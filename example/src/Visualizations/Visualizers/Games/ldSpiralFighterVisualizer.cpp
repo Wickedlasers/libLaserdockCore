@@ -460,7 +460,7 @@ void ldSpiralFighterVisualizer::drawGame(ldRendererOpenlase *p_renderer) {
     QList<int> c = QList<int>();
     c.append(ldColorUtil::colorForStep(baseColorStep));
     c.append(ldColorUtil::colorForStep(baseColorStep + colorStep));
-    drawVertexRainbow(p_renderer, v, c, 3);
+    ldGameObject::drawVertexRainbow(m_renderer, v, c, 3);
     p_renderer->end();
 
     // Draw powerup.
@@ -502,16 +502,24 @@ void ldSpiralFighterVisualizer::endGame(bool won) {
  * Input functions.
  */
 
+
+void ldSpiralFighterVisualizer::moveX(double value)
+{
+    if (m_isGameOver || m_countdownTimer.isActive()) return;
+
+    m_player.rotate(value * -1.0);
+}
+
 void ldSpiralFighterVisualizer::onPressedLeft(bool pressed) {
     if (m_isGameOver || m_countdownTimer.isActive()) return;
 
-    m_player.onPressedLeft(pressed);
+    m_player.rotate(pressed ? 1.0 : 0);
 }
 
 void ldSpiralFighterVisualizer::onPressedRight(bool pressed) {
     if (m_isGameOver || m_countdownTimer.isActive()) return;
 
-    m_player.onPressedRight(pressed);
+    m_player.rotate(pressed ? -1.0 : 0);
 }
 
 void ldSpiralFighterVisualizer::onPressedShoot(bool pressed) {
@@ -640,14 +648,4 @@ void ldSpiralFighterVisualizer::togglePlay() {
         m_countdownTimer.stop();
         setStateText("PAUSE");
     }
-}
-
-void ldSpiralFighterVisualizer::setComplexity(float complexity) {
-    QMutexLocker lock(&m_mutex);
-    m_complexity = complexity;
-}
-
-void ldSpiralFighterVisualizer::setSoundEnabled(bool enabled) {
-    QMutexLocker lock(&m_mutex);
-    m_soundEffects.setSoundEnabled(enabled);
 }

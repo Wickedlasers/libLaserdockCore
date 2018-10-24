@@ -60,25 +60,11 @@ public:
     ldShader* popVertextShader();
     ldShader* popPixelShader();
 
-    // depreacted
-    // replace top shader in stacks and returns old top shader.
-//    ldShader* setVertextPreShader(ldShader* shader);
-//    ldShader* setVertextShader(ldShader* shader);
-//    ldShader* setPixelShader(ldShader* shader);
-//
-//    ldShader* getVertextPreShader() { return m_pVtxPreShader; }
-//    ldShader* getVertextShader() { return m_pVtxShader; }
-//    ldShader* getPixelShader() { return m_pPxlShader; }
-    
     void apply_vertex_pre_shader(float *x, float *y, uint32_t *color);
     void apply_vertex_shader(float *x, float *y, uint32_t *color);
     void apply_pixel_shader(float *x, float *y, uint32_t *color);
 
 protected:
-    ldShader* m_pVtxPreShader;
-    ldShader* m_pVtxShader;
-    ldShader* m_pPxlShader;
-    
     ldList m_VtxPreStack;
     ldList m_VtxStack;
     ldList m_PxStack;

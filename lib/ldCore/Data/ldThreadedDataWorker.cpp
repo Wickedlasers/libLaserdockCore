@@ -53,7 +53,7 @@ ldThreadedDataWorker::ldThreadedDataWorker(ldBufferManager *bufferManager,
 {
     bufferManager->registerBuffer(m_frameBuffer);
 
-    connect(this, SIGNAL(startRun()), this, SLOT(run()));
+    connect(this, &ldThreadedDataWorker::startRun, this, &ldThreadedDataWorker::run);
 }
 
 ldThreadedDataWorker::~ldThreadedDataWorker()

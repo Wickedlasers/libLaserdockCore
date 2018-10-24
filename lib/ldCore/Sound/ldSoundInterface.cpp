@@ -40,6 +40,7 @@ const int MAX_SOUND_UPDATE_FRAMES = 4*SAMPLE_SIZE; // sample_size is measured in
 
 
 int ldSoundInterface::s_latencyms = 0;
+int ldSoundInterface::s_enableLatency = true;
 
 
 QAudioFormat ldSoundInterface::getDefaultAudioFormat()
@@ -242,7 +243,7 @@ void ldSoundInterface::processAudioBuffer(float *convertedBuffer, int frames)
 void ldSoundInterface::sendBlocks() {
     // process up to maxBlocks frames of audio at once
     int maxBlocks = 8;// * AUDIO_OVERDRIVE_FACTOR;
-    int lagframes = 44.100f * s_latencyms * 2; // keep buffer at least this big
+    int lagframes = s_enableLatency ? 44.100f * s_latencyms * 2 : 0; // keep buffer at least this big
 
     // process blocks
     for (int bidx = 0; bidx < maxBlocks; bidx++) {

@@ -67,6 +67,7 @@ public:
     void setDeviceInfo(const ldSoundDeviceInfo &info);
 
     void setPriorityDevice(const ldSoundDeviceInfo &info);
+    void updatePrioritySoundDeviceData(const QVariant &data);
 
     void setActivateCallbackFunc(ldActivateCallbackFunc func);
 
@@ -88,7 +89,7 @@ private:
 #ifdef LD_CORE_ENABLE_MIDI
     void activateMidiDevice(ldSoundDeviceInfo info);
 #endif
-    void activatePlayerDevice(ldSoundDeviceInfo info);
+    void activatePlayerDevice(const ldSoundDeviceInfo &info);
     void activateStubDevice(ldSoundDeviceInfo info);
 
     void deleteAudioInput();

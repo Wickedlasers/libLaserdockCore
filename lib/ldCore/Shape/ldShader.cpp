@@ -53,16 +53,10 @@ ldShaderManager* ldShaderManager::getSharedManager()
 
 ldShaderManager::ldShaderManager()
 {
-    m_pVtxPreShader = m_pVtxShader = m_pPxlShader = NULL;
 }
 
 ldShaderManager::~ldShaderManager()
 {
-//    if (m_pVtxPreShader != NULL) delete m_pVtxPreShader;
-//    if (m_pVtxShader != NULL) delete m_pVtxShader;
-//    if (m_pPxlShader != NULL) delete m_pPxlShader;
-//    
-//    m_pVtxPreShader = m_pVtxShader = m_pPxlShader = NULL;
 }
 
 void ldShaderManager::pushVertextPreShader(ldShader* shader)
@@ -104,45 +98,6 @@ ldShader* ldShaderManager::popPixelShader()
 {
     return (ldShader*)m_PxStack.pop();
 }
-
-//ldShader* ldShaderManager::setVertextPreShader(ldShader *shader)
-//{
-//    assert(shader);
-//    
-//    ldShader* old = m_pVtxPreShader;
-//
-//    m_pVtxPreShader = shader;
-//    
-//    olSetVertexPreShader(shader ? _vertex_pre_shader : NULL);
-//    
-//    return old;
-//}
-//
-//ldShader* ldShaderManager::setVertextShader(ldShader *shader)
-//{
-//    assert(shader);
-//    
-//    ldShader* old = m_pVtxShader;
-//    
-//    m_pVtxShader = shader;
-//    
-//    olSetVertexShader(shader ? _vertex_shader : NULL);
-//
-//    return old;
-//}
-//
-//ldShader* ldShaderManager::setPixelShader(ldShader *shader)
-//{
-//    assert(shader);
-//
-//    ldShader* old = m_pPxlShader;
-//    
-//    m_pPxlShader = shader;
-//    
-//    olSetPixelShader(shader ? _pixel_shader : NULL);
-//
-//    return old;
-//}
 
 void ldShaderManager::apply_vertex_pre_shader(float *x, float *y, uint32_t *color)
 {

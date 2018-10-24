@@ -134,6 +134,10 @@ class HybridAutoColor2;
 class HybridColorPalette;
 class ldTempoAC;
 
+#ifdef LD_USE_ANDROID_LAYOUT
+#define LD_REDUCE_ANALYZER_SUPPORT
+#endif
+
 class LDCORESHARED_EXPORT ldMusicManager : public QObject
 {
     Q_OBJECT
@@ -144,23 +148,16 @@ public:
     ~ldMusicManager();
 
     // update function
-    void updateWith(ldSoundData* psd, float delta);
+    void updateWith(std::shared_ptr<ldSoundData> psd, float delta);
 
-    // doAubio
-#ifndef __APPLE__
-    #define doAubio 1
-#else
-    #define doAubio 1
-#endif
     // beat variables
     // basic funcs
-    float bass = 0.f, mids = 0.f, high = 0.f;
-    float volumePowerPre = 0.f, volumePowerPost = 0.f;
-    ldSpectrumFrame spectFrame;
-    std::unique_ptr<ldSpectrogram> spectrogram;
-    std::unique_ptr<ldSpectrogram> spectrogram2;
-    std::unique_ptr<SpectAdvanced> spectAdvanced;
-    std::unique_ptr<SpectAdvanced> spectAdvanced2;
+    float bass() const;
+    float mids() const;
+    float high() const;
+    float volumePowerPre() const;
+    float volumePowerPost() const;
+
     std::unique_ptr<ldTempoAC> tempoACSlower;
     std::unique_ptr<ldTempoAC> tempoACSlow;
     std::unique_ptr<ldTempoAC> tempoACFast;
@@ -176,34 +173,24 @@ public:
     std::shared_ptr<TempoTracker> tempoTrackerFast;
     std::unique_ptr<TempoTracker> tempoTrackerSlow;
 
-    //
     std::unique_ptr<ldAppakaBeat> appakaBeat;
     std::unique_ptr<ldAppakPeaks> appakaPeak;
     std::unique_ptr<ldAppakGate> appakaGate;
     std::unique_ptr<ldAppakSpectrum> appakaSpectrum;
-    std::unique_ptr<ldAppakBpmSelector> appakaBpmSelector;
 
-    //
     std::unique_ptr<ldAudioBasic> audioBasic ;
     
     // sound gate
-    std::unique_ptr<ldSoundGate> soundGate;
-    bool isSilent = true;
-    bool isSilent2 = true;
-    float isSilent2float = 1.f;
-    std::unique_ptr<ldSilentThree> silentThree;
-    bool isSilent3 = true;
-    bool isFakeSound = false; // kill isSilent (shall be false in production!)
+    bool isSilent() const;
+    bool isSilent2() const;
+    float isSilent2float() const;
+    bool isSilent3() const;
 
 	// onset
     float onsetLargeBeat1 = 0.f;
     float onsetLargeBeat2 = 0.f;
     float onsetBeatWarm = 0.f;
     float onsetBeatFresh = 0.f;
-    std::unique_ptr<BeatWarm> beatWarm;
-    std::unique_ptr<BeatFresh> beatFresh;
-    float wfr = 0.f;
-    DurationalStatEstimator dsewfr;
 
 	// pitch
 //    PitchTracker* pitchTracker = nullptr; // deprecated?
@@ -214,33 +201,30 @@ public:
     std::unique_ptr<HybridColorPalette> hybridColorPalette;
     std::unique_ptr<HybridFlash> hybridFlash;
 
-    float bestBpm = 120.f;
-    float bestBpm2 = 0.f;
-
-    //
+    float bestBpm() const;
 
 signals:
     void updated();
 
-
-    // lag test
-
-signals:
-    void lagTestAutoCompleted();
-public slots:
-    void lagTestAutoStart();
-public:
-    int lagTestResultMs = 250;
-    float lagTestResultConfidence = 0;
-    //
-    bool lagTestInProgress = false;
-    static const int lagTestFrames = 30 * AUDIO_OVERDRIVE_FACTOR; // range width in audio frames
-    static const int lagTestDuration = 4;
-    float lagTestCand[lagTestFrames];
-    int lagTestFramesDone = 0;
-    int lagTestBaselineMs = 0;
-
 private:
+    std::shared_ptr<ldSoundData> m_psd;
+
+    ldSpectrumFrame spectFrame;
+    std::unique_ptr<ldSpectrogram> spectrogram;
+    std::unique_ptr<ldSpectrogram> spectrogram2;
+    std::unique_ptr<SpectAdvanced> spectAdvanced;
+    std::unique_ptr<SpectAdvanced> spectAdvanced2;
+
+    bool isFakeSound = false; // kill isSilent (shall be false in production!)
+    std::unique_ptr<ldSoundGate> soundGate;
+    std::unique_ptr<ldSilentThree> silentThree;
+
+    std::unique_ptr<ldAppakBpmSelector> appakaBpmSelector;
+
+    std::unique_ptr<BeatWarm> beatWarm;
+    std::unique_ptr<BeatFresh> beatFresh;
+    float wfr = 0.f;
+    DurationalStatEstimator dsewfr;
 };
 
 #endif // LDMUSICMANAGER_H

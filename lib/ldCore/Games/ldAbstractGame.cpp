@@ -29,22 +29,23 @@
 #include "ldCore/Visualizations/ldVisualizationTask.h"
 #include "ldCore/Visualizations/Visualizers/Games/ldAbstractGameVisualizer.h"
 
-#ifdef TOUCH_KEY_SUPPORT
 void ldAbstractGame::registerMetaTypes()
 {
-    qmlRegisterUncreatableType<ldAbstractGame>("WickedLasers", 1, 0, "LdGameApp", "LdGameApp enum can't be created");
+    ldGamepad::registerMetaTypes();
 }
-#endif
 
 ldAbstractGame::ldAbstractGame(const QString &id, const QString &title, QObject *parent)
     : QObject(parent)
     , m_id(id)
     , m_title(title)
+    , m_gamepadCtrl(new ldGamepadCtrl(this, this))
     , m_isActive(false)
     , m_levelIndex(0)
     , m_isPlaying(false)
     , m_isPaused(false)
 {
+    qmlRegisterType<ldGamepadCtrl>();
+
     connect(this, &ldAbstractGame::levelIndexChanged, this, &ldAbstractGame::onLevelIndexChanged);
     connect(this, &ldAbstractGame::isActiveChanged, this, &ldAbstractGame::onActiveChanged);
 
@@ -55,10 +56,7 @@ ldAbstractGame::ldAbstractGame(const QString &id, const QString &title, QObject 
     });
 #endif
 
-
-#ifdef TOUCH_KEY_SUPPORT
-    installEventFilter(this);
-#endif
+    m_gamepadCtrl->installEventFilter(this);
 }
 
 ldAbstractGame::~ldAbstractGame()
@@ -70,17 +68,49 @@ QStringList ldAbstractGame::get_levelList() const
     return m_levelList;
 }
 
-QStringList ldAbstractGame::get_hotkeys() const
+QStringList ldAbstractGame::get_keyDescriptions() const
 {
-    return m_hotkeys;
+    return m_keyDescriptions;
 }
 
-#ifdef TOUCH_KEY_SUPPORT
-QStringList ldAbstractGame::get_touchHotkeys() const
-{
-    return m_touchHotkeys;
+bool ldAbstractGame::eventFilter(QObject *obj, QEvent *ev) {
+    if(!get_isPlaying()) {
+        return QObject::eventFilter(obj, ev);
+    }
+
+    if(ev->type() == QEvent::KeyPress || ev->type() == QEvent::KeyRelease) {
+        QKeyEvent *keyEvent = dynamic_cast<QKeyEvent*>(ev);
+        if(keyEvent->modifiers() == Qt::NoModifier
+                || keyEvent->modifiers() == Qt::KeypadModifier ) {
+            if(handleKeyEvent(keyEvent)) {
+                keyEvent->accept();
+                return true;
+            }
+        }
+    }
+
+    return QObject::eventFilter(obj, ev);
 }
-#endif
+
+void ldAbstractGame::moveX(double x)
+{
+    getGameVisualizer()->moveX(x);
+}
+
+void ldAbstractGame::moveY(double y)
+{
+    getGameVisualizer()->moveY(y);
+}
+
+void ldAbstractGame::moveRightX(double x)
+{
+    getGameVisualizer()->moveRightX(x);
+}
+
+void ldAbstractGame::moveRightY(double y)
+{
+    getGameVisualizer()->moveRightY(y);
+}
 
 void ldAbstractGame::play()
 {
@@ -90,7 +120,7 @@ void ldAbstractGame::play()
 
 void ldAbstractGame::pause()
 {
-    if(m_isPlaying)
+    if(m_isPlaying && !m_isPaused)
         toggle();
 }
 
@@ -128,95 +158,6 @@ void ldAbstractGame::setSoundLevel(int soundLevel)
 {
     getGameVisualizer()->setSoundLevel(soundLevel);
 }
-
-#ifdef TOUCH_KEY_SUPPORT
-void ldAbstractGame::sendKeyEvent(Qt::Key key, bool isPressed)
-{
-    QEvent::Type eventType = isPressed ? QEvent::KeyPress : QEvent::KeyRelease;
-    QKeyEvent *eve1 = new QKeyEvent (eventType, key, Qt::NoModifier, "");
-
-    qApp->postEvent(this, eve1);
-}
-
-int ldAbstractGame::getKey(int key)
-{
-    return m_keyMap[TouchKey(key)];
-}
-
-void ldAbstractGame::initTouchHotkeys()
-{
-    for(const TouchKey &touchKey : m_keyMap.keys()) {
-        QString touchKeyString;
-        switch (touchKey) {
-        case TouchKey::Left:
-            touchKeyString = tr("Left");
-            break;
-        case TouchKey::Right:
-            touchKeyString = tr("Right");
-            break;
-        case TouchKey::Up:
-            touchKeyString = tr("Up");
-            break;
-        case TouchKey::Down:
-            touchKeyString = tr("Down");
-            break;
-        case TouchKey::A:
-            touchKeyString = tr("A");
-            break;
-        case TouchKey::B:
-            touchKeyString = tr("B");
-            break;
-        case TouchKey::X:
-            touchKeyString = tr("X");
-            break;
-        case TouchKey::Y:
-            touchKeyString = tr("Y");
-            break;
-        }
-
-
-        QString mappedValue;
-        Qt::Key mappedKey = m_keyMap[touchKey];
-        QString mappedKeyString = QKeySequence(mappedKey).toString();
-        for(int i = 0; i < m_hotkeys.length(); i+=2) {
-            QString desktopKeyString = m_hotkeys[i];
-            // key is mapped directly
-            bool isEquals = (desktopKeyString.compare(mappedKeyString, Qt::CaseInsensitive) == 0);
-            // Any key?
-            bool isAnyKey = (desktopKeyString == "Any Key");
-            // some games have multiple keys for single action, divided by "/" (e.g. Laserbeats aka GrooveCoaster)
-            QStringList keyList = desktopKeyString.split("/");
-            bool isContains = keyList.contains(mappedKeyString, Qt::CaseInsensitive);
-            if(isAnyKey || isEquals || isContains) {
-                mappedValue = m_hotkeys[i+1];
-                break;
-            }
-        }
-
-        m_touchHotkeys << touchKeyString << mappedValue;
-    }
-}
-#endif
-
-bool ldAbstractGame::eventFilter(QObject *obj, QEvent *ev) {
-    if(!get_isPlaying()) {
-        return QObject::eventFilter(obj, ev);
-    }
-
-    if(ev->type() == QEvent::KeyPress || ev->type() == QEvent::KeyRelease) {
-        QKeyEvent *keyEvent = dynamic_cast<QKeyEvent*>(ev);
-        if(keyEvent->modifiers() == Qt::NoModifier
-                || keyEvent->modifiers() == Qt::KeypadModifier ) {
-            if(handleKeyEvent(keyEvent)) {
-                keyEvent->accept();
-                return true;
-            }
-        }
-    }
-
-    return QObject::eventFilter(obj, ev);
-}
-
 
 void ldAbstractGame::activate()
 {

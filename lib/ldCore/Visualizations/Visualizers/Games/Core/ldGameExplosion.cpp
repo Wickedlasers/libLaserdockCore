@@ -23,7 +23,9 @@
 #include "ldGameExplosion.h"
 
 // Constants.
+namespace  {
 const float LIFETIME = 0.25f;
+}
 
 ldGameExplosion::ldGameExplosion(Vec2 pos, int col, float size) : ldGameObject() {
     init();

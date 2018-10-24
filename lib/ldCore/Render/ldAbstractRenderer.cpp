@@ -38,20 +38,7 @@
 
 */
 
-
 const int ldAbstractRenderer::DEFAULT_RATE = 30000;
-
-/*!
-  \brief default constructor, with type set to UNINITIALIZED
-
-*/
-ldAbstractRenderer::ldAbstractRenderer(QObject *parent) :
-    QObject(parent),
-    m_type(UNINITIALIZED)
-  , m_buffer(NULL)
-{
-
-}
 
 /*!
     \brief overloaded constructor, with additional parameter specifying the type.
@@ -59,19 +46,12 @@ ldAbstractRenderer::ldAbstractRenderer(QObject *parent) :
 ldAbstractRenderer::ldAbstractRenderer(ldRendererType type, QObject *parent) :
     QObject(parent),
     m_type(type)
-  , m_buffer(NULL)
 {
-
-
 }
 
-/*!
-    \brief empty virtual method, to be overrided by subclasses.
-*/
-void ldAbstractRenderer::render(){
-
+ldRendererType ldAbstractRenderer::type() {
+    return m_type;
 }
-
 
 void ldAbstractRenderer::setRate(int rate)
 {

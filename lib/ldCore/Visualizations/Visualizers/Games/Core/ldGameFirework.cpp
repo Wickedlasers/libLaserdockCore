@@ -23,11 +23,13 @@
 #include "ldGameFirework.h"
 
 // Constants.
+namespace  {
 const float LIFETIME_MIN = 0.30f;
 const float LIFETIME_MAX = 0.50f;
 
 const float SPEED_MIN = 0.5f;
 const float SPEED_MAX = 1.0f;
+}
 
 ldGameFirework::ldGameFirework(Vec2 p_position, float p_rotation) : ldGameObject() {
     init();

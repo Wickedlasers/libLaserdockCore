@@ -47,18 +47,6 @@ namespace {
         return  (uint8_t) color;
     }
 
-//    inline uint32_t GetColor(float r, float g, float b)
-//    {
-//        uint32_t R = (uint32_t) (r*255);
-//        uint32_t G = (uint32_t) (g*255);
-//        uint32_t B = (uint32_t) (b*255);
-
-//        uint32_t color = 0;
-//        color = R | G << 8 | B << 16;
-
-//        return color;
-//    }
-
     inline CompressedSample compress_sample(const Vertex& v){
         CompressedSample s;
 
@@ -72,7 +60,6 @@ namespace {
         return s;
     }
 }
-//#include <QtCore/QMutex>
 
 ldFrameBuffer::ldFrameBuffer(QObject *parent) :
     QObject(parent)
@@ -95,22 +82,9 @@ void ldFrameBuffer::push(Vertex& val, bool skip_filters, bool alter_val){
 
         // apply data filter
         ldFilterManager *fm = ldCore::instance()->filterManager();
-        fm->m_basicGlobalFilter.process(tval);
-        // apply global filter to simulator output
-        ldFilter *globalFilter = fm->m_globalFilter;
-        if (globalFilter)
-            globalFilter->process(tval);
 
-        // store similator value
-        simVal = tval;
-
-        // apply data filter to data output
-        // give filter proper settings
-        fm->m_dataFilter.frameModes = m_frameModes;
-        fm->m_dataFilter.process(tval);
-
-        // store data value
-        dataVal = tval;
+        fm->setFrameModes(m_frameModes);
+        fm->process(tval, simVal, dataVal);
 
         // compress and add to buffer
         m_buffer[m_fill] = simVal;
@@ -161,7 +135,6 @@ void ldFrameBuffer::reset()
 
 void ldFrameBuffer::commit()
 {
-    //if(m_fill < LDFRAMEBUFFER_WARNING_FILL) qDebug() << "Framebuffer fill below warning level.";
     m_isFilled = true;
 }
 

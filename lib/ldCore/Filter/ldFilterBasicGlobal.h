@@ -34,30 +34,30 @@
 
 #include "ldBasicFilters.h"
 
+/** Filters that are applied to Vertex before it is sent to simulator */
 class LDCORESHARED_EXPORT ldFilterBasicGlobal: public ldFilter {
 public:
+    /** Constructor/destructor */
     explicit ldFilterBasicGlobal();
     virtual ~ldFilterBasicGlobal();
 
-    virtual void process(Vertex &v);
+    /** ldFilter impl */
+    virtual void process(Vertex &v) override;
 
+    /** Filters */
     ldColorCurveFilter *colorCurveFilter() const;
     ldHueFilter *hueFilter() const;
     ldHueMatrixFilter *hueMatrixFilter() const;
     ldHueShiftFilter *hueShiftFilter() const;
-    ldRotateFilter *rotateFilter() const;
     ldTracerFilter *tracerFilter() const;
 
     bool ttl = false;
-    bool flipX = false;
-    bool flipY = false;
 
 private:
     std::unique_ptr<ldColorCurveFilter> m_colorCurveFilter;
     std::unique_ptr<ldHueFilter> m_hueFilter;
     std::unique_ptr<ldHueMatrixFilter> m_hueMatrixFilter;
     std::unique_ptr<ldHueShiftFilter> m_hueShiftFilter;
-    std::unique_ptr<ldRotateFilter> m_rotateFilter;
     std::unique_ptr<ldTracerFilter> m_tracerFilter;
 
     ldColorCurve curveR, curveG, curveB;

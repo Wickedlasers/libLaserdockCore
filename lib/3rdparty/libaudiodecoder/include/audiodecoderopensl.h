@@ -55,7 +55,7 @@ public:
     AudioDecoderOpenSL(const std::string filename);
     ~AudioDecoderOpenSL();
 
-    void initAndroidEnv(JNIEnv* env, jobject a);
+    void initAndroidEnv(JNIEnv* env, jobject a = nullptr);
 
     // Overriding AudioDecoderBase 
     int open();
@@ -69,7 +69,7 @@ public:
 
 private:
     std::unique_ptr<OpenSLDecoder> m_decoder;
-    jobject activity;
+    jobject activity = nullptr;
     double startTime;
     JavaVM* vm;
     JNIEnv* uiEnv;

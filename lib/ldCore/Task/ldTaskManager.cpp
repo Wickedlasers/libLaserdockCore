@@ -22,9 +22,8 @@
 
 #include <QtDebug>
 
-#include "ldTaskWorker.h"
-
 #include "ldAbstractTask.h"
+#include "ldTaskWorker.h"
 
 
 /*!
@@ -59,5 +58,9 @@ ldTaskManager::~ldTaskManager()
         qWarning() << "ldTaskManager m_worker_thread wasn't finished correctly";
     }
 
-    delete m_taskworker;
+    m_taskworker.reset();
+}
+
+ldTaskWorker *ldTaskManager::taskWorker() const{
+    return m_taskworker.data();
 }

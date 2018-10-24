@@ -146,6 +146,10 @@ uint32_t ldColorUtil::colorEffectThree(int p_baseColorDecay, float p_millisec, c
 }
 
 
+ldAbstractColorEffect::~ldAbstractColorEffect()
+{
+}
+
 void ldAbstractColorEffect::setBaseColorDecay(int baseColorDecay)
 {
     _baseColorDecay = baseColorDecay;

@@ -40,29 +40,52 @@
 
 class ldTextLabel;
 
+/** Base class for each game visualizer */
 class LDCORESHARED_EXPORT ldAbstractGameVisualizer : public ldVisualizer
 {
     Q_OBJECT
 public:
+    /** Constructor/destructor */
     explicit ldAbstractGameVisualizer();
     virtual ~ldAbstractGameVisualizer();
 
+    float complexity() const;
+
+    virtual int levelIndex() const;
+    virtual QStringList levelList() const;
+
 public slots:
+    /** Reset game to initial state */
     virtual void reset() = 0;
+    /** Toggle play/pause */
     virtual void togglePlay() = 0;
 
+    /** Enable sound effects*/
     virtual void setSoundEnabled(bool enabled);
+    /** Sound level */
     virtual void setSoundLevel(int soundLevel);
 
-    // optional
-    virtual void setComplexity(float /*speed*/) {}
-    virtual void setLevelIndex(int /*index*/) {}
+    /** optional */
+    virtual void setComplexity(float complexity);
+
+    virtual void setLevelIndex(int index);
+
+    void nextLevel();
+    void previousLevel();
+
+    virtual void moveX(double /*x*/) {}
+    virtual void moveY(double /*y*/) {}
+
+    virtual void moveRightX(double /*x*/) {}
+    virtual void moveRightY(double /*y*/) {}
 
 signals:
+    /** Signal finished should be emitted manually when game is over*/
     void finished();
 
 protected:
     static const int GAME_DEFAULT_RESET_TIME;
+
     // State machine.
     enum class State {
         Reset,
@@ -72,36 +95,36 @@ protected:
 
     // Variables used in all games.
     State m_state = State::Reset;
+    bool m_isPlaying = false;
     bool m_isPaused = false;
     bool m_isReset = false;
     float m_complexity = 1.0f;
     float m_gameTimer = 0.0f;
 
-    virtual void draw(void) override;
+    virtual void draw() override;
+
+    /** Optional game effects, they will be drawn in ldAbstractGameVisualizer::draw */
     void addExplosion(Vec2 position, int color = 0xff7700, float size = 0.2f);
     void addFireworks(Vec2 position, int amount = 5);
     void addSparkle(Vec2 position);
     void addSmoke (Vec2 position);
-    void drawVertexRainbow(ldRendererOpenlase* p_renderer, QList<Vec2> vertices, QList<int> colors, int segmentsPerLine = 4, int repeat = 1);
 
-    // Labels.
+    /** Text label */
     void showMessage(string text, float duration = 0.0f);
     void clearMessage();
 
-    int m_readyToStartGameTimerValue = 0;
+    int m_startGameTimerValue = 0;
 
     ldSoundEffects m_soundEffects;
 
     QMutex m_mutex;
 
 private:
-
-    // Labels.
+    /** Game helper labels */
     QScopedPointer<ldTextLabel> m_messageLabel;
     float m_messageLabelTimer = 0.0f;
 
-    // Effects.
-    QList<ldGameObject> m_gameObjects;
+    /** Optional game objects and effects */
     QList<ldGameExplosion> m_explosions;
     QList<ldGameFirework> m_fireworks;
     QList<ldGameSparkle> m_sparkles;

@@ -30,7 +30,6 @@
 #include "ldCore/ldCore_global.h"
 #include "ldCore/ldCore.h"
 #include "ldCore/Data/ldFrameBuffer.h"
-#include "ldCore/Filter/ldFilterManager.h"
 #include "ldCore/Render/ldRendererOpenlase.h"
 #include "ldCore/Shape/ldShape.h"
 #include "ldCore/Sound/ldSoundDeviceManager.h"
@@ -39,10 +38,6 @@
 
 #include "ldLogoLaserdock.h"
 #include "ldVisualizer.h"
-
-namespace {
-    ldRendererOpenlase * openlase;
-}
 
 /*!
   \class ldVisualizationTask
@@ -65,8 +60,8 @@ ldVisualizationTask::ldVisualizationTask(QObject *parent)
     qmlRegisterType<ldVisualizer>();
 #endif
     
-    openlase = (ldRendererOpenlase *)ldCore::instance()->rendererManager()->getRenderer(OPENLASE);
-    ldShape::setGlobalRenderer(openlase);
+    m_openlase = (ldRendererOpenlase *)ldCore::instance()->rendererManager()->getRenderer(OPENLASE);
+    ldShape::setGlobalRenderer(m_openlase);
 
     qRegisterMetaType<AudioBlock>("AudioBlock");
 }
@@ -91,14 +86,6 @@ ldVisualizationTask::~ldVisualizationTask()
 
 */
 
-ldVisualizer * ldVisualizationTask::getActiveVis()
-{
-    ldVisualizer* vis = m_currentVisualizer;
-    if (m_tempVisualizer != nullptr) vis = m_tempVisualizer;
-    if(!m_logo->isFinished()) vis = m_logo.get();
-    return vis;
-}
-
 void ldVisualizationTask::update(quint64 delta, ldFrameBuffer * buffer)
 {       
     // check if running
@@ -115,16 +102,16 @@ void ldVisualizationTask::update(quint64 delta, ldFrameBuffer * buffer)
     // make sure visualizer exists
     if (vis) {
         fps = vis->targetFPS();
-        openlase->loadIdentity();
-        openlase->loadIdentity3();
-        openlase->setFrameModes(0);
+        m_openlase->loadIdentity();
+        m_openlase->loadIdentity3();
+        m_openlase->setFrameModes(0);
 
         vis->visit(); // draw vis with renderer
     }
 
     // perform openlase rendering on the frame
     if (this->renderState()->renderOpenlase)
-        openlase->renderFrame(buffer, fps);
+        m_openlase->renderFrame(buffer, fps);
 	
 	//qDebug() << buffer->getFill() << " - " << buffer->getCapacity();
 }
@@ -167,7 +154,7 @@ void ldVisualizationTask::setCurrentVisualizer(ldVisualizer *visualizer)
         m_currentVisualizer->prepare(this);
         m_currentVisualizer->start();
         // call updateWith at least once, to make sure visualizer gets m_sounddata pointer before any draw happens
-        if (m_sounddata) m_currentVisualizer->updateWith(m_sounddata.data(), AUDIO_UPDATE_DELTA_S);
+        if (m_sounddata) m_currentVisualizer->updateWith(m_sounddata.get(), AUDIO_UPDATE_DELTA_S);
     }
 
     emit currentVisualizerChanged(visualizer);
@@ -192,10 +179,10 @@ void ldVisualizationTask::onUpdateAudio(const AudioBlock &block)
     m_sounddata->Update(block);
 
     // update music manager
-    ldCore::instance()->musicManager()->updateWith(m_sounddata.data(), AUDIO_UPDATE_DELTA_S);
+    ldCore::instance()->musicManager()->updateWith(m_sounddata, AUDIO_UPDATE_DELTA_S);
 
     // update visualizer
-    if (m_currentVisualizer) m_currentVisualizer->updateWith(m_sounddata.data(), AUDIO_UPDATE_DELTA_S);
+    if (m_currentVisualizer) m_currentVisualizer->updateWith(m_sounddata.get(), AUDIO_UPDATE_DELTA_S);
 }
 
 /*!
@@ -219,7 +206,7 @@ void ldVisualizationTask::start()
     if(!m_logo) m_logo.reset(new LogoLaserdock);
     // call updateWith at least once, to make sure visualizer gets m_sounddata pointer before any draw happens
     ldVisualizer* vis = getActiveVis();
-    if(vis != nullptr) vis->updateWith(m_sounddata.data(), AUDIO_UPDATE_DELTA_S);
+    if(vis != nullptr) vis->updateWith(m_sounddata.get(), AUDIO_UPDATE_DELTA_S);
 }
 
 
@@ -246,4 +233,15 @@ ldVisualizationTask::RenderState *ldVisualizationTask::renderState()
 ldVisualizer *ldVisualizationTask::getCurrentVisualizer() const
 {
     return m_currentVisualizer;
+}
+
+ldVisualizer * ldVisualizationTask::getActiveVis() const
+{
+    ldVisualizer* vis = m_currentVisualizer;
+    if (m_tempVisualizer != nullptr) vis = m_tempVisualizer;
+
+#ifdef LD_SHOW_LASERDOCK_LOGO
+    if(!m_logo->isFinished()) vis = m_logo.get();
+#endif
+    return vis;
 }

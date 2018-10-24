@@ -33,35 +33,50 @@
 
 #include <ldCore/Render/ldRendererOpenlase.h>
 
+/** The filter allows to attenuate output at/out of selected zones.
+ *  If some zone intersect the other zone, the zone with the maximum attenuation value is choosed
+ */
 class LDCORESHARED_EXPORT ldDeadzoneFilter: public ldFilter {
     
 public:
-    class LDCORESHARED_EXPORT Deadzone {
+    /** Zone class */
+    class LDCORESHARED_EXPORT Deadzone
+    {
     public:
         Deadzone(QRectF rect = QRectF(), float attenuation = 1.f);
 
+        /** Get rect in Vertex coordinates */
         QRectF visRect() const; // rect in vis coordinates
-        bool isValid() const;
 
         QRectF m_rect; // pos -1..1, size 0..1
-        float m_attenuation = 1.0f;
+        float m_attenuation = 1.0f; // 1 - full block, 0 - no block
     };
 
+    /** Constructor */
     explicit ldDeadzoneFilter();
 
+    /** ldFilter impl */
     virtual void process(Vertex &v) override;
 
+    /** Add new deadzone */
     void add(const Deadzone &deadzone);
+    /** Remove all deadzones */
     void clear();
 
+    /** List of deadzones */
     const QList<Deadzone> &deadzones() const;
-    Deadzone *currentDeadzone();
 
-    void  resetToDefault();
+    /** helper func to get pointer to the first deadzone. If there are no deadzones nullptr is returned */
+    Deadzone *firstDeadzone();
 
-    // dead zone
+    /** Creates default deadzone in the middle of screen */
+    void resetToDefault();
+
+    /** Enable filter flag */
     bool m_enabled = false;
+    /** in/out filter control */
     bool m_reverse = false;
+
 private:
     // for dead zone
     void attenuate(Vertex &v);

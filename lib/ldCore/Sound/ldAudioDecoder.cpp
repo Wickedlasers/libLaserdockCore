@@ -37,7 +37,7 @@ namespace  {
 #else
     const int IS_PRELOAD_FILE = false;
 #endif
-    const int DATA_LENGTH_TO_SEND = SAMPLE_SIZE;  // stereo int
+    const int SAMPLE_SIZE_TO_SEND = SAMPLE_SIZE;  // stereo int
 //    const int BUFFER_SIZE = 2000;
 }
 
@@ -66,8 +66,7 @@ void ldAudioDecoder::start(const QString &filePath, qint64 elapsedTime)
     m_audioDecoder.reset(new AudioDecoder(filePath.toStdString()));
 #ifdef Q_OS_ANDROID
     QAndroidJniEnvironment qjniEnv;
-    QAndroidJniObject activity = QAndroidJniObject::callStaticObjectMethod("org/qtproject/qt5/android/QtNative", "activity", "()Landroid/app/Activity;");
-    m_audioDecoder->initAndroidEnv(&(*qjniEnv), activity.object());
+    m_audioDecoder->initAndroidEnv(&(*qjniEnv));
 #endif
     int error = m_audioDecoder->open();
     if(error != AUDIODECODER_OK) {
@@ -87,7 +86,7 @@ void ldAudioDecoder::start(const QString &filePath, qint64 elapsedTime)
         m_sampleData.resize(m_audioDecoder->numSamples());
         m_audioDecoder->read(m_audioDecoder->numSamples(), &m_sampleData[0]);
     } else {
-        m_sampleData.resize(DATA_LENGTH_TO_SEND);
+        m_sampleData.resize(SAMPLE_SIZE_TO_SEND);
     }
 #else
     Q_UNUSED(elapsedTime)
@@ -103,6 +102,12 @@ void ldAudioDecoder::stop()
 
     m_audioDecoder.reset();
 #endif
+}
+
+void ldAudioDecoder::setElapsedTime(qint64 time)
+{
+    m_elapsedTime = time;
+    m_elapsedTimer.restart();
 }
 
 void ldAudioDecoder::timerSlot()
@@ -125,20 +130,24 @@ void ldAudioDecoder::timerSlot()
     //    qDebug() << elapsedTime << m_duration << elapsedPercent;
 
     int sampleIndex = elapsedPercent * m_audioDecoder->numSamples();
-    if(sampleIndex + DATA_LENGTH_TO_SEND >= m_audioDecoder->numSamples()) {
-        sampleIndex = m_audioDecoder->numSamples() - DATA_LENGTH_TO_SEND;
+    if(sampleIndex + SAMPLE_SIZE_TO_SEND >= m_audioDecoder->numSamples()) {
+        sampleIndex = m_audioDecoder->numSamples() - SAMPLE_SIZE_TO_SEND;
     }
+    if(sampleIndex % 2 != 0)
+        sampleIndex -= 1;
+
     // get sample to send
     float * sampleToSend = nullptr;
 
+    int sampleSizeToSend = SAMPLE_SIZE_TO_SEND;
     if(IS_PRELOAD_FILE) {
         sampleToSend = &m_sampleData[sampleIndex];
     } else {
         m_audioDecoder->seek(sampleIndex);
-        m_audioDecoder->read(DATA_LENGTH_TO_SEND, &m_sampleData[0]);
+        sampleSizeToSend = m_audioDecoder->read(SAMPLE_SIZE_TO_SEND, &m_sampleData[0]);
         sampleToSend = &m_sampleData[0];
     }
 
-    emit bufferUpdated(sampleToSend, DATA_LENGTH_TO_SEND / 2);
+    emit bufferUpdated(sampleToSend, sampleSizeToSend / 2);
 #endif
 }

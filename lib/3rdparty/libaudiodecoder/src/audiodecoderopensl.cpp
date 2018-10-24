@@ -69,7 +69,8 @@ void AudioDecoderOpenSL::initAndroidEnv(JNIEnv *env, jobject a)
 {
     uiEnv = env;
     uiEnv->GetJavaVM(&vm);
-    activity = uiEnv->NewGlobalRef(a);
+
+    if(a) activity = uiEnv->NewGlobalRef(a);
 }
 
 int AudioDecoderOpenSL::open() {
@@ -110,7 +111,7 @@ int AudioDecoderOpenSL::read(int size, const SAMPLE *destination) {
     int endPos = m_iPositionInSamples + size;
     if(endPos > m_buffer.size()) {
         qDebug() << __FUNCTION__ << "reduce buffer size" << m_iPositionInSamples << m_buffer.size();
-        size = m_iPositionInSamples + m_buffer.size();
+        size = m_buffer.size() - m_iPositionInSamples;
     }
 
     // fill dest buffers
@@ -144,7 +145,7 @@ void AudioDecoderOpenSL::onComplete(OpenSLDecoder* d)
     JNIEnv* env = attachToVm();
     double duration = getTime() - startTime;
     callbackActivity(env,true,duration);
-    env->DeleteGlobalRef(activity);
+    if(activity) env->DeleteGlobalRef(activity);
     vm->DetachCurrentThread();
 }
 
@@ -152,12 +153,15 @@ void AudioDecoderOpenSL::onError(OpenSLDecoder* d)
 {
     JNIEnv* env = attachToVm();
     callbackActivity(env,false,-1.0);
-    env->DeleteGlobalRef(activity);
+    if(activity) env->DeleteGlobalRef(activity);
     vm->DetachCurrentThread();
 }
 
 void AudioDecoderOpenSL::callbackActivity(JNIEnv* env, bool result, double duration)
 {
+    if(!activity)
+        return;
+
     jclass cls = env->GetObjectClass(activity);
     jmethodID mid = env->GetMethodID(cls,"onFileDecoded","(ZD)V");
     env->CallVoidMethod(activity,mid,true,(jdouble)duration);

@@ -33,35 +33,38 @@ class ldHardwareManager;
 class ldSimulatorEngine;
 class ldUsbDataWorker;
 
+/** Laserdock data transfer control class. Supports OpenGL simulator and additional custom worker for internal usage */
 class LDCORESHARED_EXPORT ldDataDispatcher : public QObject
 {
     Q_OBJECT
-    
 public:
+    /** Constructor/destructor */
     explicit ldDataDispatcher(ldBufferManager *bufferManager,
                               ldHardwareManager *hardwareManager,
                               QObject *parent = 0);
     ~ldDataDispatcher();
-    
+
+    /** If any worker is active */
     bool isActiveTransfer() const;
 
+    /** Additional optional data worker */
     void setAdditionalDataWorker(ldAbstractDataWorker *dataWorker);
 
+    /** Main USB data worker */
     ldUsbDataWorker* usbDataWorker() const;
 
-public slots:
+    /** Simulator core engine class */
     ldSimulatorEngine* simulatorEngine() const;
-    void loadSimulator();
-    void unloadSimulator();
 
+public slots:
+    /** Activate/deactivate data workers */
     void setActiveTransfer(bool active);
 
 signals:
+    /** Emitted when data workers state changed */
     void activeChanged(bool active);
 
 private:
-    ldHardwareManager *m_hardwareManager;
-
     std::unique_ptr<ldSimulatorEngine> m_simulatorEngine;
 
     std::unique_ptr<ldUsbDataWorker> m_usbDataWorker;

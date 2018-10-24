@@ -37,10 +37,35 @@ class LDCORESHARED_EXPORT ldFilterManager : public QObject
 public:
     explicit ldFilterManager(QObject *parent = 0);    
 
+    void setGlobalFilter(ldFilter *globalFilter);
+    void setFrameModes(int frameModes);
+
+    void process(Vertex &tval, Vertex &simVal, Vertex &dataVal);
+
+    ldColorCurveFilter *baseColorCurveFilter() const;
+    ldColorCurveFilter *colorCurveFilter() const;
+    ldDeadzoneFilter *deadzoneFilter() const;
+    ldHueFilter *hueFilter() const;
+    ldHueShiftFilter *hueShiftFilter() const;
+    ldFlipFilter *flipFilter() const;
+    ldScaleFilter *scaleFilter() const;
+    LdShiftFilter *shiftFilter() const;
+    ldRotateFilter *rotateFilter() const;
+    ldTracerFilter *tracerFilter() const;
+
+    void setBrightness(float brightness);
+    void setKeystoneX(float keystoneX);
+    void setKeystoneY(float keystoneY);
+    void setOffset(int offset);
+    void setTtl(bool isTtl);
+
+private:
     ldFilterBasicGlobal m_basicGlobalFilter;
     ldFilterBasicData m_dataFilter;
-
     ldFilter* m_globalFilter = nullptr;
+
+    std::unique_ptr<ldFlipFilter> m_flipFilter;
+    std::unique_ptr<ldRotateFilter> m_rotateFilter;
 };
 
 #endif // LDFILTERMANAGER_H

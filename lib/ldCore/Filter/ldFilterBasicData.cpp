@@ -35,6 +35,7 @@ ldFilterBasicData::ldFilterBasicData()
     , m_colorCurveFilter(new ldColorCurveFilter())
     , m_deadzoneFilter(new ldDeadzoneFilter())
     , m_scaleFilter(new ldScaleFilter())
+    , m_shiftFilter(new LdShiftFilter(m_scaleFilter.get()))
     , m_projectionBasic(new ldProjectionBasic)
 {
     m_colorCurveFilter->m_enabled = true;
@@ -64,8 +65,16 @@ ldFilterBasicData::~ldFilterBasicData()
 {
 }
 
+void ldFilterBasicData::addFilter(ldFilter *filter)
+{
+    m_filters.push_back(filter);
+}
+
 void ldFilterBasicData::process(Vertex &v) {
     
+    for(ldFilter *filter : m_filters)
+        filter->process(v);
+
     bool mode_disable_scale = frameModes & FRAME_MODE_SKIP_TRANSFORM;
     bool mode_disable_projection = frameModes & FRAME_MODE_SKIP_TRANSFORM;
     bool mode_disable_underscan = frameModes & FRAME_MODE_UNSAFE_UNDERSCAN;
@@ -75,11 +84,7 @@ void ldFilterBasicData::process(Vertex &v) {
     if (!mode_disable_scale) {
         // scale
         m_scaleFilter->process(v);
-        // shift
-        float fsx = shiftX * (1.0f -  m_scaleFilter->xScale());
-        float fsy = shiftY * (1.0f - m_scaleFilter->yScale());
-        v.position[0] += fsx;
-        v.position[1] += fsy;
+        m_shiftFilter->process(v);
     }
 
     // keystone
@@ -239,6 +244,11 @@ ldDeadzoneFilter *ldFilterBasicData::deadzone() const
 ldScaleFilter *ldFilterBasicData::scaleFilter() const
 {
     return m_scaleFilter.get();
+}
+
+LdShiftFilter *ldFilterBasicData::shiftFilter() const
+{
+    return m_shiftFilter.get();
 }
 
 void ldFilterBasicData::setKeystoneX(float keystoneX)

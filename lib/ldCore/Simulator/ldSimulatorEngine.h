@@ -29,19 +29,28 @@
 
 class QOpenGLShaderProgram;
 
+/** Simulator engine class */
 class LDCORESHARED_EXPORT ldSimulatorEngine : protected QOpenGLFunctions
 {
 public:
+    /** Constructor/destructor */
     explicit ldSimulatorEngine();
     virtual ~ldSimulatorEngine();
 
+    /** Engine can have multiple surfaces to draw. It is active if number of listeners > 0 */
     void addListener();
     void removeListener();
 
+    /** If engine is active*/
     bool isActive() const;
 
+    /** OpenGL initialization */
     void init();
+
+    /** Draw simulator data on surface */
     void drawLaserGeometry(QOpenGLShaderProgram *program);
+
+    /** Add simulator data */
     void pushVertexData(Vertex * data, unsigned int size);
 
 private:

@@ -50,8 +50,7 @@ void ldSpiralFighterPlayer::updateGameObject(float deltaTime) {
     ldGameObject::updateGameObject(deltaTime);
 
     // Rotate player with smoothness.
-    if (m_pressingLeft) m_targetRotation += SPEED_ROTATION * deltaTime;
-    else if (m_pressingRight) m_targetRotation -= SPEED_ROTATION * deltaTime;
+    m_targetRotation += m_rotationChange * SPEED_ROTATION * deltaTime;
     rotation = rotation * (ROTATION_SMOOTHNESS) + (m_targetRotation * (1 - ROTATION_SMOOTHNESS));
 
     // Fire missiles.
@@ -112,12 +111,8 @@ bool ldSpiralFighterPlayer::hasUsedPowerup() {
  * Input functions.
  */
 
-void ldSpiralFighterPlayer::onPressedLeft(bool pressed) {
-    m_pressingLeft = pressed;
-}
-
-void ldSpiralFighterPlayer::onPressedRight(bool pressed) {
-    m_pressingRight = pressed;
+void ldSpiralFighterPlayer::rotate(double rotate) {
+    m_rotationChange = rotate;
 }
 
 void ldSpiralFighterPlayer::onPressedShoot(bool pressed) {
@@ -129,8 +124,7 @@ void ldSpiralFighterPlayer::onPressedPowerup(bool pressed) {
 }
 
 void ldSpiralFighterPlayer::releaseKeys() {
-    m_pressingLeft = false;
-    m_pressingRight = false;
+    m_rotationChange = false;
     m_pressingShoot = false;
     m_pressingPowerup = false;
 }

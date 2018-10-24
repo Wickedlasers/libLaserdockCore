@@ -109,7 +109,7 @@ lzr::FrameList ldLzrHelper::readIldaFile(const QString &fileName)
         // empty error can be in case if file has no end header with 0 number of records
         // example - immigrant_song-LD.ILD
         if(ilda_error != "") {
-            qWarning() << "can't load ilda file" << fileName << res << frameList.size() << ilda_error;
+            qWarning() << "Warning loading ILD file: " << fileName << res << frameList.size() << ilda_error;
         }
     }
 

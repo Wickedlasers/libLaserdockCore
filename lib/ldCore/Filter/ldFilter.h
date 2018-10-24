@@ -24,9 +24,7 @@
 #include "ldCore/ldCore_global.h"
 #include "ldCore/Utilities/ldBasicDataStructures.h"
 
-/**
- * Shader
- */
+/** Shader */
 class LDCORESHARED_EXPORT ldShader
 {
 public:
@@ -34,22 +32,26 @@ public:
     virtual ~ldShader(){}
 };
 
-
+/** Abstract filter interface. Filters are applied to Vertex data directly */
 class LDCORESHARED_EXPORT ldFilter : ldShader
 {
 public:
+    /** Destructor */
     virtual ~ldFilter(){}
 
-    // filters implement this function to filter points.
-    // input is the source vertex, processing is done in-place with a ref param
-    virtual void process(Vertex &input);
+    /** Filters implement this function to filter points.
+        Input is the source vertex, processing is done in-place with a ref param */
+    virtual void process(Vertex &input) = 0;
 
+    /** Optional filter name */
     virtual QString name() { return QString(); }
 
+    /** Optional flag. Can be set by developer explicitly if filter is reactive to music analyzer */
     virtual bool isMusicAware() const { return false; }
-    // shader function adapter
+
 private:
-    virtual void ShaderFunc(float *x, float *y, uint32_t *color);
+    // shader function adapter
+    virtual void ShaderFunc(float *x, float *y, uint32_t *color) override;
 };
 
 #endif // LDFILTER

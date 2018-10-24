@@ -27,6 +27,8 @@
 #include <ldCore/Sound/ldSoundData.h>
 
 class LogoLaserdock;
+
+class ldRendererOpenlase;
 class ldVisualizer;
 
 class LDCORESHARED_EXPORT ldVisualizationTask : public ldAbstractTask
@@ -66,13 +68,16 @@ private slots:
     void onUpdateAudio(const AudioBlock& block);
 
 private:
+    ldVisualizer *getActiveVis() const;
+
     ldVisualizer* m_currentVisualizer;
     ldVisualizer* m_tempVisualizer;
-    QScopedPointer<ldSoundData> m_sounddata;
+    std::shared_ptr<ldSoundData> m_sounddata;
     RenderState m_renderstate;
 
     std::unique_ptr<LogoLaserdock> m_logo;
-    ldVisualizer * getActiveVis();
+
+    ldRendererOpenlase * m_openlase;
 };
 
 #endif // LDVISUALIZATIONTASK_H

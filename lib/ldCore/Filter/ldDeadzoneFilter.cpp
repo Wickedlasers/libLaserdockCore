@@ -79,9 +79,9 @@ const QList<ldDeadzoneFilter::Deadzone> &ldDeadzoneFilter::deadzones() const
     return m_deadzones;
 }
 
-ldDeadzoneFilter::Deadzone *ldDeadzoneFilter::currentDeadzone()
+ldDeadzoneFilter::Deadzone *ldDeadzoneFilter::firstDeadzone()
 {
-    return &m_deadzones.first();
+    return !m_deadzones.isEmpty() ? &m_deadzones.first() : nullptr;
 }
 
 void ldDeadzoneFilter::resetToDefault()
@@ -158,7 +158,3 @@ QRectF ldDeadzoneFilter::Deadzone::visRect() const
     return QRectF(QPointF(x1, y1), QPointF(x2, y2));
 }
 
-bool ldDeadzoneFilter::Deadzone::isValid() const
-{
-    return m_rect.isValid();
-}

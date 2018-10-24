@@ -22,10 +22,6 @@
 
 #include "ldColorUtils.h"
 
-void ldFilter::process(Vertex &/*input*/)
-{
-}
-
 void ldFilter::ShaderFunc(float *x, float *y, uint32_t *color) {
     Vertex input;
     input.position[0] = *x;

@@ -26,6 +26,7 @@
 
 #include <ldCore/Utilities/ldBasicDataStructures.h>
 
+/** Actual workhourse of the sound signal processing. Does discrete fourier transformation on sound data. */
 class LDFFT
 {
 public:

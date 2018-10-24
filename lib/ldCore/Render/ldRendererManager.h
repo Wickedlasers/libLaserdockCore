@@ -27,26 +27,23 @@
 
 class ldAbstractRenderer;
 
+/** Renderer type enum */
 enum ldRendererType {
     UNINITIALIZED,
     OPENLASE
 };
 
+/** Renderer manager. Currently only Openlase is supported */
 class LDCORESHARED_EXPORT ldRendererManager : public QObject
 {
     Q_OBJECT
 public:
     explicit ldRendererManager(QObject *parent = 0);
 
-    ldAbstractRenderer * getRenderer(ldRendererType type);
-
-signals:
-
-public slots:
+    ldAbstractRenderer* getRenderer(ldRendererType type);
 
 private:
     QList<ldAbstractRenderer*> m_renderers;
-
 };
 
 #endif // LDRENDERERMANAGER_H

@@ -31,6 +31,7 @@ class ldHardwareManager;
 class ldSimulatorEngine;
 class ldUsbHardwareManager;
 
+/** Internal USB data worker class. Shouldn't be used in any external code */
 class ldThreadedDataWorker : public QObject
 {
     Q_OBJECT

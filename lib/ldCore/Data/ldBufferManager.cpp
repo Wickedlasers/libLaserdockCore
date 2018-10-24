@@ -23,8 +23,6 @@
 #include <QtCore/QDebug>
 #include <QtCore/QThread>
 
-#include "ldCore/Filter/ldFilterManager.h"
-
 #include "ldFrameBuffer.h"
 
 ldBufferManager::ldBufferManager(QObject *parent)

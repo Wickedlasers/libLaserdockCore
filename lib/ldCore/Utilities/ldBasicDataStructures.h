@@ -25,9 +25,17 @@
 #include <QtCore/QMutexLocker>
 #include <stdint.h>
 
+/**
+ * Common structs and buffers
+ */
+
+
+/** Laser vertex. Used for easier processing */
 struct Vertex
 {
+    /** x,y,z */
     float position[3];
+    /** r,g,b,opacity [0..1] */
     float color[4];
 
     void clear();
@@ -36,6 +44,7 @@ struct Vertex
     bool isBlank() const;
 };
 
+/** Samples that are used by laser hardware */
 struct CompressedSample
 {
     uint16_t rg;
@@ -44,6 +53,7 @@ struct CompressedSample
     uint16_t y;
 };
 
+/** Internal buffer */
 template<class T>
 class ldBuffer
 {

@@ -28,6 +28,7 @@
 
 // ---------- ldColorCurveFilter ----------
 
+/** Smooth filters output colors to the only required one */
 class LDCORESHARED_EXPORT ldColorCurveFilter : ldFilter {
 public:
     explicit ldColorCurveFilter();
@@ -44,6 +45,7 @@ public:
 
 // ---------- ldHueFilter ----------
 
+/** Colorize output to one hue */
 class LDCORESHARED_EXPORT ldHueFilter : public ldFilter {
 public:
     virtual void process(Vertex &input) override;
@@ -56,6 +58,7 @@ public:
 
 // ---------- ldHueMatrixFilter ----------
 
+/** Hue matrix complex filter */
 class LDCORESHARED_EXPORT ldHueMatrixFilter : public ldFilter
 {
 public:
@@ -72,6 +75,7 @@ private:
 
 // ---------- ldHueShiftFilter ----------
 
+/** Shift hue filter */
 class LDCORESHARED_EXPORT ldHueShiftFilter : public ldFilter
 {
 public:
@@ -82,8 +86,21 @@ public:
 };
 
 
+// ---------- ldFlipFilter ----------
+
+/** Rotate filter */
+class LDCORESHARED_EXPORT ldFlipFilter : public ldFilter
+{
+public:
+    virtual void process(Vertex &v) override;
+
+    bool flipX = false;
+    bool flipY = false;
+};
+
 // ---------- ldRotateFilter ----------
 
+/** Rotate filter */
 class LDCORESHARED_EXPORT ldRotateFilter : public ldFilter
 {
 public:
@@ -96,7 +113,7 @@ public:
 
 // ---------- LdTracerFilter ----------
 
-// tracer adds a dashed line to black areas
+/** Tracer filter adds a dashed line to black areas and helps to see how laser works. Useful for debug */
 class LDCORESHARED_EXPORT ldTracerFilter : public ldFilter
 {
 public:
@@ -111,15 +128,20 @@ public:
 const float DEFAULT_MAX_SCALE_VALUE = 1.f;
 const float DEFAULT_RELATIVE_SCALE_VALUE = 0.5f;
 
+/** Scale filter*/
 class LDCORESHARED_EXPORT ldScaleFilter : ldFilter {
 public:
     explicit ldScaleFilter();
 
-    void setRelativeScale(float value);
+    // result scale
+    void setRelativeScaleActive(bool active);
+    void setRelativeScale(float value); // 0.1..1
 
-    void setMaxXScale(float value);
-    void setMaxYScale(float value);
+    // control max x and max y scale manually
+    void setMaxXScale(float value); // 0.1..1
+    void setMaxYScale(float value); // 0.1..1
 
+    // scale result
     float xScale() const;
     float yScale() const;
 
@@ -130,9 +152,31 @@ private:
     float m_maxX = DEFAULT_MAX_SCALE_VALUE;
     float m_maxY = DEFAULT_MAX_SCALE_VALUE;
 
+#ifdef LD_USE_ANDROID_LAYOUT
+    bool m_relativeScaleActive = false;
+#else
+    bool m_relativeScaleActive = true;
+#endif
     float m_relative = DEFAULT_RELATIVE_SCALE_VALUE;
 };
 
+
+// ---------- LdShiftFilter ----------
+
+class LDCORESHARED_EXPORT LdShiftFilter : public ldFilter
+{
+public:
+    LdShiftFilter(ldScaleFilter *scaleFilter);
+
+    virtual void process(Vertex &v) override;
+
+    // shape
+    float x = 0.f;
+    float y = 0.f;
+
+private:
+    ldScaleFilter *m_scaleFilter;
+};
 
 
 #endif // LDBASICFILTERS_H

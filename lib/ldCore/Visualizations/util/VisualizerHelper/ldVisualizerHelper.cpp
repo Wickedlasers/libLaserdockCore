@@ -449,6 +449,9 @@ float MusicReactor::process(ldSoundData* p) {
     else if (outputType < 4.0f/5.0f) output = walkerOutput;
     else output = trackerOutput;
 
+    isSilent2 = (output <= 1.0/8.0);
+    isSilent2float = clampf((1 - output)*8-7, 0, 1);
+
     return output;
 }
 

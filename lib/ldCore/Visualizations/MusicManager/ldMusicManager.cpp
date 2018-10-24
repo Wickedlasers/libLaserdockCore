@@ -54,11 +54,8 @@ ldMusicManager::ldMusicManager(QObject* parent)
     // style detectors
     musicFeature1.reset(new MusicFeature1());
 
-    // test fix
-    if (doAubio) {
-        tempoTrackerFast.reset(new TempoTracker((char*)"default", true, true, 0));
-        tempoTrackerSlow.reset(new TempoTracker((char*)"default", false, true, 0));
-    }
+    tempoTrackerFast.reset(new TempoTracker((char*)"default", true, true, 0));
+    tempoTrackerSlow.reset(new TempoTracker((char*)"default", false, true, 0));
 
     // music reactor
     mrSlowBass.reset(new MusicReactor());
@@ -126,50 +123,33 @@ ldMusicManager::ldMusicManager(QObject* parent)
 ldMusicManager::~ldMusicManager() {}
 
 // process all algorithms
-
-void ldMusicManager::updateWith(ldSoundData* psd, float /*delta*/) {
+void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float /*delta*/) {
 
     // first measurements
-    bass = psd->GetBass();
-    mids = psd->GetMids();
-    high = psd->GetHigh();
-    volumePowerPre = psd->volumePowerPre;
-    volumePowerPost = psd->volumePowerPost;
-    audioBasic->process(psd);
+    m_psd = psd;
+    audioBasic->process(psd.get());
 
     // basic music reactors
-    mrVolume->process(psd);
-    mrSlowBass->process(psd);
-    mrFastBass->process(psd);
-    mrSlowTreb->process(psd);
-    mrFastTreb->process(psd);
+    mrVolume->process(psd.get());
+    mrSlowBass->process(psd.get());
+    mrFastBass->process(psd.get());
+    mrSlowTreb->process(psd.get());
+    mrFastTreb->process(psd.get());
 
     // Appak
-    appakaBeat->process(psd);
-    appakaPeak->process(psd);
-    appakaSpectrum->process(psd);
+    appakaBeat->process(psd.get());
+    appakaPeak->process(psd.get());
+    appakaSpectrum->process(psd.get());
 
     // sound gate and silent
-    soundGate->process(psd);
-    isSilent = soundGate->isSilent;
-    isSilent2 = (mrVolume->output <= 1.0/8.0);
-    isSilent2float = clampf((1 - mrVolume->output)*8-7, 0, 1);
-    silentThree->process(psd);
-    isSilent3 = silentThree->isSilent;
+    soundGate->process(psd.get());
+    silentThree->process(psd.get());
     appakaGate->basicMono(audioBasic->mono);
 
-    // override silent if we want
-    if (isFakeSound) {
-        isSilent=false;
-        isSilent2=false;
-        isSilent2float=0;
-        isSilent3=false;
-    }
+#ifndef LD_REDUCE_ANALYZER_SUPPORT
     // ******************
     // spectrum and spectrogram processing
-
-#ifndef LD_USE_ANDROID_LAYOUT
-    spectFrame.update(psd);
+    spectFrame.update(psd.get());
     spectrogram->addFrame(spectFrame);
     {
         ldSpectrumFrame t = spectrogram->getNoisedFrame(10, sqrt(2), sqrt(2), 1, 0);
@@ -184,7 +164,7 @@ void ldMusicManager::updateWith(ldSoundData* psd, float /*delta*/) {
 
     // autocorrelative tempo processing
     spectrogram2->calculateS();
-    bool ismusic = ((isSilent?0:1) + (isSilent2?0:1) + (silentThree?0:1)) > 0;
+    bool ismusic = ((isSilent()?0:1) + (isSilent2()?0:1) + (silentThree?0:1)) > 0;
     tempoACSlower->update(spectrogram2.get(), ismusic);
     tempoACSlow->update(spectrogram2.get(), ismusic);
     tempoACFast->update(spectrogram2.get(), ismusic);
@@ -192,20 +172,14 @@ void ldMusicManager::updateWith(ldSoundData* psd, float /*delta*/) {
 
     // aubio library tempo trackers
     // test fix
-    if (doAubio) {
-        tempoTrackerFast->process(psd);
-        tempoTrackerSlow->process(psd);
-    } else {
-        tempoTrackerFast = NULL;
-        tempoTrackerSlow = NULL;
-    }
+    tempoTrackerFast->process(psd.get());
+    tempoTrackerSlow->process(psd.get());
 
     // feature metaprocessing
-    musicFeature1->update(spectFrame, psd);
+    musicFeature1->update(spectFrame, psd.get());
 
     // *****************
     // drop detectors
-
     float ff4 = 0;
     ff4 += (sqrt(tempoACFast->phaseSmooth) + sqrt(tempoACSlow->phaseSmooth))/2;
     ff4 += MAX(mrFastBass->statOutput, mrFastTreb->statOutput);
@@ -241,7 +215,7 @@ void ldMusicManager::updateWith(ldSoundData* psd, float /*delta*/) {
     //}
 
     // pitch trackers
-    //pitchTracker->update(psd, onsetLargeBeat1, (onsetLargeBeat1 > 0.30), tempoACSlow->freqSmooth);
+    //pitchTracker->update(psd.get(), onsetLargeBeat1, (onsetLargeBeat1 > 0.30), tempoACSlow->freqSmooth);
 #endif
 
     // hybrid algos
@@ -252,68 +226,69 @@ void ldMusicManager::updateWith(ldSoundData* psd, float /*delta*/) {
 
     // appak bpm selector
     appakaBpmSelector->process(tempoTrackerFast->bpm, appakaBeat->bpm, appakaPeak->lastBmpApproximation);
-    bestBpm2 = appakaBpmSelector->bestBpm;
-    bestBpm = bestBpm2;
 
     emit updated();
-
-    // lag test
-    {
-        float f = /*mrVolume->output +*/this->onsetLargeBeat2+this->onsetLargeBeat1;
-        if (!lagTestInProgress) return;
-        if (lagTestFramesDone >= lagTestDuration*lagTestFrames) {
-            lagTestInProgress = false;
-            emit lagTestAutoCompleted();
-            qDebug() << "lag test result ms is " << lagTestResultMs
-                     << ", confid " << lagTestResultConfidence;
-            return;
-        }
-
-        lagTestFramesDone++;
-        lagTestCand[(lagTestFramesDone - 1 + lagTestFrames)%lagTestFrames] += f;
-        lagTestCand[(lagTestFramesDone     + lagTestFrames)%lagTestFrames] += f;
-        lagTestCand[(lagTestFramesDone + 1 + lagTestFrames)%lagTestFrames] += f;
-
-        int best = 0;
-        float bestf = 0;
-        float sumf = 0;
-        float totalf = 0;
-        for (int i = 0; i < lagTestFrames; i++) {
-           float ff = 0;
-           ff += lagTestCand[(i - 1 + lagTestFrames)%lagTestFrames];
-           ff += lagTestCand[(i     + lagTestFrames)%lagTestFrames];
-           ff += lagTestCand[(i + 1 + lagTestFrames)%lagTestFrames];
-           if (ff > bestf) {
-               bestf = ff;
-               best = i;
-           }
-           sumf += ff;
-           totalf += 1;
-        }
-        float averagef = sumf / totalf;
-        float con = bestf / (bestf + averagef);
-        //con *= 1.5f;
-        con = sqrtf(con);
-        int ms = best * 16.667f;// - 120;
-        ms -= lagTestBaselineMs;
-        if (ms < 0) ms += 1000;
-        if (ms > 1000) ms -= 1000;
-        if (ms > 750) {
-            ms = 0;
-            con = 0;
-        }
-        //qDebug() << (int)(f*1000) << "lag test result ms is " << ms << ", confid " << con;
-        lagTestResultMs = ms;
-        lagTestResultConfidence = con;
-    }
-
 }
 
-void ldMusicManager::lagTestAutoStart() {
-    lagTestInProgress = true;
-    for (int i = 0; i < lagTestFrames; i++) {
-       lagTestCand[i] = 0;
-    }
-    lagTestFramesDone = 0;
-    lagTestBaselineMs = ldSoundInterface::s_latencyms;
+float ldMusicManager::bass() const
+{
+    return m_psd ? m_psd->GetBass() : 0;
 }
+
+float ldMusicManager::mids() const
+{
+    return m_psd ? m_psd->GetMids() : 0;
+}
+
+float ldMusicManager::high() const
+{
+    return m_psd ? m_psd->GetHigh() : 0;
+}
+
+float ldMusicManager::volumePowerPre() const
+{
+    return m_psd ? m_psd->volumePowerPre : 0;
+}
+
+float ldMusicManager::volumePowerPost() const
+{
+    return m_psd ? m_psd->volumePowerPost : 0;
+}
+
+bool ldMusicManager::isSilent() const
+{
+    if(isFakeSound)
+        return false;
+
+    return soundGate->isSilent;
+}
+
+bool ldMusicManager::isSilent2() const
+{
+    if(isFakeSound)
+        return false;
+
+    return mrVolume->isSilent2;
+}
+
+float ldMusicManager::isSilent2float() const
+{
+    if(isFakeSound)
+        return 0;
+
+    return mrVolume->isSilent2float;
+}
+
+bool ldMusicManager::isSilent3() const
+{
+    if(isFakeSound)
+        return false;
+
+    return silentThree->isSilent;
+}
+
+float ldMusicManager::bestBpm() const
+{
+    return appakaBpmSelector->bestBpm;
+}
+

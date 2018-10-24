@@ -65,7 +65,7 @@ uint32_t HybridFlash::getColor(int index, int max, int limit) {
 
 void HybridFlash::process(ldMusicManager* m) {
     
-    float beatValue = (m->onsetBeatFresh + m->volumePowerPost + m->tempoACFaster->phaseSmooth*0.5f)/2.5f;
+    float beatValue = (m->onsetBeatFresh + m->volumePowerPost() + m->tempoACFaster->phaseSmooth*0.5f)/2.5f;
     float bpf = m->tempoACSlow->freqSmooth;
     //static int erere = 0; erere++; if (erere % 10 == 0) qDebug() << bpf;
 
@@ -112,7 +112,7 @@ void HybridFlash::process(ldMusicManager* m) {
             float v = 1;
             float vs[6];
             vs[0] = clampf(1-m->mrSlowTreb->walkerOutput*2, 0, 1);
-            vs[1] = clampf(m->onsetBeatWarm+m->volumePowerPost*2-1, 0, 1);
+            vs[1] = clampf(m->onsetBeatWarm+m->volumePowerPost()*2-1, 0, 1);
             vs[2] = clampf(m->mrFastTreb->output*2-1, 0, 1);
             vs[3] = rcost(m->tempoACSlower->phaseWalker);//1;//rcost(m->tempoACSlow->phaseSmooth);
             vs[4] = rcost(m->tempoACSlow->phaseSmooth);
@@ -129,7 +129,7 @@ void HybridFlash::process(ldMusicManager* m) {
             ss[2] = 1;
             ss[3] = 1;
             ss[4] = 1;//1-m->tempoACSlower->phaseSmooth;//rcost(m->tempoACSlower->phaseSmooth);//1;            
-            ss[5] = 1-clampf(m->onsetBeatWarm+m->volumePowerPost*2-1, 0, 1);
+            ss[5] = 1-clampf(m->onsetBeatWarm+m->volumePowerPost()*2-1, 0, 1);
             float so = ss[sbao];
             float sn = ss[sban];
             s = sn * sbaf + so * sbac;
@@ -180,13 +180,13 @@ void HybridAnima::process(ldMusicManager* m) {
 
     //qDebug() << "anim beat cofnfd " <<beatConfid;
 
-    float beatValue = (m->onsetBeatFresh + m->volumePowerPost + m->tempoACFaster->phaseSmooth/2)/3;
+    float beatValue = (m->onsetBeatFresh + m->volumePowerPost() + m->tempoACFaster->phaseSmooth/2)/3;
     float bpf = m->tempoACFast->bpmSmooth;
     selectorBeatAlgo.process(beatConfid, 4, beatValue, 0.40f, 0.60f, 1.11f, bpf);
     //qDebug() << beatValue;
     //qDebug() << beatConfid;
 
-    float slowbeat = (m->onsetBeatWarm + m->mrVolume->output + m->volumePowerPost)/3;
+    float slowbeat = (m->onsetBeatWarm + m->mrVolume->output + m->volumePowerPost())/3;
     smooth1.rho = 0.15f;
     smooth1.add(slowbeat);
     slowbeat = clampf(smooth1.mean, 0, 1);

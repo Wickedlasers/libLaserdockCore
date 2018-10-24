@@ -33,10 +33,6 @@ public:
     void process(ldSoundData* pSoundData);
 
     bool isSilent;
-    bool previousIsSilent;
-    float maxAverage;
-    float minAverage;
-    float maxAmpDiff;
 
 private:
 
@@ -48,6 +44,11 @@ private:
     float bufferData[buffersize];
     bool isStarted;
     int startCounter;
+
+    bool previousIsSilent;
+    float maxAverage;
+    float minAverage;
+    float maxAmpDiff;
 
     //
 };

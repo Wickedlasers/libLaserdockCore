@@ -30,7 +30,6 @@ ldFilterBasicGlobal::ldFilterBasicGlobal()
     , m_hueFilter(new ldHueFilter())
     , m_hueMatrixFilter(new ldHueMatrixFilter())
     , m_hueShiftFilter(new ldHueShiftFilter())
-    , m_rotateFilter(new ldRotateFilter())
     , m_tracerFilter(new ldTracerFilter())
 {
 }
@@ -66,14 +65,6 @@ void ldFilterBasicGlobal::process(Vertex &v)
         }
     }
     
-    
-    // flip xy
-    if (flipX) v.position[0] *= -1;
-    if (flipY) v.position[1] *= -1;
-
-    if(m_rotateFilter->m_enabled)
-        m_rotateFilter->process(v);
-
     if (m_tracerFilter->m_enabled)
         m_tracerFilter->process(v);
 
@@ -108,11 +99,6 @@ ldHueMatrixFilter *ldFilterBasicGlobal::hueMatrixFilter() const
 ldHueShiftFilter *ldFilterBasicGlobal::hueShiftFilter() const
 {
     return m_hueShiftFilter.get();
-}
-
-ldRotateFilter *ldFilterBasicGlobal::rotateFilter() const
-{
-    return m_rotateFilter.get();
 }
 
 ldTracerFilter *ldFilterBasicGlobal::tracerFilter() const

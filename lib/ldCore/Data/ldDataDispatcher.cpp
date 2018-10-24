@@ -22,7 +22,6 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QMetaObject>
-#include <QtCore/QTimer>
 
 #include "ldCore/ldCore.h"
 #include "ldCore/Data/ldAbstractDataWorker.h"
@@ -35,7 +34,6 @@
 
 ldDataDispatcher::ldDataDispatcher(ldBufferManager *bufferManager, ldHardwareManager *hardwareManager, QObject *parent)
   : QObject(parent)
-  , m_hardwareManager(hardwareManager)
   , m_simulatorEngine(new ldSimulatorEngine())
   , m_usbDataWorker(new ldUsbDataWorker(bufferManager, hardwareManager, m_simulatorEngine.get()))
   , m_additionalDataWorker(nullptr)
@@ -94,16 +92,6 @@ ldUsbDataWorker *ldDataDispatcher::usbDataWorker() const
 ldSimulatorEngine *ldDataDispatcher::simulatorEngine() const
 {
     return m_simulatorEngine.get();
-}
-
-void ldDataDispatcher::loadSimulator()
-{
-    m_simulatorEngine->addListener();
-}
-
-void ldDataDispatcher::unloadSimulator()
-{
-    m_simulatorEngine->removeListener();
 }
 
 void ldDataDispatcher::setActiveTransfer(bool active)

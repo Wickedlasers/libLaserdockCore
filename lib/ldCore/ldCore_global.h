@@ -24,6 +24,7 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/QVariant>
 
+/** Shared library export macro */
 #ifdef Q_OS_WIN
 
 #if defined(LDCORE_LIBRARY)

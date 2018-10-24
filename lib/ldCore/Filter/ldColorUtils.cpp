@@ -22,10 +22,6 @@
 
 #include <cmath>
 
-/**
- @fn uint32_t colorRGB(uint32_t r, uint32_t g, uint32_t b)
- @brief get RGB color from r, g and b values
- */
 uint32_t colorRGB(uint32_t r, uint32_t g, uint32_t b)
 {
     uint32_t result = (r << 16) | (g << 8) | (b);
@@ -33,10 +29,6 @@ uint32_t colorRGB(uint32_t r, uint32_t g, uint32_t b)
     return result;
 }
 
-/**
- @fn uint32_t colorHSV(float h, float s, float v)
- @brief get RGB color from HSV
- */
 uint32_t colorHSV(float h, float s, float v)
 {
     int i;

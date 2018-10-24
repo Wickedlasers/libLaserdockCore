@@ -25,10 +25,13 @@
 
 #include "ldCore/ldCore_global.h"
 
+/** Get RGB color from r, g and b values */
 LDCORESHARED_EXPORT uint32_t colorRGB(uint32_t r, uint32_t g, uint32_t b);
+
+/** Get RGB color from HSV */
 LDCORESHARED_EXPORT uint32_t colorHSV(float h, float s, float v);
 
-// float color space conversions, domain and range are [0,1]
+/** float color space conversions, domain and range are [0,1] */
 LDCORESHARED_EXPORT void colorHSVtoRGBfloat(float h, float s, float v, float& r, float& g, float& b);
 LDCORESHARED_EXPORT void colorRGBtoHSVfloat(float r, float g, float b, float& h, float& s, float& v);
 

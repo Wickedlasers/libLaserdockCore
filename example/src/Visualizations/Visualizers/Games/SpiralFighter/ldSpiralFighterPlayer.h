@@ -44,8 +44,7 @@ public:
     function<void()> onPowerup;
 
     // Input functions
-    void onPressedLeft(bool pressed);
-    void onPressedRight(bool pressed);
+    void rotate(double rotate);
     void onPressedShoot(bool pressed);
     void onPressedPowerup(bool pressed);
     void releaseKeys();
@@ -63,8 +62,7 @@ private:
     float m_cooldownTimer;
 
     // Input.
-    bool m_pressingLeft;
-    bool m_pressingRight;
+    double m_rotationChange;
     bool m_pressingShoot;
     bool m_pressingPowerup;
 };

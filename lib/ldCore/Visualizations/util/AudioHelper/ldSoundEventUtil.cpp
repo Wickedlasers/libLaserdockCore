@@ -43,9 +43,8 @@ ldSoundEventUtil::ldSoundEventUtil()
     isAppakaBeat=false;
     maxChannelSize=0;
     //
-    m_musicManager = ldCore::instance()->musicManager();
-    previousIsSilent = !m_musicManager->appakaGate->isSilent;
-    isSilent = m_musicManager->appakaGate->isSilent;
+    previousIsSilent = !ldCore::instance()->musicManager()->appakaGate->isSilent;
+    isSilent = ldCore::instance()->musicManager()->appakaGate->isSilent;
 }
 
 // ~ldSoundEventUtil
@@ -100,7 +99,7 @@ void ldSoundEventUtil::update(ldSoundData* pSoundData, float /*delta*/)
 {
     if (pSoundData == NULL || !maxChannelSize) return;
 
-    ldMusicManager* m = m_musicManager;
+    ldMusicManager* m = ldCore::instance()->musicManager();
 
     // isSilent
     isSilent=m->appakaGate->isSilent;
@@ -135,7 +134,7 @@ void ldSoundEventUtil::update(ldSoundData* pSoundData, float /*delta*/)
 // updateSystem
 void ldSoundEventUtil::updateSystem(int system, int channel)
 {
-    ldMusicManager* m = m_musicManager;
+    ldMusicManager* m = ldCore::instance()->musicManager();
 
     bool isEvent=false;
     systems_channel[system][channel].isEvent=isEvent;
@@ -214,11 +213,4 @@ bool ldSoundEventUtil::isSystemEventBusy(int system, int channel)
 {
     if (channel >= maxChannelSize) return false;
     return systems_channel[system][channel].isAnimationBusy;
-}
-
-// bpm
-float ldSoundEventUtil::bpm()
-{
-    ldMusicManager* m = m_musicManager;
-    return m->bestBpm;
 }

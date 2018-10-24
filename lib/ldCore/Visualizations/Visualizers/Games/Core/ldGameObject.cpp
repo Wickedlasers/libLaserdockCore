@@ -231,7 +231,7 @@ void ldGameObject::drawGameObject(ldRendererOpenlase* /*p_renderer*/) {}
 /*
  * Draw utils
  */
-void ldGameObject::drawVertexRainbow(ldRendererOpenlase* p_renderer, QList<Vec2> vertices, QList<int> colors, int segmentsPerLine) {
+void ldGameObject::drawVertexRainbow(ldRendererOpenlase* p_renderer, QList<Vec2> vertices, QList<int> colors, int segmentsPerLine, int repeat) {
     // Remember to call p_renderer->begin(OL_LINESTRIP);
 
     int segmentsAmount = segmentsPerLine * (vertices.length() - 1);
@@ -249,7 +249,29 @@ void ldGameObject::drawVertexRainbow(ldRendererOpenlase* p_renderer, QList<Vec2>
             int startColor = colors[startColorIndex];
             int finalColor = colors[startColorIndex + 1];
 
-            p_renderer->vertex(origin.x * (1 - step) + target.x * (step), origin.y * (1 - step) + target.y * (step), ldColorUtil::lerpInt(startColor, finalColor, colorStep), 3);
+            float x = origin.x * (1 - step) + target.x * (step);
+            float y = origin.y * (1 - step) + target.y * (step);
+            uint32_t color = ldColorUtil::lerpInt(startColor, finalColor, colorStep);
+
+            int localRepeat = 1;
+            if(repeat > 1) {
+                bool isFirstSegment = (j == 0);
+                bool isLastSegment = (j == segmentsPerLine - 1) ;
+                if(isFirstSegment || isLastSegment) {
+                    bool isFirstVertex = (i == 1);
+                    bool isLastVertex = (i == vertices.length() - 1);
+
+                    if(isFirstVertex && isFirstSegment) {
+                        localRepeat = repeat / 2;
+                    } else if(isLastSegment && isLastVertex) {
+                        localRepeat = repeat / 2;
+                    } else {
+                        localRepeat = repeat;
+                    }
+                }
+            }
+
+            p_renderer->vertex(x, y, color, localRepeat);
         }
     }
 

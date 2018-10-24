@@ -31,25 +31,31 @@ class ldSimulatorEngine;
 class ldThreadedDataWorker;
 class ldUsbHardwareManager;
 
+/** USB data worker */
 class LDCORESHARED_EXPORT ldUsbDataWorker : public ldAbstractDataWorker
 {
 	Q_OBJECT
 public:
+    /** Constructor/destructor */
     explicit ldUsbDataWorker(ldBufferManager *bufferManager,
                               ldHardwareManager *hardwareManager,
                               ldSimulatorEngine *simulatorEngine,
                               QObject *parent = 0);
     ~ldUsbDataWorker();
 
+    /** ldAbstractDataWorker implementations */
     virtual bool isActiveTransfer() const override;
     virtual bool hasActiveDevices() const override;
 
+    /** USB device manager */
     ldUsbHardwareManager *deviceManager() const;
 
 public slots:
+    /** ldAbstractDataWorker implementations */
     virtual void setActive(bool active) override;
     virtual void setActiveTransfer(bool active) override;
 
+    /** Flag to use this worker to fill sumulator buffer */
     void setSimulatorEnabled(bool enabled);
 
 private:

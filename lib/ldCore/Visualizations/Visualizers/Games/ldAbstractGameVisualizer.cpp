@@ -44,7 +44,7 @@ ldAbstractGameVisualizer::ldAbstractGameVisualizer()
     : ldVisualizer()
     , m_mutex(QMutex::Recursive)
 {
-    m_rate = 20000;
+//    m_rate = 20000;
 
     m_isMusicAware = false;
     // Current game state label.
@@ -58,13 +58,68 @@ ldAbstractGameVisualizer::~ldAbstractGameVisualizer()
 
 void ldAbstractGameVisualizer::setSoundEnabled(bool enabled)
 {
+    QMutexLocker locker(&m_mutex);
     m_soundEffects.setSoundEnabled(enabled);
 }
 
 void ldAbstractGameVisualizer::setSoundLevel(int soundLevel)
 {
+    QMutexLocker locker(&m_mutex);
     m_soundEffects.setSoundLevel(soundLevel);
 }
+
+float ldAbstractGameVisualizer::complexity() const
+{
+    return m_complexity;
+}
+
+int ldAbstractGameVisualizer::levelIndex() const
+{
+    return 0;
+}
+
+QStringList ldAbstractGameVisualizer::levelList() const
+{
+    return QStringList();
+}
+
+void ldAbstractGameVisualizer::setComplexity(float complexity)
+{
+    QMutexLocker locker(&m_mutex);
+
+    m_complexity = complexity;
+}
+
+
+void ldAbstractGameVisualizer::setLevelIndex(int /*index*/)
+{
+}
+
+void ldAbstractGameVisualizer::nextLevel()
+{
+    QMutexLocker lock(&m_mutex);
+
+    int nextLevelIndex = levelIndex() + 1;
+    int levelCount = levelList().size();
+    if(nextLevelIndex >= levelCount)
+        nextLevelIndex = 0;
+
+    setLevelIndex(nextLevelIndex);
+}
+
+void ldAbstractGameVisualizer::previousLevel()
+{
+    QMutexLocker lock(&m_mutex);
+
+    int levelCount = levelList().size();
+
+    int nextLevelIndex = levelIndex() - 1;
+    if(nextLevelIndex < 0)
+        nextLevelIndex = (levelCount > 0) ? (levelCount - 1) : 0;
+
+    setLevelIndex(nextLevelIndex);
+}
+
 
 void ldAbstractGameVisualizer::draw() {
     ldVisualizer::draw();
@@ -174,53 +229,4 @@ void ldAbstractGameVisualizer::showMessage(string text, float duration) {
 void ldAbstractGameVisualizer::clearMessage() {
     m_messageLabel->setText("");
     m_messageLabelTimer = 0.0f;
-}
-
-/*
- * Draw utils
- */
-void ldAbstractGameVisualizer::drawVertexRainbow(ldRendererOpenlase* p_renderer, QList<Vec2> vertices, QList<int> colors, int segmentsPerLine, int repeat) {
-    // Remember to call p_renderer->begin(OL_LINESTRIP);
-
-    int segmentsAmount = segmentsPerLine * (vertices.length() - 1);
-
-    for (int i = 1; i < vertices.length(); i++) {
-        for (int j = 0; j < segmentsPerLine; j++) {
-            float step = (float) j / (segmentsPerLine - 1);
-            float colorStep = (float) (j + ((i - 1) * segmentsPerLine)) / segmentsAmount;
-
-            Vec2 target = vertices[i];
-            Vec2 origin = vertices[i - 1];
-
-            int startColorIndex = fmin(floorf(colorStep * colors.length()), colors.length() - 2);
-
-            int startColor = colors[max(startColorIndex, 0)];
-            int finalColor = colors[min(startColorIndex + 1, colors.length() - 1)];
-
-            float x = origin.x * (1 - step) + target.x * (step);
-            float y = origin.y * (1 - step) + target.y * (step);
-            uint32_t color = ldColorUtil::lerpInt(startColor, finalColor, colorStep);
-
-            int localRepeat = 1;
-            if(repeat > 1) {
-                bool isFirstSegment = (j == 0);
-                bool isLastSegment = (j == segmentsPerLine - 1) ;
-                if(isFirstSegment || isLastSegment) {
-                    bool isFirstVertex = (i == 1);
-                    bool isLastVertex = (i == vertices.length() - 1);
-
-                    if(isFirstVertex && isFirstSegment) {
-                        localRepeat = repeat / 2;
-                    } else if(isLastSegment && isLastVertex) {
-                        localRepeat = repeat / 2;
-                    } else {
-                        localRepeat = repeat;
-                    }
-                }
-            }
-            p_renderer->vertex(x, y, color, localRepeat);
-        }
-    }
-
-    // Remember to call p_renderer->end();
 }

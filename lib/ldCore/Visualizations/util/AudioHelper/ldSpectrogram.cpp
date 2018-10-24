@@ -115,7 +115,7 @@ ldSpectrumFrame ldSpectrogram::getNoisedFrame(float histSec, float rootScale, fl
 
 void ldSpectrogram::calculateS()
 {
-    ldSpectrumFrame h1 = currentFrame();
+    const ldSpectrumFrame &h1 = currentFrame();
 
     int total = ldSpectrumFrame::slsLen * 3;
 
@@ -123,7 +123,7 @@ void ldSpectrogram::calculateS()
     for(int t = 1; t < histLen; t++) {
         float sum = 0;
 
-        ldSpectrumFrame h2 = frame(head - t);
+        const ldSpectrumFrame &h2 = frame(head - t);
 
         // 8 iterations
         for (int i = 0; i < ldSpectrumFrame::slsLen; i++) {

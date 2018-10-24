@@ -20,14 +20,6 @@
 
 #include "ldFFT.h"
 
-/*!
-  \class LDFFT
-  \brief Actual workhourse of the sound signal processing. Does discrete fourier transformation on sound data.
-  \inmodule audio
-
-*/
-
-
 LDFFT::LDFFT(unsigned size)
     : m_size(size)
     , m_fftin(size)

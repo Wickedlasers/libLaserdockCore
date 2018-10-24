@@ -24,8 +24,116 @@
 
 #include <QtCore/QDebug>
 
-ldFilterManager::ldFilterManager(QObject *parent) :
-    QObject(parent)
+ldFilterManager::ldFilterManager(QObject *parent)
+    : QObject(parent)
+    , m_flipFilter(new ldFlipFilter())
+    , m_rotateFilter(new ldRotateFilter())
 {
     qDebug() << __FUNCTION__;
+    m_dataFilter.addFilter(m_flipFilter.get());
+    m_dataFilter.addFilter(m_rotateFilter.get());
+}
+
+void ldFilterManager::setGlobalFilter(ldFilter *globalFilter)
+{
+    m_globalFilter = globalFilter;
+}
+
+void ldFilterManager::setFrameModes(int frameModes)
+{
+    m_dataFilter.frameModes = frameModes;
+}
+
+void ldFilterManager::process(Vertex &tval, Vertex &simVal, Vertex &dataVal)
+{
+    m_basicGlobalFilter.process(tval);
+
+    // apply global filter to simulator output
+    if (m_globalFilter)
+        m_globalFilter->process(tval);
+
+    // store similator value
+    simVal = tval;
+
+    // apply data filter to data output
+    // give filter proper settings
+    m_dataFilter.process(tval);
+
+    // store data value
+    dataVal = tval;
+}
+
+ldColorCurveFilter *ldFilterManager::baseColorCurveFilter() const
+{
+    return m_dataFilter.colorCurveFilter();
+}
+
+ldColorCurveFilter *ldFilterManager::colorCurveFilter() const
+{
+    return m_basicGlobalFilter.colorCurveFilter();
+}
+
+ldDeadzoneFilter *ldFilterManager::deadzoneFilter() const
+{
+    return m_dataFilter.deadzone();
+}
+
+ldHueFilter *ldFilterManager::hueFilter() const
+{
+    return m_basicGlobalFilter.hueFilter();
+}
+
+ldHueShiftFilter *ldFilterManager::hueShiftFilter() const
+{
+    return m_basicGlobalFilter.hueShiftFilter();
+}
+
+ldFlipFilter *ldFilterManager::flipFilter() const
+{
+    return m_flipFilter.get();
+}
+
+ldScaleFilter *ldFilterManager::scaleFilter() const
+{
+    return m_dataFilter.scaleFilter();
+}
+
+LdShiftFilter *ldFilterManager::shiftFilter() const
+{
+    return m_dataFilter.shiftFilter();
+}
+
+ldRotateFilter *ldFilterManager::rotateFilter() const
+{
+    return m_rotateFilter.get();
+}
+
+ldTracerFilter *ldFilterManager::tracerFilter() const
+{
+    return m_basicGlobalFilter.tracerFilter();
+}
+
+void ldFilterManager::setBrightness(float brightness)
+{
+    m_dataFilter.m_brightness = brightness;
+}
+
+void ldFilterManager::setKeystoneX(float keystoneX)
+{
+    m_dataFilter.setKeystoneX(keystoneX);
+}
+
+void ldFilterManager::setKeystoneY(float keystoneY)
+{
+    m_dataFilter.setKeystoneY(keystoneY);
+}
+
+void ldFilterManager::setOffset(int offset)
+{
+    m_dataFilter.m_offset = offset;
+}
+
+void ldFilterManager::setTtl(bool isTtl)
+{
+    m_basicGlobalFilter.ttl = isTtl;
 }

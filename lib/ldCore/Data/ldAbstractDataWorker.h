@@ -25,12 +25,11 @@
 
 #include "ldCore/ldCore_global.h"
 
+/** Base data worker interface */
 class LDCORESHARED_EXPORT ldAbstractDataWorker : public QObject
 {
     Q_OBJECT
 public:
-    explicit ldAbstractDataWorker(QObject *parent = nullptr);
-
     virtual bool isActiveTransfer() const = 0;
     virtual bool hasActiveDevices() const = 0;
 
@@ -40,6 +39,9 @@ public slots:
 
 signals:
     void isActiveTransferChanged(bool active);
+
+protected:
+    explicit ldAbstractDataWorker(QObject *parent = nullptr);
 
 };
 

@@ -36,37 +36,47 @@
 class ldDeadzoneFilter;
 class ldProjectionBasic;
 
+// disables projector-oriented settings such as x/y size, position, etc.
 #define FRAME_MODE_SKIP_TRANSFORM 0x01
+// Disables the burn safety, which normally prevents the laser from focusing on a
+// single point for too much time. Don't use this unless you know what you're doing.
 #define FRAME_MODE_UNSAFE_UNDERSCAN 0x02
+// Disables the galvanometer safety, which normally prevents sudden large movements in
+// in x/y position that can damage the projector's scanner mechanism. Don't use this unless you know what you're doing.
 #define FRAME_MODE_UNSAFE_OVERSCAN 0x04
+// ignores app color and brightness settings.
 #define FRAME_MODE_DISABLE_COLOR_CORRECTION 0x08
 
 #define LD_DEFAULT_OFFSET 4
 
-class LDCORESHARED_EXPORT ldFilterBasicData: public ldFilter {
-    
+/** Filters that are applied to final data right before it is sent to laser */
+class LDCORESHARED_EXPORT ldFilterBasicData: public ldFilter
+{
 public:
+    /** Constructor/destructor */
     explicit ldFilterBasicData();
     virtual ~ldFilterBasicData();
 
+    void addFilter(ldFilter *filter);
+
+    /** ldFilter impl */
     virtual void process(Vertex &v) override;
     
+    /** filter classes */
     ldColorCurveFilter *colorCurveFilter() const;
     ldDeadzoneFilter *deadzone() const;
     ldScaleFilter *scaleFilter() const;
+    LdShiftFilter *shiftFilter() const;
 
+    // keystone
     void setKeystoneX(float keystoneX);
     void setKeystoneY(float keystoneY);
 
-    //alignment
+    // alignment
     int m_offset = LD_DEFAULT_OFFSET;
 
-    //color
+    // color
     float m_brightness = 1.f;
-
-    //shape
-    float shiftX = 0.f;
-    float shiftY = 0.f;
 
     // scan protection
     bool galvo_libre = false;
@@ -85,8 +95,10 @@ private:
     std::unique_ptr<ldColorCurveFilter> m_colorCurveFilter;
     std::unique_ptr<ldDeadzoneFilter> m_deadzoneFilter;
     std::unique_ptr<ldScaleFilter> m_scaleFilter;
+    std::unique_ptr<LdShiftFilter> m_shiftFilter;
 
     std::unique_ptr<ldProjectionBasic> m_projectionBasic;
+    std::vector<ldFilter*> m_filters;
 };
 
 #endif // ldFilterBasicData_H

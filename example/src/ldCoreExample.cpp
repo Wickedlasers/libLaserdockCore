@@ -38,7 +38,7 @@
 
 ldCoreExample::ldCoreExample(QQmlApplicationEngine *engine, QObject *parent)
     : QObject(parent)
-    , m_ldCore(new ldCore(parent))
+    , m_ldCore(ldCore::create(parent))
     , m_game(nullptr)
     , m_qmlEngine(engine)
 {

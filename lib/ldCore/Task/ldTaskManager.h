@@ -38,13 +38,11 @@ public:
     explicit ldTaskManager(ldBufferManager* bufferManager, QObject *parent = 0);
     virtual ~ldTaskManager();
 
-    ldTaskWorker * taskWorker(){
-        return m_taskworker;
-    }
+    ldTaskWorker *taskWorker() const;
 
 private:
     QThread m_worker_thread;
-    ldTaskWorker *m_taskworker;
+    QScopedPointer<ldTaskWorker> m_taskworker;
 };
 
 #endif // LDTASKMANAGER_H

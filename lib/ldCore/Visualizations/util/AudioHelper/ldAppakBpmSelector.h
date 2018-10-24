@@ -32,20 +32,16 @@ public:
     ldAppakBpmSelector();
     ~ldAppakBpmSelector();
 	
-
-    //
     void process(float aubioFastBpm, float appakaBeatBpm, float appakaPeakBpm);
-    //
-    float bestBpm;
-    float lastTrustableBPM;
-    float lastSomehowTrustableBPM;
-    float lastVeryTrustableBPM;
-    float trustableTime;
+    float bestBpm = 120;
 
 private:
     void doStats();
 
-protected:
+    float lastTrustableBPM = 0;
+    float lastSomehowTrustableBPM = 0;
+    float lastVeryTrustableBPM = 0;
+//    float trustableTime = 0;
 };
 
 

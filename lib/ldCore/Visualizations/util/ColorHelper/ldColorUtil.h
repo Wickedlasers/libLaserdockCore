@@ -57,6 +57,8 @@ namespace ldColorUtil
 class LDCORESHARED_EXPORT ldAbstractColorEffect {
 
 public:
+    virtual ~ldAbstractColorEffect();
+
     void setBaseColorDecay(int baseColorDecay);
 
     virtual uint32_t getColor(const Vec2& p_point, const SvgDim &p_dim) = 0;

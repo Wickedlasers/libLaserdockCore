@@ -30,6 +30,7 @@
 ldUsbHardwareManager::ldUsbHardwareManager(QObject *parent)
     : ldAbstractHardwareManager(parent)
 {
+    connect(this, &ldUsbHardwareManager::deviceCountChanged, this, &ldUsbHardwareManager::updateCheckTimerState);
     connect(&m_checkTimer, &QTimer::timeout, this, &ldUsbHardwareManager::usbDeviceCheck);
     m_checkTimer.setInterval(1000);
 
@@ -162,6 +163,7 @@ void ldUsbHardwareManager::usbDeviceCheck()
 {
     QMutexLocker locker(&m_mutex);
 
+    uint oldDeviceCount = m_usbHardwares.size();
     // check for disconnected devices
     auto usbHardwareIt = m_usbHardwares.begin();
     while(usbHardwareIt != m_usbHardwares.end()) {
@@ -210,5 +212,7 @@ void ldUsbHardwareManager::usbDeviceCheck()
         m_usbHardwares.push_back(std::move(usbHardware));
     }
 
-    emit deviceCountChanged(m_usbHardwares.size());
+    if(oldDeviceCount != m_usbHardwares.size()) {
+        emit deviceCountChanged(m_usbHardwares.size());
+    }
 }

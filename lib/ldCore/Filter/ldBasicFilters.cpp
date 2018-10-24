@@ -109,11 +109,23 @@ void ldHueShiftFilter::process(Vertex &input)
     colorHSVtoRGBfloat(hh, ss, vv, input.color[0], input.color[1], input.color[2]);
 }
 
+// ---------- ldFlipFilter ----------
+
+void ldFlipFilter::process(Vertex &v)
+{
+    // flip xy
+    if (flipX) v.position[0] *= -1;
+    if (flipY) v.position[1] *= -1;
+}
+
 
 // ---------- ldRotateFilter ----------
 
 void ldRotateFilter::process(Vertex &v)
 {
+    if(!m_enabled)
+        return;
+
     // rotate
     float tx = v.position[0];
     float ty = v.position[1];
@@ -146,10 +158,15 @@ ldScaleFilter::ldScaleFilter()
 
 }
 
+void ldScaleFilter::setRelativeScaleActive(bool active)
+{
+    m_relativeScaleActive = active;
+}
+
 void ldScaleFilter::process(Vertex &v)
 {
-    v.position[0] *= m_maxX * m_relative;
-    v.position[1] *= m_maxY * m_relative;
+    v.position[0] *= xScale();
+    v.position[1] *= yScale();
 }
 
 void ldScaleFilter::setRelativeScale(float value)
@@ -178,11 +195,31 @@ void ldScaleFilter::setMaxYScale(float value)
 
 float ldScaleFilter::xScale() const
 {
-    return m_maxX * m_relative;
+    return m_relativeScaleActive ?
+                m_maxX * m_relative :
+                m_maxX;
 }
 
 float ldScaleFilter::yScale() const
 {
-    return m_maxY * m_relative;
+    return m_relativeScaleActive ?
+                m_maxY * m_relative :
+                m_maxY;
 }
 
+
+LdShiftFilter::LdShiftFilter(ldScaleFilter *scaleFilter)
+    : ldFilter()
+    , m_scaleFilter(scaleFilter)
+{
+
+}
+
+void LdShiftFilter::process(Vertex &v)
+{
+    // shift
+    float fsx = x * (1.0f - m_scaleFilter->xScale());
+    float fsy = y * (1.0f - m_scaleFilter->yScale());
+    v.position[0] += fsx;
+    v.position[1] += fsy;
+}

@@ -22,108 +22,101 @@
 #define LDABSTRACTGAME_H
 
 #include <QQmlHelpers>
-#include <QMap>
 
 #include "ldCore/ldCore_global.h"
 
 #ifdef LD_USE_ANDROID_LAYOUT
-#define TOUCH_KEY_SUPPORT //
 #define ALWAYS_PLAY_STATE // no game over
 #endif
 
+#include "ldGamepad.h"
+#include "ldGamepadCtrl.h"
 
 class QKeyEvent;
+
 class ldAbstractGameVisualizer;
 
 /**
- * @brief The ldAbstractGame class - base class for each mini-app.
+ * The ldAbstractGame class - base class for each game class
  */
 class LDCORESHARED_EXPORT ldAbstractGame : public QObject
 {
     Q_OBJECT
 
+    /** each game has id and title properties */
     QML_CONSTANT_PROPERTY(QString, id)
     QML_CONSTANT_PROPERTY(QString, title)
 
+    /** optional virtual gamepad support */
+    QML_CONSTANT_PROPERTY(ldGamepadCtrl*, gamepadCtrl)
+
+    /** activate game */
     QML_WRITABLE_PROPERTY(bool, isActive)
 
+    /** number of levels - initialize in a child constructor */
     Q_PROPERTY(QStringList levelList READ get_levelList CONSTANT)
 
-    Q_PROPERTY(QStringList hotkeys READ get_hotkeys CONSTANT)
-#ifdef TOUCH_KEY_SUPPORT
-    Q_PROPERTY(QStringList touchHotkeys READ get_touchHotkeys CONSTANT)
-#endif
+    /** Optional QStringList of key descriptions - first is key, second is description */
+    Q_PROPERTY(QStringList keyDescriptions READ get_keyDescriptions CONSTANT)
 
+    /** current level index */
     QML_WRITABLE_PROPERTY(int, levelIndex)
+
+    /**
+       Game can have several states:
+        isPlaying && !isPaused = playing
+        isPlaying && isPaused = paused
+        !isPlaying = finished
+        */
     QML_WRITABLE_PROPERTY(bool, isPlaying)
     QML_WRITABLE_PROPERTY(bool, isPaused)
 
 public:
-#ifdef TOUCH_KEY_SUPPORT
-    enum TouchKey {
-        Left,
-        Right,
-        Up,
-        Down,
-        A,
-        B,
-        X,
-        Y
-    };
-    Q_ENUM(TouchKey)
-
     static void registerMetaTypes();
-#endif
 
+    /** Constructor/destructor */
     explicit ldAbstractGame(const QString &id, const QString &title, QObject *parent = 0);
     virtual ~ldAbstractGame();
 
+    /** Properties READ functions */
     QStringList get_levelList() const;
-    QStringList get_hotkeys() const;
-#ifdef TOUCH_KEY_SUPPORT
-    QStringList get_touchHotkeys() const;
-#endif
+    QStringList get_keyDescriptions() const;
+
+    /** QObject */
+    virtual bool eventFilter(QObject *obj, QEvent *ev) override;
+
+    void moveX(double x);
+    void moveY(double y);
+
+    void moveRightX(double x);
+    void moveRightY(double y);
 
 public slots:
     void play();
 
     void pause();
 
-    /** @brief reset - Reset game to initial state */
+    /** Reset game to initial state */
     void reset();
 
-    /** @brief toggle - toggle play/paus */
+    /** Toggle play/pause */
     void toggle();
 
-    /** @brief setComplexity - game complexity */
+    /** Game complexity level */
     void setComplexity(float speed);
 
-    /** @brief setSoundEnabled - enable/disable sound if supported */
+    /** Enable/disable sound if supported */
     void setSoundEnabled(bool enabled);
 
-    /** @brief setSoundLevel - set sound level if supported */
+    /** Set sound level (if sound is enabled) */
     void setSoundLevel(int soundLevel);
 
-#ifdef TOUCH_KEY_SUPPORT
-    void sendKeyEvent(Qt::Key key, bool isPressed);
-    int getKey(int key);
-#endif
-
 protected:
-    void initTouchHotkeys();
-
-    virtual bool eventFilter(QObject *obj, QEvent *ev) override;
-
     virtual void activate();
     virtual void deactivate();
 
     QStringList m_levelList;
-    QStringList m_hotkeys;
-
-#ifdef TOUCH_KEY_SUPPORT
-    QMap<TouchKey, Qt::Key> m_keyMap;
-    QStringList m_touchHotkeys;
-#endif
+    QStringList m_keyDescriptions;
 
 private:
     virtual bool handleKeyEvent(QKeyEvent *keyEvent) = 0;

@@ -61,8 +61,8 @@ public slots:
     // ldAbstractGameVisualizer
     virtual void reset() override;
     virtual void togglePlay()  override;
-    virtual void setComplexity(float speed) override;
-    virtual void setSoundEnabled(bool enabled) override;
+
+    void moveX(double value) override;
 
     // Input functions
     void onPressedLeft(bool pressed);
@@ -124,14 +124,10 @@ private:
      * Main game fields.
      */
 
-    bool m_isPlaying = false;
-    bool m_isPaused = false;
-    bool m_isReset = false;
     bool m_isGameOver = false;
     bool m_hasWon = false;
-    float m_complexity = 1.0f;
     int m_score = 0;
-    float m_gameTimer;
+    float m_gameTimer = 0.f;
 
     // Label.
     QScopedPointer<ldTextLabel> m_scoreLabel;

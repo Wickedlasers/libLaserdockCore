@@ -101,19 +101,10 @@ public:
 
     virtual void updateWith(ldSoundData *pSoundData, float delta);
 
-    QMap<QString, QVariant> const & getParameters(){
-        return m_parameters;
-    }
-
     virtual bool isValid() const { return true; }
 
     Q_INVOKABLE virtual bool isMusicAware() const { return m_isMusicAware; }
     Q_INVOKABLE virtual bool isRepeatAvailable() const { return false; }
-
-public slots:
-    void setParameters(QMap<QString, QVariant> const & parameters){
-        m_parameters = parameters;
-    }
 
 protected:
     virtual void onShouldStart();
@@ -136,7 +127,6 @@ protected:
      */
     virtual void draw(void);
 
-    QMap<QString, QVariant> m_parameters;
     ldVisualizationTask * m_task;
     ldMusicManager* m_musicManager;
 
@@ -144,7 +134,7 @@ protected:
 
     int m_rate = 0;
 
-    QMutex m_mutex;
+    mutable QMutex m_mutex;
 };
 
 Q_DECLARE_METATYPE(ldVisualizer*)

@@ -31,7 +31,7 @@ public:
 
     void process(ldSoundData* pSoundData);
 
-    bool isSilent;
+    bool isSilent = true;
     float sliderValue,previouSliderValue;
     float computedCeilValue;
     float maxLevel;

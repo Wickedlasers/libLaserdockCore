@@ -41,7 +41,7 @@ if(${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
 endif()
 
 # set desktop qt dir
-if(NOT LD_ANDROID_BUILD)
+if(NOT LD_ANDROID_BUILD AND NOT DEFINED QTDIR)
     if(DEFINED QT_BASE_DIR)
         # win
         if(WIN32)
@@ -57,7 +57,7 @@ endif()
 # Android toolchain: should be before project() call
 if(LD_ANDROID_BUILD)
     # Target ABI Qt
-    if(DEFINED QT_BASE_DIR)
+    if(DEFINED QT_BASE_DIR AND NOT DEFINED QTDIR)
         if(ANDROID_ABI STREQUAL "armeabi-v7a")
             set(QTDIR "${QT_BASE_DIR}/android_armv7")
         elseif(ANDROID_ABI STREQUAL "x86")
@@ -86,11 +86,13 @@ set(CMAKE_PREFIX_PATH "${QTDIR}/lib/cmake")
 set(Qt5_DIR "${QTDIR}/lib/cmake/Qt5")
 set(Qt5AndroidExtras_DIR "${QTDIR}/lib/cmake/Qt5AndroidExtras")
 set(Qt5Core_DIR "${QTDIR}/lib/cmake/Qt5Core")
+set(Qt5Gamepad_DIR "${QTDIR}/lib/cmake/Qt5Gamepad")
 set(Qt5Gui_DIR "${QTDIR}/lib/cmake/Qt5Gui")
 set(Qt5Multimedia_DIR "${QTDIR}/lib/cmake/Qt5Multimedia")
 set(Qt5Network_DIR "${QTDIR}/lib/cmake/Qt5Network")
 set(Qt5OpenGL_DIR "${QTDIR}/lib/cmake/Qt5OpenGL")
 set(Qt5Qml_DIR "${QTDIR}/lib/cmake/Qt5Qml")
+set(Qt5Test_DIR "${QTDIR}/lib/cmake/Qt5Test")
 
 # project
 project(LaserdockCore)

@@ -30,6 +30,7 @@
 #define ldGameObject_H
 
 #include <ldCore/Render/ldRendererOpenlase.h>
+
 #include "ldCore/Visualizations/util/MathsHelper/ldMaths.h"
 #include "ldCore/Visualizations/util/ColorHelper/ldColorUtil.h"
 
@@ -37,6 +38,8 @@ class LDCORESHARED_EXPORT ldGameObject
 {
 public:
     static int uuid;
+
+    static void drawVertexRainbow(ldRendererOpenlase* p_renderer, QList<Vec2> vertices, QList<int> colors, int segmentsPerLine = 4, int repeat = 1);
 
     bool operator == (const ldGameObject& s) const { return m_id == s.getId(); }
     bool operator != (const ldGameObject& s) const { return !operator==(s); }
@@ -80,7 +83,6 @@ protected:
     virtual void updateGameObject(float deltaTime);
     virtual void drawGameObject(ldRendererOpenlase* p_renderer);
 
-    void drawVertexRainbow(ldRendererOpenlase* p_renderer, QList<Vec2> vertices, QList<int> colors, int segmentsPerLine = 4);
 
 private:
     int m_id;

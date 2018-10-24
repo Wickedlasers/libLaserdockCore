@@ -33,6 +33,7 @@ public:
 
     /** Generate random number in range**/
     int generate(int from, int to);
+    float generatef(float from, float to);
 
 private:
     explicit ldRandomGenerator();

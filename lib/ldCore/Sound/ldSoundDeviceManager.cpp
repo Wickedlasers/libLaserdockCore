@@ -91,7 +91,7 @@ void ldSoundDeviceManager::refreshAvailableDevices()
 {
     m_devices.clear();
 
-    QList<QAudioDeviceInfo> inputAudioDevices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
+    QList<QAudioDeviceInfo> inputAudioDevices = ldQAudioInputDevice::getDevices();
     for(const QAudioDeviceInfo &inputAudioDevice : inputAudioDevices) {
         m_devices.append(ldSoundDeviceInfo(ldSoundDeviceInfo::Type::QAudioInput, inputAudioDevice.deviceName()));
     }
@@ -137,11 +137,15 @@ ldSoundDeviceInfo ldSoundDeviceManager::getDeviceInfo() const
 
 void ldSoundDeviceManager::setDeviceInfo(const ldSoundDeviceInfo &info)
 {
-    if(m_info == info || m_priorityInfo.isValid()) {
+    if(m_info == info) {
         return;
     }
 
-    if(initializeAudio(info)) {
+    if(!m_priorityInfo.isValid()) {
+        if(initializeAudio(info)) {
+            m_info = info;
+        }
+    } else {
         m_info = info;
     }
 }
@@ -165,6 +169,14 @@ void ldSoundDeviceManager::setPriorityDevice(const ldSoundDeviceInfo &info)
         m_priorityInfo = info;
         initializeAudio(m_info);
     }
+}
+
+void ldSoundDeviceManager::updatePrioritySoundDeviceData(const QVariant &data)
+{
+    if(m_priorityInfo.type() != ldSoundDeviceInfo::Type::Decoder)
+        return;
+
+    m_playerDevice->setElapsedTime(data.toInt());
 }
 
 void ldSoundDeviceManager::setActivateCallbackFunc(ldActivateCallbackFunc func)
@@ -282,7 +294,9 @@ bool ldSoundDeviceManager::initializeAudio(const ldSoundDeviceInfo &info)
 		// show error - nothing found
         qWarning() << "show error - nothing found";
         emit error(tr("Error, can't open: %1").arg(info.name()));
-	}
+    } else {
+        qDebug() << __FUNCTION__ << info.name() << info.type();
+    }
 
     if(isSuccess && m_activateCallbackFunc) {
         m_activateCallbackFunc(info);
@@ -293,7 +307,7 @@ bool ldSoundDeviceManager::initializeAudio(const ldSoundDeviceInfo &info)
 
 bool ldSoundDeviceManager::activateQAudioInputDevice(const ldSoundDeviceInfo &info)
 {
-    QList<QAudioDeviceInfo> inputDevices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
+    QList<QAudioDeviceInfo> inputDevices = ldQAudioInputDevice::getDevices();
 
     auto it = std::find_if(inputDevices.begin(), inputDevices.end(), [&](const QAudioDeviceInfo &inputDevice) {
         return inputDevice.deviceName() == info.name();
@@ -324,7 +338,7 @@ void ldSoundDeviceManager::activateMidiDevice(ldSoundDeviceInfo info) {
 #endif
 
 
-void ldSoundDeviceManager::activatePlayerDevice(ldSoundDeviceInfo info)
+void ldSoundDeviceManager::activatePlayerDevice(const ldSoundDeviceInfo &info)
 {
     // dummy options for pcm data
     m_format = getDefaultAudioFormat();
