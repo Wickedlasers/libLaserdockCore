@@ -41,8 +41,8 @@ ldClockComplexObject::ldClockComplexObject()
     , _svgHour(svgBezierCurves())
     , _svgMin(svgBezierCurves())
 {
-    _svgHour = ldSvgReader::loadSvg(ldCore::instance()->resourceDir() + "/svg/clock/hour.svg", LD_SVG_READING_DEV);
-    _svgMin = ldSvgReader::loadSvg(ldCore::instance()->resourceDir() + "/svg/clock/min.svg", LD_SVG_READING_DEV);
+    _svgHour = ldSvgReader::loadSvg(ldCore::instance()->resourceDir() + "/svg/clock/hour.svg", ldSvgReader::Type::Dev);
+    _svgMin = ldSvgReader::loadSvg(ldCore::instance()->resourceDir() + "/svg/clock/min.svg", ldSvgReader::Type::Dev);
 }
 
 // ldClockComplexObject
@@ -99,7 +99,7 @@ void ldClockComplexObject::innerDraw(ldRendererOpenlase* p_renderer, const QTime
                 p.y = step*scale;
                 p.y += (1.0-l);
                 p.x = 0;
-                p = ldMaths::changeCoordsVec2(p, angle, Vec2());
+                p.rotate(angle);
                 // add point to buffer
                 //p = ldMaths::addVec2(p, Vec2(1, 1));
                 p_renderer->vertex(p.x, p.y, c);
@@ -141,7 +141,7 @@ void ldClockComplexObject::innerDraw(ldRendererOpenlase* p_renderer, const QTime
            p.y = step*scale;
            p.y += (1.0-l-0.1);
            p.x = 0;
-           p = ldMaths::changeCoordsVec2(p, angle, Vec2());
+           p.rotate(angle);
            // add point to buffer
            //p = ldMaths::addVec2(p, Vec2(1, 1));
            p_renderer->vertex(p.x, p.y, c);
@@ -166,7 +166,7 @@ void ldClockComplexObject::innerDraw(ldRendererOpenlase* p_renderer, const QTime
         float step = 0.9*(1.0*j/pointsCount);
         p.x = 0;
         p.y = step;
-        p = ldMaths::changeCoordsVec2(p, sign*second * M_2PIf / 60.0, Vec2());
+        p.rotate(sign*second * M_2PIf / 60.0);
         // color
         int c = ldColorUtil::lerpInt(0xFF0000,0xFF9933, step);
         // add point to buffer
@@ -179,12 +179,12 @@ void ldClockComplexObject::innerDraw(ldRendererOpenlase* p_renderer, const QTime
 // drawDataBezierAsLinestrip
 void ldClockComplexObject::drawDataBezierAsLinestrip(ldRendererOpenlase* p_renderer, svgBezierCurves &dataVect, float rotation, int color)
 {
-    for (std::vector<BezierCurve> &bezierTab : dataVect)
+    for (std::vector<ldBezierCurve> &bezierTab : dataVect)
     {
         p_renderer->begin(OL_LINESTRIP);
-        for (const BezierCurve &b : bezierTab)
+        for (const ldBezierCurve &b : bezierTab)
         {
-            int maxPoints = (int) (0.5*ldMaths::bezierLength(b));
+            int maxPoints = (int) (0.5*b.length());
             //qDebug()<<"maxPoints"<<maxPoints;
             if (maxPoints<3) maxPoints = 3;
             if (maxPoints>15) maxPoints = 15;
@@ -193,12 +193,12 @@ void ldClockComplexObject::drawDataBezierAsLinestrip(ldRendererOpenlase* p_rende
             {
                 float slope = 1.0*j/(maxPoints-1);
                 Vec2 p;
-                p.x = ldMaths::cubicBezier(slope, b.start.x, b.control1.x, b.control2.x, b.end.x);
-                p.y = ldMaths::cubicBezier(slope, b.start.y, b.control1.y, b.control2.y, b.end.y);
+                p.x = ldMaths::cubicBezier(slope, b.start().x, b.control1().x, b.control2().x, b.end().x);
+                p.y = ldMaths::cubicBezier(slope, b.start().y, b.control1().y, b.control2().y, b.end().y);
                 p.y = p.y + 100;
                 p.x = 2 * p.x / 100.0  - 1;
                 p.y = 2 * p.y / 100.0  - 1;
-                p = ldMaths::changeCoordsVec2(p, rotation, Vec2());
+                p.rotate(rotation);
                 p_renderer->vertex(p.x, p.y, color);
             }
         }

@@ -30,9 +30,9 @@ public:
     ldSpectrumBandVisualizer(int p_countCols, int p_countRows, float p_cellPadCoef, bool p_useLog, bool p_useMax, bool p_useBackground);
     ~ldSpectrumBandVisualizer();
 
-    virtual const char* getInternalName() override { return __FILE__; }
-    virtual const char* visualizerName () override { return "Appak. Spect Band v2"; }
-    virtual float targetFPS() override { return 60; }
+    
+    virtual QString visualizerName() const override { return "Appak. Spect Band v2"; }
+    virtual float targetFPS() const override { return 60; }
     bool init();
     virtual void onShouldStart() override;
 
@@ -40,7 +40,7 @@ protected:
 
     virtual void clearBuffer() override;
     virtual void onUpdate(ldSoundData* pSoundData, float delta) override;
-    virtual void draw(void) override;
+    virtual void draw() override;
 
     void initData();
     void line(CCPoint a, CCPoint b);

@@ -41,12 +41,12 @@ public:
     bool init();
 
     // ldVisualizer
-    virtual const char* getInternalName() override { return __FILE__; }
-    virtual const char* visualizerName() override { return "Square"; }
+    
+    virtual QString visualizerName() const override { return "Square"; }
 
 protected:
     // ldVisualizer
-    virtual void draw(void) override;
+    virtual void draw() override;
 };
 
 #endif /*__ldCore__ldSquareVisualizer__*/

@@ -1,12 +1,8 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.11)
 
 project(ldCore_Example)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-
-if(WIN32)
-    add_definitions(-D_USE_MATH_DEFINES)
-endif()
 
 # setup C++
 set(CMAKE_CXX_STANDARD 11)
@@ -21,7 +17,18 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # ---------------------------- SOURCES  ----------------------
 
-set(SOURCE_FILES
+# Executable
+if (ANDROID)
+    add_library(${PROJECT_NAME} SHARED )
+else()
+    add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32)
+endif()
+
+if(WIN32)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
+endif()
+
+target_sources(${PROJECT_NAME} PRIVATE
     src/main.cpp
     src/ldCoreExample.cpp
     src/ldCoreExample.h
@@ -29,8 +36,8 @@ set(SOURCE_FILES
     src/Games/ldSpiralFighterGame.cpp
     src/Games/ldSpiralFighterGame.h
     #src/Visualizations/Visualizers
-    src/Visualizations/Visualizers/Animation/ldLdva2AnimationVisualizer.cpp
-    src/Visualizations/Visualizers/Animation/ldLdva2AnimationVisualizer.h
+    src/Visualizations/Visualizers/Animation/ldAnimationVisualizer.cpp
+    src/Visualizations/Visualizers/Animation/ldAnimationVisualizer.h
     src/Visualizations/Visualizers/Animation/ldGoGoGirlAnimationVisualizer.cpp
     src/Visualizations/Visualizers/Animation/ldGoGoGirlAnimationVisualizer.h
     src/Visualizations/Visualizers/Clock/ldClockComplexObject.cpp
@@ -53,33 +60,24 @@ set(SOURCE_FILES
     src/Visualizations/Visualizers/Spectrum/ldSpectrumBandVisualizer.h
     )
 
-list(APPEND SOURCE_FILES
+target_sources(${PROJECT_NAME} PRIVATE
     res/qml.qrc
     )
 
-
-# Executable
-if (ANDROID)
-    add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
-else()
-    add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32 ${SOURCE_FILES} )
-endif()
 
 # ---------------------------- DEPENDENCIES  ----------------------
 
 # Qt
 set(CMAKE_PREFIX_PATH "${QTDIR}/lib/cmake")
 find_package(Qt5 CONFIG REQUIRED Core Gui Multimedia Qml)
-list(APPEND LIBRARIES Qt5::Core  Qt5::Gui Qt5::Multimedia Qt5::Qml )
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core  Qt5::Gui Qt5::Multimedia Qt5::Qml)
 
 
 # ldCore
-include_directories(../lib)
-include_directories(../lib/3rdparty)
-include_directories(../lib/3rdparty/lib-qt-qml-tricks/include)
-list(APPEND LIBRARIES ldCore)
+target_include_directories(${PROJECT_NAME} PRIVATE ../3rdparty)
+target_include_directories(${PROJECT_NAME} PRIVATE ../3rdparty/lib-qt-qml-tricks/include)
 
-target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE ldCore)
 
 
 # ---------------------------- DEPLOY  ----------------------
@@ -97,28 +95,28 @@ if(WIN32)
 
     set(EXEDIR_PATH ${CMAKE_CURRENT_BINARY_DIR})
 
-    set(LDCORELIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/../lib/ldCore.dll")
+    set(LDCORELIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/../ldCore.dll")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${LDCORELIB_PATH} ${EXEDIR_PATH})
 
-    set(LIBUSB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../lib/3rdparty/laserdocklib/libusb/libusb-1.0.dll")
+    set(LIBUSB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/laserdocklib/3rdparty/libusb/lib/win/libusb-1.0.dll")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${LIBUSB_PATH} ${EXEDIR_PATH})
 
-    set(LASERDOCKLIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/../lib/3rdparty/laserdocklib${BUILD_SUB_PATH}/laserdocklib.dll")
+    set(LASERDOCKLIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/../3rdparty/laserdocklib${BUILD_SUB_PATH}/laserdocklib.dll")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${LASERDOCKLIB_PATH} ${EXEDIR_PATH})
 
-    set(OPENLASE_PATH "${CMAKE_CURRENT_BINARY_DIR}/../lib/3rdparty/openlase${BUILD_SUB_PATH}/OpenLase.dll")
+    set(OPENLASE_PATH "${CMAKE_CURRENT_BINARY_DIR}/../3rdparty/openlase${BUILD_SUB_PATH}/OpenLase.dll")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${OPENLASE_PATH} ${EXEDIR_PATH})
 
     if(LD_CORE_ENABLE_LIBLZR)
-        set(LIBLZR_PATH "${CMAKE_CURRENT_BINARY_DIR}/../lib/3rdparty/liblzr${BUILD_SUB_PATH}/liblzr.dll")
+        set(LIBLZR_PATH "${CMAKE_CURRENT_BINARY_DIR}/../3rdparty/liblzr${BUILD_SUB_PATH}/liblzr.dll")
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${LIBLZR_PATH} ${EXEDIR_PATH}
@@ -127,7 +125,7 @@ if(WIN32)
 
     if(LD_CORE_ENABLE_OPENCV)
         #opencv
-        include(../lib/3rdparty/opencv/CMakeLists.txt)
+        include(../3rdparty/opencv/CMakeLists.txt)
 
         if (CMAKE_BUILD_TYPE STREQUAL "Debug")
             set(DEBUG_SUFFIX "d")

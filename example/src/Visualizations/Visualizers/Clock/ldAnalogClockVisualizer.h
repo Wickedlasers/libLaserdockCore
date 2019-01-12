@@ -36,13 +36,13 @@ public:
     bool init();
 
     // ldVisualizer
-    virtual const char* getInternalName() override { return __FILE__; }
-    virtual const char* visualizerName() override { return "Analog"; }
-    virtual float targetFPS() override { return 42; }
+    
+    virtual QString visualizerName() const override { return "Analog"; }
+    virtual float targetFPS() const override { return 42; }
     virtual void onShouldStart() override;
 
 protected:
-    virtual void draw(void) override;
+    virtual void draw() override;
 
 private:
     QScopedPointer<ldClockComplexObject> m_clockObj;
