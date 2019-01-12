@@ -526,6 +526,10 @@ if(LD_CORE_ENABLE_LIBLZR)
     add_subdirectory(3rdparty/liblzr)
     target_link_libraries(${PROJECT_NAME} PRIVATE liblzr)
 endif()
+# lua
+add_subdirectory(3rdparty/lua)
+target_link_libraries(${PROJECT_NAME} PRIVATE liblua)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/lua/src)
 # nanosvg
 # No need to do anything, header-only library
 # opencv (optional)
