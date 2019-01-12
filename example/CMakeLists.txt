@@ -89,13 +89,15 @@ if(WIN32)
     # Copy required dlls to output folder
     if(CMAKE_GENERATOR STREQUAL "Visual Studio 14 2015")
         set(BUILD_SUB_PATH "${CMAKE_BUILD_TYPE}")
+    elseif(CMAKE_GENERATOR STREQUAL "Visual Studio 15 2017")
+        set(BUILD_SUB_PATH "${CMAKE_CFG_INTDIR}")
     else()
         set(BUILD_SUB_PATH "")
     endif()
 
     set(EXEDIR_PATH ${CMAKE_CURRENT_BINARY_DIR})
 
-    set(LDCORELIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/../ldCore.dll")
+    set(LDCORELIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/../${BUILD_SUB_PATH}/ldCore.dll")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${LDCORELIB_PATH} ${EXEDIR_PATH})
@@ -105,18 +107,18 @@ if(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${LIBUSB_PATH} ${EXEDIR_PATH})
 
-    set(LASERDOCKLIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/../3rdparty/laserdocklib${BUILD_SUB_PATH}/laserdocklib.dll")
+    set(LASERDOCKLIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/../3rdparty/laserdocklib/${BUILD_SUB_PATH}/laserdocklib.dll")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${LASERDOCKLIB_PATH} ${EXEDIR_PATH})
 
-    set(OPENLASE_PATH "${CMAKE_CURRENT_BINARY_DIR}/../3rdparty/openlase${BUILD_SUB_PATH}/OpenLase.dll")
+    set(OPENLASE_PATH "${CMAKE_CURRENT_BINARY_DIR}/../3rdparty/openlase/${BUILD_SUB_PATH}/OpenLase.dll")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${OPENLASE_PATH} ${EXEDIR_PATH})
 
     if(LD_CORE_ENABLE_LIBLZR)
-        set(LIBLZR_PATH "${CMAKE_CURRENT_BINARY_DIR}/../3rdparty/liblzr${BUILD_SUB_PATH}/liblzr.dll")
+        set(LIBLZR_PATH "${CMAKE_CURRENT_BINARY_DIR}/../3rdparty/liblzr/${BUILD_SUB_PATH}/liblzr.dll")
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${LIBLZR_PATH} ${EXEDIR_PATH}
