@@ -1,0 +1,10 @@
+#ifndef LASERDOCKLIB_LASERDOCKLIB_H
+#define LASERDOCKLIB_LASERDOCKLIB_H
+
+#ifdef _WIN32
+#define LASERDOCKLIB_EXPORT __declspec(dllexport)
+#else
+#define LASERDOCKLIB_EXPORT
+#endif
+
+#endif //LASERDOCKLIB_LASERDOCKLIB_H

@@ -52,8 +52,8 @@ public:
     bool init();
 
     // ldVisualizer
-    virtual const char* getInternalName() override { return __FILE__; }
-    virtual const char* visualizerName() override { return "Spiral Fighter"; }
+    
+    virtual QString visualizerName() const override { return "Spiral Fighter"; }
     virtual void onShouldStart() override;
     virtual void onShouldStop() override;
 
@@ -74,7 +74,7 @@ signals:
     void scoreChanged(const int &score);
 
 protected:
-    virtual void draw(void) override;
+    virtual void draw() override;
     OLRenderParams m_params;
 
 private slots:
@@ -105,7 +105,7 @@ private:
     // Labels.
     void updateScoreLabel();
     void updateStateLabel();
-    void setStateText(string text);
+    void setStateText(const QString &text);
 
     /*
      * Specific game functions.

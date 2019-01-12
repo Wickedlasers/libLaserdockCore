@@ -572,12 +572,12 @@ void ldSpiralFighterVisualizer::updateStateLabel() {
         if(m_countdownTimerValue > 0) {
             timerString = QString::number(m_countdownTimerValue);
         }
-        setStateText(timerString.toStdString());
+        setStateText(timerString);
     }
 }
 
 // Set the state label's text and horizontally align it.
-void ldSpiralFighterVisualizer::setStateText(string text) {
+void ldSpiralFighterVisualizer::setStateText(const QString &text) {
     m_stateLabel->setText(text);
 
     float labelWidth = m_stateLabel->getWidth();
@@ -587,7 +587,7 @@ void ldSpiralFighterVisualizer::setStateText(string text) {
 // Updates the score label.
 void ldSpiralFighterVisualizer::updateScoreLabel() {
     QString scoreString = QString("%1").arg(QString::number(m_score));
-    m_scoreLabel->setText(scoreString.toStdString());
+    m_scoreLabel->setText(scoreString);
 
     float labelWidth = m_scoreLabel->getWidth();
     float labelHeight = m_scoreLabel->getHeight();

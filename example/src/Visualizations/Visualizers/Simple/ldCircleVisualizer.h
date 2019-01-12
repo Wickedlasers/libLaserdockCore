@@ -35,12 +35,12 @@ public:
     bool init();
 
     // ldVisualizer
-    virtual const char* getInternalName() override { return __FILE__; }
-    virtual const char* visualizerName() override { return "Circle"; }
+    
+    virtual QString visualizerName() const override { return "Circle"; }
 
 protected:
     // ldVisualizer
-    virtual void draw(void) override;
+    virtual void draw() override;
 };
 
 #endif /*__ldCore__ldCircleVisualizer__*/
