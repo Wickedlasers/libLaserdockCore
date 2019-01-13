@@ -24,9 +24,9 @@
 
 #include <ldCore/Sound/ldSoundInterface.h>
 
-#include "ldCore/Visualizations/util/AudioHelper/ldHybridReactor.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldTempoAC.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldAppakSpectrum.h"
+#include "ldCore/Helpers/Audio/ldHybridReactor.h"
+#include "ldCore/Helpers/Audio/ldTempoAC.h"
+#include "ldCore/Helpers/Audio/ldAppakSpectrum.h"
 
 // initial state
 ldMusicManager::ldMusicManager(QObject* parent)

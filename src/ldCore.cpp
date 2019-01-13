@@ -172,7 +172,7 @@ QString ldCore::resourceDir() const
 #if defined(Q_OS_MAC)
     return qApp->applicationDirPath() + "/../Resources";
 #elif defined(Q_OS_WIN32)
-    return qApp->applicationDirPath();
+    return qApp->applicationDirPath() + "/Resources";
 #else
     return qApp->applicationDirPath();
 #endif

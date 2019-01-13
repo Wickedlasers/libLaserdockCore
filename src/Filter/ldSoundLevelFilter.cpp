@@ -22,7 +22,7 @@
 
 #include <ldCore/ldCore.h>
 #include <ldCore/Visualizations/MusicManager/ldMusicManager.h>
-#include <ldCore/Visualizations/util/VisualizerHelper/ldLaserFilter.h>
+#include <ldCore/Helpers/Visualizer/ldLaserFilter.h>
 
 ldSoundLevelFilter::ldSoundLevelFilter()
 {

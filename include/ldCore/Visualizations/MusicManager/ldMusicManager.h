@@ -113,18 +113,18 @@ is required.
 
 #include <memory>
 
-#include "ldCore/Visualizations/util/AudioHelper/ldAppakaBeat.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldAppakPeaks.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldAppakGate.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldAppakBpmSelector.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldAudioBasic.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldDurationalStatEstimator.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldMusicFeature.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldSoundGate.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldSilentThree.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldSpectrumFrame.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldTempoTracker.h"
-#include "ldCore/Visualizations/util/VisualizerHelper/ldVisualizerHelper.h"
+#include "ldCore/Helpers/Audio/ldAppakaBeat.h"
+#include "ldCore/Helpers/Audio/ldAppakPeaks.h"
+#include "ldCore/Helpers/Audio/ldAppakGate.h"
+#include "ldCore/Helpers/Audio/ldAppakBpmSelector.h"
+#include "ldCore/Helpers/Audio/ldAudioBasic.h"
+#include "ldCore/Helpers/Audio/ldDurationalStatEstimator.h"
+#include "ldCore/Helpers/Audio/ldMusicFeature.h"
+#include "ldCore/Helpers/Audio/ldSoundGate.h"
+#include "ldCore/Helpers/Audio/ldSilentThree.h"
+#include "ldCore/Helpers/Audio/ldSpectrumFrame.h"
+#include "ldCore/Helpers/Audio/ldTempoTracker.h"
+#include "ldCore/Helpers/Visualizer/ldVisualizerHelper.h"
 
 class ldAppakSpectrum;
 class ldSpectrogram;

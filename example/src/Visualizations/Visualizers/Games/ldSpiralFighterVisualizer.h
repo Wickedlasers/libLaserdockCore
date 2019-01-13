@@ -31,9 +31,9 @@
 
 #include <QtCore/QTimer>
 
-#include "ldCore/Visualizations/util/MathsHelper/ldMaths.h"
-#include "ldCore/Visualizations/util/ColorHelper/ldColorUtilMEO.h"
-#include "ldCore/Visualizations/util/SoundHelper/ldQSound.h"
+#include "ldCore/Helpers/Maths/ldMaths.h"
+#include "ldCore/Helpers/Color/ldColorUtilMEO.h"
+#include "ldCore/Helpers/Sound/ldQSound.h"
 #include "ldCore/Visualizations/Visualizers/Games/ldAbstractGameVisualizer.h"
 
 #include "SpiralFighter/ldSpiralFighterEnemy.h"

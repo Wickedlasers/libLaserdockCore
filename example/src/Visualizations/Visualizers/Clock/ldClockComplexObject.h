@@ -33,7 +33,7 @@
 #include <QtCore/QTime>
 
 #include <ldCore/Render/ldRendererOpenlase.h>
-#include "ldCore/Visualizations/util/MathsHelper/ldMaths.h"
+#include "ldCore/Helpers/Maths/ldMaths.h"
 
 class ldClockComplexObject : public QObject
 {

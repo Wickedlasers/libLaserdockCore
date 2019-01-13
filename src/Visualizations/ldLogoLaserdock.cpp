@@ -22,7 +22,7 @@
 
 #include <ldCore/Render/ldRendererOpenlase.h>
 
-#include "ldCore/Visualizations/util/MathsHelper/ldGeometryUtil.h"
+#include "ldCore/Helpers/Maths/ldGeometryUtil.h"
 
 // ---------------------- LogoPoint ---------------------
 

@@ -12,11 +12,11 @@
 #include "ldCore/Filter/ldFilterColorize.h"
 #include <ldCore/Sound/ldSoundData.h>
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldTempoAC.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldHybridReactor.h"
-#include "ldCore/Visualizations/util/SVGHelper/ldSvgReader.h"
-#include "ldCore/Visualizations/util/VisualizerHelper/ldAnimationSequence.h"
-#include "ldCore/Visualizations/util/VisualizerHelper/ldLaserFilter.h"
+#include "ldCore/Helpers/Audio/ldTempoAC.h"
+#include "ldCore/Helpers/Audio/ldHybridReactor.h"
+#include "ldCore/Helpers/SVG/ldSvgReader.h"
+#include "ldCore/Helpers/Visualizer/ldAnimationSequence.h"
+#include "ldCore/Helpers/Visualizer/ldLaserFilter.h"
 
 namespace {
 static float getClosestBeat(float r, float t, bool slow) {

@@ -265,117 +265,117 @@ target_sources(${PROJECT_NAME} PRIVATE
         #Visualizations/MusicManager/
         ${SRCDIR}/Visualizations/MusicManager/ldMusicManager.cpp
         ${INCDIR}/Visualizations/MusicManager/ldMusicManager.h
-        #Visualizations/util/AudioHelper
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldAppakaBeat.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldAppakaBeat.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldAppakBpmSelector.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldAppakBpmSelector.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldAppakGate.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldAppakGate.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldAppakPeaks.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldAppakPeaks.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldAppakSpectrum.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldAppakSpectrum.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldAudioBasic.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldAudioBasic.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldDurationalStatEstimator.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldDurationalStatEstimator.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldHybridReactor.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldHybridReactor.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldMusicFeature.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldMusicFeature.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldNoiseField.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldNoiseField.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldOnsetDetector.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldOnsetDetector.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldPitchDetector.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldPitchDetector.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldSilentThree.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldSilentThree.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldSoundGate.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldSoundGate.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldSoundEventUtil.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldSoundEventUtil.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldSpectrogram.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldSpectrogram.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldSpectrumFrame.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldSpectrumFrame.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldTempoAC.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldTempoAC.h
-        ${SRCDIR}/Visualizations/util/AudioHelper/ldTempoTracker.cpp
-        ${INCDIR}/Visualizations/util/AudioHelper/ldTempoTracker.h
-        #Visualizations/util/BezierCurveHelper
-        ${SRCDIR}/Visualizations/util/BezierCurveHelper/ld3dBezierCurveFrame.cpp
-        ${INCDIR}/Visualizations/util/BezierCurveHelper/ld3dBezierCurveFrame.h
-        ${SRCDIR}/Visualizations/util/BezierCurveHelper/ld3dBezierCurveObject.cpp
-        ${INCDIR}/Visualizations/util/BezierCurveHelper/ld3dBezierCurveObject.h
-        ${SRCDIR}/Visualizations/util/BezierCurveHelper/ldBezierCurveFrame.cpp
-        ${INCDIR}/Visualizations/util/BezierCurveHelper/ldBezierCurveFrame.h
-        ${SRCDIR}/Visualizations/util/BezierCurveHelper/ldBezierCurveObject.cpp
-        ${INCDIR}/Visualizations/util/BezierCurveHelper/ldBezierCurveObject.h
-        #Visualizations/util/ColorHelper
-        ${SRCDIR}/Visualizations/util/ColorHelper/ldColorUtil.cpp
-        ${INCDIR}/Visualizations/util/ColorHelper/ldColorUtil.h
-        ${SRCDIR}/Visualizations/util/ColorHelper/ldColorUtilMEO.cpp
-        ${INCDIR}/Visualizations/util/ColorHelper/ldColorUtilMEO.h
-        #Visualizations/util/DrawHelper
-        ${SRCDIR}/Visualizations/util/DrawHelper/ld3dBezierCurveDrawer.cpp
-        ${INCDIR}/Visualizations/util/DrawHelper/ld3dBezierCurveDrawer.h
-        ${SRCDIR}/Visualizations/util/DrawHelper/ldBezierCurveDrawer.cpp
-        ${INCDIR}/Visualizations/util/DrawHelper/ldBezierCurveDrawer.h
-        #Visualizations/util/MathsHelper
-        ${SRCDIR}/Visualizations/util/MathsHelper/ldGeometryUtil.cpp
-        ${INCDIR}/Visualizations/util/MathsHelper/ldGeometryUtil.h
-        ${SRCDIR}/Visualizations/util/MathsHelper/ldMathSpectrum.cpp
-        ${INCDIR}/Visualizations/util/MathsHelper/ldMathSpectrum.h
-        ${SRCDIR}/Visualizations/util/MathsHelper/ldMathStat.cpp
-        ${INCDIR}/Visualizations/util/MathsHelper/ldMathStat.h
-        ${SRCDIR}/Visualizations/util/MathsHelper/ldMaths.cpp
-        ${INCDIR}/Visualizations/util/MathsHelper/ldMaths.h
-        ${SRCDIR}/Visualizations/util/MathsHelper/ldSimpleVector.cpp
-        ${INCDIR}/Visualizations/util/MathsHelper/ldSimpleVector.h
-        ${SRCDIR}/Visualizations/util/MathsHelper/ldSmoothUtil.cpp
-        ${INCDIR}/Visualizations/util/MathsHelper/ldSmoothUtil.h
-        #Visualizations/util/SoundHelper
-        ${SRCDIR}/Visualizations/util/SoundHelper/ldQSound.cpp
-        ${INCDIR}/Visualizations/util/SoundHelper/ldQSound.h
-        ${SRCDIR}/Visualizations/util/SoundHelper/ldSoundEffects.cpp
-        ${INCDIR}/Visualizations/util/SoundHelper/ldSoundEffects.h
-        #Visualizations/util/SVGHelper
-        ${SRCDIR}/Visualizations/util/SVGHelper/ldSvgDir.cpp
-        ${INCDIR}/Visualizations/util/SVGHelper/ldSvgDir.h
-        ${SRCDIR}/Visualizations/util/SVGHelper/ldSvgObject.cpp
-        ${INCDIR}/Visualizations/util/SVGHelper/ldSvgObject.h
-        ${SRCDIR}/Visualizations/util/SVGHelper/ldSvgReader.cpp
-        ${INCDIR}/Visualizations/util/SVGHelper/ldSvgReader.h
-        #Visualizations/util/TextHelper
-        ${SRCDIR}/Visualizations/util/TextHelper/ldAbstractText.cpp
-        ${INCDIR}/Visualizations/util/TextHelper/ldAbstractText.h
-        ${SRCDIR}/Visualizations/util/TextHelper/ld3dTextLabelOne.cpp
-        ${INCDIR}/Visualizations/util/TextHelper/ld3dTextLabelOne.h
-        ${SRCDIR}/Visualizations/util/TextHelper/ldFont.cpp
-        ${INCDIR}/Visualizations/util/TextHelper/ldFont.h
-        ${SRCDIR}/Visualizations/util/TextHelper/ldSvgLetter.cpp
-        ${INCDIR}/Visualizations/util/TextHelper/ldSvgLetter.h
-        ${SRCDIR}/Visualizations/util/TextHelper/ldTextCounterOne.cpp
-        ${INCDIR}/Visualizations/util/TextHelper/ldTextCounterOne.h
-        ${SRCDIR}/Visualizations/util/TextHelper/ldTextLabel.cpp
-        ${INCDIR}/Visualizations/util/TextHelper/ldTextLabel.h
-        ${SRCDIR}/Visualizations/util/TextHelper/ldTextSvgHelper.cpp
-        ${INCDIR}/Visualizations/util/TextHelper/ldTextSvgHelper.h
-        #Visualizations/util/VisualizerHelper
-        ${SRCDIR}/Visualizations/util/VisualizerHelper/ldAnimTimerUtil.cpp
-        ${INCDIR}/Visualizations/util/VisualizerHelper/ldAnimTimerUtil.h
-        ${SRCDIR}/Visualizations/util/VisualizerHelper/ldAnimationSequence.cpp
-        ${INCDIR}/Visualizations/util/VisualizerHelper/ldAnimationSequence.h
-        ${SRCDIR}/Visualizations/util/VisualizerHelper/ldBeatTracker.cpp
-        ${INCDIR}/Visualizations/util/VisualizerHelper/ldBeatTracker.h
-        ${SRCDIR}/Visualizations/util/VisualizerHelper/ldLaserFilter.cpp
-        ${INCDIR}/Visualizations/util/VisualizerHelper/ldLaserFilter.h
-        ${SRCDIR}/Visualizations/util/VisualizerHelper/ldLineGraph.cpp
-        ${INCDIR}/Visualizations/util/VisualizerHelper/ldLineGraph.h
-        ${SRCDIR}/Visualizations/util/VisualizerHelper/ldVisualizerHelper.cpp
-        ${INCDIR}/Visualizations/util/VisualizerHelper/ldVisualizerHelper.h
+        #Helpers/Audio
+        ${SRCDIR}/Helpers/Audio/ldAppakaBeat.cpp
+        ${INCDIR}/Helpers/Audio/ldAppakaBeat.h
+        ${SRCDIR}/Helpers/Audio/ldAppakBpmSelector.cpp
+        ${INCDIR}/Helpers/Audio/ldAppakBpmSelector.h
+        ${SRCDIR}/Helpers/Audio/ldAppakGate.cpp
+        ${INCDIR}/Helpers/Audio/ldAppakGate.h
+        ${SRCDIR}/Helpers/Audio/ldAppakPeaks.cpp
+        ${INCDIR}/Helpers/Audio/ldAppakPeaks.h
+        ${SRCDIR}/Helpers/Audio/ldAppakSpectrum.cpp
+        ${INCDIR}/Helpers/Audio/ldAppakSpectrum.h
+        ${SRCDIR}/Helpers/Audio/ldAudioBasic.cpp
+        ${INCDIR}/Helpers/Audio/ldAudioBasic.h
+        ${SRCDIR}/Helpers/Audio/ldDurationalStatEstimator.cpp
+        ${INCDIR}/Helpers/Audio/ldDurationalStatEstimator.h
+        ${SRCDIR}/Helpers/Audio/ldHybridReactor.cpp
+        ${INCDIR}/Helpers/Audio/ldHybridReactor.h
+        ${SRCDIR}/Helpers/Audio/ldMusicFeature.cpp
+        ${INCDIR}/Helpers/Audio/ldMusicFeature.h
+        ${SRCDIR}/Helpers/Audio/ldNoiseField.cpp
+        ${INCDIR}/Helpers/Audio/ldNoiseField.h
+        ${SRCDIR}/Helpers/Audio/ldOnsetDetector.cpp
+        ${INCDIR}/Helpers/Audio/ldOnsetDetector.h
+        ${SRCDIR}/Helpers/Audio/ldPitchDetector.cpp
+        ${INCDIR}/Helpers/Audio/ldPitchDetector.h
+        ${SRCDIR}/Helpers/Audio/ldSilentThree.cpp
+        ${INCDIR}/Helpers/Audio/ldSilentThree.h
+        ${SRCDIR}/Helpers/Audio/ldSoundGate.cpp
+        ${INCDIR}/Helpers/Audio/ldSoundGate.h
+        ${SRCDIR}/Helpers/Audio/ldSoundEventUtil.cpp
+        ${INCDIR}/Helpers/Audio/ldSoundEventUtil.h
+        ${SRCDIR}/Helpers/Audio/ldSpectrogram.cpp
+        ${INCDIR}/Helpers/Audio/ldSpectrogram.h
+        ${SRCDIR}/Helpers/Audio/ldSpectrumFrame.cpp
+        ${INCDIR}/Helpers/Audio/ldSpectrumFrame.h
+        ${SRCDIR}/Helpers/Audio/ldTempoAC.cpp
+        ${INCDIR}/Helpers/Audio/ldTempoAC.h
+        ${SRCDIR}/Helpers/Audio/ldTempoTracker.cpp
+        ${INCDIR}/Helpers/Audio/ldTempoTracker.h
+        #Helpers/BezierCurve
+        ${SRCDIR}/Helpers/BezierCurve/ld3dBezierCurveFrame.cpp
+        ${INCDIR}/Helpers/BezierCurve/ld3dBezierCurveFrame.h
+        ${SRCDIR}/Helpers/BezierCurve/ld3dBezierCurveObject.cpp
+        ${INCDIR}/Helpers/BezierCurve/ld3dBezierCurveObject.h
+        ${SRCDIR}/Helpers/BezierCurve/ldBezierCurveFrame.cpp
+        ${INCDIR}/Helpers/BezierCurve/ldBezierCurveFrame.h
+        ${SRCDIR}/Helpers/BezierCurve/ldBezierCurveObject.cpp
+        ${INCDIR}/Helpers/BezierCurve/ldBezierCurveObject.h
+        #Helpers/Color
+        ${SRCDIR}/Helpers/Color/ldColorUtil.cpp
+        ${INCDIR}/Helpers/Color/ldColorUtil.h
+        ${SRCDIR}/Helpers/Color/ldColorUtilMEO.cpp
+        ${INCDIR}/Helpers/Color/ldColorUtilMEO.h
+        #Helpers/Draw
+        ${SRCDIR}/Helpers/Draw/ld3dBezierCurveDrawer.cpp
+        ${INCDIR}/Helpers/Draw/ld3dBezierCurveDrawer.h
+        ${SRCDIR}/Helpers/Draw/ldBezierCurveDrawer.cpp
+        ${INCDIR}/Helpers/Draw/ldBezierCurveDrawer.h
+        #Helpers/Maths
+        ${SRCDIR}/Helpers/Maths/ldGeometryUtil.cpp
+        ${INCDIR}/Helpers/Maths/ldGeometryUtil.h
+        ${SRCDIR}/Helpers/Maths/ldMathSpectrum.cpp
+        ${INCDIR}/Helpers/Maths/ldMathSpectrum.h
+        ${SRCDIR}/Helpers/Maths/ldMathStat.cpp
+        ${INCDIR}/Helpers/Maths/ldMathStat.h
+        ${SRCDIR}/Helpers/Maths/ldMaths.cpp
+        ${INCDIR}/Helpers/Maths/ldMaths.h
+        ${SRCDIR}/Helpers/Maths/ldSimpleVector.cpp
+        ${INCDIR}/Helpers/Maths/ldSimpleVector.h
+        ${SRCDIR}/Helpers/Maths/ldSmoothUtil.cpp
+        ${INCDIR}/Helpers/Maths/ldSmoothUtil.h
+        #Helpers/Sound
+        ${SRCDIR}/Helpers/Sound/ldQSound.cpp
+        ${INCDIR}/Helpers/Sound/ldQSound.h
+        ${SRCDIR}/Helpers/Sound/ldSoundEffects.cpp
+        ${INCDIR}/Helpers/Sound/ldSoundEffects.h
+        #Helpers/SVG
+        ${SRCDIR}/Helpers/SVG/ldSvgDir.cpp
+        ${INCDIR}/Helpers/SVG/ldSvgDir.h
+        ${SRCDIR}/Helpers/SVG/ldSvgObject.cpp
+        ${INCDIR}/Helpers/SVG/ldSvgObject.h
+        ${SRCDIR}/Helpers/SVG/ldSvgReader.cpp
+        ${INCDIR}/Helpers/SVG/ldSvgReader.h
+        #Helpers/Text
+        ${SRCDIR}/Helpers/Text/ldAbstractText.cpp
+        ${INCDIR}/Helpers/Text/ldAbstractText.h
+        ${SRCDIR}/Helpers/Text/ld3dTextLabelOne.cpp
+        ${INCDIR}/Helpers/Text/ld3dTextLabelOne.h
+        ${SRCDIR}/Helpers/Text/ldFont.cpp
+        ${INCDIR}/Helpers/Text/ldFont.h
+        ${SRCDIR}/Helpers/Text/ldSvgLetter.cpp
+        ${INCDIR}/Helpers/Text/ldSvgLetter.h
+        ${SRCDIR}/Helpers/Text/ldTextCounterOne.cpp
+        ${INCDIR}/Helpers/Text/ldTextCounterOne.h
+        ${SRCDIR}/Helpers/Text/ldTextLabel.cpp
+        ${INCDIR}/Helpers/Text/ldTextLabel.h
+        ${SRCDIR}/Helpers/Text/ldTextSvgHelper.cpp
+        ${INCDIR}/Helpers/Text/ldTextSvgHelper.h
+        #Helpers/Visualizer
+        ${SRCDIR}/Helpers/Visualizer/ldAnimTimerUtil.cpp
+        ${INCDIR}/Helpers/Visualizer/ldAnimTimerUtil.h
+        ${SRCDIR}/Helpers/Visualizer/ldAnimationSequence.cpp
+        ${INCDIR}/Helpers/Visualizer/ldAnimationSequence.h
+        ${SRCDIR}/Helpers/Visualizer/ldBeatTracker.cpp
+        ${INCDIR}/Helpers/Visualizer/ldBeatTracker.h
+        ${SRCDIR}/Helpers/Visualizer/ldLaserFilter.cpp
+        ${INCDIR}/Helpers/Visualizer/ldLaserFilter.h
+        ${SRCDIR}/Helpers/Visualizer/ldLineGraph.cpp
+        ${INCDIR}/Helpers/Visualizer/ldLineGraph.h
+        ${SRCDIR}/Helpers/Visualizer/ldVisualizerHelper.cpp
+        ${INCDIR}/Helpers/Visualizer/ldVisualizerHelper.h
         ${SRCDIR}/Visualizations/Visualizers/Games/ldAbstractGameVisualizer.cpp
         ${INCDIR}/Visualizations/Visualizers/Games/ldAbstractGameVisualizer.h
         ${SRCDIR}/Visualizations/Visualizers/Games/Core/ldGameObject.cpp
@@ -405,9 +405,9 @@ endif()
 # opencv
 if(LD_CORE_ENABLE_OPENCV)
     target_sources(${PROJECT_NAME} PRIVATE
-        #Visualizations/util/ImageHelper
-        ${SRCDIR}/Visualizations/util/ImageHelper/ldImageHelper.cpp
-        ${INCDIR}/Visualizations/util/ImageHelper/ldImageHelper.h
+        #Helpers/Image
+        ${SRCDIR}/Helpers/Image/ldImageHelper.cpp
+        ${INCDIR}/Helpers/Image/ldImageHelper.h
         )
 endif()
 
@@ -466,7 +466,7 @@ endif()
 target_compile_definitions(${PROJECT_NAME} PRIVATE LDCORE_LIBRARY)
 
 if(WIN32)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC _USE_MATH_DEFINES)
 endif()
 
 if(LD_CORE_SHOW_LOGO)
@@ -524,7 +524,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC libqtqmltricks)
 # liblzr (optional)
 if(LD_CORE_ENABLE_LIBLZR)
     add_subdirectory(3rdparty/liblzr)
-    target_link_libraries(${PROJECT_NAME} PRIVATE liblzr)
+    target_link_libraries(${PROJECT_NAME} PUBLIC liblzr)
 endif()
 # lua
 add_subdirectory(3rdparty/lua)

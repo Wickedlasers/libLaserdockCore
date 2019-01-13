@@ -32,7 +32,7 @@
 #include <memory>
 
 #include "ldCore/Visualizations/ldVisualizer.h"
-#include "ldCore/Visualizations/util/SoundHelper/ldSoundEffects.h"
+#include "ldCore/Helpers/Sound/ldSoundEffects.h"
 #include "ldCore/Visualizations/Visualizers/Games/Core/ldGameExplosion.h"
 #include "ldCore/Visualizations/Visualizers/Games/Core/ldGameFirework.h"
 #include "ldCore/Visualizations/Visualizers/Games/Core/ldGameSmoke.h"
@@ -45,6 +45,9 @@ class LDCORESHARED_EXPORT ldAbstractGameVisualizer : public ldVisualizer
 {
     Q_OBJECT
 public:
+    static QList<QList<Vec2> > lineListToVertexShapes(const QList<Vec2> &lineListBricks, float precise = 0.005);
+    static QList<QList<Vec2> > optimizeShapesToLaser(const QList<QList<Vec2> > &linePathParts, int repeat = 1);
+
     /** Constructor/destructor */
     explicit ldAbstractGameVisualizer();
     virtual ~ldAbstractGameVisualizer();

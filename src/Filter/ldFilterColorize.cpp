@@ -27,12 +27,12 @@
 #include "ldCore/ldCore.h"
 #include <ldCore/Filter/ldColorUtils.h>
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldHybridReactor.h"
-#include "ldCore/Visualizations/util/AudioHelper/ldTempoAC.h"
-#include "ldCore/Visualizations/util/ColorHelper/ldColorUtil.h"
-#include "ldCore/Visualizations/util/MathsHelper/ldGeometryUtil.h"
-#include "ldCore/Visualizations/util/MathsHelper/ldMaths.h"
-#include "ldCore/Visualizations/util/VisualizerHelper/ldLaserFilter.h"
+#include "ldCore/Helpers/Audio/ldHybridReactor.h"
+#include "ldCore/Helpers/Audio/ldTempoAC.h"
+#include "ldCore/Helpers/Color/ldColorUtil.h"
+#include "ldCore/Helpers/Maths/ldGeometryUtil.h"
+#include "ldCore/Helpers/Maths/ldMaths.h"
+#include "ldCore/Helpers/Visualizer/ldLaserFilter.h"
 
 ldFilterColorFade::ldFilterColorFade() {
     huebase = 0;

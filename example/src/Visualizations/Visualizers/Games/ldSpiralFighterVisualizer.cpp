@@ -35,7 +35,7 @@
 #include <QtCore/QString>
 
 #include "ldCore/ldCore.h"
-#include "ldCore/Visualizations/util/TextHelper/ldTextLabel.h"
+#include "ldCore/Helpers/Text/ldTextLabel.h"
 
 // Constants.
 const int LEVEL_AMOUNT = 3;

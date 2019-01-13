@@ -11,8 +11,8 @@ enable_testing()
 add_executable(${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME} PRIVATE
-    ldCore/Visualizations/util/MathsHelper/ldMathsTests.cpp
-    ldCore/Visualizations/util/MathsHelper/ldMathsTests.h
+    ldCore/Helpers/Maths/ldMathsTests.cpp
+    ldCore/Helpers/Maths/ldMathsTests.h
     )
 
 find_package(Qt5 CONFIG REQUIRED Core Test)

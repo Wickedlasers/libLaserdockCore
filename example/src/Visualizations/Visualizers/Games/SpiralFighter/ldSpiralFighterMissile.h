@@ -22,8 +22,8 @@
 #define ldSpiralFighterMissile_H
 
 #include <ldCore/Render/ldRendererOpenlase.h>
-#include "ldCore/Visualizations/util/MathsHelper/ldMaths.h"
-#include "ldCore/Visualizations/util/ColorHelper/ldColorUtil.h"
+#include "ldCore/Helpers/Maths/ldMaths.h"
+#include "ldCore/Helpers/Color/ldColorUtil.h"
 
 #include "ldCore/Visualizations/Visualizers/Games/Core/ldGameObject.h"
 

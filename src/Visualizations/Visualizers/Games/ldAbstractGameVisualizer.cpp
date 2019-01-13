@@ -28,23 +28,155 @@
 
 #include "ldCore/Visualizations/Visualizers/Games/ldAbstractGameVisualizer.h"
 
-#include "ldCore/Visualizations/util/TextHelper/ldTextLabel.h"
+#include "ldCore/Helpers/Text/ldTextLabel.h"
 
 
 
 //     default reset time in debug mode is 1 sec for quick testing
 #ifdef LD_BUILD_RELEASE_VERSION
-    const int ldAbstractGameVisualizer::GAME_DEFAULT_RESET_TIME = 3;
+const int ldAbstractGameVisualizer::GAME_DEFAULT_RESET_TIME = 3;
 #else
-    const int ldAbstractGameVisualizer::GAME_DEFAULT_RESET_TIME = 1;
+const int ldAbstractGameVisualizer::GAME_DEFAULT_RESET_TIME = 1;
 #endif
+
+// convert line list of vertex bricks to plain closed path
+QList<QList<Vec2> > ldAbstractGameVisualizer::lineListToVertexShapes(const QList<Vec2> &lineListBricksInput, float precise)
+{
+    QList<Vec2> lineListBricks = lineListBricksInput;
+    int i = 0;
+    QList<QList<Vec2>> shapes;
+    QList<Vec2> currentShape;
+
+    // iterate over 'bricks' and find plain vertex path
+    while(!lineListBricks.empty()) {
+        // if we reach end of 'bricks' and didn't find next point create new shape
+        if(i == lineListBricks.size()) {
+            // add new shape
+            shapes.push_back(currentShape);
+            // start new one
+            currentShape.clear();
+            // start search from begin
+            i = 0;
+            continue;
+        }
+
+        const Vec2 &brickStart = lineListBricks[i];
+
+        // add first 2 points in a raw
+        if(currentShape.length() < 2) {
+            // add point
+            currentShape.append(brickStart);
+            // remove 'brick' point
+            lineListBricks.removeAt(i);
+            // start search from begin
+            i = 0;
+            continue;
+        } else {
+            const Vec2 &lastPoint =  currentShape[currentShape.length() - 1];
+            const Vec2 &brickEnd = lineListBricks[i+1];
+
+            // if we find next 'brick' remember it's path and go to next iteration
+            bool isEqualsBrickStart = cmpf(lastPoint.x, brickStart.x, precise) && cmpf(lastPoint.y, brickStart.y, precise);
+            bool isEqualsBrickEnd = cmpf(lastPoint.x, brickEnd.x, precise) && cmpf(lastPoint.y, brickEnd.y, precise);
+
+            if(isEqualsBrickStart
+                    || isEqualsBrickEnd) {
+                // check what we should remember
+                if(isEqualsBrickStart) {
+                    currentShape.append(brickEnd);
+                } else {
+                    currentShape.append(brickStart);
+                }
+
+                // remove 'brick'
+                lineListBricks.removeAt(i);
+                lineListBricks.removeAt(i);
+
+                // start search from begin
+                i = 0;
+                continue;
+            }
+        }
+
+        // go to next brick
+        i += 2;
+    }
+
+    // add last part
+    if(!currentShape.empty())
+        shapes.push_back(currentShape);
+
+    return shapes;
+}
+
+QList<QList<Vec2> > ldAbstractGameVisualizer::optimizeShapesToLaser(const QList<QList<Vec2>> &linePathParts, int repeat)
+{
+    QList<QList<Vec2>> laserLinePathParts;
+
+    //  current path direction - x or y
+    bool isCurrentYAxis = false;
+
+    int repeatFirstLast = (repeat+1) / 2;
+
+    for(const QList<Vec2> &line : linePathParts) {
+        QList<Vec2> laserLinePath;
+
+        for(const Vec2 &point : line) {
+
+            // add first 2 points in plain order
+            if(laserLinePath.size() < 2) {
+                // add first point twice
+                if(laserLinePath.size() == 1) {
+                    for(int i = 0; i < repeatFirstLast; i++) {
+                        laserLinePath.push_back(laserLinePath.first());
+                    }
+                }
+
+                // add point
+                laserLinePath.push_back(point);
+
+                // current path direction
+                isCurrentYAxis = cmpf(laserLinePath.first().y, point.y);
+                continue;
+            }
+
+            // check direction of new point
+            const Vec2 &lastBrick = laserLinePath.last();
+            bool isNextYAxis = cmpf(lastBrick.y, point.y);
+
+            // if we change direction add extra point to this angle
+            if(isNextYAxis != isCurrentYAxis) {
+                for(int i = 0; i < repeat; i ++) {
+                    laserLinePath.push_back(lastBrick);
+                }
+            }
+
+            // add point
+            laserLinePath.push_back(point);
+
+            // and save current path direction
+            isCurrentYAxis = isNextYAxis;
+        }
+
+        // add last point twice
+        for(int i = 0; i < repeatFirstLast; i++) {
+            laserLinePath.push_back(laserLinePath.last());
+        }
+
+        // remember in parts
+        laserLinePathParts.push_back(laserLinePath);
+    }
+
+    return laserLinePathParts;
+}
+
 
 // ldAbstractGameVisualizer
 ldAbstractGameVisualizer::ldAbstractGameVisualizer()
     : ldVisualizer()
     , m_mutex(QMutex::Recursive)
 {
-//    m_rate = 20000;
+    //    m_rate = 20000;
 
     m_isMusicAware = false;
     // Current game state label.

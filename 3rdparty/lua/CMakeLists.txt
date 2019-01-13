@@ -1,5 +1,8 @@
-project ( lua C )
 cmake_minimum_required ( VERSION 2.8 )
+
+set(CMAKE_AUTOMOC OFF)
+
+project ( lua C )
 
 include_directories ( src ${CMAKE_CURRENT_BINARY_DIR} )
 set ( SRC_CORE src/lapi.c src/lcode.c src/lctype.c src/ldebug.c src/ldo.c src/ldump.c src/lfunc.c src/lgc.c src/llex.c
@@ -15,7 +18,7 @@ add_library ( liblua ${SRC_CORE} ${SRC_LIB} )
 set_target_properties ( liblua PROPERTIES OUTPUT_NAME lua )
 
 if(WIN32)
-add_library ( libluadll SHARED ${SRC_CORE} ${SRC_LIB} )
-target_compile_definitions ( libluadll PRIVATE _CRT_SECURE_NO_WARNINGS LUA_BUILD_AS_DLL )
-set_target_properties ( libluadll PROPERTIES OUTPUT_NAME lua53 )
+    add_library ( libluadll SHARED ${SRC_CORE} ${SRC_LIB} )
+    target_compile_definitions ( libluadll PRIVATE _CRT_SECURE_NO_WARNINGS LUA_BUILD_AS_DLL )
+    set_target_properties ( libluadll PROPERTIES OUTPUT_NAME lua53 )
 endif()

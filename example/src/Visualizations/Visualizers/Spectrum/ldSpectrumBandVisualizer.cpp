@@ -22,10 +22,10 @@
 
 #include <QtCore/QDebug>
 
-#include "ldCore/Visualizations/util/MathsHelper/ldMaths.h"
-#include "ldCore/Visualizations/util/MathsHelper/ldMathSpectrum.h"
+#include "ldCore/Helpers/Maths/ldMaths.h"
+#include "ldCore/Helpers/Maths/ldMathSpectrum.h"
 
-#include "ldCore/Visualizations/util/ColorHelper/ldColorUtil.h"
+#include "ldCore/Helpers/Color/ldColorUtil.h"
 
 ldSpectrumBandVisualizer::ldSpectrumBandVisualizer()
 {

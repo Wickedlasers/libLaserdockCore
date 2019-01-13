@@ -10,7 +10,7 @@
 #define __LaserdockVisualizer__ldAnimationVisualizer__
 
 #include "ldCore/Visualizations/ldVisualizer.h"
-#include "ldCore/Visualizations/util/VisualizerHelper/ldAnimationSequence.h"
+#include "ldCore/Helpers/Visualizer/ldAnimationSequence.h"
 
 class ldAnimationVisualizer : public ldVisualizer
 {

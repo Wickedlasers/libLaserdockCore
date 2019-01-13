@@ -31,8 +31,8 @@
 
 #include <ldCore/Render/ldRendererOpenlase.h>
 
-#include "ldCore/Visualizations/util/MathsHelper/ldMaths.h"
-#include "ldCore/Visualizations/util/ColorHelper/ldColorUtil.h"
+#include "ldCore/Helpers/Maths/ldMaths.h"
+#include "ldCore/Helpers/Color/ldColorUtil.h"
 
 class LDCORESHARED_EXPORT ldGameObject
 {

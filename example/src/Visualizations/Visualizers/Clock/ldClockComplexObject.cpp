@@ -32,8 +32,8 @@
 
 #include "ldCore/ldCore.h"
 #include "ldCore/Filter/ldColorUtils.h"
-#include "ldCore/Visualizations/util/ColorHelper/ldColorUtil.h"
-#include "ldCore/Visualizations/util/SVGHelper/ldSvgReader.h"
+#include "ldCore/Helpers/Color/ldColorUtil.h"
+#include "ldCore/Helpers/SVG/ldSvgReader.h"
 
 // ldClockComplexObject
 ldClockComplexObject::ldClockComplexObject()

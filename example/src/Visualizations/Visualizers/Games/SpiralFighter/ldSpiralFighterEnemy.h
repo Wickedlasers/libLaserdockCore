@@ -22,7 +22,7 @@
 #define ldSpiralFighterEnemy_H
 
 #include <ldCore/Render/ldRendererOpenlase.h>
-#include "ldCore/Visualizations/util/MathsHelper/ldMaths.h"
+#include "ldCore/Helpers/Maths/ldMaths.h"
 
 #include "ldCore/Visualizations/Visualizers/Games/Core/ldGameObject.h"
 

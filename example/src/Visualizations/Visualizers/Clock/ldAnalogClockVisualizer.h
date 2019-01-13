@@ -22,7 +22,7 @@
 #define __ldCore__ldAnalogClockVisualizer__
 
 #include "ldCore/Visualizations/ldVisualizer.h"
-#include "ldCore/Visualizations/util/MathsHelper/ldMaths.h"
+#include "ldCore/Helpers/Maths/ldMaths.h"
 
 class ldClockComplexObject;
 
