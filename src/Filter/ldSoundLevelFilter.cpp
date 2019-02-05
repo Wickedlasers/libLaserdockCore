@@ -33,13 +33,10 @@ void ldSoundLevelFilter::process(Vertex &input)
     if(!m_enabled)
         return;
 
-    float str = ldCore::instance()->musicManager()->soundLevel() < m_borderValue ? 0 : 1;
-
-    LaserPoint t(input);
-    t.r *= str;
-    t.g *= str;
-    t.b *= str;
-    input = t.toVertex();
+    bool isBorder = ldCore::instance()->musicManager()->soundLevel() < m_borderValue;
+    if(isBorder) {
+        input.clear();
+    }
 }
 
 bool ldSoundLevelFilter::enabled() const

@@ -27,9 +27,6 @@
 
 #include <ldCore/Sound/ldSoundData.h>
 
-// namespace
-using namespace std;
-
 class LDCORESHARED_EXPORT ldAppakPeaks
 {
 public:

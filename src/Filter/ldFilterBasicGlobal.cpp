@@ -22,7 +22,7 @@
 
 #include <math.h>
 #include <QtCore/QDebug>
-#include "ldCore/Filter/ldColorUtils.h"
+#include "ldCore/Helpers/Color/ldColorUtil.h"
 
 
 ldFilterBasicGlobal::ldFilterBasicGlobal()

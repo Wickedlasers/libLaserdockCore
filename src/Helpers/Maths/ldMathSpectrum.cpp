@@ -26,9 +26,9 @@
 #include <QtCore/QDebug>
 
 // getAverageSpectrumValueFromInterval
-vector<float> ldMathSpectrum::getAverageSpectrumValueFromInterval(ldSoundData* pSoundData, vector<int> interval, int nbBandSoundData)
+std::vector<float> ldMathSpectrum::getAverageSpectrumValueFromInterval(ldSoundData* pSoundData, std::vector<int> interval, int nbBandSoundData)
 {
-    vector<float> res = vector<float>();
+    std::vector<float> res;
     for (uint i=0; i<interval.size(); i++)
     {
         int start_interval = 0;
@@ -48,10 +48,10 @@ vector<float> ldMathSpectrum::getAverageSpectrumValueFromInterval(ldSoundData* p
 }
 
 // getNormalizedSpectrumValueFromInterval
-vector<float> ldMathSpectrum::getNormalizedSpectrumValueFromInterval(ldSoundData* pSoundData, vector<int> interval, int nbBandSoundData)
+std::vector<float> ldMathSpectrum::getNormalizedSpectrumValueFromInterval(ldSoundData* pSoundData, std::vector<int> interval, int nbBandSoundData)
 {
-    vector<float> res = vector<float>();
-    vector<float> resNormed = vector<float>();
+    std::vector<float> res;
+    std::vector<float> resNormed;
     float max = -1.0;
     for (uint i=0; i<interval.size(); i++)
     {

@@ -43,15 +43,11 @@ class ldSoundStubDevice;
 class ldLoopbackAudioDevice;
 #endif
 
-class ldAudioDecoder;
-class ldQAudioDecoder;
-
 typedef void (*ldActivateCallbackFunc)(const ldSoundDeviceInfo &info);
 
 class LDCORESHARED_EXPORT ldSoundDeviceManager: public ldSoundInterface
 {
     Q_OBJECT
-    QML_READONLY_PROPERTY(bool, isPriorityDevice)
 public:
     static void registerMetaType();
 
@@ -67,9 +63,6 @@ public:
 
     ldSoundDeviceInfo getDeviceInfo() const;
     void setDeviceInfo(const ldSoundDeviceInfo &info);
-
-    void setPriorityDevice(const ldSoundDeviceInfo &info);
-    void updatePrioritySoundDeviceData(const QVariant &data);
 
     void setActivateCallbackFunc(ldActivateCallbackFunc func);
 
@@ -91,7 +84,6 @@ private:
 #ifdef LD_CORE_ENABLE_MIDI
     void activateMidiDevice(ldSoundDeviceInfo info);
 #endif
-    void activatePlayerDevice(const ldSoundDeviceInfo &info);
     void activateStubDevice(ldSoundDeviceInfo info);
 
     void deleteAudioInput();
@@ -104,7 +96,6 @@ private:
 
     QList<ldSoundDeviceInfo> m_devices;
     ldSoundDeviceInfo m_info;
-    ldSoundDeviceInfo m_priorityInfo;
 
     // different devices
     ldQAudioInputDevice *m_qaudioInputDevice;
@@ -115,7 +106,6 @@ private:
     ldMidiDevice* m_midiDevice;
 #endif
     ldSoundStubDevice* m_stubDevice;
-    ldAudioDecoder* m_playerDevice;
 
     ldActivateCallbackFunc m_activateCallbackFunc = nullptr;
 };

@@ -26,7 +26,7 @@
 //
 #include "ldCore/Helpers/Audio/ldHybridReactor.h"
 #include <QtCore/QDebug>
-#include <ldCore/Filter/ldColorUtils.h>
+#include <ldCore/Helpers/Color/ldColorUtil.h>
 #include "ldCore/Helpers/Audio/ldTempoAC.h"
 
 
@@ -142,7 +142,7 @@ void ldHybridFlash::process(ldMusicManager* m) {
             //s = v = 1;
 
             int h = 360 * (1.0f - 0.33f * c);
-            colors[i] = colorHSV(h % 360, s, v);
+            colors[i] = ldColorUtil::colorHSV(h % 360, s, v);
             ison[i] = (v > 0.01f);
             //ison[i] = (sban != 0 && sban != 2);
 
@@ -214,7 +214,7 @@ void ldHybridAnima::process(ldMusicManager* m) {
     //qDebug() << "anim selector index " << selectorBeatAlgo.indexNew;
 
     // progress track position
-    if (m->appakaGate->isSilent) {
+    if (m->appakaGate->isSilent()) {
         //qDebug() << "anim silent";
         outputTrackPosition = 0;
     } /*else if (m->tempoACSlow->confidence < 0.25) {
@@ -267,8 +267,8 @@ void ldHybridAnima::process(ldMusicManager* m) {
 }
 
 ldHybridAutoColor2::ldHybridAutoColor2() {
-    outputColor1 = colorRGB(128, 255, 0);
-    outputColor2 = colorRGB(0, 255, 255);
+    outputColor1 = ldColorUtil::colorRGB(128, 255, 0);
+    outputColor2 = ldColorUtil::colorRGB(0, 255, 255);
 }
 
 void ldHybridAutoColor2::process(ldMusicManager* m) {
@@ -285,8 +285,8 @@ void ldHybridAutoColor2::process(ldMusicManager* m) {
     selectorColorSat2.process(fastness, 3, beatValue, 0.45f, 0.75f, 0.95f, bpf*2.f);
     
     
-    outputColor1 = colorHSV(359*selectorColorHue1.indexFloat/4, 1, 1);
-    outputColor2 = colorHSV(359*(selectorColorHue2.indexFloat+0.5)/5+0.1, selectorColorSat2.indexFloat/2, clampf(/*m->mrVolume->output*/+m->tempoACSlower->phaseReactive, 0.5, 1));
+    outputColor1 = ldColorUtil::colorHSV(359*selectorColorHue1.indexFloat/4, 1, 1);
+    outputColor2 = ldColorUtil::colorHSV(359*(selectorColorHue2.indexFloat+0.5)/5+0.1, selectorColorSat2.indexFloat/2, clampf(/*m->mrVolume->output*/+m->tempoACSlower->phaseReactive, 0.5, 1));
     
         
 }

@@ -18,7 +18,7 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#include "ldAudioDecoder.h"
+#include "ldCore/Sound/ldAudioDecoder.h"
 
 #include <QtCore/QtDebug>
 
@@ -41,8 +41,9 @@ namespace  {
 //    const int BUFFER_SIZE = 2000;
 }
 
-ldAudioDecoder::ldAudioDecoder(QObject *parent) :
-    QObject(parent)
+ldAudioDecoder::ldAudioDecoder(QObject *parent)
+    : ldSoundInterface(parent)
+    , m_isActive(false)
 {
     m_timer.setInterval(1000 / STUBFPS); // 18 ms
     m_timer.setTimerType(Qt::PreciseTimer);
@@ -51,9 +52,7 @@ ldAudioDecoder::ldAudioDecoder(QObject *parent) :
 
 ldAudioDecoder::~ldAudioDecoder()
 {
-    stop();
 }
-
 
 void ldAudioDecoder::start(const QString &filePath, qint64 elapsedTime)
 {
@@ -91,6 +90,8 @@ void ldAudioDecoder::start(const QString &filePath, qint64 elapsedTime)
 #else
     Q_UNUSED(elapsedTime)
 #endif
+
+    update_isActive(true);
 }
 
 void ldAudioDecoder::stop()
@@ -101,6 +102,7 @@ void ldAudioDecoder::stop()
     m_duration = -1;
 
     m_audioDecoder.reset();
+    update_isActive(false);
 #endif
 }
 
@@ -108,6 +110,7 @@ void ldAudioDecoder::setElapsedTime(qint64 time)
 {
     m_elapsedTime = time;
     m_elapsedTimer.restart();
+    update_isActive(true);
 }
 
 void ldAudioDecoder::timerSlot()
@@ -148,6 +151,6 @@ void ldAudioDecoder::timerSlot()
         sampleToSend = &m_sampleData[0];
     }
 
-    emit bufferUpdated(sampleToSend, sampleSizeToSend / 2);
+    processAudioBuffer(sampleToSend, sampleSizeToSend / 2);
 #endif
 }

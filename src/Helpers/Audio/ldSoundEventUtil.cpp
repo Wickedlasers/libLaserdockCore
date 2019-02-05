@@ -37,8 +37,8 @@ ldSoundEventUtil::ldSoundEventUtil()
 {
 //    m_debug=true;
 
-    m_previousIsSilent = !ldCore::instance()->musicManager()->appakaGate->isSilent;
-    isSilent = ldCore::instance()->musicManager()->appakaGate->isSilent;
+    m_previousIsSilent = !ldCore::instance()->musicManager()->appakaGate->isSilent();
+    isSilent = ldCore::instance()->musicManager()->appakaGate->isSilent();
 }
 
 // ~ldSoundEventUtil
@@ -96,10 +96,10 @@ void ldSoundEventUtil::update(ldSoundData* pSoundData, float /*delta*/)
     ldMusicManager* m = ldCore::instance()->musicManager();
 
     // isSilent
-    isSilent=m->appakaGate->isSilent;
+    isSilent=m->appakaGate->isSilent();
 
-    if (m_previousIsSilent != m->appakaGate->isSilent) {
-        if (!m->appakaGate->isSilent) {
+    if (m_previousIsSilent != m->appakaGate->isSilent()) {
+        if (!m->appakaGate->isSilent()) {
             //qDebug() << "Dj Start";
             didDjStart=true;
         } else {
@@ -111,7 +111,7 @@ void ldSoundEventUtil::update(ldSoundData* pSoundData, float /*delta*/)
         didDjStop=false;
         didDjStart=false;
     }
-    m_previousIsSilent = m->appakaGate->isSilent;
+    m_previousIsSilent = m->appakaGate->isSilent();
 
     // update events
     for (int i=0; i<m_maxChannelSize; i++)

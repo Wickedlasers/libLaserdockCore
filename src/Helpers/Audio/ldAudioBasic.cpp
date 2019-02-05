@@ -40,7 +40,7 @@ ldAudioBasic::ldAudioBasic() {
     buffers.clear();
 //    buffers.resize(buffersize);
     for (int ad=0; ad<2; ad++) {
-        buffers.push_back(vector<float>());
+        buffers.push_back(std::vector<float>());
         for (int i=0; i<buffersize; i++) {
             buffers[ad].push_back(0.0);
         }

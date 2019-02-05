@@ -31,13 +31,13 @@ class LDCORESHARED_EXPORT ldAbstractHardwareManager : public QObject
 public:
     explicit ldAbstractHardwareManager(QObject *parent = nullptr);
 
-    virtual int deviceCount() const = 0;
+    virtual uint deviceCount() const = 0;
 
 public slots:
     virtual void setConnectedDevicesActive(bool active) = 0;
 
 signals:
-    void deviceCountChanged(int deviceCount);
+    void deviceCountChanged(uint deviceCount);
 };
 
 

@@ -51,6 +51,11 @@ bool Vec2::isNull() const
     return cmpf(x, 0.f) && cmpf(y, 0.f);
 }
 
+float Vec2::distance(const Vec2 &n) const
+{
+    return sqrtf(powf((x-n.x), 2) + powf((y-n.y), 2));
+}
+
 float Vec2::magnitude() const
 {
     return sqrt(pow(x, 2) + pow(y, 2));
@@ -60,8 +65,9 @@ Vec2 Vec2::normalize() const
 {
     Vec2 normalized;
 
-    if (magnitude() > 0) {
-        normalized = Vec2(x / magnitude(), y / magnitude());
+    float m = magnitude();
+    if (m > 0) {
+        normalized = Vec2(x / m, y / m);
     }
 
     return normalized;
@@ -103,12 +109,33 @@ void Vec2::scale(float xFactor, float yFactor)
 
 Vec2 Vec2::operator+ (const Vec2& other) const
 {
-    return Vec2(x + other.x, y + other.y);
+    Vec2 res = *this;
+    res += other;
+    return res;
 }
+
+Vec2 &Vec2::operator+=(const Vec2 &other)
+{
+    x += other.x;
+    y += other.y;
+
+    return *this;
+}
+
 
 Vec2 Vec2::operator- (const Vec2& other) const
 {
-    return Vec2(x - other.x, y - other.y);
+    Vec2 res = *this;
+    res -= other;
+    return res;
+}
+
+Vec2& Vec2::operator-=(const Vec2 &other)
+{
+    x -= other.x;
+    y -= other.y;
+
+    return *this;
 }
 
 bool Vec2::operator ==(const Vec2 &other) const
@@ -149,6 +176,20 @@ bool point3d::isNull() const
     return x == 0.f && y == 0.f && z == 0.f;
 }
 
+float point3d::distance(const point3d &n) const
+{
+    return sqrtf(powf((x-n.x), 2) + powf((y-n.y), 2) + powf((z-n.z), 2));
+}
+
+void point3d::norm()
+{
+    float d = distance(ZERO_VECTOR);
+    if(d == 0)
+        return;
+
+    *this /= d;
+}
+
 point3d point3d::toLaserCoord() const
 {
     point3d result;
@@ -165,6 +206,70 @@ void point3d::rotate(float p_x, float p_y, float p_z, point3d p_pivot)
     r = ldMaths::rotate3dAtPoint(r, p_y, point3d::Y_VECTOR, p_pivot);
     r = ldMaths::rotate3dAtPoint(r, p_z, point3d::Z_VECTOR, p_pivot);
     *this = r;
+}
+
+point3d point3d::operator+(const point3d &other) const
+{
+    point3d res = *this;
+    res += other;
+    return res;
+}
+
+point3d &point3d::operator+=(const point3d &other)
+{
+    x += other.x;
+    y += other.y;
+    z += other.z;
+
+    return *this;
+}
+
+point3d point3d::operator-(const point3d &other) const
+{
+    point3d res = *this;
+    res -= other;
+    return res;
+}
+
+point3d &point3d::operator-=(const point3d &other)
+{
+    x -= other.x;
+    y -= other.y;
+    z -= other.z;
+
+    return *this;
+}
+
+point3d point3d::operator*(float coef) const
+{
+    point3d res = *this;
+    res *= coef;
+    return res;
+}
+
+point3d &point3d::operator*=(float coef)
+{
+    x *= coef;
+    y *= coef;
+    z *= coef;
+
+    return *this;
+}
+
+point3d point3d::operator/(float coef) const
+{
+    point3d res = *this;
+    res /= coef;
+    return res;
+}
+
+point3d &point3d::operator/=(float coef)
+{
+    x /= coef;
+    y /= coef;
+    z /= coef;
+
+    return *this;
 }
 
 // -------------------------- SvgDim ---------------------------------
@@ -406,12 +511,6 @@ CCPoint ldMaths::changeCoords(const CCPoint &m, float rotation, const CCPoint &t
     return res;
 }
 
-//  addVec2
-Vec2 ldMaths::addVec2(const Vec2 &m, const Vec2 &n)
-{
-    return Vec2(m.x+n.x, m.y+n.y);
-}
-
 // rotate3d
 point3d ldMaths::rotate3d(const point3d &p, float angle, const point3d &axis)
 {
@@ -479,62 +578,12 @@ point3d ldMaths::rotate3d(const point3d &p, float angle, const point3d &axis)
 // rotate3dAtPoint
 point3d ldMaths::rotate3dAtPoint(const point3d &p, float angle, const point3d &axis, const point3d &point)
 {
-    point3d tmp=diff3d(p,point);
-    tmp=rotate3d(tmp, angle, axis);
-    tmp=add3d(tmp,point);
+    point3d tmp = p - point;
+    tmp = rotate3d(tmp, angle, axis);
+    tmp += point;
     return tmp;
 }
 
-// distance3d
-float ldMaths::distance3d(const point3d &m, const point3d &n)
-{
-    return sqrtf( (m.x-n.x)*(m.x-n.x) + (m.y-n.y)*(m.y-n.y) + (m.z-n.z)*(m.z-n.z) );
-}
-
-// norm3d
-point3d ldMaths::norm3d(const point3d &m)
-{
-    point3d zero;
-    zero.x=0;
-    zero.y=0;
-    zero.z=0;
-    float d=distance3d(m, zero);
-    if (d==0) return zero;
-    zero.x=m.x/d;
-    zero.y=m.y/d;
-    zero.z=m.z/d;
-    return zero;
-}
-
-// add3d
-point3d ldMaths::add3d(const point3d &m, const point3d &n)
-{
-    point3d res;
-    res.x=n.x+m.x;
-    res.y=n.y+m.y;
-    res.z=n.z+m.z;
-    return res;
-}
-
-// diff3d
-point3d ldMaths::diff3d(const point3d &m, const point3d &n)
-{
-    point3d res;
-    res.x=m.x-n.x;
-    res.y=m.y-n.y;
-    res.z=m.z-n.z;
-    return res;
-}
-
-// mult3d
-point3d ldMaths::mult3d(const point3d &m, float coef)
-{
-    point3d res;
-    res.x=coef*m.x;
-    res.y=coef*m.y;
-    res.z=coef*m.z;
-    return res;
-}
 
 // vectProduct
 point3d ldMaths::vectProduct(const point3d &u, const point3d &v)
@@ -618,11 +667,11 @@ float ldMaths::bezier3dLength(const Bezier3dCurve &b, int maxPoints)
 
 float ldMaths::bezier3dLengthFast(const Bezier3dCurve &b)
 {
-    float chord = distance3d(b.end, b.start);
+    float chord = b.end.distance(b.start);
 
-    float cont_net = distance3d(b.start, b.control1)
-            + distance3d(b.control2, b.control1)
-            + distance3d(b.end, b.control2);
+    float cont_net = b.start.distance(b.control1)
+            + b.control2.distance(b.control1)
+            + b.end.distance(b.control2);
 
     float app_arc_length = (cont_net + chord) / 2;
     return app_arc_length;

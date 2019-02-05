@@ -244,7 +244,7 @@ void ldRendererOpenlase::dot(float x, float y, int points, uint32_t color){
 }
 
 
-void ldRendererOpenlase::setRenderParamsDefaultQuality() {
+void ldRendererOpenlase::setRenderParamsQuality() {
     OLRenderParams params;
     memset(&params, 0, sizeof(params));
     params.rate = rate();
@@ -264,7 +264,7 @@ void ldRendererOpenlase::setRenderParamsDefaultQuality() {
     setRenderParams(&params);
 }
 
-void ldRendererOpenlase::setRenderParamsDefaultSpeed() {
+void ldRendererOpenlase::setRenderParamsSpeed() {
     OLRenderParams params;
     memset(&params, 0, sizeof(params));
     params.rate = rate();
@@ -284,13 +284,106 @@ void ldRendererOpenlase::setRenderParamsDefaultSpeed() {
     setRenderParams(&params);
 }
 
-void ldRendererOpenlase::setRenderParamsDefaultRaw() {
+void ldRendererOpenlase::setRenderParamsRaw() {
     OLRenderParams params;
     memset(&params, 0, sizeof(params));
     params.rate = rate();
     params.on_speed = 999;
     params.off_speed = 999;
     params.snap = 0;
+    params.render_flags = RENDER_NOREVERSE | RENDER_NOREORDER;
+    setRenderParams(&params);
+}
+
+void ldRendererOpenlase::setRenderParamsStandard()
+{
+    //
+    OLRenderParams params;
+    memset(&params, 0, sizeof params);
+    params.rate = rate();
+    params.on_speed = 2.0/32.0;
+    params.off_speed = 2.0/32.0;
+    params.start_wait = 8;
+    params.start_dwell = 2;
+    params.curve_dwell = 1;
+    params.corner_dwell = 3;
+    params.curve_angle = cosf(30.0f*((float) M_PI/180.0f)); // 30 deg
+    params.end_dwell = 2;
+    params.end_wait = 1;
+    params.snap = 1/1000.0f;
+    params.render_flags = RENDER_GRAYSCALE | RENDER_NOREVERSE | RENDER_NOREORDER;
+    params.flatness = 0;
+    params.min_length = 0;
+    params.max_framelen = params.rate/30;
+    setRenderParams(&params);
+}
+
+void ldRendererOpenlase::setRenderParamsBezier()
+{
+    //
+    OLRenderParams params;
+    memset(&params, 0, sizeof params);
+    params.rate = rate();
+    params.on_speed = 2.0/32.0;
+    params.off_speed = 2.0/32.0;
+    params.start_wait = 8; // 16
+    params.start_dwell = 2;
+    params.curve_dwell = 1;
+    params.corner_dwell = 3;
+    params.curve_angle = cosf(30.0f*((float) M_PI/180.0f)); // 30 deg
+    params.end_dwell = 2;
+    params.end_wait = 1;
+    params.snap = 1/1000.0f;
+    params.render_flags = RENDER_GRAYSCALE | RENDER_NOREVERSE | RENDER_NOREORDER;
+    params.min_length = 0;
+    params.max_framelen = params.rate/30;
+    params.flatness = 0.00001f; //for beziers to work (thanks Alec!)
+    setRenderParams(&params);
+}
+
+void ldRendererOpenlase::setRenderParamsLower()
+{
+    //
+    OLRenderParams params;
+    memset(&params, 0, sizeof params);
+    params.rate = rate();
+    //    params.on_speed = 2.0/32.0;
+    //    params.off_speed = 2.0/32.0;
+
+    params.on_speed = 1.0/64.0;
+    params.off_speed = 1.0/64.0;
+
+    params.start_wait = 8;
+    params.start_dwell = 2;
+    params.curve_dwell = 1;
+    params.corner_dwell = 3;
+    params.curve_angle = cosf(30.0f*((float) M_PI/180.0f)); // 30 deg
+    params.end_dwell = 2;
+    params.end_wait = 1;
+    params.snap = 1/500.0f;
+    params.render_flags = RENDER_GRAYSCALE | RENDER_NOREVERSE | RENDER_NOREORDER;
+    params.flatness = 0;
+    params.min_length = 0;
+    params.max_framelen = params.rate/30;
+    setRenderParams(&params);
+}
+
+void ldRendererOpenlase::setRenderParamsBeam() {
+    OLRenderParams params;
+    memset(&params, 0, sizeof(params));
+    params.rate =rate();
+    params.on_speed = 2.0f / 50.0f;
+    params.off_speed = 2.0f / 50.0f;
+    params.start_wait = 3;
+    params.start_dwell = 0;
+    params.curve_dwell = 0;
+    params.corner_dwell = 0;
+    params.end_dwell = 0;
+    params.end_wait = 2;
+    params.curve_angle = cosf(30.0f * (3.14f / 180.0f)); // 30 deg
+    params.flatness = 0;
+    params.min_length = 0;
+    params.snap = 0;//1.0f / 40.0f;
     params.render_flags = RENDER_NOREVERSE | RENDER_NOREORDER;
     setRenderParams(&params);
 }

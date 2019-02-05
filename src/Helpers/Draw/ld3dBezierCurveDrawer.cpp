@@ -33,10 +33,8 @@
 
 #include <ldCore/Helpers/ldEnumHelper.h>
 #include <ldCore/Helpers/ldRandomGenerator.h>
-#include <ldCore/Filter/ldColorUtils.h>
+#include <ldCore/Helpers/Color/ldColorUtil.h>
 #include <ldCore/Render/ldRendererOpenlase.h>
-
-#include "ldCore/Helpers/Color/ldColorUtil.h"
 
 #define TIME_FOR_INTRO_3DTO 0.8f
 #define TIME_FOR_SHOW_3DTO 1.0f
@@ -143,11 +141,11 @@ bool ld3dBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer)
                     p.rotate(st.angleX, st.angleY, st.angleZ, piv);
 
                     // 3d effect
-                    float dist = ldMaths::distance3d(st.position, piv);
-                    point3d t = ldMaths::diff3d(st.position, piv);
-                    t = ldMaths::norm3d(t);
-                    t = ldMaths::mult3d(t, inputCoeff*dist);
-                    p = ldMaths::add3d(p, t);
+                    float dist = st.position.distance(piv);
+                    point3d t = st.position - piv;
+                    t.norm();
+                    t *= inputCoeff*dist;
+                    p += t;
 
                     // detect which color step should be used depending on current state
                     int colorStep = 0;
@@ -163,7 +161,7 @@ bool ld3dBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer)
                     break;
                     }
                     // convert color step to openlase format
-                    uint32_t color = colorHSV(colorStep, 1.0f, 1.0f);
+                    uint32_t color = ldColorUtil::colorHSV(colorStep, 1.0f, 1.0f);
                     // color fade in/fade out
                     color = ldColorUtil::lerpInt(color, 0x000000, ldMaths::normLog(inputCoeff, 3.0f) );
                     // add point
@@ -293,7 +291,7 @@ bool ld3dBezierCurveDrawer::innerDrawTwo(ldRendererOpenlase *renderer, int rotat
                     break;
                     }
                     // convert color step to openlase format
-                    uint32_t color = colorHSV(colorStep, 1.0f, 1.0f);
+                    uint32_t color = ldColorUtil::colorHSV(colorStep, 1.0f, 1.0f);
                     // color fade in/fade out
                     color = ldColorUtil::lerpInt(color, 0x000000, ldMaths::normLog(inputCoeff, 3.0f) );
                     // add point

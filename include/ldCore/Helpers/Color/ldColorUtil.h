@@ -26,13 +26,6 @@
 #include "ldCore/Shape/ldParticleGeometry.h"
 #include "ldCore/Helpers/Maths/ldMaths.h"
 
-struct Point3dColor {
-    float x;
-    float y;
-    float z;
-    int c;
-};
-
 namespace ldColorUtil
 {
     LDCORESHARED_EXPORT int lerpInt(int a, int b, float amt);
@@ -41,67 +34,23 @@ namespace ldColorUtil
     
     LDCORESHARED_EXPORT uint32_t colorForStep(float step, float decay = 0);
     
-    LDCORESHARED_EXPORT uint32_t colorEffectOneSecond(int p_baseColorDecay, int p_lastStep, int p_lastSecond, float p_millisec, const Vec2& p_origin, const Vec2& p_size, const Vec2& p_point);
-    LDCORESHARED_EXPORT uint32_t colorEffectTwoSecond(int p_baseColorDecay, int p_lastStep, int p_lastSecond, float p_millisec, const Vec2& p_origin, const Vec2& p_size, const Vec2& p_point);
-    LDCORESHARED_EXPORT uint32_t colorEffectThree(int p_baseColorDecay, float p_millisec, const Vec2& p_origin, const Vec2& p_size, const Vec2& p_point);
-    
-
-    // hsv helper
-
     LDCORESHARED_EXPORT void rgb2hsv(float& r, float& g, float& b, float& h, float& s, float& v);
     LDCORESHARED_EXPORT void hsv2rgb(float& h, float& s, float& v, float& r, float& g, float& b);
     LDCORESHARED_EXPORT void hueSet(float& r, float& g, float& b, float hue);
     LDCORESHARED_EXPORT void hueShift(float& r, float& g, float& b, float hueoffset);
+
+    LDCORESHARED_EXPORT uint32_t colorRGB(uint32_t r, uint32_t g, uint32_t b);
+
+    /** Get RGB color from HSV */
+    LDCORESHARED_EXPORT uint32_t colorHSV(float h, float s, float v);
+
+    /** float color space conversions, domain and range are [0,1] */
+    LDCORESHARED_EXPORT void colorHSVtoRGBfloat(float h, float s, float v, float& r, float& g, float& b);
+    LDCORESHARED_EXPORT void colorRGBtoHSVfloat(float r, float g, float b, float& h, float& s, float& v);
+
+    LDCORESHARED_EXPORT void HSVtoRGB(quint16 h, quint8 s, quint8 v, quint8 wheelLine, quint8 color[3]);
+    LDCORESHARED_EXPORT void RGBtoHSV(quint8 r, quint8 g, quint8 b, quint16 hsv[3]);
 }
-
-class LDCORESHARED_EXPORT ldAbstractColorEffect {
-
-public:
-    virtual ~ldAbstractColorEffect();
-
-    void setBaseColorDecay(int baseColorDecay);
-
-    virtual uint32_t getColor(const Vec2& p_point, const SvgDim &p_dim) = 0;
-    virtual void updateColor();
-
-protected:
-    float _millis = 0.0f;
-
-    int _baseColorDecay = 223;
-};
-
-class LDCORESHARED_EXPORT ldAbstractStepColorEffect : public ldAbstractColorEffect {
-
-public:
-    virtual void updateColor() override;
-
-protected:
-    float _lastColorStep = 0.f;
-    int _lastSecond = 0;
-};
-
-class LDCORESHARED_EXPORT ldColorEffectOne : public ldAbstractStepColorEffect {
-public:
-    virtual uint32_t getColor(const Vec2& p_point, const SvgDim &p_dim) override;
-
-private:
-
-};
-class LDCORESHARED_EXPORT ldColorEffectTwo : public ldAbstractStepColorEffect {
-public:
-
-    virtual uint32_t getColor(const Vec2& p_point, const SvgDim &p_dim) override;
-
-private:
-
-};
-class LDCORESHARED_EXPORT ldColorEffectThree : public ldAbstractColorEffect {
-public:
-    virtual uint32_t getColor(const Vec2& p_point, const SvgDim &p_dim) override;
-
-private:
-
-};
 
 #endif // LDCOLORUTIL_H
 

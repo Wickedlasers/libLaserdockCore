@@ -48,18 +48,19 @@ struct RGB {
     uchar b, g, r;
 };
 
-QImage ldImageHelper::QImageFromMat(cv::Mat _input) {
-    IplImage iplImage(_input);
-    return IplImage2QImage(&iplImage);
+QImage ldImageHelper::QImageFromMat(const cv::Mat &img) {
+    return QImage(img.data, img.cols, img.rows, img.step, QImage::Format_RGB888).rgbSwapped().copy();
+
+    // old code, left just for reference
+//    IplImage iplImage(img);
+//    return IplImage2QImage(&iplImage);
 }
 
-cv::Mat ldImageHelper::matFromQImage(QImage _input) {
-    QImage image = _input;
+cv::Mat ldImageHelper::matFromQImage(const QImage &image) {
     //cv::Mat mat(image.height(), image.width(), CV_8UC3, image.bytesPerLine());
     //cv::Mat mat(image.height(), image.width(), CV_8UC3,
     //cv::Mat mat()
     cv::Mat mat(image.height(), image.width(), CV_8UC3);
-    mat = mat.clone();
     for (int i = 0; i < mat.rows; i++) {
         for (int j = 0; j < mat.cols; j++) {
             RGB& rgb = mat.ptr<RGB>(i)[j];
@@ -85,7 +86,12 @@ cv::Mat ldImageHelper::resizeFitInSquare(const cv::Mat& _input, int size) {
         neww = size * w / h;
     }
     cv::Mat ret;
+#ifdef Q_OS_ANROID
+    // do NEAREST resize on Android as it is requires less CPU
+    cv::resize(_input, ret, cv::Size(neww, newh), 0, 0, cv::InterpolationFlags::INTER_NEAREST);
+#else
     cv::resize(_input, ret, cv::Size(neww, newh), 0, 0, cv::InterpolationFlags::INTER_CUBIC);
+#endif
     return ret;
 }
 

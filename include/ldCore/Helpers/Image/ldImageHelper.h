@@ -23,12 +23,13 @@ class LDCORESHARED_EXPORT ldImageHelper
 {
 public:
     static QImage IplImage2QImage(IplImage *iplImg);
-    static QImage QImageFromMat(cv::Mat _input);
-    static cv::Mat matFromQImage(QImage _input);
+    static QImage QImageFromMat(const cv::Mat &_input);
+    static cv::Mat matFromQImage(const QImage &image);
     static cv::Mat resizeFitInSquare(const cv::Mat& _input, int size);
     static QImage drawLaserImageFromPoints(std::vector<OLPoint>, int size, float scale = 1);
     static QImage drawLaserImageFromVerts(std::vector<Vertex>, int size, float scale = 1);
     static QImage resizeLaserImage(QImage src, int size);
+
 };
 
 #endif // LDIMAGEHELPER_H

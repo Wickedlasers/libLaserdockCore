@@ -154,8 +154,6 @@ target_sources(${PROJECT_NAME} PRIVATE
         #Filter
         ${SRCDIR}/Filter/ldBasicFilters.cpp
         ${INCDIR}/Filter/ldBasicFilters.h
-        ${SRCDIR}/Filter/ldColorUtils.cpp
-        ${INCDIR}/Filter/ldColorUtils.h
         ${SRCDIR}/Filter/ldDeadzoneFilter.cpp
         ${INCDIR}/Filter/ldDeadzoneFilter.h
         ${SRCDIR}/Filter/ldFilter.cpp
@@ -219,11 +217,9 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Shape/ldShape.h
         #Sound
         ${SRCDIR}/Sound/ldAudioDecoder.cpp
-        ${SRCDIR}/Sound/ldAudioDecoder.h
+        ${INCDIR}/Sound/ldAudioDecoder.h
         ${SRCDIR}/Sound/ldFFT.cpp
         ${SRCDIR}/Sound/ldFFT.h
-        ${SRCDIR}/Sound/ldQAudioDecoder.cpp
-        ${SRCDIR}/Sound/ldQAudioDecoder.h
         ${SRCDIR}/Sound/ldQAudioInputDevice.cpp
         ${SRCDIR}/Sound/ldQAudioInputDevice.h
         ${SRCDIR}/Sound/ldSoundData.cpp
@@ -314,10 +310,10 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${SRCDIR}/Helpers/BezierCurve/ldBezierCurveObject.cpp
         ${INCDIR}/Helpers/BezierCurve/ldBezierCurveObject.h
         #Helpers/Color
+        ${SRCDIR}/Helpers/Color/ldColorEffects.cpp
+        ${INCDIR}/Helpers/Color/ldColorEffects.h
         ${SRCDIR}/Helpers/Color/ldColorUtil.cpp
         ${INCDIR}/Helpers/Color/ldColorUtil.h
-        ${SRCDIR}/Helpers/Color/ldColorUtilMEO.cpp
-        ${INCDIR}/Helpers/Color/ldColorUtilMEO.h
         #Helpers/Draw
         ${SRCDIR}/Helpers/Draw/ld3dBezierCurveDrawer.cpp
         ${INCDIR}/Helpers/Draw/ld3dBezierCurveDrawer.h

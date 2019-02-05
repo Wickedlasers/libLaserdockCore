@@ -27,14 +27,7 @@
 //
 ldAppakGate::ldAppakGate()
 {
-    memset(bufferData, 0.0, buffersize * sizeof(float));
-    isStarted=false;
-    startCounter=0;
-    waitingTimerCounter=0;
-    isSilent=true;
-    previousIsSilent=false;
-    maxAverage=0;
-    minAverage=10000000000;
+    memset(m_bufferData, 0.0, m_buffersize * sizeof(float));
 }
 
 ldAppakGate::~ldAppakGate() { }
@@ -45,29 +38,29 @@ void ldAppakGate::basicMono(float mono)
     //
     float waveform=mono;
     
-    bufferData[last_i]=waveform;
-    for (int i = 1; i < buffersize; i++) {
-        bufferData[i-1]=bufferData[i];
+    m_bufferData[m_last_i]=waveform;
+    for (int i = 1; i < m_buffersize; i++) {
+        m_bufferData[i-1]=m_bufferData[i];
     }
     
     //
-    if (!isStarted) {
-        startCounter++;
-        if (startCounter > buffersize) isStarted=true;
+    if (!m_isStarted) {
+        m_startCounter++;
+        if (m_startCounter > m_buffersize) m_isStarted=true;
         return;
     }
         
-    if (previousIsSilent!=isSilent) {
-        previousIsSilent=isSilent;
+    if (m_previousIsSilent!=m_isSilent) {
+        m_previousIsSilent=m_isSilent;
     }
     
-    average = ldMathStat::getFloatAverage(bufferData, buffersize);
-    float max = ldMathStat::getMaxFloatValue(bufferData, buffersize);
-    float min = ldMathStat::getMinFloatValue(bufferData, buffersize);
-    maxAmpDiff = max -  min;
+    m_average = ldMathStat::getFloatAverage(m_bufferData, m_buffersize);
+    float max = ldMathStat::getMaxFloatValue(m_bufferData, m_buffersize);
+    float min = ldMathStat::getMinFloatValue(m_bufferData, m_buffersize);
+    m_maxAmpDiff = max -  min;
     
-    debug = 0;
-    if (maxAmpDiff>0) debug = fabsf(average-maxAmpDiff)/maxAmpDiff;
+    m_debug = 0;
+    if (m_maxAmpDiff>0) m_debug = fabsf(m_average-m_maxAmpDiff)/m_maxAmpDiff;
     
     /* isSilent3
     float ceil=0;
@@ -91,25 +84,55 @@ void ldAppakGate::basicMono(float mono)
     }*/
     
     float ceil = 0.15f;
-    if (average<ceil && maxAmpDiff<ceil) {
-        isSilent=true;
+    if (m_average<ceil && m_maxAmpDiff<ceil) {
+        m_isSilent=true;
     } else {
-        isSilent=false;
+        m_isSilent=false;
     }
     
     // 
-    if (!previousIsSilent && isSilent) {
+    if (!m_previousIsSilent && m_isSilent) {
         //qDebug() << "wait ";
-        if (waitingTimerCounter<waitingTimer) {
-            waitingTimerCounter++;
-            isSilent=false;
+        if (m_waitingTimerCounter<m_waitingTimer) {
+            m_waitingTimerCounter++;
+            m_isSilent=false;
         } else {
-            waitingTimerCounter=0;
+            m_waitingTimerCounter=0;
         }
     }
     //if (isSilent) qDebug()<< "silence";
     //else qDebug()<< "music";
     //qDebug()<< "waveform * 1k: " << waveform << " minAverage:" << minAverage<< " maxAverage:" << maxAverage << " average:" << average << " ceil:" << ceil;
+}
+
+bool ldAppakGate::isSilent() const
+{
+    return m_isSilent;
+}
+
+float ldAppakGate::average() const
+{
+    return m_average;
+}
+
+float ldAppakGate::maxAmpDiff() const
+{
+    return m_maxAmpDiff;
+}
+
+float ldAppakGate::debug() const
+{
+   return m_debug;
+}
+
+float ldAppakGate::maxAverage() const
+{
+    return m_maxAverage;
+}
+
+float ldAppakGate::minAverage() const
+{
+    return m_minAverage;
 }
 
 

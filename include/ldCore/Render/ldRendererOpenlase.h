@@ -147,9 +147,17 @@ public:
     // quality - precise laser movement
     // speed - uses fewer points for better fps
     // raw - no processing (raw mode)
-    void setRenderParamsDefaultQuality();
-    void setRenderParamsDefaultSpeed();
-    void setRenderParamsDefaultRaw();
+    // standard - no processing (raw mode)
+    // lower - ?
+    // bezier - for bezier lines
+    // beam - optimized for beam vis
+    void setRenderParamsQuality();
+    void setRenderParamsSpeed();
+    void setRenderParamsRaw();
+    void setRenderParamsStandard();
+    void setRenderParamsLower();
+    void setRenderParamsBezier();
+    void setRenderParamsBeam();
 
     // drawPoints draws a point multiple times, useful for beam and particle visualizers.
     // nPoints - number of samples to spend

@@ -46,10 +46,10 @@ signals:
     void deviceCountChanged(uint count);
 
 private:
-    void setDeviceCount(int deviceCount);
+    void setDeviceCount(uint deviceCount);
     void updateDeviceCount();
 
-    int m_deviceCount = 0;
+    uint m_deviceCount = 0;
 
     std::vector<ldAbstractHardwareManager*> m_hardwareManagers;
 };

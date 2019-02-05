@@ -55,7 +55,7 @@ void ldHardwareManager::addHardwareManager(ldAbstractHardwareManager *hardwareMa
 }
 
 
-void ldHardwareManager::setDeviceCount(int deviceCount)
+void ldHardwareManager::setDeviceCount(uint deviceCount)
 {
     if(m_deviceCount == deviceCount) {
         return;
@@ -69,7 +69,7 @@ void ldHardwareManager::setDeviceCount(int deviceCount)
 
 void ldHardwareManager::updateDeviceCount()
 {
-    int deviceCount = 0;
+    uint deviceCount = 0;
     for(const ldAbstractHardwareManager *hardwareManager : m_hardwareManagers) {
        deviceCount += hardwareManager->deviceCount();
     }

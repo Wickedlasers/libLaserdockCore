@@ -25,8 +25,6 @@
 #include <QtCore/QObject>
 #include <QtCore/QTimer>
 
-#define STUBFPS (30*2)
-
 class ldSoundStubDevice : public QObject
 {
     Q_OBJECT
@@ -49,6 +47,9 @@ protected:
 
     QTimer m_timer;
     QMutex mutex;
+
+private:
+    const int STUBFPS = 30*2;
 };
 
 #endif //LDSOUNDSTUBDEVICE_H

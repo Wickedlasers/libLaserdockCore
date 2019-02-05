@@ -117,10 +117,6 @@ void ldSpectrumBandVisualizer::clearBuffer() {
 }
 
 void ldSpectrumBandVisualizer::initData() {
-    grid=vector<vector<int> >();
-    top=vector<float>();
-    accel=vector<float>();
-    
     maxPoints = 666;
     
     //
@@ -139,7 +135,7 @@ void ldSpectrumBandVisualizer::initData() {
         top.push_back(0);
         accel.push_back(0);
         //
-        vector<int> tmp = vector<int>();
+        std::vector<int> tmp;
         for (int j = 0; j < countRows; j++)
         {
             tmp.push_back(0);
@@ -168,7 +164,7 @@ void ldSpectrumBandVisualizer::onUpdate(ldSoundData* pSoundData, float /*delta*/
     //vector<float> tmpValues = ldMathSpectrum::getNormalizedSpectrumValueFromInterval(pSoundData, intervals, 200);
 
     
-    vector<float> tmpValues;
+    std::vector<float> tmpValues;
     for (int i = 0; i < countCols; i++) {
         
         float f1 = 440;

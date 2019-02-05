@@ -26,7 +26,7 @@
 
 #include <QtCore/QDebug>
 
-#include <ldCore/Filter/ldColorUtils.h>
+#include <ldCore/Helpers/Color/ldColorUtil.h>
 #include <ldCore/Helpers/ldEnumHelper.h>
 
 #include "ldCore/Helpers/SVG/ldSvgReader.h"
@@ -217,7 +217,7 @@ void ldTextCounterOne::checkTimers()
         _colorTimer.start();
         _colorStep = _colorNextStep;
         _colorNextStep = ldMaths::periodIntervalKeeperInt(_colorStep+170, 0, 360);
-        _messageTextLabel->setColor(colorHSV(_colorStep, 1.0, 1.0));
+        _messageTextLabel->setColor(ldColorUtil::colorHSV(_colorStep, 1.0, 1.0));
     }
 }
 
@@ -327,7 +327,7 @@ void ldTextCounterOne::innerDraw(ldRendererOpenlase *p_renderer)
 
                     // color
                     int colorStep = (coefBase > base_y/drawFrame.dim().height()) ? _colorNextStep : _colorStep;
-                    uint32_t color = colorHSV(colorStep, 1.0, 1.0);
+                    uint32_t color = ldColorUtil::colorHSV(colorStep, 1.0, 1.0);
 
                     p_renderer->vertex3(p.x, p.y, p.z, color);
 

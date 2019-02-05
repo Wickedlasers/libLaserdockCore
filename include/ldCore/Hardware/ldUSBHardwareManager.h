@@ -53,7 +53,7 @@ public:
 
     virtual void setConnectedDevicesActive(bool active) override;
 
-    virtual int deviceCount() const override;
+    virtual uint deviceCount() const override;
 
 public slots:
     void setAuthenticateFunc(ldAuthenticateCallbackFunc authenticateFunc);

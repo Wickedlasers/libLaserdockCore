@@ -27,8 +27,6 @@
 
 #include <ldCore/Sound/ldSoundData.h>
 
-using namespace std;
-
 class LDCORESHARED_EXPORT ldAudioBasic
 {
 public:
@@ -44,9 +42,9 @@ public:
     //
     
     //
-    vector<float> freq16bands;
-    vector<float> freq128bands;
-    vector<float> frequencies;
+    std::vector<float> freq16bands;
+    std::vector<float> freq128bands;
+    std::vector<float> frequencies;
 
     // values from volume correction system
     float powerRaw = 0.0f; // sound energy before volume correction
@@ -58,7 +56,7 @@ private:
     // buffer size for mono, stereoLeft, stereoRight normalization
     static const int buffersize = 1*30*AUDIO_OVERDRIVE_FACTOR; // fps on 1s 1*30*AUDIO_OVERDRIVE_FACTOR
     
-    vector<vector<float> > buffers;
+    std::vector<std::vector<float> > buffers;
     
 };
 

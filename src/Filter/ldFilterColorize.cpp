@@ -25,7 +25,6 @@
 #include <QtCore/QDebug>
 
 #include "ldCore/ldCore.h"
-#include <ldCore/Filter/ldColorUtils.h>
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
 #include "ldCore/Helpers/Audio/ldHybridReactor.h"
 #include "ldCore/Helpers/Audio/ldTempoAC.h"
@@ -67,7 +66,7 @@ void ldFilterColorFade::process(Vertex &input) {
     hue += huebase;
     hue -= (int)hue;
     
-    uint32_t c = colorHSV(hue*360, sat, value);
+    uint32_t c = ldColorUtil::colorHSV(hue*360, sat, value);
     t.r = ((c>>16)&0xff)/255.0f;
     t.g = ((c>> 8)&0xff)/255.0f;
     t.b = ((c>> 0)&0xff)/255.0f;
@@ -105,16 +104,16 @@ void ldFilterColorLift::process(Vertex &input) {
     }
 
     float decColor1 = cde;
-    int color = colorHSV(decColor1, 1.0, 1.0);
+    int color = ldColorUtil::colorHSV(decColor1, 1.0, 1.0);
 
-    color = colorHSV(cde, 1.0, 1.0);
-    color = ldColorUtil::lerpInt(color, colorHSV(nde, 1.0, 1.0), clampf((y + 1.2)*0.6, 0, v));
+    color = ldColorUtil::colorHSV(cde, 1.0, 1.0);
+    color = ldColorUtil::lerpInt(color, ldColorUtil::colorHSV(nde, 1.0, 1.0), clampf((y + 1.2)*0.6, 0, v));
 
     if (cde2 > 0) {
-        if (fabs(-(y + 1)*0.5 + cde2) < 0.01)  color = colorHSV(ldMaths::periodIntervalKeeper(decColor1 + 80, 0, 360), 1.0, v);
+        if (fabs(-(y + 1)*0.5 + cde2) < 0.01)  color = ldColorUtil::colorHSV(ldMaths::periodIntervalKeeper(decColor1 + 80, 0, 360), 1.0, v);
     }
     if (cde3 > 0) {
-        if (fabs(-(y + 1)*0.5 + cde3) < 0.06)  color = colorHSV(ldMaths::periodIntervalKeeper(decColor1 + 30, 0, 360), 1.0, v);
+        if (fabs(-(y + 1)*0.5 + cde3) < 0.06)  color = ldColorUtil::colorHSV(ldMaths::periodIntervalKeeper(decColor1 + 30, 0, 360), 1.0, v);
     }
     
     t.r = ((0x00ff0000 & color) >> 16) / 255.0f;
@@ -261,10 +260,10 @@ void FilterColorBlobs::process(Vertex &input) {
     if (m_type != 2)
     {
         float hh, ss;
-        colorRGBtoHSVfloat(input.color[0], input.color[1], input.color[2], hh, ss, vv);
+        ldColorUtil::colorRGBtoHSVfloat(input.color[0], input.color[1], input.color[2], hh, ss, vv);
         hh += (offset/scale);
         hh -= (int) hh;
-        colorHSVtoRGBfloat(hh, ss, vv, input.color[0], input.color[1], input.color[2]);
+        ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, input.color[0], input.color[1], input.color[2]);
     }
 
 }
@@ -345,10 +344,10 @@ void FilterColorFreq::process(Vertex &input) {
     //if (m_type == 2) mm->mrSlowBass->spinOutput4 + 0.25f*mm->mrSlowTreb->spinOutput4;
     if (m_type == 1) {
         float hh, ss;
-        colorRGBtoHSVfloat(input.color[0], input.color[1], input.color[2], hh, ss, vv);
+        ldColorUtil::colorRGBtoHSVfloat(input.color[0], input.color[1], input.color[2], hh, ss, vv);
         hh += hm;
         hh -= (int) hh;
-        colorHSVtoRGBfloat(hh, ss, vv, input.color[0], input.color[1], input.color[2]);
+        ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, input.color[0], input.color[1], input.color[2]);
     }
 
 }

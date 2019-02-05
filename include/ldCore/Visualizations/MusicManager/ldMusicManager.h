@@ -156,6 +156,9 @@ public:
 
     int soundLevel() const; // 1..100
 
+    void setRealSoundLevel(int value);
+    int realSoundLevel() const;
+
     std::unique_ptr<ldTempoAC> tempoACSlower;
     std::unique_ptr<ldTempoAC> tempoACSlow;
     std::unique_ptr<ldTempoAC> tempoACFast;
@@ -224,6 +227,8 @@ private:
     std::unique_ptr<ldBeatFresh> beatFresh;
     float wfr = 0.f;
     ldDurationalStatEstimator dsewfr;
+
+    int m_realSoundLevel = 0;
 };
 
 #endif // LDMUSICMANAGER_H

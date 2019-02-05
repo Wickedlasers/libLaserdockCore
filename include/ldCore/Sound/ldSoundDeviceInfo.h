@@ -34,8 +34,7 @@ public:
 #ifdef LD_CORE_ENABLE_MIDI
         Midi = 0x04,
 #endif
-        Stub = 0x08,
-        Decoder = 0x10,
+        Stub = 0x08
     };
 
     static void registerMetaType();

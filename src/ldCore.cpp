@@ -33,6 +33,7 @@
 #include "ldCore/Simulator/ldSimulatorItem.h"
 #endif
 #include "ldCore/Simulator/ldSimulatorEngine.h"
+#include "ldCore/Sound/ldAudioDecoder.h"
 #include "ldCore/Sound/ldSoundDeviceManager.h"
 #include "ldCore/Task/ldTaskManager.h"
 #include "ldCore/Task/ldTaskWorker.h"
@@ -138,6 +139,8 @@ void ldCore::initialize()
     qDebug() << "Core initialize...";
 
     // create managers
+    m_audioDecoder = new ldAudioDecoder(this);
+
     m_hardwareManager = new ldHardwareManager(this);
 
     m_filterManager = new ldFilterManager();
@@ -176,6 +179,11 @@ QString ldCore::resourceDir() const
 #else
     return qApp->applicationDirPath();
 #endif
+}
+
+ldAudioDecoder *ldCore::audioDecoder() const
+{
+    return m_audioDecoder;
 }
 
 ldDataDispatcher *ldCore::dataDispatcher() const

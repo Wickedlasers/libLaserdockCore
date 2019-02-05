@@ -20,7 +20,7 @@
 
 #include "ldCore/Filter/ldFilter.h"
 
-#include "ldCore/Filter/ldColorUtils.h"
+#include "ldCore/Helpers/Color/ldColorUtil.h"
 
 void ldFilter::ShaderFunc(float *x, float *y, uint32_t *color) {
     Vertex input;
@@ -35,5 +35,5 @@ void ldFilter::ShaderFunc(float *x, float *y, uint32_t *color) {
     process(input);
     *x = input.position[0];
     *y = input.position[1];
-    *color = colorRGB(input.color[0]*255, input.color[1]*255, input.color[2]*255);
+    *color = ldColorUtil::colorRGB(input.color[0]*255, input.color[1]*255, input.color[2]*255);
 }

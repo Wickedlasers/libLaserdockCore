@@ -258,8 +258,17 @@ float ldMusicManager::volumePowerPost() const
 
 int ldMusicManager::soundLevel() const
 {
-    int value = 100.0f * powf(volumePowerPost(), 0.5);
-    return std::min(std::max(value, 0), 100);
+    return m_psd ? m_psd->GetSoundLevel() : 0;
+}
+
+void ldMusicManager::setRealSoundLevel(int value)
+{
+    m_realSoundLevel = value;
+}
+
+int ldMusicManager::realSoundLevel() const
+{
+    return m_realSoundLevel;
 }
 
 bool ldMusicManager::isSilent() const

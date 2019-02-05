@@ -41,7 +41,7 @@ public:
     explicit ldSoundInterface(QObject *parent = 0);
     ~ldSoundInterface();
 
-    virtual QAudioFormat getAudioFormat() const = 0;
+    virtual QAudioFormat getAudioFormat() const;
 
     static int s_latencyms;
     static int s_enableLatency;

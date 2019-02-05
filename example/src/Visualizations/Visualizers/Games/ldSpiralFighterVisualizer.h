@@ -32,7 +32,7 @@
 #include <QtCore/QTimer>
 
 #include "ldCore/Helpers/Maths/ldMaths.h"
-#include "ldCore/Helpers/Color/ldColorUtilMEO.h"
+#include "ldCore/Helpers/Color/ldColorUtil.h"
 #include "ldCore/Helpers/Sound/ldQSound.h"
 #include "ldCore/Visualizations/Visualizers/Games/ldAbstractGameVisualizer.h"
 

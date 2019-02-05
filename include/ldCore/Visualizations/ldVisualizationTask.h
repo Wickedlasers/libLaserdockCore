@@ -59,11 +59,15 @@ public slots:
     void setCurrentVisualizer(ldVisualizer *visualizer = nullptr);
     void setTempVisualizer(ldVisualizer *visualizer = nullptr);
 
+    void setSoundLevelGate(int value);
+    int soundLevelGate() const;
+
 signals:
     void currentVisualizerChanged(ldVisualizer *visualizer);
 
 private slots:
     void onUpdateAudio(const AudioBlock& block);
+    void onUpdateDecoderAudio(const AudioBlock& block);
 
 private:
     ldVisualizer *getActiveVis() const;
@@ -74,11 +78,14 @@ private:
     ldVisualizer* m_currentVisualizer;
     ldVisualizer* m_tempVisualizer;
     std::shared_ptr<ldSoundData> m_sounddata;
+    std::shared_ptr<ldSoundData> m_decoderSoundData;
     RenderState m_renderstate;
 
     std::unique_ptr<ldLogoLaserdock> m_logo;
 
     ldRendererOpenlase * m_openlase;
+
+    int m_soundLevelGate = 0;
 };
 
 #endif // LDVISUALIZATIONTASK_H

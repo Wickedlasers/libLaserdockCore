@@ -80,7 +80,7 @@ void ldVisualizer::start() {
 
     // set default quality values because some old visualizers don't do it
     // good practice is to set quality params in onShouldStart()
-    m_renderer->setRenderParamsDefaultQuality();
+    m_renderer->setRenderParamsQuality();
 
     onShouldStart();
 }

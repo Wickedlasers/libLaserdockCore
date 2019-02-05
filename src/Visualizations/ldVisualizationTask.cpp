@@ -32,6 +32,7 @@
 #include "ldCore/Data/ldFrameBuffer.h"
 #include "ldCore/Render/ldRendererOpenlase.h"
 #include "ldCore/Shape/ldShape.h"
+#include "ldCore/Sound/ldAudioDecoder.h"
 #include "ldCore/Sound/ldSoundDeviceManager.h"
 #include "ldCore/Task/ldTaskManager.h"
 #include "ldCore/Visualizations/ldLogoLaserdock.h"
@@ -135,6 +136,16 @@ void ldVisualizationTask::setTempVisualizer(ldVisualizer *visualizer)
     }
 }
 
+void ldVisualizationTask::setSoundLevelGate(int value)
+{
+    m_soundLevelGate = value;
+}
+
+int ldVisualizationTask::soundLevelGate() const
+{
+    return m_soundLevelGate;
+}
+
 void ldVisualizationTask::setCurrentVisualizer(ldVisualizer *visualizer)
 {
     QMutexLocker lock(&m_mutex);
@@ -174,11 +185,39 @@ void ldVisualizationTask::onUpdateAudio(const AudioBlock &block)
     // process block into raw sounddata struct
     m_sounddata->Update(block);
 
+    ldCore::instance()->musicManager()->setRealSoundLevel(m_sounddata->GetSoundLevel());
+
+    if(m_sounddata->GetSoundLevel() < m_soundLevelGate) {
+        m_sounddata->Update(AudioBlock::EMPTY_AUDIO_BLOCK);
+    }
+
     // update music manager
     ldCore::instance()->musicManager()->updateWith(m_sounddata, AUDIO_UPDATE_DELTA_S);
 
     // update visualizer
-    if (m_currentVisualizer) m_currentVisualizer->updateWith(m_sounddata.get(), AUDIO_UPDATE_DELTA_S);
+    if (m_currentVisualizer && !ldCore::instance()->audioDecoder()->get_isActive()) m_currentVisualizer->updateWith(m_sounddata.get(), AUDIO_UPDATE_DELTA_S);
+}
+
+void ldVisualizationTask::onUpdateDecoderAudio(const AudioBlock &block)
+{
+    QMutexLocker lock(&m_mutex);
+    // process a new block of data, send data to music manager, auto random manager, and current visualizer
+
+    // check if running
+    if (!m_decoderSoundData) {qDebug() << "TEST FIX CHECK 3";return;}
+
+    // process block into raw sounddata struct
+    m_decoderSoundData->Update(block);
+
+    if(!ldCore::instance()->soundDeviceManager()->getDeviceInfo().isValid()) {
+        ldCore::instance()->musicManager()->setRealSoundLevel(m_decoderSoundData->GetSoundLevel());
+
+        // update music manager
+        ldCore::instance()->musicManager()->updateWith(m_decoderSoundData, AUDIO_UPDATE_DELTA_S);
+    }
+
+    // update visualizer
+    if (m_currentVisualizer) m_currentVisualizer->updateWith(m_decoderSoundData.get(), AUDIO_UPDATE_DELTA_S);
 }
 
 /*!
@@ -194,11 +233,13 @@ void ldVisualizationTask::start()
 {
     QMutexLocker lock(&m_mutex);
 
-    ldSoundInterface * soundinterface = ldCore::instance()->soundDeviceManager();
-    
-    QAudioFormat format = soundinterface->getAudioFormat();
-    m_sounddata.reset(new ldSoundData(format));
-    connect(soundinterface, &ldSoundInterface::audioBlockUpdated, this, &ldVisualizationTask::onUpdateAudio);
+    ldSoundInterface * soundDeviceInterface = ldCore::instance()->soundDeviceManager();
+    ldSoundInterface * audioDecoderInterface = ldCore::instance()->audioDecoder();
+
+    m_sounddata.reset(new ldSoundData(soundDeviceInterface->getAudioFormat()));
+    m_decoderSoundData.reset(new ldSoundData(audioDecoderInterface->getAudioFormat()));
+    connect(soundDeviceInterface, &ldSoundInterface::audioBlockUpdated, this, &ldVisualizationTask::onUpdateAudio);
+    connect(audioDecoderInterface, &ldSoundInterface::audioBlockUpdated, this, &ldVisualizationTask::onUpdateDecoderAudio);
 
     if(!m_logo) m_logo.reset(new ldLogoLaserdock);
     // call updateWith at least once, to make sure visualizer gets m_sounddata pointer before any draw happens
@@ -221,6 +262,7 @@ void ldVisualizationTask::stop()
     disconnect(soundinterface, 0, this, 0);
     
     m_sounddata.reset();
+    m_decoderSoundData.reset();
 }
 
 ldVisualizationTask::RenderState *ldVisualizationTask::renderState()

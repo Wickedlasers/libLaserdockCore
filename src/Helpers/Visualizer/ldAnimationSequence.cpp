@@ -21,7 +21,7 @@
 #include "ldCore/Helpers/Visualizer/ldAnimationSequence.h"
 
 #include "ldCore/ldCore.h"
-#include <ldCore/Filter/ldColorUtils.h>
+#include <ldCore/Helpers/Color/ldColorUtil.h>
 #include <ldCore/Render/ldRendererOpenlase.h>
 #include "ldCore/Visualizations/ldVisualizer.h"
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
@@ -86,7 +86,7 @@ void ldAnimationSequenceBezier::drawFrameBezier3(ldRendererOpenlase* r, int inde
         for (const std::vector<ldBezierCurve> &bezierTab : dataVect)
         {
 //            if (bezierTab.size() < 2) continue;
-            //uint32_t color = colorHSV(0, 0, 1);
+            //uint32_t color = ldColorUtil::colorHSV(0, 0, 1);
             uint32_t c = color;
             ldShader* s = _shader1;
             float f = 0;
@@ -151,7 +151,7 @@ void ldAnimationSequenceBezier::drawFrameLine4(ldRendererOpenlase* r, int index)
                     float slope = 1.0*i / (maxPointsLocal - 1);
                     Vec2 p = b.getPoint(slope);
 
-                    //uint32_t color = colorHSV(0, 0, 1);
+                    //uint32_t color = ldColorUtil::colorHSV(0, 0, 1);
                     //renderer->vertex(x, y, c);
                     vert3(renderer, s, p.x, p.y, c);
                 }
@@ -213,7 +213,7 @@ void ldAnimationSequenceBezier::drawFrameLights5(ldRendererOpenlase* r, int inde
                     float slope = 1.0*i / (maxPointsLocal - 1);
                     Vec2 p =  b.getPoint(slope);
 
-                    //uint32_t color = colorHSV(0, 0, 1);
+                    //uint32_t color = ldColorUtil::colorHSV(0, 0, 1);
                     //renderer->vertex(x, y, c);
 
                     if (cc == 0) {
@@ -675,7 +675,7 @@ void ldAnimationSequenceBezier::autoscale() {
         {
             std::vector<ldBezierCurve> bezierTab = dataVect.at(p);
 //            if (bezierTab.size() < 2) continue;
-//            uint32_t color = colorHSV(0, 0, 1);
+//            uint32_t color = ldColorUtil::colorHSV(0, 0, 1);
 
             //
             for (uint i = 0; i < bezierTab.size(); i++)
@@ -745,7 +745,7 @@ void ldAnimationSequenceBezier::autoscale() {
         {
             std::vector<ldBezierCurve> bezierTab = dataVect[p];
 //            if (bezierTab.size() < 2) continue;
-//            uint32_t color = colorHSV(0, 0, 1);
+//            uint32_t color = ldColorUtil::colorHSV(0, 0, 1);
 
             //
             for (uint i = 0; i < bezierTab.size(); i++)
@@ -806,7 +806,7 @@ void ldAnimationSequenceBezier::drawFrameBezier3x(ldRendererOpenlase* r, int ind
             for (const std::vector<ldBezierCurve> &bezierTab : dataVect)
             {
 //                if (bezierTab.size() < 2) continue;
-                //uint32_t color = colorHSV(0, 0, 1);
+                //uint32_t color = ldColorUtil::colorHSV(0, 0, 1);
                 uint32_t c = color;
                 float f = 0;
 

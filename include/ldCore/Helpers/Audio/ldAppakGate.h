@@ -23,7 +23,6 @@
 #ifndef LDAPPAKGATE_H
 #define LDAPPAKGATE_H
 
-// include
 #include <ldCore/Sound/ldSoundData.h>
 
 class LDCORESHARED_EXPORT ldAppakGate
@@ -32,34 +31,34 @@ public:
 	ldAppakGate();
 	~ldAppakGate();
 	
-    //
     void basicMono(float mono);
-    //
-    bool isSilent;
-    //
-    float average = 0.0f;
-    float maxAmpDiff = 0.0f;
-    float debug = 0.0f;
-    float maxAverage;
-    float minAverage;
-    
+
+    bool isSilent() const;
+    float average() const;
+    float maxAmpDiff() const;
+    float debug() const;
+    float maxAverage() const;
+    float minAverage() const;
+
 private:
-    static const int buffersize = 1*20*AUDIO_OVERDRIVE_FACTOR; // fps on 1s 1*30*AUDIO_OVERDRIVE_FACTOR
-    static const int last_i = buffersize-1;
-    static const int waitingTimer= 3*10*AUDIO_OVERDRIVE_FACTOR;
-    int waitingTimerCounter;
-    bool previousIsSilent;
+    static const int m_buffersize = 1*20*AUDIO_OVERDRIVE_FACTOR; // fps on 1s 1*30*AUDIO_OVERDRIVE_FACTOR
+    static const int m_last_i = m_buffersize-1;
+    static const int m_waitingTimer= 3*10*AUDIO_OVERDRIVE_FACTOR;
+    int m_waitingTimerCounter = 0;
+    bool m_previousIsSilent = false;
     
-    float bufferData[buffersize];
-    bool isStarted;
-    int startCounter;
- 
-protected:
+    float m_bufferData[m_buffersize];
+    bool m_isStarted = false;
+    int m_startCounter = 0;
+
+    bool m_isSilent = true;
+    float m_average = 0.0f;
+    float m_maxAmpDiff = 0.0f;
+    float m_debug = 0.0f;
+    float m_maxAverage = 0;
+    float m_minAverage = 10000000000;
+
 };
-
-
-
-
 
 #endif // LDAPPAKGATE_H
 

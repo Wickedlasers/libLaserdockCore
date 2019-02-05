@@ -25,6 +25,7 @@
 
 #include "ldCore/ldCore_global.h"
 
+class ldAudioDecoder;
 class ldBufferManager;
 class ldDataDispatcher;
 class ldFilterManager;
@@ -62,6 +63,7 @@ public:
     virtual QString resourceDir() const;
 
     /** Managers/accessors*/
+    ldAudioDecoder *audioDecoder() const;
     ldDataDispatcher *dataDispatcher() const;
     ldBufferManager *bufferManager() const;
     ldFilterManager *filterManager() const;
@@ -75,6 +77,7 @@ public:
 protected:
     explicit ldCore(QObject *parent = 0);
 
+    ldAudioDecoder *m_audioDecoder = nullptr;
     ldBufferManager *m_bufferManager = nullptr;
     ldDataDispatcher *m_dataDispatcher = nullptr;
     ldFilterManager *m_filterManager = nullptr;

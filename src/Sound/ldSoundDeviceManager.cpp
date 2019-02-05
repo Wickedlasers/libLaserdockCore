@@ -26,8 +26,6 @@
 #include <QtWidgets/QMessageBox>
 
 
-#include "Sound/ldAudioDecoder.h"
-#include "Sound/ldQAudioDecoder.h"
 #include "Sound/ldQAudioInputDevice.h"
 // loopback
 #ifdef LD_LOOPBACK_DEVICE_ENABLED
@@ -54,13 +52,11 @@ void ldSoundDeviceManager::registerMetaType()
 
 ldSoundDeviceManager::ldSoundDeviceManager(QObject *parent)
     : ldSoundInterface(parent)
-    , m_isPriorityDevice(false)
     , m_qaudioInputDevice(new ldQAudioInputDevice(this))
 #ifdef LD_CORE_ENABLE_MIDI
     , m_midiDevice(new ldMidiDevice(this))
 #endif
     , m_stubDevice(new ldSoundStubDevice(this))
-    , m_playerDevice(new ldAudioDecoder(this))
 {
     qDebug() << __FUNCTION__;
 
@@ -71,7 +67,6 @@ ldSoundDeviceManager::ldSoundDeviceManager(QObject *parent)
 #endif
     connect(m_stubDevice, &ldSoundStubDevice::soundUpdated, this, &ldSoundDeviceManager::soundUpdated);
 
-    connect(m_playerDevice, &ldAudioDecoder::bufferUpdated, this, &ldSoundDeviceManager::processAudioBuffer);
     //
     refreshAvailableDevices();
 
@@ -160,42 +155,9 @@ void ldSoundDeviceManager::setDeviceInfo(const ldSoundDeviceInfo &info)
         return;
     }
 
-    if(!m_priorityInfo.isValid()) {
-        if(initializeAudio(info)) {
-            m_info = info;
-        }
-    } else {
+    if(initializeAudio(info)) {
         m_info = info;
     }
-}
-
-void ldSoundDeviceManager::setPriorityDevice(const ldSoundDeviceInfo &info)
-{
-    if(m_priorityInfo == info) {
-        return;
-    }
-
-    if(info.isValid()) {
-        // try to initialize priority device
-        bool isOk = initializeAudio(info);
-        if(isOk) {
-            m_priorityInfo = info;
-            update_isPriorityDevice(true);
-        }
-    } else {
-        // restore old device
-        update_isPriorityDevice(false);
-        m_priorityInfo = info;
-        initializeAudio(m_info);
-    }
-}
-
-void ldSoundDeviceManager::updatePrioritySoundDeviceData(const QVariant &data)
-{
-    if(m_priorityInfo.type() != ldSoundDeviceInfo::Type::Decoder)
-        return;
-
-    m_playerDevice->setElapsedTime(data.toInt());
 }
 
 void ldSoundDeviceManager::setActivateCallbackFunc(ldActivateCallbackFunc func)
@@ -253,7 +215,6 @@ void ldSoundDeviceManager::deleteAudioInput()
 #endif
 
     m_stubDevice->stop();
-    m_playerDevice->stop();
 
     m_isStopping = false;
 }
@@ -293,12 +254,6 @@ bool ldSoundDeviceManager::initializeAudio(const ldSoundDeviceInfo &info)
     case ldSoundDeviceInfo::Type::Stub:
     {
         activateStubDevice(info);
-        isSuccess = true;
-        break;
-    }
-    case ldSoundDeviceInfo::Type::Decoder:
-    {
-        activatePlayerDevice(info);
         isSuccess = true;
         break;
     }
@@ -356,13 +311,6 @@ void ldSoundDeviceManager::activateMidiDevice(ldSoundDeviceInfo info) {
 }
 #endif
 
-
-void ldSoundDeviceManager::activatePlayerDevice(const ldSoundDeviceInfo &info)
-{
-    // dummy options for pcm data
-    m_format = getDefaultAudioFormat();
-    m_playerDevice->start(info.id().toString(), info.data().toInt());
-}
 
 void ldSoundDeviceManager::activateStubDevice(ldSoundDeviceInfo /*info*/)
 {

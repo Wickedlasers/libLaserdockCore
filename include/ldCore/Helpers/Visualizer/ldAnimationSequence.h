@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <vector>
 
-#include <ldCore/Filter/ldColorUtils.h>
+#include <ldCore/Helpers/Color/ldColorUtil.h>
 #include "ldCore/Visualizations/ldVisualizer.h"
 #include "ldCore/Helpers/Maths/ldMaths.h"
 #include "ldCore/Helpers/Visualizer/ldLaserFilter.h"

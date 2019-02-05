@@ -27,8 +27,6 @@
 
 #include <ldCore/Sound/ldSoundData.h>
 
-using namespace std;
-
 class LDCORESHARED_EXPORT ldMathSpectrum
 {
 public:
@@ -37,8 +35,8 @@ public:
 //    ~ldMathSpectrum();
 
 //    void process(ldSoundData* pSoundData);
-    static vector<float> getAverageSpectrumValueFromInterval(ldSoundData* pSoundData, vector<int> interval, int nbBandSoundData);
-    static vector<float> getNormalizedSpectrumValueFromInterval(ldSoundData* pSoundData, vector<int> interval, int nbBandSoundData);
+    static std::vector<float> getAverageSpectrumValueFromInterval(ldSoundData* pSoundData, std::vector<int> interval, int nbBandSoundData);
+    static std::vector<float> getNormalizedSpectrumValueFromInterval(ldSoundData* pSoundData, std::vector<int> interval, int nbBandSoundData);
 
 };
 

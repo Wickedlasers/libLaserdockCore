@@ -211,7 +211,7 @@ void ldGameObject::setLifetime(float duration) {
 }
 
 float ldGameObject::getLifetimePercentage() {
-    return max(m_lifeTimer, 0.0f) / m_totalLifetime;
+    return std::max(m_lifeTimer, 0.0f) / m_totalLifetime;
 }
 
 float ldGameObject::getTimeAlive() {

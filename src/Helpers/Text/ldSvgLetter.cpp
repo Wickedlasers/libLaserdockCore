@@ -38,7 +38,7 @@ const ldBezierCurveObject &ldSvgLetter::data() const
 
 void ldSvgLetter::translate(const Vec2 &v)
 {
-    m_translateVec = m_translateVec + v;
+    m_translateVec += v;
 
     resetObject();
 }

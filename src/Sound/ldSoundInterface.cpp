@@ -77,6 +77,11 @@ ldSoundInterface::~ldSoundInterface()
 {
 }
 
+QAudioFormat ldSoundInterface::getAudioFormat() const
+{
+    return getDefaultAudioFormat();
+}
+
 void ldSoundInterface::handleSoundUpdated(const char * data, qint64 len) {
 
     // get audio format variable

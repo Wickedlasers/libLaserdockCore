@@ -25,15 +25,14 @@
 //  Copyright (c) 2017 Wicked Lasers. All rights reserved.
 //
 
-#include "ldCore/Helpers/Draw/ldBezierCurveDrawer.h"
+#include <ldCore/Helpers/Draw/ldBezierCurveDrawer.h>
 
 #include <QtCore/QtDebug>
 #include <QtCore/QTime>
 
+#include <ldCore/Helpers/BezierCurve/ldBezierCurveFrame.h>
+#include <ldCore/Helpers/Color/ldColorEffects.h>
 #include <ldCore/Render/ldRendererOpenlase.h>
-
-#include "ldCore/Helpers/BezierCurve/ldBezierCurveFrame.h"
-#include "ldCore/Helpers/Color/ldColorUtil.h"
 
 ldBezierCurveDrawer::ldBezierCurveDrawer()
 {

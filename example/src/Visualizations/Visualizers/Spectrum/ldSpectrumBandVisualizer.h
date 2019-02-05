@@ -58,11 +58,11 @@ protected:
     float cellPadding;
     
     // like Rock Classic Viz but dynamic dim
-    vector<vector<int> > grid;
-    vector<float> top;
-    vector<float> accel;
+    std::vector<std::vector<int> > grid;
+    std::vector<float> top;
+    std::vector<float> accel;
 
-    vector<int> intervals;
+    std::vector<int> intervals;
 };
 
 #endif // LDSPECTRUMBANDVISUALIZER_H

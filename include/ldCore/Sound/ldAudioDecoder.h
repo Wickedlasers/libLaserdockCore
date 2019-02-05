@@ -18,8 +18,8 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#ifndef LDQAUDIODECODER_H
-#define LDQAUDIODECODER_H
+#ifndef LDAUDIODECODER_H
+#define LDAUDIODECODER_H
 
 #include <memory>
 
@@ -28,48 +28,54 @@
 #include <QtCore/QObject>
 #include <QtCore/QTimer>
 
-#define STUBFPS (30*2)
+#include <ldCore/Sound/ldSoundInterface.h>
 
-//#define LD_QAUDIO_DECODER
+#include <QQmlHelpers>
+
+//#ifndef Q_OS_LINUX
+#define AUIDIO_DECODER_SUPPORTED
+//#endif
 
 class QMediaPlayer;
 
-class QAudioBuffer;
-class QAudioDecoder;
+class AudioDecoder;
 
-class ldQAudioDecoder : public QObject
+
+class ldAudioDecoder : public ldSoundInterface
 {
     Q_OBJECT
 
+    QML_READONLY_PROPERTY(bool, isActive)
+
 public:
-    explicit ldQAudioDecoder(QObject *parent);
-    ~ldQAudioDecoder();
-        
+    explicit ldAudioDecoder(QObject *parent);
+    ~ldAudioDecoder();
+
 public slots:
-    void start(const QString &filePath);
+    void start(const QString &filePath, qint64 elapsedTime = 0);
     void stop();
-    
-signals:
-    void soundUpdated(const char * data, qint64 len);
+
+    void setElapsedTime(qint64 time);
 
 protected slots:
     void timerSlot();
 
-protected:
+private:
+    const int STUBFPS = 30*2;
+
     QMutex mutex;
 
     QTimer m_timer;
+    qint64 m_elapsedTime = 0;
     QElapsedTimer m_elapsedTimer;
     qint64 m_duration = -1;
 
-    std::unique_ptr<QAudioDecoder> m_qaudioDecoder;
-    std::vector<QAudioBuffer> m_audioBuffers;
+#ifdef AUIDIO_DECODER_SUPPORTED
+    std::unique_ptr<AudioDecoder> m_audioDecoder;
+#endif
 
-    int m_lastSentBufferIndex = -1;
-    int m_lastSentBufferEndIndex = -1;
-
-    std::vector<char> m_soundData;
+    std::vector<float> m_sampleData;
 };
 
-#endif //LDQAUDIODECODER_H
+#endif //LDAUDIODECODER_H
 

@@ -22,7 +22,7 @@
 
 #include <math.h>
 
-#include "ldCore/Filter/ldColorUtils.h"
+#include "ldCore/Helpers/Color/ldColorUtil.h"
 
 // ---------- ldColorCurveFilter ----------
 
@@ -52,7 +52,7 @@ void ldColorCurveFilter::process(Vertex &v)
 void ldHueFilter::process(Vertex &input)
 {
     float h, s, v;
-    colorRGBtoHSVfloat(input.color[0], input.color[1], input.color[2], h, s, v);
+    ldColorUtil::colorRGBtoHSVfloat(input.color[0], input.color[1], input.color[2], h, s, v);
 
     h = m_value;
 
@@ -63,7 +63,7 @@ void ldHueFilter::process(Vertex &input)
     s += std::max(v - saturationCoeff, 0.f);
     s = std::min(s, 1.0f);
 
-    colorHSVtoRGBfloat(h, s, v, input.color[0], input.color[1], input.color[2]);
+    ldColorUtil::colorHSVtoRGBfloat(h, s, v, input.color[0], input.color[1], input.color[2]);
 }
 
 
@@ -80,9 +80,9 @@ void ldHueMatrixFilter::process(Vertex &input)
     if (m_last != m_value) {
         m_last = m_value;
         float spread = 0.1f; // hue spread
-        hh = hue - spread + 1; hh -= (int)hh; colorHSVtoRGBfloat(hh, ss, vv, c1r, c1g, c1b);
-        hh = hue          + 1; hh -= (int)hh; colorHSVtoRGBfloat(hh, ss, vv, c2r, c2g, c2b);
-        hh = hue + spread + 1; hh -= (int)hh; colorHSVtoRGBfloat(hh, ss, vv, c3r, c3g, c3b);
+        hh = hue - spread + 1; hh -= (int)hh; ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, c1r, c1g, c1b);
+        hh = hue          + 1; hh -= (int)hh; ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, c2r, c2g, c2b);
+        hh = hue + spread + 1; hh -= (int)hh; ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, c3r, c3g, c3b);
     }
     float vr, vg, vb;
     vr = c1r * input.color[0] + c2r * input.color[1] + c3r * input.color[2];
@@ -103,10 +103,10 @@ void ldHueMatrixFilter::process(Vertex &input)
 void ldHueShiftFilter::process(Vertex &input)
 {
     float hh, ss, vv;
-    colorRGBtoHSVfloat(input.color[0], input.color[1], input.color[2], hh, ss, vv);
+    ldColorUtil::colorRGBtoHSVfloat(input.color[0], input.color[1], input.color[2], hh, ss, vv);
     hh += m_value;
     hh -= (int) hh;
-    colorHSVtoRGBfloat(hh, ss, vv, input.color[0], input.color[1], input.color[2]);
+    ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, input.color[0], input.color[1], input.color[2]);
 }
 
 // ---------- ldFlipFilter ----------

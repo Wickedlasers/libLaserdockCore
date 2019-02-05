@@ -23,8 +23,6 @@
 
 #include <iostream>
 
-using namespace std;
-
 class ldList
 {
     struct _list_node {

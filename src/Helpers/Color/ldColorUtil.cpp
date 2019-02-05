@@ -29,7 +29,6 @@
 
 #include <QtCore/QTime>
 
-#include <ldCore/Filter/ldColorUtils.h>
 #include "ldCore/Helpers/Maths/ldMaths.h"
 #include "ldCore/Helpers/Maths/ldGeometryUtil.h"
 
@@ -83,114 +82,8 @@ uint32_t ldColorUtil::colorForStep(float step, float decay)
 {
     float decColor1 = step == 0 ? 0 : (1.0f - step)*360.0f;
     decColor1 = ldMaths::periodIntervalKeeper(decColor1 + decay*360.0f, 0.0f, 360.0f);
-    return colorHSV(decColor1, 1.0f, 1.0f);
+    return ldColorUtil::colorHSV(decColor1, 1.0f, 1.0f);
 }
-
-// colorEffectOneSecond
-uint32_t ldColorUtil::colorEffectOneSecond(int p_baseColorDecay, int p_lastStep, int p_lastSecond, float p_millisec,
-                                           const Vec2& p_origin, const Vec2& p_size, const Vec2& p_point)
-{
-    int color = colorHSV(p_lastStep, 1.0, 1.0);
-    //
-    Vec2 p = ldMaths::laserToUnitedCoords(p_point);
-    //
-    int first_key = p_lastSecond;
-    if (first_key > 9) first_key = p_lastSecond - 10*(int)(p_lastSecond/10); // only 0 to 9
-    if (first_key > 4) first_key = first_key - 5;  // only 0 to 4
-    bool test = false;
-    if (first_key == 0) test = (p.y < p_origin.y + p_size.y*p_millisec/1000);
-    if (first_key == 1) test = (p.y < p_origin.y + p_size.y*(1.0-p_millisec/1000));
-    if (first_key == 2) test = (p.x < p_origin.x + p_size.x*p_millisec/1000);
-    if (first_key == 3) test = (p.x < p_origin.x + p_size.x*(1.0-p_millisec/1000));
-    if (first_key == 4) test = ((p.y < p_origin.y + p_size.y*p_millisec/1000) && (p.x < (p_origin.x + p_size.x)*p_millisec/1000));
-    if (test) color = colorHSV(ldMaths::periodIntervalKeeper(p_lastStep+p_baseColorDecay, 0, 360), 1.0, 1.0);
-    return color;
-}
-
-// colorEffectTwoSecond
-uint32_t ldColorUtil::colorEffectTwoSecond(int p_baseColorDecay, int p_lastStep, int p_lastSecond, float p_millisec,
-                                           const Vec2& p_origin, const Vec2& p_size, const Vec2& p_point)
-{
-    int color = colorHSV(p_lastStep, 1.0, 1.0);
-    //
-    Vec2 p = ldMaths::laserToUnitedCoords(p_point);
-    //
-    int first_key = p_lastSecond;
-    bool test = false;
-
-    if (first_key%2 == 0) test = (p.y < p_origin.y + p_size.y*p_millisec/1000);
-    else test = (p.y < p_origin.y + p_size.y*(1.0-p_millisec/1000));
-    
-    //
-    if (test) color = colorHSV(ldMaths::periodIntervalKeeper(p_lastStep+p_baseColorDecay, 0, 360), 1.0, 1.0);
-    //
-    float dec = p_size.y / 10.0f;
-    if (
-        ((first_key%2 == 0) && fabs( (p_origin.y + p_size.y*(p_millisec/1000)) - p.y) < dec)
-        || ((first_key%2 != 0) && fabs( (p_origin.y + p_size.y*(1.0-p_millisec/1000)) - p.y) < dec)
-        ){
-        color= 0xFFFFFF;
-    }
-    return color;
-}
-
-// colorEffectThree
-uint32_t ldColorUtil::colorEffectThree(int p_baseColorDecay, float p_millisec, const Vec2& p_origin, const Vec2& p_size, const Vec2& p_point)
-{
-    Vec2 p = ldMaths::laserToUnitedCoords(p_point);
-    //
-    float x = 360.f*(p_millisec/1000.f) + p_baseColorDecay * fabsf( (p_origin.y + p_size.y) - p.y)/p_size.y;
-    float colorH = ldMaths::periodIntervalKeeper(x, 0, 360);
-    int color = colorHSV(colorH, 1.0, 1.0);
-    return color;
-}
-
-
-ldAbstractColorEffect::~ldAbstractColorEffect()
-{
-}
-
-void ldAbstractColorEffect::setBaseColorDecay(int baseColorDecay)
-{
-    _baseColorDecay = baseColorDecay;
-}
-
-void ldAbstractColorEffect::updateColor()
-{
-    QTime time = QTime::currentTime();
-    _millis = time.msec();
-}
-
-void ldAbstractStepColorEffect::updateColor()
-{
-    ldAbstractColorEffect::updateColor();
-
-    QTime time = QTime::currentTime();
-
-    if (time.second() != _lastSecond) {
-        _lastSecond = time.second();
-        _lastColorStep += _baseColorDecay;
-        _lastColorStep = ldMaths::periodIntervalKeeper(_lastColorStep, 0, 360);
-    }
-}
-
-uint32_t ldColorEffectOne::getColor(const Vec2 &p_point, const SvgDim &p_dim)
-{
-    return ldColorUtil::colorEffectOneSecond(_baseColorDecay, (int) _lastColorStep, _lastSecond, _millis, p_dim.bottom_left, p_dim.size(), p_point);
-}
-
-uint32_t ldColorEffectTwo::getColor(const Vec2 &p_point, const SvgDim &p_dim)
-{
-    return ldColorUtil::colorEffectTwoSecond(_baseColorDecay, _lastColorStep, _lastSecond, _millis, p_dim.bottom_left, p_dim.size(), p_point);
-}
-
-uint32_t ldColorEffectThree::getColor(const Vec2 &p_point, const SvgDim &p_dim)
-{
-    return ldColorUtil::colorEffectThree(_baseColorDecay, _millis, p_dim.bottom_left, p_dim.size(), p_point);
-}
-
-
-
 
 namespace ldColorUtil {
 
@@ -237,7 +130,7 @@ void hsv2rgb(float& h, float& s, float& v, float& r, float& g, float& b) {
     clampfp(h, 0, 1);
     clampfp(s, 0, 1);
     clampfp(v, 0, 1);
-    uint32_t c = colorHSV(h * 359, s, v);
+    uint32_t c = ldColorUtil::colorHSV(h * 359, s, v);
     r = ((c >> 16) & 0xff) / 255.0f;
     g = ((c >> 8) & 0xff) / 255.0f;
     b = ((c >> 0) & 0xff) / 255.0f;
@@ -260,6 +153,302 @@ void hueShift(float& r, float& g, float& b, float hueoffset) {
     h += hueoffset;
     h -= (int)floorf(h);
     hsv2rgb(h, s, v, r, g, b);
+}
+
+
+uint32_t colorRGB(uint32_t r, uint32_t g, uint32_t b)
+{
+    uint32_t result = (r << 16) | (g << 8) | (b);
+
+    return result;
+}
+
+uint32_t colorHSV(float h, float s, float v)
+{
+    int i;
+    float f, p, q, t;
+
+    uint32_t r, g, b;
+
+    if (s == 0)
+    {
+        // achromatic (grey)
+        r = g = b = 255 * v;
+    }
+
+    h /= 60;                    // sector 0 to 5
+    i = floor(h);
+    f = h - i;                  // factorial part of h
+    p = v * (1 - s);
+    q = v * (1 - s * f);
+    t = v * (1 - s * (1 - f));
+
+    switch (i)
+    {
+        case 0:
+            r = v * 255;
+            g = t * 255;
+            b = p * 255;
+            break;
+        case 1:
+            r = q * 255;
+            g = v * 255;
+            b = p * 255;
+            break;
+        case 2:
+            r = p * 255;
+            g = v * 255;
+            b = t * 255;
+            break;
+        case 3:
+            r = p * 255;
+            g = q * 255;
+            b = v * 255;
+            break;
+        case 4:
+            r = t * 255;
+            g = p * 255;
+            b = v * 255;
+            break;
+        default: // case 5
+            r = v * 255;
+            g = p * 255;
+            b = q * 255;
+            break;
+    }
+
+    uint32_t result = (r << 16) | (g << 8) | (b);
+
+    return result;
+}
+
+
+
+// internal
+static float clamp(float& i) {if (i < 0) return i=0; if (i > 1) return i=1; return i; }
+#ifndef MIN
+#define MIN(x,y) (((x) > (y)) ? (y) : (x))
+#endif  // MIN
+#ifndef MAX
+#define MAX(x,y) (((x) < (y)) ? (y) : (x))
+#endif  // MAX
+
+void colorRGBtoHSVfloat(float r, float g, float b, float& h, float& s, float& v) {
+    clamp(r);
+    clamp(g);
+    clamp(b);
+
+    // min max delta
+    float maxc = 0;
+    maxc = MAX(maxc, r);
+    maxc = MAX(maxc, g);
+    maxc = MAX(maxc, b);
+    float minc = 1;
+    minc = MIN(minc, r);
+    minc = MIN(minc, g);
+    minc = MIN(minc, b);
+    float delta = maxc - minc;
+
+    // hue calc
+    float hue6 = 0;
+    if (delta > 0) {
+        if (maxc == r) {
+            hue6 =  (g - b) / delta + 0;
+        } else if (maxc == g) {
+            hue6 =  (b - r) / delta + 2;
+        } else {
+            hue6 =  (r - g) / delta + 4;
+        }
+    }
+
+    // hsv
+    h = hue6/6;  h -= (int)h;
+    if (maxc > 0) s = delta / maxc; else s = 0;
+    v = maxc;
+
+    clamp(h);
+    clamp(s);
+    clamp(v);
+
+}
+
+void colorHSVtoRGBfloat(float h, float s, float v, float& r, float& g, float& b) {
+    clamp(h);
+    clamp(s);
+    clamp(v);
+    uint32_t c = colorHSV(h * 359, s, v);
+    r = ((c >> 16) & 0xff) / 255.0f;
+    g = ((c >> 8) & 0xff) / 255.0f;
+    b = ((c >> 0) & 0xff) / 255.0f;
+    clamp(r);
+    clamp(g);
+    clamp(b);
+}
+
+
+// Hue is 0 to 1536 when wheelLine is 0 (otherwise 1024)
+// Sat is 0 to 255
+// Level is 0 to 255
+// wheelLine of 0 is full color wheel, 1 is RG only, 2 GB, 3 BR.
+// color is passed back - array of R0-255, G0-255, B0-255
+void HSVtoRGB(quint16 h, quint8 s, quint8 v, quint8 wheelLine, quint8 color[3]) {
+    int r, g, b, lo;
+    r = g = b = lo = 0;
+    switch (wheelLine) {
+        case 0: // Full RGB Wheel (based on pburgess original function)
+            h %= 1536;
+            // h - unsigned
+//            if (h < 0) h += 1536; //     0 to +1535
+            lo = h & 255; // Low byte  = primary/secondary color mix
+            switch (h >> 8) { // High byte = sextant of colorwheel
+                case 0:
+                    r = 255;
+                    g = lo;
+                    b = 0;
+                    break; // R to Y
+                case 1:
+                    r = 255 - lo;
+                    g = 255;
+                    b = 0;
+                    break; // Y to G
+                case 2:
+                    r = 0;
+                    g = 255;
+                    b = lo;
+                    break; // G to C
+                case 3:
+                    r = 0;
+                    g = 255 - lo;
+                    b = 255;
+                    break; // C to B
+                case 4:
+                    r = lo;
+                    g = 0;
+                    b = 255;
+                    break; // B to M
+                default:
+                    r = 255;
+                    g = 0;
+                    b = 255 - lo;
+                    break; // M to R
+            }
+            break;
+        case 1: //RG Line only
+            h %= 1024;
+//            if (h < 0) h += 1024;
+            lo = h & 255; // Low byte  = primary/secondary color mix
+            switch (h >> 8) { // High byte = sextant of colorwheel
+                case 0:
+                    r = 255;
+                    g = lo;
+                    b = 0;
+                    break; // R to Y
+                case 1:
+                    r = 255 - lo;
+                    g = 255;
+                    b = 0;
+                    break; // Y to G
+                case 2:
+                    r = lo;
+                    g = 255;
+                    b = 0;
+                    break; // G to Y
+                default:
+                    r = 255;
+                    g = 255 - lo;
+                    b = 0;
+                    break; // Y to R
+            }
+            break;
+        case 2: //GB Line only
+            h %= 1024;
+//            if (h < 0) h += 1024;
+            lo = h & 255; // Low byte  = primary/secondary color mix
+            switch (h >> 8) { // High byte = sextant of colorwheel
+                case 0:
+                    r = 0;
+                    g = 255;
+                    b = lo;
+                    break; // G to C
+                case 1:
+                    r = 0;
+                    g = 255 - lo;
+                    b = 255;
+                    break; // C to B
+                case 2:
+                    r = 0;
+                    g = lo;
+                    b = 255;
+                    break; // B to C
+                default:
+                    r = 0;
+                    g = 255;
+                    b = 255 - lo;
+                    break; // C to G
+            }
+            break;
+        case 3: //BR Line only
+            h %= 1024;
+//            if (h < 0) h += 1024;
+            lo = h & 255; // Low byte  = primary/secondary color mix
+            switch (h >> 8) { // High byte = sextant of colorwheel
+                case 0:
+                    r = lo;
+                    g = 0;
+                    b = 255;
+                    break; // B to M
+                case 1:
+                    r = 255;
+                    g = 0;
+                    b = 255 - lo;
+                    break; // M to R
+                case 2:
+                    r = 255;
+                    g = 0;
+                    b = lo;
+                    break; // R to M
+                default:
+                    r = 255 - lo;
+                    g = 0;
+                    b = 255;
+                    break; // M to B
+            }
+            break;
+    }
+
+    r = 255 - (((255 - r) * (s + 1)) >> 8);
+    g = 255 - (((255 - g) * (s + 1)) >> 8);
+    b = 255 - (((255 - b) * (s + 1)) >> 8);
+
+    color[0] = (quint8) (r * (v + 1));
+    color[1] = (quint8) (g * (v + 1));
+    color[2] = (quint8) (b * (v + 1));
+}
+
+// compliment to HSVtoRGB
+void RGBtoHSV(quint8 r, quint8 g, quint8 b, quint16 hsv[3]) {
+    float tempR, tempG, tempB;
+
+    tempR = (float)r / 255.0;
+    tempG = (float)g / 255.0;
+    tempB = (float)b / 255.0;
+
+    float minRGB = qMin(tempR, qMin(tempG, tempB));
+    float maxRGB = qMax(tempR, qMax(tempG, tempB));
+
+    // Black-gray-white
+    if (minRGB == maxRGB) {
+        hsv[0] = 0; // irrelevant, as saturation is nothing
+        hsv[1] = 0;
+        hsv[2] = (quint16) (255.0 * maxRGB);
+    } else {
+        // Colors other than black-gray-white:
+        float d = (tempR == minRGB) ? tempG - tempB : ((tempB == minRGB) ? tempR - tempG : tempB - tempR);
+        float h = (tempR == minRGB) ? 3.0 : ((tempB == minRGB) ? 1.0 : 5.0);
+        hsv[0] = (quint16) (255.0 * (h - d / (maxRGB - minRGB)));
+        hsv[1] = (quint16) (255.0 * (maxRGB - minRGB) / maxRGB);
+        hsv[2] = (quint16) (255.0 * maxRGB);
+    }
 }
 
 } // namespace

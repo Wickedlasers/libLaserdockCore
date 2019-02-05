@@ -103,7 +103,7 @@ void ldUsbHardwareManager::setConnectedDevicesActive(bool active)
     updateCheckTimerState();
 }
 
-int ldUsbHardwareManager::deviceCount() const
+uint ldUsbHardwareManager::deviceCount() const
 {
     return m_usbHardwares.size();
 }

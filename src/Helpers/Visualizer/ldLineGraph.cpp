@@ -20,12 +20,12 @@
 
 #include "ldCore/Helpers/Visualizer/ldLineGraph.h"
 
-#include <ldCore/Filter/ldColorUtils.h>
+#include <ldCore/Helpers/Color/ldColorUtil.h>
 
 ldLineGraph::ldLineGraph(char* n) {
     memset(this, 0, sizeof(*this));
     name = n;
-    color = colorHSV(randRange(0, 360), 1, 1);
+    color = ldColorUtil::colorHSV(randRange(0, 360), 1, 1);
     head = 0;
     zoom = 0;
 }

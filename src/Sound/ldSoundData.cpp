@@ -47,6 +47,17 @@
   This data can then be used to generate live visualization.
 */
 
+const AudioBlock AudioBlock::EMPTY_AUDIO_BLOCK = AudioBlock(true);
+
+
+
+AudioBlock::AudioBlock(bool clear)
+{
+    if(clear) {
+        for(int i = 0; i < AUDIO_BLOCK_SIZE; ++i)
+            data[i] = 0.;
+    }
+}
 
 /*!
  * \brief ldSoundData::ldSoundData
@@ -464,7 +475,13 @@ void ldSoundData::GetSpectrum(float *spectrum, unsigned spectrumLength, float mi
             value += m_frequency[fIdx] *scale;      // accumulate scaled
         spectrum[i] = value/(float)binsPerBlock;    // store averaged;
         firstBinIndex += binsPerBlock;              // increment to next block
-    }    
+    }
+}
+
+int ldSoundData::GetSoundLevel() const
+{
+    int value = 100.0f * powf(volumePowerPost, 0.5);
+    return std::min(std::max(value, 0), 100);
 }
 
 float ldSoundData::GetFFTValueForBlock(unsigned blockIndex, unsigned numBlocks) const {

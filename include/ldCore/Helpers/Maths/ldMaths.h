@@ -29,19 +29,17 @@
 
 #include "ldCore/Shape/ldParticleGeometry.h"
 
-#define M_PIf static_cast<float> (M_PI)
-#define M_PI_2f static_cast<float> (M_PI_2)
-#define M_PI_4f static_cast<float> (M_PI_4)
-#define M_2PI (2.0*M_PI)
-#define M_2PIf static_cast<float> (2.0*M_PI)
+const float M_PIf = static_cast<float> (M_PI);
+const float M_PI_2f = static_cast<float> (M_PI_2);
+const float M_PI_4f = static_cast<float> (M_PI_4);
+const double M_2PI  = 2.0*M_PI;
+const float M_2PIf = static_cast<float> (M_2PI);
 
 #ifdef _MSC_VER
 // we want to use words far and near in our code
 #undef far
 #undef near
 #endif
-
-using namespace std;
 
 LDCORESHARED_EXPORT bool cmpf(float a, float b, float epsilon = 0.005f);
 
@@ -63,9 +61,21 @@ struct LDCORESHARED_EXPORT point3d {
     explicit point3d(float p_x, float p_y, float p_z);
     bool isNull() const;
 
+    float distance(const point3d &n) const;
+    void norm();
+
     point3d toLaserCoord() const;
 
     void rotate(float p_x, float p_y, float p_z, point3d p_pivot);
+
+    point3d operator+ (const point3d& other) const;
+    point3d& operator+= (const point3d& other);
+    point3d operator- (const point3d& other) const;
+    point3d& operator-= (const point3d& other);
+    point3d operator* (float coef) const;
+    point3d& operator*= (float coef);
+    point3d operator/ (float coef) const;
+    point3d& operator/= (float coef);
 };
 
 // animatedAngle
@@ -92,6 +102,7 @@ public:
     Vec2(float p_x, float p_y);
 
     bool isNull() const;
+    float distance(const Vec2 &n) const;
     float magnitude() const;
     Vec2 normalize() const;
     float toRadians() const;
@@ -101,7 +112,9 @@ public:
     void scale(float xFactor, float yFactor);
 
     Vec2 operator+ (const Vec2& other) const;
+    Vec2& operator+= (const Vec2& other);
     Vec2 operator- (const Vec2& other) const;
+    Vec2& operator-= (const Vec2& other);
     bool operator == (const Vec2& other) const;
     bool operator != (const Vec2& other) const;
 };
@@ -221,14 +234,8 @@ public:
     static float normLog(float v, float power);
     static float normExp(float v, float power);
     static CCPoint changeCoords(const CCPoint &m, float rotation, const CCPoint &translation);
-    static Vec2 addVec2(const Vec2 &m, const Vec2 &n);
     static point3d rotate3d(const point3d &p, float angle, const point3d &axis);
     static point3d rotate3dAtPoint(const point3d &p, float angle, const point3d &axis, const point3d &point);
-    static float distance3d(const point3d &m, const point3d &n);
-    static point3d norm3d(const point3d &m);
-    static point3d add3d(const point3d &m, const point3d &n);
-    static point3d diff3d(const point3d &m, const point3d &n);
-    static point3d mult3d(const point3d &m, float coef);
     static point3d vectProduct(const point3d &u, const point3d &v);
     static float dotProduct(const point3d &u, const point3d &v);
     static float distanceToPlan(float a, float b, float c, float d, point3d m);

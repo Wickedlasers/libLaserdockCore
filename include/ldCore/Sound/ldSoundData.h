@@ -57,7 +57,13 @@ constexpr float AUDIO_UPDATE_DELTA_S = (AUDIO_SUB_BLOCK_SIZE/2) / 44100.0f;
 constexpr float AUDIO_UPDATE_DELTA_MS = AUDIO_UPDATE_DELTA_S * 1000;
 
 // structures for audio block and sub block
-typedef struct AudioBlock {float data[AUDIO_BLOCK_SIZE];} AudioBlock;
+typedef struct AudioBlock {
+    static const AudioBlock EMPTY_AUDIO_BLOCK;
+
+    AudioBlock(bool clear = false);
+    float data[AUDIO_BLOCK_SIZE];
+} AudioBlock;
+
 typedef struct AudioSubBlock {float data[AUDIO_SUB_BLOCK_SIZE];} AudioSubBlock;
 
 // MH Note: 2940 @30fps = 88200 samples / sec... it would appear we are leaving half the buffer empty...
@@ -295,6 +301,8 @@ public:
 
 
     float GetSampleRate() const { return soundMaxFrequency * 2.0f; }
+
+    int GetSoundLevel() const; // 1..100
 
 protected:
 

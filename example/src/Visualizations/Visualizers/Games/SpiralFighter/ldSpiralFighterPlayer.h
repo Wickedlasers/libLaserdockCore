@@ -40,8 +40,8 @@ public:
     bool hasUsedPowerup();
 
     // Callbacks.
-    function<void(ldSpiralFighterPlayer*)> onFire;
-    function<void()> onPowerup;
+    std::function<void(ldSpiralFighterPlayer*)> onFire;
+    std::function<void()> onPowerup;
 
     // Input functions
     void rotate(double rotate);
