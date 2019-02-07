@@ -1,23 +1,3 @@
-/**
-    libLaserdockCore
-    Copyright(c) 2018 Wicked Lasers
-
-    This file is part of libLaserdockCore.
-
-    libLaserdockCore is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    libLaserdockCore is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
-**/
-
 #include "ldSpectrumBandVisualizer.h"
 
 #include <QtCore/QDebug>
@@ -296,7 +276,7 @@ void ldSpectrumBandVisualizer::draw()
                 int i_col = i;
                 if (j%2!=0) i_col = countCols-1-i;
                 
-                //color = grid[i_col][j]==255 ? 0xFF0000 : colorRGB(grid[i_col][j] / 2, grid[i_col][j], 0);
+                //color = grid[i_col][j]==255 ? 0xFF0000 : ldColorUtil::colorRGB(grid[i_col][j] / 2, grid[i_col][j], 0);
                 if (grid[i_col][j]>0 || j==0) {
                     color = ldColorUtil::lerpInt(0x00FF00, 0xFF0000, ldMaths::normLog(1.0*j/(countRows-1), 3.0));
                 } else {
@@ -304,10 +284,9 @@ void ldSpectrumBandVisualizer::draw()
                     if (useBackground) color = 0x00000041;
                 }
 
-//                bool isLineStartEnd = ((k == 0) || (k == maxPointPerLine - 1));
-//                bool isFirstOrLastLine = ((i == 0) || (i == countCols - 1));
-//                int repeat = isLineStartEnd || isFirstOrLastLine ? 3 : 1;
+                if(k == 0) m_renderer->vertex(x, y, C_BLACK, 2);
                 m_renderer->vertex(x, y, color);
+                if(k == (maxPointPerLine - 1)) m_renderer->vertex(x, y, C_BLACK, 2);
             }
             m_renderer->end();
             

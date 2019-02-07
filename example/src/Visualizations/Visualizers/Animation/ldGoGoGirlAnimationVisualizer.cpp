@@ -19,26 +19,26 @@ void ldGoGoGirlAnimationVisualizer::loadAnimation() {
     // switch- if we load from binary, or load from another format and convert
     bool useLDVAFile = true;
     QString filename = "gogo";
-    asb.load2(ldCore::instance()->resourceDir() + "/ldva2/" + filename + ".ldva2");
+    m_asb.load2(ldCore::instance()->resourceDir() + "/ldva2/" + filename + ".ldva2");
 
 
     // apply animation settings and styles
-    doSynchSpeed = true;
-    speedAllowSlow = true;
-    doReverse = false;
-    doWrapOnKeyEnd = false;
-    doJumpToKeyStartOnBeat = true;
-    jumpBeatMidpoint = false; 
-    jumpBeatCount = 2; 
-    useOldAlg = false;
-    doColorCircle = true;
-    doZoom = false;
-    doEcho = false;
+    m_doSynchSpeed = true;
+    m_speedAllowSlow = true;
+    m_doReverse = false;
+    m_doWrapOnKeyEnd = false;
+    m_doJumpToKeyStartOnBeat = true;
+    m_jumpBeatMidpoint = false; 
+    m_jumpBeatCount = 2; 
+    m_useOldAlg = false;
+    m_doColorCircle = true;
+    m_doZoom = false;
+    m_doEcho = false;
 
 
     /// save to ldva2
     // if we didnt load form a binary, then save it instead
-    if (!useLDVAFile) asb.save2("./" + filename + ".ldva2"); // (this puts it in current directory)
+    if (!useLDVAFile) m_asb.save2("./" + filename + ".ldva2"); // (this puts it in current directory)
 
 }
 

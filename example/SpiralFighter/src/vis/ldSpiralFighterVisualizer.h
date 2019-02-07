@@ -1,33 +1,13 @@
-/**
-    libLaserdockCore
-    Copyright(c) 2018 Wicked Lasers
-
-    This file is part of libLaserdockCore.
-
-    libLaserdockCore is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    libLaserdockCore is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
-**/
-
 //
 //  ldSpiralFighterVisualizer.h
-//  ldCore
+//  LaserdockVisualizer
 //
 //  Created by Glauco Pires 20/10/2017.
 //  Copyright (c) 2017 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __ldCore__ldSpiralFighterVisualizer__
-#define __ldCore__ldSpiralFighterVisualizer__
+#ifndef __LaserdockVisualizer__ldSpiralFighterVisualizer__
+#define __LaserdockVisualizer__ldSpiralFighterVisualizer__
 
 #include <QtCore/QTimer>
 
@@ -36,9 +16,9 @@
 #include "ldCore/Helpers/Sound/ldQSound.h"
 #include "ldCore/Visualizations/Visualizers/Games/ldAbstractGameVisualizer.h"
 
-#include "SpiralFighter/ldSpiralFighterEnemy.h"
-#include "SpiralFighter/ldSpiralFighterMissile.h"
-#include "SpiralFighter/ldSpiralFighterPlayer.h"
+#include "impl/ldSpiralFighterEnemy.h"
+#include "impl/ldSpiralFighterMissile.h"
+#include "impl/ldSpiralFighterPlayer.h"
 
 class ldTextLabel;
 
@@ -164,4 +144,4 @@ private:
     float m_streamTimer;
 };
 
-#endif /*__ldCore__ldSpiralFighterVisualizer__*/
+#endif /*__LaserdockVisualizer__ldSpiralFighterVisualizer__*/

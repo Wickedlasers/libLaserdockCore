@@ -5,7 +5,7 @@ message(STATUS "CMAKE_GENERATOR: ${CMAKE_GENERATOR}")
 
 # main app configuration
 option(LD_ANDROID_BUILD "Build for Android" OFF)
-option(LD_CORE_BUILD_EXAMPLE "Build Example" OFF)
+option(LD_CORE_BUILD_EXAMPLE "Build Example" ON)
 option(LD_CORE_BUILD_TESTS "Build Tests" OFF)
 # library flags
 option(LD_CORE_ENABLE_LIBLZR "Enable liblzr" OFF)

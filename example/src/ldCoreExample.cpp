@@ -28,7 +28,8 @@
 #include <ldCore/ldCore.h>
 #include <ldCore/Visualizations/ldVisualizationTask.h>
 
-#include "src/Games/ldSpiralFighterGame.h"
+#include "ldSpiralFighterGame.h"
+
 #include "src/Visualizations/Visualizers/Animation/ldGoGoGirlAnimationVisualizer.h"
 #include "src/Visualizations/Visualizers/Animation/ldGoGoGirlAnimationVisualizer.h"
 #include "src/Visualizations/Visualizers/Clock/ldAnalogClockVisualizer.h"

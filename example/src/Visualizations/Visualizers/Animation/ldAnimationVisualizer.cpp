@@ -8,10 +8,11 @@
 #include "ldAnimationVisualizer.h"
 
 #include "ldCore/ldCore.h"
-#include <ldCore/Filter/ldColorUtils.h>
+#include <ldCore/Helpers/Color/ldColorUtil.h>
 #include "ldCore/Filter/ldFilterColorize.h"
 #include <ldCore/Sound/ldSoundData.h>
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
+#include "ldCore/Helpers/Audio/ldAppakPeaks.h"
 #include "ldCore/Helpers/Audio/ldTempoAC.h"
 #include "ldCore/Helpers/Audio/ldHybridReactor.h"
 #include "ldCore/Helpers/SVG/ldSvgReader.h"
@@ -19,38 +20,49 @@
 #include "ldCore/Helpers/Visualizer/ldLaserFilter.h"
 
 namespace {
-static float getClosestBeat(float r, float t, bool slow) {
+static float getClosestBeat(float currentBpm, float sourceBpm, bool slow) {
 
-    for (int i = 0; i < 5; i++) if (r < t) r = r * 2;
-    for (int i = 0; i < 5; i++) if (r / 2 > t) r = r / 2;
+    for (int i = 0; i < 5; i++)
+        if (currentBpm < sourceBpm)
+            currentBpm = currentBpm * 2;
+
+    for (int i = 0; i < 5; i++)
+        if (currentBpm / 2 > sourceBpm)
+            currentBpm = currentBpm / 2;
 
 
     if (!slow) {
         //if (r * 0.667 > t) return r * 0.667;
-        if (r * 0.750 > t) return r * 0.750;
-        return r;
+        if (currentBpm * 0.750 > sourceBpm) return currentBpm * 0.750;
+        return currentBpm;
     }
 
     // slow
 
     if (slow) {
-        float bpm = r;
-        float bestdiff = fabsf(logf(bpm) - logf(t));
+        float bpm = currentBpm;
+        float bestDiff = fabsf(logf(bpm) - logf(sourceBpm));
 
         {
-            float test = r / 2;
-            float diff = fabsf(logf(test) - logf(t));
-            if (diff < bestdiff) { bestdiff = diff; bpm = test; }
+            float test = currentBpm / 2;
+            float diff = fabsf(logf(test) - logf(sourceBpm));
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                bpm = test;
+            }
         }
         {
-            float test = r * 2 / 3;
-            float diff = fabsf(logf(test) - logf(t));
-            if (diff < bestdiff) {bestdiff = diff; bpm = test;}
+            float test = currentBpm * 2 / 3;
+            float diff = fabsf(logf(test) - logf(sourceBpm));
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                bpm = test;
+            }
         }
         return bpm;
     }
 
-    return r;
+    return currentBpm;
 }
 }
 
@@ -98,22 +110,22 @@ void ldAnimationVisualizer::onShouldStart()
     m_renderer->setRenderParams(&params);
 }
 
-void ldAnimationVisualizer::onUpdate(ldSoundData* /*pSoundData*/, float /*delta*/) {
+void ldAnimationVisualizer::onUpdate(ldSoundData* /*pSoundData*/, float delta) {
     
     QMutexLocker lock(&m_mutex);
-    if (!isLoaded) {
-        isLoaded = true;
+    if (!m_isLoaded) {
+        m_isLoaded = true;
         this->loadAnimation();
     }
 
-    if (asb.frames().size() == 0) return;
+    if (m_asb.frames().size() == 0) return;
 
     ldMusicManager* m = ldCore::instance()->musicManager();    
         
-    if (useOldAlg) {
+    if (m_useOldAlg) {
 
-        int* keyHead = asb.keyStart.data();
-        int* keyTail = asb.keyEnd.data();
+        int* keyHead = m_asb.keyStart.data();
+        int* keyTail = m_asb.keyEnd.data();
         // get key and offset from anima
         int key = 0;
         int offset = 0;
@@ -122,64 +134,80 @@ void ldAnimationVisualizer::onUpdate(ldSoundData* /*pSoundData*/, float /*delta*
         // loop offset within key
         if (offset < 0) offset = 0;
         // set index
-        currentFrame = keyHead[key] + offset;
-        if (currentFrame >= keyTail[key]) currentFrame = keyTail[key] - 1;
+        m_currentFrame = keyHead[key] + offset;
+        if (m_currentFrame >= keyTail[key]) m_currentFrame = keyTail[key] - 1;
 
     } else {
         
 //        ldMusicManager* m = ldCore::instance()->musicManager();
-        // test reverse        
-        rev = false;        
-        if (doReverse) {
-            if (m->tempoACSlower->phaseSmooth < 0.50) rev = true;
-            if (m->tempoACSlower->phaseSmooth < 0.25) rev = false;
-            if (m->tempoACSlower->phaseReactive > 0.50) rev = false;
+        // test reverse
+        bool isReverse = false;
+        if (m_doReverse) {
+            if (m->tempoACSlower->phaseSmooth < 0.50) isReverse = true;
+            if (m->tempoACSlower->phaseSmooth < 0.25) isReverse = false;
+            if (m->tempoACSlower->phaseReactive > 0.50) isReverse = false;
         }
-        // set speed                
-        float speed = 1;        
-        //{
-            float bpm = m->tempoACSlower->bpmSmooth;
-            bpm = getClosestBeat(bpm, asb.sourceBPM, speedAllowSlow);
-            speed = bpm / asb.sourceBPM;            
-        //}
-        if (!doSynchSpeed) speed = 1;
+
+        // bpm
+        float bpm = 0;
+        if(m_usePeakBpm) {
+            bpm = m->peaks()->bpm();
+            //        bpm = m->appakaPeak->bpm;
+            //        bpm = m->appakaBeat->bpm;
+//                    bpm = m->bestBpm();
+            //        qDebug() << m->appakaPeak->lastBmpApproximation;
+            //        qDebug() << m->tempoACSlower->bpmSmooth << m->tempoTrackerSlow->bpm() << m->appakaBeat->bpm << m->bestBpm();
+            //        qDebug() << bpm << asb.sourceBPM;
+            if(bpm == 0) {
+                bpm = m_asb.sourceBPM;
+            }
+        } else {
+            bpm = m->tempoTrackerSlow->bpm();
+            bpm = getClosestBeat(bpm, m_asb.sourceBPM, m_speedAllowSlow);
+        }
+
+        // set speed
+        float speed = 1;
+        if(m_doSynchSpeed)
+            speed = bpm / m_asb.sourceBPM;
+
         // advance
-        frx += AUDIO_UPDATE_DELTA_S * asb.sourceFPS * speed;
-        int irx = 0;
-        if (frx >= 1.0f) {
-            irx = (int)frx;
-            frx -= irx;
+        m_totalFrameDelta += delta * m_asb.sourceFPS * speed;
+        int frameDelta = 0;
+        if (m_totalFrameDelta >= 1.0f) {
+            frameDelta = (int) m_totalFrameDelta;
+            m_totalFrameDelta -= frameDelta;
         }
-        if (rev) irx = -irx;
-        currentFrame += irx;
+        if (isReverse) frameDelta = -frameDelta;
+        m_currentFrame += frameDelta;
         // wrap
-        if (doWrapOnKeyEnd) {
+        if (m_doWrapOnKeyEnd) {
             // loop under
-            if (currentFrame < asb.keyStart[ckey]) {                
-                currentFrame = asb.keyEnd[ckey];
+            if (m_currentFrame < m_asb.keyStart[m_ckey]) {
+                m_currentFrame = m_asb.keyEnd[m_ckey];
             }
             // loop over
-            if (currentFrame > asb.keyEnd[ckey]) {                
-                ckey++;
-                ckey %= 8;
-                currentFrame = asb.keyStart[ckey];
+            if (m_currentFrame > m_asb.keyEnd[m_ckey]) {
+                m_ckey++;
+                m_ckey %= 8;
+                m_currentFrame = m_asb.keyStart[m_ckey];
             }
         }    
         // keep in size
-        currentFrame += asb.frames().size();
-        currentFrame %= asb.frames().size();
+        m_currentFrame += m_asb.frames().size();
+        m_currentFrame %= m_asb.frames().size();
         // check clip restart
-        if (doJumpToKeyStartOnBeat) {
+        if (m_doJumpToKeyStartOnBeat) {
             if (m->tempoACSlower->phaseSmooth == 1 && m->tempoACSlow->phaseSmooth <= 1) {
-                jumpBeatCounter++;
-                if (jumpBeatCounter >= jumpBeatCount) jumpBeatCounter = 0;
-                if (jumpBeatCounter == 0) {                    
-                    ckey = rand() % 8;
-                    currentFrame = asb.keyStart[ckey];
-                    if (jumpBeatMidpoint) {
-                        float oo = speed * asb.sourceFPS / (bpm / 60.0);
-                        currentFrame = (asb.keyStart[ckey] + asb.keyEnd[ckey]) / 2 - oo;
-                        currentFrame = MAX(currentFrame, asb.keyStart[ckey]);
+                m_jumpBeatCounter++;
+                if (m_jumpBeatCounter >= m_jumpBeatCount) m_jumpBeatCounter = 0;
+                if (m_jumpBeatCounter == 0) {
+                    m_ckey = rand() % 8;
+                    m_currentFrame = m_asb.keyStart[m_ckey];
+                    if (m_jumpBeatMidpoint) {
+                        float oo = speed * m_asb.sourceFPS / (bpm / 60.0);
+                        m_currentFrame = (m_asb.keyStart[m_ckey] + m_asb.keyEnd[m_ckey]) / 2 - oo;
+                        m_currentFrame = MAX(m_currentFrame, m_asb.keyStart[m_ckey]);
                     }
                 }
             }
@@ -195,8 +223,8 @@ void ldAnimationVisualizer::draw()
 {
     QMutexLocker lock(&m_mutex);
     // load if needed
-    if (!isLoaded) return;
-    if (asb.frames().size() == 0) return;
+    if (!m_isLoaded) return;
+    if (m_asb.frames().size() == 0) return;
 
     //qDebug() currentFrame;
 
@@ -223,9 +251,9 @@ void ldAnimationVisualizer::draw()
     //(no)//colorFilter3.nde = m_musicManager->musicFeature1->statMoodMelodic * 250;// m_musicManager->mrSlowTreb->spinOutput4*250;
     //colorFilter3.nde = m_musicManager->mrSlowTreb->spinOutput4*250;
 
-    if (doColorCircle) {
+    if (m_doColorCircle) {
         setPixelShader((ldShader*)&colorFilter2);
-    } else if (doColorRise) {
+    } else if (m_doColorRise) {
         setPixelShader((ldShader*)&colorFilter3);
     } else {
         setPixelShader((ldShader*)&colorFilter);
@@ -238,29 +266,33 @@ void ldAnimationVisualizer::draw()
 //    float beat2 = m->tempoTrackerFast->output;
     float zoom1 = 1;
     float zoom2 = 1;    
-    if (doZoom) {
+    if (m_doZoom) {
         zoom1 = zoom2 = 0.80 + 0.20 * beat1;
-        if (doEcho) zoom1 = 0.75;
+        if (m_doEcho) zoom1 = 0.75;
     }
     
     // draw once
     m_renderer->loadIdentity3();
     m_renderer->scale3(zoom1, zoom1, 1);
-    asb.color = asb._c1 = asb._c2 = C_GREY(255);
-    asb.drawFrame(m_renderer, currentFrame);
+    m_asb.color = m_asb._c1 = m_asb._c2 = C_GREY(255);
+    m_asb.drawFrame(m_renderer, m_currentFrame);
 
+    doEcho(zoom2);
+}
+
+void ldAnimationVisualizer::doEcho(float zoom2)
+{
     // draw again
-    if (doEcho) {        
-        if (echoFrame == -1) echoFrame = currentFrame;        
+    if (m_doEcho) {
+        if (m_echoFrame == -1) m_echoFrame = m_currentFrame;
 
         m_renderer->loadIdentity3();
-        m_renderer->scale3(zoom2, zoom2, 1);        
-        asb.color = asb._c1 = asb._c2 = C_GREY(100);
-        asb.drawFrame(m_renderer, echoFrame);
+        m_renderer->scale3(zoom2, zoom2, 1);
+        m_asb.color = m_asb._c1 = m_asb._c2 = C_GREY(100);
+        m_asb.drawFrame(m_renderer, m_echoFrame);
 
-        echoFrame = currentFrame;
+        m_echoFrame = m_currentFrame;
     }
-
 }
 
 

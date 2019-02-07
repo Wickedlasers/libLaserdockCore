@@ -9,7 +9,7 @@
 #ifndef ldGoGoGirlAnimationVisualizer_H
 #define ldGoGoGirlAnimationVisualizer_H
 
-#include "ldAnimationVisualizer.h"
+#include "Visualizations/Visualizers/Animation/ldAnimationVisualizer.h"
 
 class ldGoGoGirlAnimationVisualizer : public ldAnimationVisualizer
 {

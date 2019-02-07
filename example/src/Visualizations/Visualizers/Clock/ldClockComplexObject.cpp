@@ -1,26 +1,6 @@
-/**
-    libLaserdockCore
-    Copyright(c) 2018 Wicked Lasers
-
-    This file is part of libLaserdockCore.
-
-    libLaserdockCore is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    libLaserdockCore is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
-**/
-
 //
 //  ldClockComplexObject.cpp
-//  ldCore
+//  LaserdockVisualizer
 //
 //  Created by Eric Brugère on 12/05/16.
 //  Copyright (c) 2016 Wicked Lasers. All rights reserved.
@@ -31,18 +11,13 @@
 #include <QtCore/QDebug>
 
 #include "ldCore/ldCore.h"
-#include "ldCore/Filter/ldColorUtils.h"
 #include "ldCore/Helpers/Color/ldColorUtil.h"
 #include "ldCore/Helpers/SVG/ldSvgReader.h"
 
 // ldClockComplexObject
 ldClockComplexObject::ldClockComplexObject()
     : _all_visible(true)
-    , _svgHour(svgBezierCurves())
-    , _svgMin(svgBezierCurves())
 {
-    _svgHour = ldSvgReader::loadSvg(ldCore::instance()->resourceDir() + "/svg/clock/hour.svg", ldSvgReader::Type::Dev);
-    _svgMin = ldSvgReader::loadSvg(ldCore::instance()->resourceDir() + "/svg/clock/min.svg", ldSvgReader::Type::Dev);
 }
 
 // ldClockComplexObject
@@ -153,6 +128,9 @@ void ldClockComplexObject::innerDraw(ldRendererOpenlase* p_renderer, const QTime
 
     int color = ldColorUtil::colorForStep(sign * second/60.0);
 
+    if(_svgHour.empty()) _svgHour = ldSvgReader::loadSvg(ldCore::instance()->resourceDir() + "/svg/clock/hour.svg", ldSvgReader::Type::Dev);
+    if(_svgMin.empty()) _svgMin = ldSvgReader::loadSvg(ldCore::instance()->resourceDir() + "/svg/clock/min.svg", ldSvgReader::Type::Dev);
+
     drawDataBezierAsLinestrip(p_renderer, _svgHour, sign*hour * M_2PIf / 12.0, color);
     drawDataBezierAsLinestrip(p_renderer, _svgMin, sign*minute * M_2PIf / 60.0, color);
     //drawDataBezierAsLinestrip(svgSec, sign*second * M_2PIf / 60.0);
@@ -192,9 +170,7 @@ void ldClockComplexObject::drawDataBezierAsLinestrip(ldRendererOpenlase* p_rende
             for (int j=0; j<maxPoints; j++)
             {
                 float slope = 1.0*j/(maxPoints-1);
-                Vec2 p;
-                p.x = ldMaths::cubicBezier(slope, b.start().x, b.control1().x, b.control2().x, b.end().x);
-                p.y = ldMaths::cubicBezier(slope, b.start().y, b.control1().y, b.control2().y, b.end().y);
+                Vec2 p = b.getPoint(slope);
                 p.y = p.y + 100;
                 p.x = 2 * p.x / 100.0  - 1;
                 p.y = 2 * p.y / 100.0  - 1;

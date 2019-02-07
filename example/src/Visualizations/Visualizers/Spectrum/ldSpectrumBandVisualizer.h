@@ -30,7 +30,6 @@ public:
     ldSpectrumBandVisualizer(int p_countCols, int p_countRows, float p_cellPadCoef, bool p_useLog, bool p_useMax, bool p_useBackground);
     ~ldSpectrumBandVisualizer();
 
-    
     virtual QString visualizerName() const override { return "Appak. Spect Band v2"; }
     virtual float targetFPS() const override { return 60; }
     bool init();

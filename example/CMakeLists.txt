@@ -28,13 +28,12 @@ if(WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 endif()
 
+target_include_directories(${PROJECT_NAME} PRIVATE src)
+
 target_sources(${PROJECT_NAME} PRIVATE
     src/main.cpp
     src/ldCoreExample.cpp
     src/ldCoreExample.h
-    # src/Games
-    src/Games/ldSpiralFighterGame.cpp
-    src/Games/ldSpiralFighterGame.h
     #src/Visualizations/Visualizers
     src/Visualizations/Visualizers/Animation/ldAnimationVisualizer.cpp
     src/Visualizations/Visualizers/Animation/ldAnimationVisualizer.h
@@ -44,14 +43,6 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/Visualizations/Visualizers/Clock/ldClockComplexObject.h
     src/Visualizations/Visualizers/Clock/ldAnalogClockVisualizer.cpp
     src/Visualizations/Visualizers/Clock/ldAnalogClockVisualizer.h
-    src/Visualizations/Visualizers/Games/ldSpiralFighterVisualizer.cpp
-    src/Visualizations/Visualizers/Games/ldSpiralFighterVisualizer.h
-    src/Visualizations/Visualizers/Games/SpiralFighter/ldSpiralFighterEnemy.cpp
-    src/Visualizations/Visualizers/Games/SpiralFighter/ldSpiralFighterEnemy.h
-    src/Visualizations/Visualizers/Games/SpiralFighter/ldSpiralFighterMissile.cpp
-    src/Visualizations/Visualizers/Games/SpiralFighter/ldSpiralFighterMissile.h
-    src/Visualizations/Visualizers/Games/SpiralFighter/ldSpiralFighterPlayer.cpp
-    src/Visualizations/Visualizers/Games/SpiralFighter/ldSpiralFighterPlayer.h
     src/Visualizations/Visualizers/Simple/ldCircleVisualizer.cpp
     src/Visualizations/Visualizers/Simple/ldCircleVisualizer.h
     src/Visualizations/Visualizers/Simple/ldSquareVisualizer.cpp
@@ -79,6 +70,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE ../3rdparty/lib-qt-qml-tricks
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ldCore)
 
+
+add_subdirectory(SpiralFighter)
+target_link_libraries(${PROJECT_NAME} PRIVATE ldSpiralFighter)
 
 # ---------------------------- DEPLOY  ----------------------
 

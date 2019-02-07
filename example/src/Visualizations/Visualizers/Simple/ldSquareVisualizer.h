@@ -41,7 +41,6 @@ public:
     bool init();
 
     // ldVisualizer
-    
     virtual QString visualizerName() const override { return "Square"; }
 
 protected:

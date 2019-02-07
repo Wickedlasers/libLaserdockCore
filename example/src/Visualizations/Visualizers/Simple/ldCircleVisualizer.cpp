@@ -20,8 +20,7 @@
 
 #include "ldCircleVisualizer.h"
 
-#include <ldCore/Filter/ldColorUtils.h>
-#include <ldCore/Filter/ldFilterManager.h>
+#include <ldCore/Helpers/Color/ldColorUtil.h>
 
 #include "ldCircleVisualizer.h"
 
@@ -37,7 +36,7 @@ void ldCircleVisualizer::circle(ldRendererOpenlase* m_renderer, int points, floa
         uint32_t color = C_GREY(255*tc);
         if (gradient) {
             int hue = (360*a + 360*2); hue %= 360;
-            color = colorHSV(hue, 1, c);
+            color = ldColorUtil::colorHSV(hue, 1, c);
         }
         m_renderer->vertex(x+tx, y+ty, color);
     }

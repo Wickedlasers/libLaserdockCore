@@ -33,36 +33,40 @@ protected:
     virtual void prepareBeforeRender() {}
 
 protected:
+    void doEcho(float zoom2);
+
     // params
     float m_fps = 42;
         
     // animation settings and styles
-    bool useOldAlg = false; // use old algorithm (loops an animation between key frames) this disregards previous settings
-    bool doReverse = false; // allow animation to reverse on some types of beats
-    bool doSynchSpeed = false; // match speed of dancer
-    bool speedAllowSlow = false; // allow slow motion when using speed matching
-    bool doWrapOnKeyEnd = false; // when reaching a key end frame, jump to the beginning of that clip
-    bool doJumpToKeyStartOnBeat = false; // on a loud beat, jump to a random key start frame
-    bool jumpBeatMidpoint = false; // adjust start frame to match next beat with middle frame
-    int jumpBeatCount = 1; // 2 = only jump at every 2nd beat
+    bool m_useOldAlg = false; // use old algorithm (loops an animation between key frames) this disregards previous settings
+    bool m_doReverse = false; // allow animation to reverse on some types of beats
+    bool m_doSynchSpeed = false; // match speed of dancer
+    bool m_speedAllowSlow = false; // allow slow motion when using speed matching
+    bool m_doWrapOnKeyEnd = false; // when reaching a key end frame, jump to the beginning of that clip
+    bool m_doJumpToKeyStartOnBeat = false; // on a loud beat, jump to a random key start frame
+    bool m_jumpBeatMidpoint = false; // adjust start frame to match next beat with middle frame
+    bool m_usePeakBpm = false; // adjust start frame to match next beat with middle frame
+    int m_jumpBeatCount = 1; // 2 = only jump at every 2nd beat
     
-    bool doColorCircle = false;
-    bool doColorRise = false;
+    bool m_doColorCircle = false;
+    bool m_doColorRise = false;
           
-    bool doZoom = false; // beat zoom effects
-    bool doEcho = false;// beat echo effects
+    bool m_doZoom = false; // beat zoom effects
+    bool m_doEcho = false;// beat echo effects
 
     // internal
-    ldAnimationSequenceBezier asb;    
-    bool isLoaded = false;
+    ldAnimationSequenceBezier m_asb;
+    bool m_isLoaded = false;
 
-    float frx = 0;
-    int currentFrame = 0;
-    int echoFrame = 0;
-    int jumpBeatCounter = 0;
-    bool rev = false;
-    int ckey = 0;
-     
+    int m_currentFrame = 0;
+
+private:
+    float m_totalFrameDelta = 0;
+
+    int m_echoFrame = 0;
+    int m_jumpBeatCounter = 0;
+    int m_ckey = 0;
 };
 
 #endif /* defined(__LaserdockVisualizer__ldAnimationVisualizer__) */

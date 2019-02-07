@@ -35,7 +35,6 @@ public:
     bool init();
 
     // ldVisualizer
-    
     virtual QString visualizerName() const override { return "Circle"; }
 
 protected:
