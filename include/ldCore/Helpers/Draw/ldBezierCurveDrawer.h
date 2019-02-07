@@ -67,8 +67,6 @@ public:
 private:
     void draw(ldRendererOpenlase* renderer, const ldBezierCurveObject &dataVect, const SvgDim &dimInUnited);
 
-    mutable int m_safeDrawing = 0;
-
     std::unique_ptr<ldAbstractColorEffect> m_colorEffect;
     int m_baseColorDecay = 223;
 

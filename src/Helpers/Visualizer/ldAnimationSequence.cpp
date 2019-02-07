@@ -732,8 +732,8 @@ void ldAnimationSequenceBezier::autoscale() {
 
 #define XY2(bc, getter, setter) {\
     Vec2 tmp = bc.getter(); \
-    tmp.scale(f2x, f2y); \
-    tmp.translate(Vec2(f1x, f1y)); \
+    tmp *= Vec2(f2x, f2y); \
+    tmp += Vec2(f1x, f1y); \
     bc.setter(tmp); \
     }
 
@@ -836,7 +836,7 @@ void ldAnimationSequenceBezier::scale(float xs, float ys) {
 
 #define XY3(bc,getter,setter) { \
     Vec2 tmp = bc.getter(); \
-    tmp.scale(xs, ys); \
+    tmp *= Vec2(xs, ys); \
     bc.setter(tmp); \
 }
 
@@ -858,7 +858,7 @@ void ldAnimationSequenceBezier::move(float xt, float yt) {
 
 #define XY4(bc,getter,setter) { \
     Vec2 tmp = bc.getter(); \
-    tmp.translate(Vec2(xt, yt)); \
+    tmp += Vec2(xt, yt); \
     bc.setter(tmp); \
 }
 

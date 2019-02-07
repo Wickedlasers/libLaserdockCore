@@ -89,24 +89,6 @@ void Vec2::rotate(float rotation)
     y = oldX*sinf(rotation)+y*cosf(rotation);
 }
 
-void Vec2::translate(const Vec2 &translation)
-{
-    x += translation.x;
-    y += translation.y;
-}
-
-void Vec2::scale(float value)
-{
-    x *= value;
-    y *= value;
-}
-
-void Vec2::scale(float xFactor, float yFactor)
-{
-    x *= xFactor;
-    y *= yFactor;
-}
-
 Vec2 Vec2::operator+ (const Vec2& other) const
 {
     Vec2 res = *this;
@@ -135,6 +117,34 @@ Vec2& Vec2::operator-=(const Vec2 &other)
     x -= other.x;
     y -= other.y;
 
+    return *this;
+}
+
+Vec2 &Vec2::operator*=(float s)
+{
+    x *= s;
+    y *= s;
+    return *this;
+}
+
+Vec2 &Vec2::operator*=(const Vec2 &other)
+{
+    x *= other.x;
+    y *= other.y;
+    return *this;
+}
+
+Vec2 &Vec2::operator/=(float s)
+{
+    x /= s;
+    y /= s;
+    return *this;
+}
+
+Vec2 &Vec2::operator/=(const Vec2 &other)
+{
+    x /= other.x;
+    y /= other.y;
     return *this;
 }
 
@@ -1037,10 +1047,10 @@ void ldBezierCurve::rotate(float rotation)
 
 void ldBezierCurve::translate(const Vec2 &t)
 {
-    m_start.translate(t);
-    m_end.translate(t);
-    m_control1.translate(t);
-    m_control2.translate(t);
+    m_start += t;
+    m_end += t;
+    m_control1 += t;
+    m_control2 += t;
 }
 
 

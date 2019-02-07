@@ -30,6 +30,7 @@
 #include <QtCore/QDebug>
 
 #include "ldCore/ldCore.h"
+#include "ldCore/Helpers/Audio/ldAppakPeaks.h"
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
 
 // ldSoundEventUtil
@@ -141,7 +142,7 @@ void ldSoundEventUtil::updateSystem(System system, int channel)
         if ( m->tempoTrackerSlow->output() >= 1.0 ) isEvent=true;
         break;
     case AppakabarBeat:
-            if ( m->appakaPeak->output >= 0.9 ) {
+            if ( m->peaks()->output() >= 0.9 ) {
         //if ( m->appakaBeat->outputRealTimePeak >= 1.0) {
         //if ( m->appakaBeat->output >= 1.0) {
             //if (channel==0) qDebug() << "ldSoundEventUtil::System::AppakabarBeat" << systems_channel[system][channel].dropCount;
@@ -150,7 +151,7 @@ void ldSoundEventUtil::updateSystem(System system, int channel)
         break;
     case AppakabarPeak:
         //if ( m->appakaBeat->outputRealTimePeak >= 1.0) isEvent=true;
-            if ( m->appakaPeak->output >= 0.9f ) isEvent=true;
+            if ( m->peaks()->output() >= 0.9f ) isEvent=true;
             
         break;
     default:

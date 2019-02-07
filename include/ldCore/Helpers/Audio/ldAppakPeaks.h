@@ -34,17 +34,12 @@ public:
 	~ldAppakPeaks();
     
     void process(ldSoundData* pSoundData);
-    
-    //
-    float output;
-    float peakOneDebug;
-    float peakTwoDebug;
-    
-    float timer = 0.0f;
-    float bpmTimer;
-    float lastBmpApproximation; // between two last peaks
-    
-protected:
+    void processBpm(float bestBpm, float delta);
+
+    float lastBpmApproximation() const;
+    float output() const;
+    int bpm() const;
+
 private:
     static const int minDiff = 3*AUDIO_OVERDRIVE_FACTOR;
     static const int maxDiff = 6*AUDIO_OVERDRIVE_FACTOR;
@@ -53,22 +48,38 @@ private:
     static const int buffersize = seconds*fps;
     static const int last_i = buffersize-1;
     static const bool debug = false;
-    
-    int startCounter;
-    bool isStarted;
-    float prevOutput;
 
-    bool isDuringPeakOne;
-    bool isDuringPeakTwo;
-    bool didPeakOneReachLower;
-    bool isPeakOneDurationReached;
+    void doRealTimeCompute();
+    void newPeak();
+    void doPeakTwo();
+    void doPeakOne();
+    void resetPeakStats();
+
+    //
+    float m_output = 0.f;
+    float m_lastBpmApproximation = 0.f; // between two last peaks
+
+    float peakOneDebug = 0.f;
+//    float peakTwoDebug = 0.f;
+
+    float timer = 0.0f;
+    float bpmTimer = 0.f;
+
+    int startCounter = 0;
+    bool isStarted = false;
+    float prevOutput = 0.f;
+
+    bool isDuringPeakOne = false;
+    bool isDuringPeakTwo = false;
+    bool didPeakOneReachLower = false;
+    bool isPeakOneDurationReached = false;
     
-    int noPeakRunningSince;
-    int noPeakRunningLimitSinceReset;
+    int noPeakRunningSince = 0;
+    int noPeakRunningLimitSinceReset = maxDiff;
     
-    float prevValForPeakTwo;
-    float prevPrevValForPeakTwo;
-    float prevPrevPrevValForPeakTwo;
+    float prevValForPeakTwo = 0.f;
+    float prevPrevValForPeakTwo = 0.f;
+    float prevPrevPrevValForPeakTwo = 0.f;
     
     //
     float powerDataOne[buffersize];
@@ -77,11 +88,13 @@ private:
     float bufferTmp[buffersize];
     float bufferTmpTwo[buffersize];
     
-    void doRealTimeCompute();
-    void newPeak();
-    void doPeakTwo();
-    void doPeakOne();
-    void resetPeakStats();
+    float m_milliSecondsCounter = 0;
+    float m_milliSecondsCounter2 = 0;
+    int m_minCurrentMillis = 500;
+    bool m_isRunningBPMCounter = false;
+    int bpmCount = 0;
+
+    int m_bpm = 0;
 };
 
 #endif // LDAPPAKPEAKS_H

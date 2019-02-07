@@ -40,21 +40,21 @@
 #include <ldCore/Utilities/ldBasicDataStructures.h>
 
 // sample size is size of an audio buffer object in frames
-const int SAMPLE_RATE = 44100; // 48000
+const int SAMPLE_RATE = 44100;
 const int SAMPLE_SIZE = SAMPLE_RATE / 30; // 1470
 
 // overdrive factor increases the update speed of audio without affecting the size of the buffer
 const int AUDIO_OVERDRIVE_FACTOR = 2;
 
 // block size is the size of a full frame in samples
-const int AUDIO_BLOCK_SIZE = SAMPLE_SIZE*2;
+const int AUDIO_BLOCK_SIZE = SAMPLE_SIZE*2; // 2940
 
 // sub block size corresponds to the number of new samples in each update
-const int AUDIO_SUB_BLOCK_SIZE  = AUDIO_BLOCK_SIZE/AUDIO_OVERDRIVE_FACTOR;
+const int AUDIO_SUB_BLOCK_SIZE  = AUDIO_BLOCK_SIZE/AUDIO_OVERDRIVE_FACTOR; // 1470
 
 // duration of time between audio block update
-constexpr float AUDIO_UPDATE_DELTA_S = (AUDIO_SUB_BLOCK_SIZE/2) / 44100.0f;
-constexpr float AUDIO_UPDATE_DELTA_MS = AUDIO_UPDATE_DELTA_S * 1000;
+constexpr float AUDIO_UPDATE_DELTA_S = (AUDIO_SUB_BLOCK_SIZE/2) / 44100.0f; // 0.016
+constexpr float AUDIO_UPDATE_DELTA_MS = AUDIO_UPDATE_DELTA_S * 1000; // 16.6
 
 // structures for audio block and sub block
 typedef struct AudioBlock {

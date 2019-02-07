@@ -84,17 +84,10 @@ public:
     virtual QString visualizerName() const;
     virtual float targetFPS() const { return 30; }
 
-    ldVisualizationTask * task() const {
-        return m_task;
-    }
-
     bool init();
 
     void start();
     void stop();
-
-    //used to pass in parent vtask so the visualizer has a handle of it.
-    void prepare(ldVisualizationTask * task = NULL);
 
     virtual void updateWith(ldSoundData *pSoundData, float delta);
 
@@ -106,7 +99,6 @@ public:
 protected:
     virtual void onShouldStart();
     virtual void onShouldStop();
-
 
     /*!
      * \brief clearBuffer
@@ -124,7 +116,6 @@ protected:
      */
     virtual void draw() override;
 
-    ldVisualizationTask * m_task;
     ldMusicManager* m_musicManager;
 
     bool m_isMusicAware = true; // most of visualizers are music aware

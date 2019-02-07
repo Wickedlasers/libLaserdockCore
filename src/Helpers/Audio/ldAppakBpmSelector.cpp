@@ -25,13 +25,6 @@
 #include "ldCore/Helpers/Maths/ldMathStat.h"
 #include "ldCore/Helpers/Maths/ldMaths.h"
 
-static const int fps = 30*AUDIO_OVERDRIVE_FACTOR;
-//static const int seconds = 1;
-static const int buffersize = fps;//seconds*fps;
-static float bpmAubio[buffersize];
-static float bpmAppakBeat[buffersize];
-static float bpmAppakPeak[buffersize];
-
 // ldAppakBpmSelector
 ldAppakBpmSelector::ldAppakBpmSelector()
 {

@@ -133,9 +133,4 @@ void ldVisualizer::draw()
 {
 }
 
-void ldVisualizer::prepare(ldVisualizationTask * task){
-    m_task = task;
-    task->renderState()->renderOpenlase = true;    
-}
-
 

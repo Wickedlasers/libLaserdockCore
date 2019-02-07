@@ -42,6 +42,15 @@ private:
     float lastSomehowTrustableBPM = 0;
     float lastVeryTrustableBPM = 0;
 //    float trustableTime = 0;
+
+    static const int fps = 30*AUDIO_OVERDRIVE_FACTOR;
+    //static const int seconds = 1;
+    static const int buffersize = fps;//seconds*fps;
+    float bpmAubio[buffersize];
+    float bpmAppakBeat[buffersize];
+    float bpmAppakPeak[buffersize];
+
+
 };
 
 

@@ -114,7 +114,6 @@ is required.
 #include <memory>
 
 #include "ldCore/Helpers/Audio/ldAppakaBeat.h"
-#include "ldCore/Helpers/Audio/ldAppakPeaks.h"
 #include "ldCore/Helpers/Audio/ldAppakGate.h"
 #include "ldCore/Helpers/Audio/ldAppakBpmSelector.h"
 #include "ldCore/Helpers/Audio/ldAudioBasic.h"
@@ -126,6 +125,7 @@ is required.
 #include "ldCore/Helpers/Audio/ldTempoTracker.h"
 #include "ldCore/Helpers/Visualizer/ldVisualizerHelper.h"
 
+class ldAppakPeaks;
 class ldAppakSpectrum;
 class ldSpectrogram;
 class ldHybridAnima;
@@ -159,6 +159,8 @@ public:
     void setRealSoundLevel(int value);
     int realSoundLevel() const;
 
+    const ldAppakPeaks* peaks() const;
+
     std::unique_ptr<ldTempoAC> tempoACSlower;
     std::unique_ptr<ldTempoAC> tempoACSlow;
     std::unique_ptr<ldTempoAC> tempoACFast;
@@ -175,7 +177,6 @@ public:
     std::unique_ptr<ldTempoTracker> tempoTrackerSlow;
 
     std::unique_ptr<ldAppakaBeat> appakaBeat;
-    std::unique_ptr<ldAppakPeaks> appakaPeak;
     std::unique_ptr<ldAppakGate> appakaGate;
     std::unique_ptr<ldAppakSpectrum> appakaSpectrum;
 
@@ -222,6 +223,7 @@ private:
     std::unique_ptr<ldSilentThree> silentThree;
 
     std::unique_ptr<ldAppakBpmSelector> appakaBpmSelector;
+    std::unique_ptr<ldAppakPeaks> m_peaks;
 
     std::unique_ptr<ldBeatWarm> beatWarm;
     std::unique_ptr<ldBeatFresh> beatFresh;

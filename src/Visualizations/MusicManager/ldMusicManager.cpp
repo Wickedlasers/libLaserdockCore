@@ -26,6 +26,7 @@
 
 #include "ldCore/Helpers/Audio/ldHybridReactor.h"
 #include "ldCore/Helpers/Audio/ldTempoAC.h"
+#include "ldCore/Helpers/Audio/ldAppakPeaks.h"
 #include "ldCore/Helpers/Audio/ldAppakSpectrum.h"
 
 // initial state
@@ -94,7 +95,7 @@ ldMusicManager::ldMusicManager(QObject* parent)
 
     // appaka
     appakaBeat.reset(new ldAppakaBeat());
-    appakaPeak.reset(new ldAppakPeaks());
+    m_peaks.reset(new ldAppakPeaks());
     appakaGate.reset(new ldAppakGate());
     appakaSpectrum.reset(new ldAppakSpectrum());
     appakaBpmSelector.reset(new ldAppakBpmSelector());
@@ -124,7 +125,7 @@ ldMusicManager::ldMusicManager(QObject* parent)
 ldMusicManager::~ldMusicManager() {}
 
 // process all algorithms
-void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float /*delta*/) {
+void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float delta) {
 
     // first measurements
     m_psd = psd;
@@ -139,7 +140,7 @@ void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float /*delta*
 
     // Appak
     appakaBeat->process(psd.get());
-    appakaPeak->process(psd.get());
+    m_peaks->process(psd.get());
     appakaSpectrum->process(psd.get());
 
     // sound gate and silent
@@ -226,8 +227,9 @@ void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float /*delta*
     hybridColorPalette->process(this);
 
     // appak bpm selector
-    appakaBpmSelector->process(tempoTrackerFast->bpm(), appakaBeat->bpm, appakaPeak->lastBmpApproximation);
+    appakaBpmSelector->process(tempoTrackerFast->bpm(), appakaBeat->bpm, m_peaks->lastBpmApproximation());
 
+    m_peaks->processBpm(appakaBpmSelector->bestBpm, delta);
     emit updated();
 }
 
@@ -269,6 +271,11 @@ void ldMusicManager::setRealSoundLevel(int value)
 int ldMusicManager::realSoundLevel() const
 {
     return m_realSoundLevel;
+}
+
+const ldAppakPeaks *ldMusicManager::peaks() const
+{
+    return m_peaks.get();
 }
 
 bool ldMusicManager::isSilent() const

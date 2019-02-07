@@ -90,8 +90,6 @@ void ldBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer, const ldBezier
 {
     if(m_colorEffect) m_colorEffect->updateColor();
 
-    m_safeDrawing = 0;
-
     // calculate dim in united coords for later usage
     SvgDim dimInUnited = dataVect.dim();
     if(!dataVect.data().empty() && !dataVect.data()[0].isUnitedCoordinates()) {
@@ -109,8 +107,6 @@ void ldBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer, const ldBezier
 {
     if(m_colorEffect) m_colorEffect->updateColor();
 
-    m_safeDrawing = 0;
-
     // calculate dim in united coords for later usage
     SvgDim dimInUnited = dataVect.dim();
     if(!dataVect.isUnitedCoordinates()) {
@@ -124,9 +120,8 @@ std::vector<std::vector<OLPoint> > ldBezierCurveDrawer::getDrawingData(const ldB
 {
     std::vector<std::vector<OLPoint> > data;
 
-    m_safeDrawing = 0;
-
-    int drawingMaxPoints = 1000;
+    const int MAX_SAFE_POINTS = 1000;
+    int safeDrawing = 0;
 
     for(const ldBezierCurveObject &object : frame.data()) {
 //        qDebug() << "dim" << object.isUnitedCoordinates() << object.dim().isValidLaserDim() << object.dim().bottom_left.x << object.dim().bottom_left.y << object.dim().top_right.x << object.dim().top_right.y;
@@ -147,9 +142,10 @@ std::vector<std::vector<OLPoint> > ldBezierCurveDrawer::getDrawingData(const ldB
                     if(object.isUnitedCoordinates()) {
                         p = ldMaths::unitedToLaserCoords(p);
                     }
-                    if (m_safeDrawing <= drawingMaxPoints && ldMaths::isValidLaserPoint(p)) {
+                    if (safeDrawing <= MAX_SAFE_POINTS && ldMaths::isValidLaserPoint(p)) {
 //                        qDebug() << "p" << p.x << p.y;
                         curvePoints.push_back(OLPoint{p.x, p.y, 0, b.color()});
+                        safeDrawing++;
                     }
                 }
 
@@ -170,7 +166,6 @@ void ldBezierCurveDrawer::draw(ldRendererOpenlase *renderer, const ldBezierCurve
         for(const OLPoint &p: pointVector) {
             uint32_t color = m_colorEffect ? m_colorEffect->getColor(Vec2(p.x, p.y), dimInUnited) :  p.color;
             renderer->vertex(p.x, p.y, color, 1);
-            m_safeDrawing++;
         }
         renderer->end();
    }

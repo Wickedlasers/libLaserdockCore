@@ -79,7 +79,7 @@ struct LDCORESHARED_EXPORT point3d {
 };
 
 // animatedAngle
-struct LDCORESHARED_EXPORT animatedAngle {
+struct LDCORESHARED_EXPORT ldAnimatedAngle {
     float value;
     float decay;
     float sign;
@@ -107,14 +107,15 @@ public:
     Vec2 normalize() const;
     float toRadians() const;
     void rotate(float rotation); // (angle in radians)
-    void translate(const Vec2 &translation);
-    void scale(float value);
-    void scale(float xFactor, float yFactor);
 
     Vec2 operator+ (const Vec2& other) const;
     Vec2& operator+= (const Vec2& other);
     Vec2 operator- (const Vec2& other) const;
     Vec2& operator-= (const Vec2& other);
+    Vec2& operator*= (float s);
+    Vec2& operator*= (const Vec2& other);
+    Vec2& operator/= (float s);
+    Vec2& operator/= (const Vec2& other);
     bool operator == (const Vec2& other) const;
     bool operator != (const Vec2& other) const;
 };
