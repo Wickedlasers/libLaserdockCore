@@ -23,7 +23,6 @@ public:
 
 private:
     ldMidiInput *m_input;
-
 };
 
 

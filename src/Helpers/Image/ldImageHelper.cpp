@@ -96,10 +96,10 @@ cv::Mat ldImageHelper::resizeFitInSquare(const cv::Mat& _input, int size) {
 }
 
 
-QImage ldImageHelper::drawLaserImageFromVerts(std::vector<Vertex> verts, int size, float scale) {
+QImage ldImageHelper::drawLaserImageFromVerts(const std::vector<Vertex> &verts, int size, float scale) {
     std::vector<OLPoint> points;
+    OLPoint p;
     for (uint i = 0; i < verts.size(); i++) {
-        OLPoint p;
         p.x = verts[i].position[0];
         p.y = verts[i].position[1];
         float r = 255*verts[i].color[0];
@@ -112,7 +112,7 @@ QImage ldImageHelper::drawLaserImageFromVerts(std::vector<Vertex> verts, int siz
     return drawLaserImageFromPoints(points, size, scale);
 }
 
-QImage ldImageHelper::drawLaserImageFromPoints(std::vector<OLPoint> frame, int size, float scale) {
+QImage ldImageHelper::drawLaserImageFromPoints(const std::vector<OLPoint> &frame, int size, float scale) {
 
     // image properties
     int w = size; int h = size;
@@ -152,7 +152,7 @@ QImage ldImageHelper::drawLaserImageFromPoints(std::vector<OLPoint> frame, int s
     return px.toImage();
 }
 
-QImage ldImageHelper::resizeLaserImage(QImage src, int size) {
+QImage ldImageHelper::resizeLaserImage(const QImage &src, int size) {
     if(src.isNull())
         return src;
 

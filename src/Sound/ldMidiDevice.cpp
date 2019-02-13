@@ -21,18 +21,19 @@ ldMidiDevice::~ldMidiDevice()
 {
 }
 
-void ldMidiDevice::start(const ldMidiInfo &info) {
+void ldMidiDevice::start(const ldMidiInfo &info)
+{
+    ldSoundStubDevice::start();
 
+    QMutexLocker lock(&m_mutex);
     m_input->start(info);
-
-    startStub();
 }
 
 void ldMidiDevice::stop() {
+    ldSoundStubDevice::stop();
 
+    QMutexLocker lock(&m_mutex);
     m_input->stop();
-
-    stopStub();
 }
 
 ldMidiInput *ldMidiDevice::input() const

@@ -23,6 +23,8 @@
 ldSoundStubDevice::ldSoundStubDevice(QObject *parent) :
     QObject(parent)
 {
+    memset(m_fakeData, 0, FAKEDATA_LEN);
+
     m_timer.setTimerType(Qt::PreciseTimer);
     connect(&m_timer, &QTimer::timeout, this, &ldSoundStubDevice::timerSlot);
 }
@@ -35,33 +37,21 @@ ldSoundStubDevice::~ldSoundStubDevice()
 
 void ldSoundStubDevice::start()
 {
-    QMutexLocker lock(&mutex);
-    startStub();
+    QMutexLocker lock(&m_mutex);
+    m_timer.start(1000 / STUBFPS);
 }
 
 void ldSoundStubDevice::stop()
 {
-//    QMutexLocker lock(&mutex);
-    stopStub();
+    QMutexLocker lock(&m_mutex);
+    m_timer.stop();
 }
 
 void ldSoundStubDevice::timerSlot()
 {
     // send fake audio data (silence) to progress timer
-    const int fakedatalen = 44100 / STUBFPS * 2 * 2;  // stereo int
-    char fakedata[fakedatalen];
-    memset(fakedata, 0, fakedatalen);
-    emit soundUpdated(fakedata, fakedatalen);
+    emit soundUpdated(m_fakeData, FAKEDATA_LEN);
 }
 
 
-void ldSoundStubDevice::startStub()
-{
-    m_timer.start(1000 / STUBFPS);
-}
-
-void ldSoundStubDevice::stopStub()
-{
-    m_timer.stop();
-}
 

@@ -36,20 +36,21 @@ public:
     virtual void stop();
     
 signals:
-    void soundUpdated(const char * data, qint64 len);    
+    void soundUpdated(const char * data, qint64 len);
 
 protected slots:
     virtual void timerSlot();
 
 protected:
-    void startStub();
-    void stopStub();
-
-    QTimer m_timer;
-    QMutex mutex;
+    QMutex m_mutex;
 
 private:
-    const int STUBFPS = 30*2;
+    static const int STUBFPS = 30*2;
+
+    static const int FAKEDATA_LEN = 44100 / STUBFPS * 2 * 2;  // stereo int
+    char m_fakeData[FAKEDATA_LEN];
+
+    QTimer m_timer;
 };
 
 #endif //LDSOUNDSTUBDEVICE_H

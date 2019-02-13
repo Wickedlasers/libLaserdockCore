@@ -41,7 +41,7 @@ class QMediaPlayer;
 class AudioDecoder;
 
 
-class ldAudioDecoder : public ldSoundInterface
+class LDCORESHARED_EXPORT ldAudioDecoder : public ldSoundInterface
 {
     Q_OBJECT
 

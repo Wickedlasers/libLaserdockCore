@@ -132,6 +132,7 @@ void ldVisualizationTask::setTempVisualizer(ldVisualizer *visualizer)
     if(visualizer) {
         startVisualizer(visualizer);
     } else {
+        lock.unlock();
         setCurrentVisualizer(m_currentVisualizer);
     }
 }

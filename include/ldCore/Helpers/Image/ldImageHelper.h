@@ -26,9 +26,9 @@ public:
     static QImage QImageFromMat(const cv::Mat &_input);
     static cv::Mat matFromQImage(const QImage &image);
     static cv::Mat resizeFitInSquare(const cv::Mat& _input, int size);
-    static QImage drawLaserImageFromPoints(std::vector<OLPoint>, int size, float scale = 1);
-    static QImage drawLaserImageFromVerts(std::vector<Vertex>, int size, float scale = 1);
-    static QImage resizeLaserImage(QImage src, int size);
+    static QImage drawLaserImageFromPoints(const std::vector<OLPoint> &, int size, float scale = 1);
+    static QImage drawLaserImageFromVerts(const std::vector<Vertex> &, int size, float scale = 1);
+    static QImage resizeLaserImage(const QImage &src, int size);
 
 };
 
