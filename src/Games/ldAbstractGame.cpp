@@ -94,6 +94,11 @@ bool ldAbstractGame::eventFilter(QObject *obj, QEvent *ev) {
     return QObject::eventFilter(obj, ev);
 }
 
+ldAbstractGameVisualizer *ldAbstractGame::getVisualizer() const
+{
+    return getGameVisualizer();
+}
+
 void ldAbstractGame::moveX(double x)
 {
     getGameVisualizer()->moveX(x);

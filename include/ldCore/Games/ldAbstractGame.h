@@ -81,6 +81,8 @@ public:
     /** QObject */
     virtual bool eventFilter(QObject *obj, QEvent *ev) override;
 
+    ldAbstractGameVisualizer *getVisualizer() const;
+
     void moveX(double x);
     void moveY(double y);
 
