@@ -32,15 +32,15 @@ namespace  {
 ldSimulatorEngine::ldSimulatorEngine()
     : m_buffer(default_size_for_vbuffer)
 {
-    vbuffer = (Vertex *) calloc(default_size_for_vbuffer, sizeof(Vertex));
+    vbuffer.resize(default_size_for_vbuffer);
+
+    m_last.clear();
+    m_lastOn.clear();
 }
 
 ldSimulatorEngine::~ldSimulatorEngine()
 {
 //    qDebug() << "~ldSimulatorEngine()";
-
-//    glDeleteBuffers(2, vboIds);
-    free(vbuffer);
 }
 
 void ldSimulatorEngine::addListener()
@@ -66,11 +66,16 @@ void ldSimulatorEngine::init()
     glGenBuffers(2, vboIds);
 }
 
+void ldSimulatorEngine::uninit()
+{
+    glDeleteBuffers(2, vboIds);
+}
+
 void ldSimulatorEngine::drawLaserGeometry(QOpenGLShaderProgram *program)
 {
     if (m_lock.tryLockForRead()) {
         glBindBuffer(GL_ARRAY_BUFFER, vboIds[0]);
-        glBufferData(GL_ARRAY_BUFFER, history_sample_count * sizeof(Vertex), (const void*) vbuffer, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, history_sample_count * sizeof(Vertex), (const void*) &vbuffer[0], GL_DYNAMIC_DRAW);
 
         // Offset for position
         quintptr offset = 0;
@@ -96,78 +101,6 @@ void ldSimulatorEngine::drawLaserGeometry(QOpenGLShaderProgram *program)
     }
 }
 
-
-
-// function for altering laser data to make points bigger before being sent to simulator
-
-static void bigger_dots(Vertex* inData, Vertex* outData, unsigned int size) {
-
-    const float mindist = 0.005f; // force lines to have this min length
-
-    for (uint i = 0; i < size; i++) {
-
-        outData[i] = inData[i]; // initial value
-
-        // some data to remember
-        static Vertex last;
-        static Vertex laston;
-        static float lastdeltax = 1;
-        static float lastdeltay = 1;
-        static bool wason = false;
-        static float movedist = 0;
-
-        // color logic
-        bool ison = false;
-        ison |= inData[i].color[0] != 0;
-        ison |= inData[i].color[1] != 0;
-        ison |= inData[i].color[2] != 0;
-
-        // remember color of last nonblack point
-        if (ison) laston = inData[i];
-
-        // distance calcs
-        if (ison) {
-            float dx = (outData[i].position[0] - last.position[0]);
-            float dy = (outData[i].position[1] - last.position[1]);
-            float delta2 = dx*dx + dy*dy;
-            float delta = sqrtf(delta2);
-            movedist += delta;
-            if (delta >= mindist) {
-                // get a vector of length mindist, pointed in last direction laser moved
-                lastdeltax = dx * mindist / delta;
-                lastdeltay = dy * mindist / delta;
-            }
-        }
-
-        // check for end of a line, make changes to the points here
-        if (wason && !ison) {
-
-            // force last point to be a color
-            //data2[i] = laston;
-            outData[i].color[0] = laston.color[0];
-            outData[i].color[1] = laston.color[1];
-            outData[i].color[2] = laston.color[2];
-
-            // force line length to be a minimum
-            if (movedist < mindist) {
-                outData[i].position[0] += lastdeltax;
-                outData[i].position[1] += lastdeltay;
-            }
-        }
-
-        // check for start of a new line
-        if (!wason && ison) {
-            movedist = 0;
-        }
-
-        // save static values for next point's delta calcs
-        last = inData[i];
-        wason = ison;
-
-    }
-
-}
-
 void ldSimulatorEngine::pushVertexData(Vertex * data, unsigned int size) {
 
     // need lock first
@@ -183,10 +116,72 @@ void ldSimulatorEngine::pushVertexData(Vertex * data, unsigned int size) {
 
         // send processed data to the drawing engine
         m_buffer.Push(data_processed, size);
-        m_buffer.Get(vbuffer, history_sample_count);
+        m_buffer.Get(&vbuffer[0], history_sample_count);
 
         // done
         m_lock.unlock();
+    }
+}
+
+// function for altering laser data to make points bigger before being sent to simulator
+void ldSimulatorEngine::bigger_dots(Vertex* inData, Vertex* outData, unsigned int size) {
+
+    const float mindist = 0.005f; // force lines to have this min length
+
+    for (uint i = 0; i < size; i++) {
+
+        outData[i] = inData[i]; // initial value
+
+        // color logic
+        bool ison = false;
+        ison |= inData[i].color[0] != 0;
+        ison |= inData[i].color[1] != 0;
+        ison |= inData[i].color[2] != 0;
+
+        // remember color of last nonblack point
+        if (ison) m_lastOn = inData[i];
+
+        // distance calcs
+        if (ison) {
+            float dx = (outData[i].position[0] - m_last.position[0]);
+            float dy = (outData[i].position[1] - m_last.position[1]);
+            float delta2 = dx*dx + dy*dy;
+            float delta = sqrtf(delta2);
+            m_moveDist += delta;
+            if (delta >= mindist) {
+                // get a vector of length mindist, pointed in last direction laser moved
+                m_lastDeltaX = dx * mindist / delta;
+                m_lastDeltaY = dy * mindist / delta;
+            }
+        }
+
+        // check for end of a line, make changes to the points here
+        if (m_wasOn && !ison) {
+
+            // force last point to be a color
+            //data2[i] = laston;
+            outData[i].color[0] = m_lastOn.color[0];
+            outData[i].color[1] = m_lastOn.color[1];
+            outData[i].color[2] = m_lastOn.color[2];
+
+            // force line length to be a minimum
+            if (m_moveDist < mindist) {
+                outData[i].position[0] += m_lastDeltaX;
+                outData[i].position[1] += m_lastDeltaY;
+            }
+        }
+
+        // check for start of a new line
+        if (!m_wasOn && ison) {
+            m_moveDist = 0;
+        }
+
+        // save static values for next point's delta calcs
+        if(!inData[i].isBlank())
+            m_last = inData[i];
+
+        m_wasOn = ison;
+
     }
 }
 

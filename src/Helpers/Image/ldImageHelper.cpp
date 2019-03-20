@@ -49,6 +49,12 @@ struct RGB {
 };
 
 QImage ldImageHelper::QImageFromMat(const cv::Mat &img) {
+    switch (img.type()) {
+    case CV_8UC1: return QImage(img.data, img.cols, img.rows, img.step, QImage::Format_Indexed8).copy();
+    case CV_8UC3: return QImage(img.data, img.cols, img.rows, img.step, QImage::Format_RGB888).rgbSwapped().copy();
+    }
+
+    // just try another one...
     return QImage(img.data, img.cols, img.rows, img.step, QImage::Format_RGB888).rgbSwapped().copy();
 
     // old code, left just for reference

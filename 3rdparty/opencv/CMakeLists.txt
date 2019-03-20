@@ -1,5 +1,9 @@
 if(WIN32)
-    set(OpenCV_DIR "${CMAKE_CURRENT_LIST_DIR}/win")
+    if(MSVC_VERSION STREQUAL "1900")
+        set(OpenCV_DIR "${CMAKE_CURRENT_LIST_DIR}/win/2015")
+    else()
+        set(OpenCV_DIR "${CMAKE_CURRENT_LIST_DIR}/win/2017")
+    endif()
 endif()
 
 if(APPLE)

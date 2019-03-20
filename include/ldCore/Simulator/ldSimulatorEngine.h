@@ -47,6 +47,9 @@ public:
     /** OpenGL initialization */
     void init();
 
+    /** OpenGL uninitialization */
+    void uninit();
+
     /** Draw simulator data on surface */
     void drawLaserGeometry(QOpenGLShaderProgram *program);
 
@@ -54,13 +57,23 @@ public:
     void pushVertexData(Vertex * data, unsigned int size);
 
 private:
+    void bigger_dots(Vertex *inData, Vertex *outData, unsigned int size);
+
     GLuint vboIds[2] = {};
 
     ldVertexCircularBuffer m_buffer;
     QReadWriteLock m_lock;
-    Vertex * vbuffer;
+    std::vector<Vertex> vbuffer;
 
     int m_listenerCount = 0;
+
+    // bigger dots
+    Vertex m_last;
+    Vertex m_lastOn;
+    float m_lastDeltaX = 1;
+    float m_lastDeltaY = 1;
+    bool m_wasOn = false;
+    float m_moveDist = 0;
 };
 
 Q_DECLARE_METATYPE(ldSimulatorEngine*)

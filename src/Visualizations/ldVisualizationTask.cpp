@@ -50,9 +50,10 @@
 */
 
 ldVisualizationTask::ldVisualizationTask(QObject *parent)
-: ldAbstractTask(parent) ,
-  m_currentVisualizer(NULL) ,
-  m_tempVisualizer(NULL)
+    : ldAbstractTask(parent)
+    , m_mutex(QMutex::Recursive)
+    , m_currentVisualizer(NULL)
+    , m_tempVisualizer(NULL)
 {
     qDebug() << __FUNCTION__;
 

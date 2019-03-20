@@ -101,6 +101,7 @@ void ldSimulatorRenderer::loadEngine()
 void ldSimulatorRenderer::unloadEngine()
 {
     if(m_engine) {
+        m_engine->uninit();
         m_engine->removeListener();
         m_engine = nullptr;
     }
