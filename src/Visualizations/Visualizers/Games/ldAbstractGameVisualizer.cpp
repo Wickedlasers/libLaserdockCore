@@ -215,6 +215,11 @@ QStringList ldAbstractGameVisualizer::levelList() const
     return QStringList();
 }
 
+bool ldAbstractGameVisualizer::isSoundEnabled() const
+{
+    return m_soundEffects.isSoundEnabled();
+}
+
 void ldAbstractGameVisualizer::setComplexity(float complexity)
 {
     QMutexLocker locker(&m_mutex);

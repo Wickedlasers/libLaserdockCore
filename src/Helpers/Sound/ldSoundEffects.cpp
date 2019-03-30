@@ -51,9 +51,19 @@ void ldSoundEffects::setLoops(int sfx, int loops)
     m_soundMap[sfx]->setLoops(loops);
 }
 
+bool ldSoundEffects::isSoundEnabled() const
+{
+    return m_enabled;
+}
+
 void ldSoundEffects::setSoundEnabled(bool enabled)
 {
     m_enabled = enabled;
+    if(!m_enabled) {
+        for(auto &item : m_soundMap) {
+            item.second->stop();
+        }
+    }
 }
 
 void ldSoundEffects::setSoundLevel(int soundLevel)

@@ -156,6 +156,11 @@ void ldAbstractGame::setComplexity(float speed)
     getGameVisualizer()->setComplexity(speed);
 }
 
+bool ldAbstractGame::isSoundEnabled() const
+{
+    return getGameVisualizer()->isSoundEnabled();
+}
+
 void ldAbstractGame::setSoundEnabled(bool enabled)
 {
     getGameVisualizer()->setSoundEnabled(enabled);

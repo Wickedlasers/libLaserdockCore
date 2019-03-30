@@ -64,7 +64,9 @@ public slots:
     virtual void togglePlay() = 0;
 
     /** Enable sound effects*/
+    bool isSoundEnabled() const;
     virtual void setSoundEnabled(bool enabled);
+
     /** Sound level */
     virtual void setSoundLevel(int soundLevel);
 

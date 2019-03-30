@@ -70,6 +70,12 @@ ldSoundDeviceManager::ldSoundDeviceManager(QObject *parent)
     //
     refreshAvailableDevices();
 
+    qDebug() << "Sound input devices:";
+    for(const ldSoundDeviceInfo &device : m_devices) {
+        qDebug() << device.type() << device.name();
+    }
+
+
 //    QList<ldSoundDeviceInfo> availableDevices = getAvailableDevices(ldSoundDeviceInfo::Type::QAudioInput);
 //    if(!availableDevices.isEmpty()) {
 //        setDeviceInfo(getDefaultDevice(ldSoundDeviceInfo::Type::QAudioInput));

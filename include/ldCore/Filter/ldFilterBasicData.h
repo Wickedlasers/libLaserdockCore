@@ -46,6 +46,8 @@ class ldProjectionBasic;
 #define FRAME_MODE_UNSAFE_OVERSCAN 0x04
 // ignores app color and brightness settings.
 #define FRAME_MODE_DISABLE_COLOR_CORRECTION 0x08
+// do not use this frame for screenshots (used by burn preview vis to avoid screenshotting itself)
+#define FRAME_MODE_NO_SCREENSHOT 0x10
 
 #define LD_DEFAULT_OFFSET 4
 

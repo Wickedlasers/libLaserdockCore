@@ -42,7 +42,9 @@ public:
     void stop(int sfx);
     void setLoops(int sfx, int loops);
 
+    bool isSoundEnabled() const;
     void setSoundEnabled(bool enabled);
+
     void setSoundLevel(int soundLevel);
 
     ldQSound* operator [](int i);

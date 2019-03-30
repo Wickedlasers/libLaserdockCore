@@ -26,7 +26,7 @@
 #include <QtCore/QCoreApplication>
 
 #include "ldCore/Data/ldFrameBuffer.h"
-
+#include "ldCore/Filter/ldFilterBasicData.h"
 
 void logCallbackFunc(const char *msg)
 {
@@ -80,10 +80,12 @@ float ldRendererOpenlase::renderFrame(ldFrameBuffer * buffer, int max_fps){
     OLRenderedFrame * rendered_frame = olGetRenderedFrames();
     m_lastFramePointCount = rendered_frame->pnext;
 
+    bool save_ss = !(m_frameModes & FRAME_MODE_NO_SCREENSHOT);
+
 //    {static int s; s=(s+1)%100; int z=olGetRenderedFrames()->pnext; if (!s || z > 30001) qDebug() << "frames point count:" << z;}
 
     Vertex v = {{0, 0, 0}, {0, 0, 0, 0}};
-    m_cachedFrame.resize(rendered_frame->pnext);
+    if (save_ss) m_cachedFrame.resize(rendered_frame->pnext);
 
     buffer->setFrameModes(m_frameModes);
     for(int i = 0; i < rendered_frame->pnext; i++ ){
@@ -96,7 +98,7 @@ float ldRendererOpenlase::renderFrame(ldFrameBuffer * buffer, int max_fps){
         v.color[2] =((p->color & 0x0000FF) >> 0) / 255.0f;
         v.color[3] = 1.0f;
         buffer->push(v, false, true); // also alters v with global filter
-        m_cachedFrame[i] = v;
+        if (save_ss) m_cachedFrame[i] = v;
     }
 
     return result;

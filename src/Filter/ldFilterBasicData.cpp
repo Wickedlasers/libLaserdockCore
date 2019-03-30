@@ -114,20 +114,17 @@ void ldFilterBasicData::process(Vertex &v) {
     // disable rotate before applying deadzone
     m_deadzoneFilter->process(v);
 
-    // global brightness 1
-    v.color[0] *= m_brightness;
-    v.color[1] *= m_brightness;
-    v.color[2] *= m_brightness;
-
-    // apply color curves
+    // color
     if (!mode_disable_colorcorrection) {
-        for (int i = 0; i < 3; i++)
-            v.color[i] = fminf(fmaxf(v.color[i], 0), 1);
+        // global brightness 1
+        v.color[0] *= m_brightness;
+        v.color[1] *= m_brightness;
+        v.color[2] *= m_brightness;
 
+        // apply color curves
+        for (int i = 0; i < 3; i++) v.color[i] = fminf(fmaxf(v.color[i], 0), 1);
         m_colorCurveFilter->process(v);
-
-        for (int i = 0; i < 3; i++)
-            v.color[i] = fminf(fmaxf(v.color[i], 0), 1);
+        for (int i = 0; i < 3; i++) v.color[i] = fminf(fmaxf(v.color[i], 0), 1);
     }
 
     // scan protection

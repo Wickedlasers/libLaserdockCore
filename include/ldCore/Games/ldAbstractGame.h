@@ -104,6 +104,7 @@ public slots:
     void setComplexity(float speed);
 
     /** Enable/disable sound if supported */
+    bool isSoundEnabled() const;
     void setSoundEnabled(bool enabled);
 
     /** Set sound level (if sound is enabled) */
