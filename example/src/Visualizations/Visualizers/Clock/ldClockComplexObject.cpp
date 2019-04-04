@@ -155,9 +155,9 @@ void ldClockComplexObject::innerDraw(ldRendererOpenlase* p_renderer, const QTime
 }
 
 // drawDataBezierAsLinestrip
-void ldClockComplexObject::drawDataBezierAsLinestrip(ldRendererOpenlase* p_renderer, ldBezierShapes &shapes, float rotation, int color)
+void ldClockComplexObject::drawDataBezierAsLinestrip(ldRendererOpenlase* p_renderer, ldBezierPaths &shapes, float rotation, int color)
 {
-    for (ldBezierShape &shape : shapes)
+    for (ldBezierPath &shape : shapes)
     {
         p_renderer->begin(OL_LINESTRIP);
         for (const ldBezierCurve &b : shape.data())

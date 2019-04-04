@@ -47,9 +47,9 @@ bool ldGradientStop::isValid() const
 }
 
 ldGradient::ldGradient(const std::vector<ldGradientStop> &stops)
-    : m_stops(stops)
-    , m_v1(ldVec2(-1.f, -0.5f))
+    : m_v1(ldVec2(-1.f, -0.5f))
     , m_v2(ldVec2(-1.f, -0.5f))
+    , m_stops(stops)
 {
 
 }
