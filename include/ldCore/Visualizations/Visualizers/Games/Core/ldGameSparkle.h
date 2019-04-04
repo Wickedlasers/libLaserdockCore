@@ -29,7 +29,7 @@
 class LDCORESHARED_EXPORT ldGameSparkle : public ldGameObject
 {
 public:
-    ldGameSparkle(Vec2 pos);
+    ldGameSparkle(ldVec2 pos);
 
 protected:
     virtual void updateGameObject(float deltaTime) override;

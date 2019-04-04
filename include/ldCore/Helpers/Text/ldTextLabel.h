@@ -42,11 +42,11 @@ public:
     * p_string is the string to write
     * p_fontSize is 1.0 to show a upper A on the whole laser projection. 1/2.0 would mean half the projection and so on
     */
-    ldTextLabel(const QString &p_string = "", float p_fontSize = 1.0f/16, const Vec2 &p_position = Vec2());
+    ldTextLabel(const QString &p_string = "", float p_fontSize = 1.0f/16, const ldVec2 &p_position = ldVec2());
     ~ldTextLabel();
 
-    void setPosition(const Vec2 &p_p);
-    Vec2 getPosition() const;
+    void setPosition(const ldVec2 &p_p);
+    ldVec2 getPosition() const;
 
     void setColor(uint32_t p_color);
     uint32_t getColor() const;
@@ -74,7 +74,7 @@ public:
 
 private:
     uint32_t _color;
-    Vec2 _position; // working in [0,1]x[0,1]
+    ldVec2 _position; // working in [0,1]x[0,1]
 
     std::unique_ptr<ldBezierCurveDrawer> _drawer;
 

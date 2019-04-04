@@ -63,9 +63,11 @@ public:
     void innerDraw(ldRendererOpenlase* renderer, const ldBezierCurveObject &dataVect);
 
     std::vector<std::vector<OLPoint>> getDrawingData(const ldBezierCurveFrame &frame) const;
+    std::vector<std::vector<OLPoint>> getDrawingData(const ldBezierCurveObject &object, bool isSafe = true) const;
 
 private:
-    void draw(ldRendererOpenlase* renderer, const ldBezierCurveObject &dataVect, const SvgDim &dimInUnited);
+    void draw(ldRendererOpenlase* renderer, const ldBezierCurveObject &dataVect, const ldRect &dimInUnited);
+    std::vector<std::vector<OLPoint> > makeSafeDrawing(const std::vector<std::vector<OLPoint> > &data) const;
 
     std::unique_ptr<ldAbstractColorEffect> m_colorEffect;
     int m_baseColorDecay = 223;

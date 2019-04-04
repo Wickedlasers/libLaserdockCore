@@ -30,7 +30,7 @@
 
 #include "ldCore/Helpers/SVG/ldSvgReader.h"
 
-ld3dBezierCurveObject::ld3dBezierCurveObject(const svgBezier3dCurves &curves, bool isUnitedCoordinates)
+ld3dBezierCurveObject::ld3dBezierCurveObject(const ld3dBezierCurves &curves, bool isUnitedCoordinates)
     : m_curves(curves)
     , m_isUnitedCoordinates(isUnitedCoordinates)
 {
@@ -41,7 +41,7 @@ ld3dBezierCurveObject::~ld3dBezierCurveObject()
 {
 }
 
-const svgBezier3dCurves &ld3dBezierCurveObject::data() const
+const ld3dBezierCurves &ld3dBezierCurveObject::data() const
 {
     return m_curves;
 }
@@ -54,13 +54,13 @@ bool ld3dBezierCurveObject::isUnitedCoordinates() const
 uint ld3dBezierCurveObject::countPoints() const
 {
     uint result = 0;
-    for(const std::vector<Bezier3dCurve> &vec : m_curves) {
+    for(const std::vector<ld3dBezierCurve> &vec : m_curves) {
         result += vec.size();
     }
     return result;
 }
 
-Svg3dDim ld3dBezierCurveObject::dim() const
+ldRect3 ld3dBezierCurveObject::dim() const
 {
     return m_dim;
 }

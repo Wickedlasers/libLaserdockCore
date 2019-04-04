@@ -63,14 +63,14 @@ const std::vector<ld3dBezierCurveObject> &ld3dBezierCurveFrame::data() const
     return m_curves;
 }
 
-Svg3dDim ld3dBezierCurveFrame::dim() const
+ldRect3 ld3dBezierCurveFrame::dim() const
 {
     return m_dim;
 }
 
 void ld3dBezierCurveFrame::updateDim()
 {
-    Svg3dDim res;
+    ldRect3 res;
     bool init = false;
     for (const ld3dBezierCurveObject &curveObject : m_curves) {
         if (!init) {

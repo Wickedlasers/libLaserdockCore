@@ -30,7 +30,7 @@ class ldSpiralFighterEnemy : public ldGameObject
 {
 public:
     // Constructor and destructor.
-    ldSpiralFighterEnemy(Vec2 pos);
+    ldSpiralFighterEnemy(ldVec2 pos);
     ~ldSpiralFighterEnemy();
 
     void rotate();

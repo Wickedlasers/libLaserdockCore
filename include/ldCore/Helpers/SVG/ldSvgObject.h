@@ -48,8 +48,8 @@ public:
     void setScale(float p_scale);
     float getScale() const;
 
-    void setPosition(Vec2 p_position);
-    Vec2 getPosition() const;
+    void setPosition(ldVec2 p_position);
+    ldVec2 getPosition() const;
 
     const ldBezierCurveObject &getSvgData(uint frame = 0);
 
@@ -68,7 +68,7 @@ private:
     std::vector<ldBezierCurveObject> _svgData;
     bool m_isValidCache = false;
     std::vector<ldBezierCurveObject> _cachedSvgData;
-    Vec2 _position;
+    ldVec2 _position;
     float _scale = 1.0f;
 
     uint m_currentFrame = 0;

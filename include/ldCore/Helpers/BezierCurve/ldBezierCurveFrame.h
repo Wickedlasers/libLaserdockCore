@@ -51,10 +51,10 @@ public:
     const std::vector<ldBezierCurveObject> &data() const;
 
     /** Get dimension */
-    SvgDim dim() const;
+    ldRect dim() const;
 
     /** Modify */
-    void translate(const Vec2 &vec2);
+    void translate(const ldVec2 &vec2);
     void rotate(float rotateValue);
     void scale(float scaleValue);
     void colorize(uint32_t color);
@@ -66,7 +66,7 @@ public:
 
     /** Move it, move it */
     void moveToCenter();
-    void moveTo(const Vec2 &pos);
+    void moveTo(const ldVec2 &pos);
 
 private:
     void resetCache() const;
@@ -79,7 +79,7 @@ private:
 
     // cached data
     mutable ldBezierCurveObject m_cachedObject;
-    mutable SvgDim m_cachedDim;
+    mutable ldRect m_cachedDim;
 };
 
 #endif // LDBEZIERCURVEFRAME_H

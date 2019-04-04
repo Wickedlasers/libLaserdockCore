@@ -18,22 +18,24 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#ifndef ldGameSmoke_H
-#define ldGameSmoke_H
+#ifndef LD3DBEZIERCURVE_H
+#define LD3DBEZIERCURVE_H
 
-#include <ldCore/Render/ldRendererOpenlase.h>
-#include "ldCore/Helpers/Maths/ldMaths.h"
+#include "ldCore/Helpers/Maths/ldVec3.h"
 
-#include "ldCore/Visualizations/Visualizers/Games/Core/ldGameObject.h"
+struct LDCORESHARED_EXPORT ld3dBezierCurve {
+    ldVec3 start;
+    ldVec3 end;
+    ldVec3 control1;
+    ldVec3 control2;
+    uint32_t color = 0;
+    ldVec3 pivot;
 
-class LDCORESHARED_EXPORT ldGameSmoke : public ldGameObject
-{
-public:
-    ldGameSmoke(ldVec2 pos);
-
-protected:
-    virtual void updateGameObject(float deltaTime) override;
-    virtual void drawGameObject(ldRendererOpenlase* p_renderer) override;
+    ldVec3 getPoint(float slope) const;
 };
 
-#endif // ldGameSmoke_H
+typedef std::vector< std::vector<ld3dBezierCurve> > ld3dBezierCurves;
+typedef std::vector< ld3dBezierCurves> ld3dBezierCurvesSequence;
+
+#endif // LD3DBEZIERCURVE_H
+

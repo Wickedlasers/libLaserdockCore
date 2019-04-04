@@ -72,14 +72,14 @@ float ldSvgObject::getScale() const
 }
 
 // setPosition
-void ldSvgObject::setPosition(Vec2 p_position)
+void ldSvgObject::setPosition(ldVec2 p_position)
 {
     _position = p_position;
     m_isValidCache = false;
 }
 
 // getPosition
-Vec2 ldSvgObject::getPosition() const
+ldVec2 ldSvgObject::getPosition() const
 {
     return _position;
 }
@@ -136,7 +136,7 @@ void ldSvgObject::updateCachedSvgData()
 {
     if(_svgData.empty()) {
         for(const QString &p_file : m_files) {
-            _svgData.push_back(ldBezierCurveObject(ldSvgReader::loadSvg(p_file, ldSvgReader::Type::Maximize, 0.01f), false));
+            _svgData.push_back(ldSvgReader::loadSvg(p_file, ldSvgReader::Type::Maximize, 0.01f));
         }
     }
 

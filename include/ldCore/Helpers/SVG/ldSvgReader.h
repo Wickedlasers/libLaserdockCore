@@ -44,22 +44,22 @@ public:
         SvgFrame
     };
 
-    static int totalPoints(const svgBezierCurves &bezierCurves);
-    static int totalPoints(const svgBezier3dCurves &bezierCurves);
-    static svgBezierCurves loadSvg(QString qtfilename, Type type = Type::Maximize, float snapDistance = -1, bool isTranslate = true);
-    static svgBezierCurves loadSvgFixedScale(float fixedMinX, float fixedMaxX, float fixedMinY, float fixedMaxY, const QString &qtfilename, Type p_type = Type::Maximize, float snapDistance = -1);
-    static svgBezierCurvesSequence loadSvgSequence(const QString &dirPath, Type p_type = Type::Maximize, float snapDistance = -1, const QString &filePrefix = "", int masksize = -1);
-    static svgBezierCurvesSequence loadSvgSequenceFixedScale(float fixedMinX, float fixedMaxX, float fixedMinY, float fixedMaxY, int size, int masksize, char const* qtbasefilename, Type p_type = Type::Maximize, float snapDistance = -1);
-    static svgBezierCurvesSequence loadFromJSArrayText(const char* text);
-    static SvgDim svgDim(const svgBezierCurves &bezierCurves);
-    static Svg3dDim svgDim(const svgBezier3dCurves &bezierCurves);
-    static SvgDim svgDimSequence(const svgBezierCurvesSequence &bezierCurves);
-    static SvgDim svgDimByInterpolation(const svgBezierCurves &bezierCurves, int p_interpolate = 100);
-    static Svg3dDim svgDimByInterpolation(const svgBezier3dCurves &bezierCurves, int p_interpolate = 100);
+    static int totalPoints(const ldBezierPaths &bezierPaths);
+    static int totalPoints(const ld3dBezierCurves &bezierCurves);
+    static ldBezierCurveObject loadSvg(QString qtfilename, Type type = Type::Maximize, float snapDistance = -1, bool isTranslate = true,
+                                       float fixedMinX = -1.f, float fixedMaxX = -1.f, float fixedMinY = -1.f, float fixedMaxY = -1.f);
+    static ldBezierPathsSequence loadSvgSequence(const QString &dirPath, Type p_type = Type::Maximize, float snapDistance = -1, const QString &filePrefix = "", int masksize = -1);
+    static ldBezierPathsSequence loadSvgSequenceFixedScale(float fixedMinX, float fixedMaxX, float fixedMinY, float fixedMaxY, int size, int masksize, char const* qtbasefilename, Type p_type = Type::Maximize, float snapDistance = -1);
+    static ldBezierPathsSequence loadFromJSArrayText(const char* text);
+    static ldRect svgDim(const ldBezierPaths &bezierPaths);
+    static ldRect3 svgDim(const ld3dBezierCurves &bezierCurves);
+    static ldRect svgDimSequence(const ldBezierPathsSequence &bezierCurves);
+    static ldRect svgDimByInterpolation(const ldBezierPaths &bezierPaths, int p_interpolate = 100);
+    static ldRect3 svgDimByInterpolation(const ld3dBezierCurves &bezierCurves, int p_interpolate = 100);
 
 private:
-    static void debugStatCurves(svgBezierCurves bezierCurves);
-    static svgBezierCurves snapCurves(const svgBezierCurves &bezierCurves, float snapDistance);
+    static void debugStatCurves(ldBezierPaths bezierPaths);
+    static ldBezierPaths snapCurves(const ldBezierPaths &bezierPaths, float snapDistance);
 };
 
 #endif // ldSvgReader_H

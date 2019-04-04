@@ -18,22 +18,33 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#ifndef ldGameSmoke_H
-#define ldGameSmoke_H
+#ifndef LDRECT_H
+#define LDRECT_H
 
-#include <ldCore/Render/ldRendererOpenlase.h>
-#include "ldCore/Helpers/Maths/ldMaths.h"
+#include "ldCore/ldCore_global.h"
 
-#include "ldCore/Visualizations/Visualizers/Games/Core/ldGameObject.h"
+#include "ldVec2.h"
 
-class LDCORESHARED_EXPORT ldGameSmoke : public ldGameObject
-{
-public:
-    ldGameSmoke(ldVec2 pos);
+/// Try to have the same API as QRectF. QRectF is based on qreal primitive but we need to use float
+struct LDCORESHARED_EXPORT ldRect {
+    ldVec2 bottom_left;
+    ldVec2 top_right;
 
-protected:
-    virtual void updateGameObject(float deltaTime) override;
-    virtual void drawGameObject(ldRendererOpenlase* p_renderer) override;
+    bool isNull() const;
+
+    float width() const;
+    float height() const;
+
+    float bottom() const;
+    float top() const;
+    float left() const;
+    float right() const;
+
+    ldVec2 center() const;
+
+    ldVec2 size() const;
 };
 
-#endif // ldGameSmoke_H
+#endif // LDRECT_H
+
+

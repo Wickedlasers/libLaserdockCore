@@ -29,7 +29,7 @@
 class LDCORESHARED_EXPORT ldGameFirework : public ldGameObject
 {
 public:
-    ldGameFirework(Vec2 p_position, float p_rotation);
+    ldGameFirework(ldVec2 p_position, float p_rotation);
 
 protected:
     virtual void updateGameObject(float deltaTime) override;

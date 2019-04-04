@@ -18,34 +18,54 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#include "ldCore/Visualizations/Visualizers/Games/Core/ldGameSmoke.h"
+#include "ldCore/Helpers/Maths/ldRect.h"
 
-#include "ldCore/Visualizations/Visualizers/Games/Core/ldGameObject.h"
+#include <math.h>
 
-
-// Constants.
-namespace  {
-const float LIFETIME = 0.125f;
-const float RADIUS = 0.05f;
-const int COLOR = 0xffffff;
+bool ldRect::isNull() const
+{
+    return bottom_left.isNull() && top_right.isNull();
 }
 
-ldGameSmoke::ldGameSmoke(ldVec2 pos) : ldGameObject() {
-    init();
-
-    position = pos;
-
-    setLifetime(LIFETIME);
+float ldRect::width() const
+{
+    return fabsf(bottom_left.x - top_right.x);
 }
 
-void ldGameSmoke::updateGameObject(float deltaTime) {
-    ldGameObject::updateGameObject(deltaTime);
+float ldRect::height() const
+{
+    return fabsf(bottom_left.y - top_right.y);
 }
 
-void ldGameSmoke::drawGameObject(ldRendererOpenlase* p_renderer) {
-    ldGameObject::drawGameObject(p_renderer);
-
-    p_renderer->begin(OL_LINESTRIP);
-    p_renderer->drawCircle(position.x, position.y, RADIUS * getLifetimePercentage(), COLOR);
-    p_renderer->end();
+float ldRect::bottom() const
+{
+    return std::min(bottom_left.y, top_right.y);
 }
+
+float ldRect::top() const
+{
+    return std::max(bottom_left.y, top_right.y);
+}
+
+float ldRect::left() const
+{
+    return std::min(bottom_left.x, top_right.x);
+}
+
+float ldRect::right() const
+{
+    return std::max(bottom_left.x, top_right.x);
+}
+
+ldVec2 ldRect::center() const
+{
+    return ldVec2(left() + width()/2.f, bottom() + height()/2.f);
+}
+
+ldVec2 ldRect::size() const
+{
+    return ldVec2(width(), height());
+}
+
+
+

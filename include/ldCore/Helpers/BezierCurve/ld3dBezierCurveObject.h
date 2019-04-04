@@ -36,27 +36,27 @@
 class LDCORESHARED_EXPORT ld3dBezierCurveObject
 {
 public:
-    explicit ld3dBezierCurveObject(const svgBezier3dCurves &curves = svgBezier3dCurves(), bool isUnitedCoordinates = true);
+    explicit ld3dBezierCurveObject(const ld3dBezierCurves &curves = ld3dBezierCurves(), bool isUnitedCoordinates = true);
     ~ld3dBezierCurveObject();
 
     /** Get internal curve data */
-    const svgBezier3dCurves &data() const;
+    const ld3dBezierCurves &data() const;
 
     bool isUnitedCoordinates() const;
 
     /** Get dimension */
-    Svg3dDim dim() const;
+    ldRect3 dim() const;
 
     uint countPoints() const;
 
 private:
     void updateDim();
 
-    svgBezier3dCurves m_curves;
+    ld3dBezierCurves m_curves;
 
     bool m_isUnitedCoordinates = false;
 
-    Svg3dDim m_dim;
+    ldRect3 m_dim;
 };
 
 #endif // LD3DBEZIERCURVEOBJECT_H

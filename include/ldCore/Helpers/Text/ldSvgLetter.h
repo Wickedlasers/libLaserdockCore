@@ -33,7 +33,7 @@ public:
 
     const ldBezierCurveObject &data() const;
 
-    void translate(const Vec2 &v);
+    void translate(const ldVec2 &v);
     void scale(float scale);
 
 private:
@@ -42,7 +42,7 @@ private:
 
     QString m_svgPath;
 
-    Vec2 m_translateVec;
+    ldVec2 m_translateVec;
     float m_scale = 1.f;
 
     mutable ldBezierCurveObject m_originalObject;

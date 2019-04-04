@@ -51,7 +51,7 @@ const std::vector<ldBezierCurveObject> &ldBezierCurveFrame::data() const
     return m_curves;
 }
 
-SvgDim ldBezierCurveFrame::dim() const
+ldRect ldBezierCurveFrame::dim() const
 {
     if(m_cachedDim.isNull()) {
         updateCachedDim();
@@ -60,7 +60,7 @@ SvgDim ldBezierCurveFrame::dim() const
     return m_cachedDim;
 }
 
-void ldBezierCurveFrame::translate(const Vec2 &vec2)
+void ldBezierCurveFrame::translate(const ldVec2 &vec2)
 {
     for(ldBezierCurveObject &object : m_curves) {
         object.translate(vec2);
@@ -123,7 +123,7 @@ void ldBezierCurveFrame::resetCache() const
 
 void ldBezierCurveFrame::resetCachedDim() const
 {
-    m_cachedDim = SvgDim();
+    m_cachedDim = ldRect();
 }
 
 void ldBezierCurveFrame::resetCachedObject() const
@@ -133,7 +133,7 @@ void ldBezierCurveFrame::resetCachedObject() const
 
 void ldBezierCurveFrame::updateCachedDim() const
 {
-    SvgDim res;
+    ldRect res;
     bool init = false;
     for (const ldBezierCurveObject &curveObject : m_curves) {
         if (!init) {
@@ -169,7 +169,7 @@ void ldBezierCurveFrame::moveToCenter()
 {
     for (ldBezierCurveObject &bezierCurves : m_curves) {
         const float centerCoord = bezierCurves.isUnitedCoordinates() ? 1.0f : 0.f;
-        Vec2 centerPos;
+        ldVec2 centerPos;
         centerPos.x = (centerCoord - dim().width())/2.f;
         centerPos.y = (centerCoord - dim().height())/2.f;
 
@@ -179,9 +179,9 @@ void ldBezierCurveFrame::moveToCenter()
     resetCache();
 }
 
-void ldBezierCurveFrame::moveTo(const Vec2 &pos)
+void ldBezierCurveFrame::moveTo(const ldVec2 &pos)
 {
-    Vec2 moveDiff;
+    ldVec2 moveDiff;
     moveDiff.x = pos.x - dim().left();
     moveDiff.y = pos.y - dim().bottom();
 

@@ -39,7 +39,7 @@ class LDCORESHARED_EXPORT ldGameObject
 public:
     static int uuid;
 
-    static void drawVertexRainbow(ldRendererOpenlase* p_renderer, QList<Vec2> vertices, QList<int> colors, int segmentsPerLine = 4, int repeat = 1);
+    static void drawVertexRainbow(ldRendererOpenlase* p_renderer, QList<ldVec2> vertices, QList<int> colors, int segmentsPerLine = 4, int repeat = 1);
 
     bool operator == (const ldGameObject& s) const { return m_id == s.getId(); }
     bool operator != (const ldGameObject& s) const { return !operator==(s); }
@@ -53,7 +53,7 @@ public:
 
     // Collision functions.
     bool overlaps(ldGameObject other);
-    bool overlaps(Vec2 otherPosition);
+    bool overlaps(ldVec2 otherPosition);
     void collide(ldGameObject other);
 
     // Getters and setters.
@@ -61,13 +61,13 @@ public:
     float getLifetimePercentage();
     int getId() const;
     float getTimeAlive();
-    Vec2 center();
+    ldVec2 center();
 
     // Fields.
-    Vec2 position;
-    Vec2 size;
-    Vec2 velocity;
-    Vec2 acceleration;
+    ldVec2 position;
+    ldVec2 size;
+    ldVec2 velocity;
+    ldVec2 acceleration;
 
     float rotation;
 

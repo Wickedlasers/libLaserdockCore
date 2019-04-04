@@ -59,14 +59,14 @@ void ldAbstractStepColorEffect::updateColor()
     }
 }
 
-uint32_t ldColorEffectOne::getColor(const Vec2 &p_point, const SvgDim &p_dim)
+uint32_t ldColorEffectOne::getColor(const ldVec2 &p_point, const ldRect &p_dim)
 {
-    Vec2 dimOrigin = p_dim.bottom_left;
-    Vec2 dimSize = p_dim.size();
+    ldVec2 dimOrigin = p_dim.bottom_left;
+    ldVec2 dimSize = p_dim.size();
 
     int color = ldColorUtil::colorHSV(_lastColorStep, 1.0, 1.0);
     //
-    Vec2 p = ldMaths::laserToUnitedCoords(p_point);
+    ldVec2 p = ldMaths::laserToUnitedCoords(p_point);
     //
     int first_key = _lastSecond;
     if (first_key > 9) first_key = _lastSecond - 10*(int)(_lastSecond/10); // only 0 to 9
@@ -81,14 +81,14 @@ uint32_t ldColorEffectOne::getColor(const Vec2 &p_point, const SvgDim &p_dim)
     return color;
 }
 
-uint32_t ldColorEffectTwo::getColor(const Vec2 &p_point, const SvgDim &p_dim)
+uint32_t ldColorEffectTwo::getColor(const ldVec2 &p_point, const ldRect &p_dim)
 {
-    Vec2 dimOrigin = p_dim.bottom_left;
-    Vec2 dimSize = p_dim.size();
+    ldVec2 dimOrigin = p_dim.bottom_left;
+    ldVec2 dimSize = p_dim.size();
 
     int color = ldColorUtil::colorHSV(_lastColorStep, 1.0, 1.0);
     //
-    Vec2 p = ldMaths::laserToUnitedCoords(p_point);
+    ldVec2 p = ldMaths::laserToUnitedCoords(p_point);
     //
     int first_key = _lastSecond;
     bool test = false;
@@ -109,9 +109,9 @@ uint32_t ldColorEffectTwo::getColor(const Vec2 &p_point, const SvgDim &p_dim)
     return color;
 }
 
-uint32_t ldColorEffectThree::getColor(const Vec2 &p_point, const SvgDim &p_dim)
+uint32_t ldColorEffectThree::getColor(const ldVec2 &p_point, const ldRect &p_dim)
 {
-    Vec2 p = ldMaths::laserToUnitedCoords(p_point);
+    ldVec2 p = ldMaths::laserToUnitedCoords(p_point);
     //
     float x = 360.f*(_millis/1000.f) + _baseColorDecay * fabsf( (p_dim.bottom_left.y + p_dim.size().y) - p.y)/p_dim.size().y;
     float colorH = ldMaths::periodIntervalKeeper(x, 0, 360);

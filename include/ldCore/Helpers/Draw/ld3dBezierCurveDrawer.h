@@ -42,7 +42,7 @@ class ldBezierCurveObject;
 
 // Steps3dTState
 struct LDCORESHARED_EXPORT Steps3dTState {
-    point3d position;
+    ldVec3 position;
     float angleX = 0.f;
     float angleY = 0.f;
     float angleZ = 0.f;

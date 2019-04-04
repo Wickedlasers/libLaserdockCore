@@ -31,11 +31,11 @@
 #include <QtCore/QFile>
 #include <QtCore/QString>
 
-#define NANOSVG_IMPLEMENTATION
 #include <nanosvg-master/src/nanosvg.h>
 
 #include "ldCore/Helpers/Color/ldColorUtil.h"
 #include "ldCore/Helpers/SVG/ldSvgDir.h"
+#include "ldCore/Render/ldRendererOpenlase.h"
 
 namespace {
     const int MAX_NUMBER_POINTS_FOR_SVG_POSITIONING_FIX = 200;
@@ -43,28 +43,28 @@ namespace {
 
 
 // totalPoints
-int ldSvgReader::totalPoints(const svgBezierCurves &bezierCurves)
+int ldSvgReader::totalPoints(const ldBezierPaths &bezierPaths)
 {
     int pointCounter = 0;
-    for (const std::vector<ldBezierCurve> &curve : bezierCurves) {
-        pointCounter += curve.size();
+    for (const ldBezierPath &path : bezierPaths) {
+        pointCounter += path.data().size();
     }
     return pointCounter;
 }
 
 // totalPoints
-int ldSvgReader::totalPoints(const svgBezier3dCurves &bezierCurves)
+int ldSvgReader::totalPoints(const ld3dBezierCurves &bezierCurves)
 {
     int pointCounter = 0;
-    for (const std::vector<Bezier3dCurve> &curve : bezierCurves) {
+    for (const std::vector<ld3dBezierCurve> &curve : bezierCurves) {
         pointCounter += curve.size();
     }
     return pointCounter;
 }
 
-svgBezierCurvesSequence ldSvgReader::loadSvgSequence(const QString &dirPath, Type p_type, float snapDistance, const QString &filePrefix, int masksize)
+ldBezierPathsSequence ldSvgReader::loadSvgSequence(const QString &dirPath, Type p_type, float snapDistance, const QString &filePrefix, int masksize)
 {
-    svgBezierCurvesSequence res;
+    ldBezierPathsSequence res;
 
     ldSvgDir svgDir(dirPath);
     if(masksize != -1)
@@ -74,15 +74,15 @@ svgBezierCurvesSequence ldSvgReader::loadSvgSequence(const QString &dirPath, Typ
 
     QStringList svgFiles = svgDir.getSvgFiles();
     for(const QString &svgFile : svgFiles) {
-        res.push_back(ldSvgReader::loadSvg(dirPath + "/" + svgFile, p_type, snapDistance, false));
+        res.push_back(ldSvgReader::loadSvg(dirPath + "/" + svgFile, p_type, snapDistance, false).data());
     }
     return res;
 }
 
 // loadSvgSequenceFixedScale
-svgBezierCurvesSequence ldSvgReader::loadSvgSequenceFixedScale(float fixedMinX, float fixedMaxX, float fixedMinY, float fixedMaxY, int size, int masksize, char const* qtbasefilename, Type p_type, float snapDistance)
+ldBezierPathsSequence ldSvgReader::loadSvgSequenceFixedScale(float fixedMinX, float fixedMaxX, float fixedMinY, float fixedMaxY, int size, int masksize, char const* qtbasefilename, Type p_type, float snapDistance)
 {
-    svgBezierCurvesSequence res = svgBezierCurvesSequence();
+    ldBezierPathsSequence res = ldBezierPathsSequence();
     //
     for (int i=1;i<size+1;i++) {
         // qDebug() << "i:" << i;
@@ -90,16 +90,17 @@ svgBezierCurvesSequence ldSvgReader::loadSvgSequenceFixedScale(float fixedMinX, 
         stringWork += QString::number(i).rightJustified(masksize, '0');
         stringWork.append(".svg");
         // qDebug() << " > i:" << i << "stringWork " << stringWork->toStdString().c_str();
-        svgBezierCurves tmp = ldSvgReader::loadSvgFixedScale(fixedMinX, fixedMaxX, fixedMinY, fixedMaxY, stringWork, p_type, snapDistance);
+        ldBezierPaths tmp = ldSvgReader::loadSvg(stringWork, p_type, snapDistance, true, fixedMinX, fixedMaxX, fixedMinY, fixedMaxY).data();
         res.push_back(tmp);
     }
     return res;
 }
 
 // loadSvg
-svgBezierCurves ldSvgReader::loadSvg(QString qtfilename, Type type, float snapDistance, bool isTranslate)
+ldBezierCurveObject ldSvgReader::loadSvg(QString qtfilename, Type type, float snapDistance, bool isTranslate,
+                                         float fixedMinX, float fixedMaxX, float fixedMinY, float fixedMaxY)
 {
-    svgBezierCurves res;
+    ldBezierCurveObject res;
 
     //qDebug() << "ldSvgReader::loadSvg " << qtfilename;
 
@@ -115,49 +116,57 @@ svgBezierCurves ldSvgReader::loadSvg(QString qtfilename, Type type, float snapDi
 
     QByteArray blob = file.readAll();
 
-    NSVGimage* nsvgImage = nsvgParseFromData(blob.data(), blob.length(), "px", 96.0f);
+    std::unique_ptr<NSVGimage, void(*)(NSVGimage*)> nsvgImage(nsvgParseFromData(blob.data(), blob.length(), "px", 96.0f), nsvgDelete);
     if (nsvgImage == NULL) {
         qDebug() << "nsvgImage == NULL";
-        nsvgDelete(nsvgImage);
         return res;
     }
 
     //
     float maxValue = 100000000;
-    float minX = maxValue;
-    float minY = maxValue;
-    float maxX = -maxValue;
-    float maxY = -maxValue;
     float im_w = nsvgImage->width;
     float im_h = nsvgImage->height;
 
     // stats
-    for (NSVGshape* shape = nsvgImage->shapes; shape != NULL; shape = shape->next)
-    {
-        //
-        for (NSVGpath* path = shape->paths; path != NULL; path = path->next)
+    float minX = fixedMinX;
+    float minY = fixedMinY;
+    float maxX = fixedMaxX;
+    float maxY = fixedMaxY;
+
+    bool isNotFixed = (minX == -1.f && minY == -1.f && maxX == -1.f&& maxY == -1.f);
+    if(isNotFixed) {
+        minX = maxValue ;
+        minY = maxValue;
+        maxX = -maxValue;
+        maxY = -maxValue;
+
+        for (NSVGshape* shape = nsvgImage->shapes; shape != NULL; shape = shape->next)
         {
-            for (int i = 0; i < path->npts-1; i += 3)
+            //
+            for (NSVGpath* path = shape->paths; path != NULL; path = path->next)
             {
-                // start
-                if (path->pts[(i)*2]<minX) minX = path->pts[(i)*2];
-                if (path->pts[(i)*2]>maxX) maxX = path->pts[(i)*2];
-                if (path->pts[(i)*2+1]<minY) minY = path->pts[(i)*2+1];
-                if (path->pts[(i)*2+1]>maxY) maxY = path->pts[(i)*2+1];
-                // end
-                if (path->pts[(i+3)*2]<minX) minX = path->pts[(i+3)*2];
-                if (path->pts[(i+3)*2]>maxX) maxX = path->pts[(i+3)*2];
-                if (path->pts[(i+3)*2+1]<minY) minY = path->pts[(i+3)*2+1];
-                if (path->pts[(i+3)*2+1]>maxY) maxY = path->pts[(i+3)*2+1];
-                // maybe do the same thing for control point if issue appears with some paths going outside [-1,1]
+                for (int i = 0; i < path->npts-1; i += 3)
+                {
+                    // start
+                    if (path->pts[(i)*2]<minX) minX = path->pts[(i)*2];
+                    if (path->pts[(i)*2]>maxX) maxX = path->pts[(i)*2];
+                    if (path->pts[(i)*2+1]<minY) minY = path->pts[(i)*2+1];
+                    if (path->pts[(i)*2+1]>maxY) maxY = path->pts[(i)*2+1];
+                    // end
+                    if (path->pts[(i+3)*2]<minX) minX = path->pts[(i+3)*2];
+                    if (path->pts[(i+3)*2]>maxX) maxX = path->pts[(i+3)*2];
+                    if (path->pts[(i+3)*2+1]<minY) minY = path->pts[(i+3)*2+1];
+                    if (path->pts[(i+3)*2+1]>maxY) maxY = path->pts[(i+3)*2+1];
+                    // maybe do the same thing for control point if issue appears with some paths going outside [-1,1]
+                }
             }
         }
+
     }
 
     // should not append
     if (minX >= maxValue || minY >= maxValue || maxX<=-maxValue || maxY<=-maxValue)
     {
-        nsvgDelete(nsvgImage);
         return res;
     }
 
@@ -173,7 +182,7 @@ svgBezierCurves ldSvgReader::loadSvg(QString qtfilename, Type type, float snapDi
     // ldSvgReader::Type::Dev
     // important ! do after check
     // still ldSvgReader::Type::SvgFrame ?
-    if (type == Type::Dev || type==Type::SvgFrame) {
+    if ((type == Type::Dev || type==Type::SvgFrame) && isNotFixed) {
         // all clear -> we change the min max value to frame size
         minX = 0;
         maxX = im_w;
@@ -187,7 +196,6 @@ svgBezierCurves ldSvgReader::loadSvg(QString qtfilename, Type type, float snapDi
     // should not append
     if (fabs(max_w) <= 1.0f/maxValue || fabs(max_h) <= 1.0f/maxValue)
     {
-        nsvgDelete(nsvgImage);
         return res;
     }
 
@@ -205,87 +213,131 @@ svgBezierCurves ldSvgReader::loadSvg(QString qtfilename, Type type, float snapDi
     int pointLimiterCount = 0;
 
     // cout << "nsvgImage->bounds[0]: " << nsvgImage->bounds[0] << endl;
+
+    // resize to -1/1 keeping framesize
+    auto resizeFrameSize = [&](float value, float d) -> float {
+      return  2.0f*value*ratio - 1.0f + d;
+    };
+
+    const float MAX_COEFF = 0.97f;
+    auto transformXCoord = [&](float value) {
+        value = value - minX;
+        if (type!=Type::Dev) {
+            value = resizeFrameSize(value, dx);
+        }
+        if (type==Type::Maximize) {
+            value = MAX_COEFF*value;
+        }
+        return value;
+    };
+
+    auto transformYCoord = [&](float value) {
+        value = value - minY;
+        if (type!=Type::Dev) {
+            value = resizeFrameSize(value, dy);
+        }
+        value = -value;
+        if (type==Type::Maximize) {
+            value = MAX_COEFF*value;
+        }
+        return value;
+    };
+
     ldBezierCurve bzrCurve;
     for (NSVGshape* shape = nsvgImage->shapes; shape != NULL; shape = shape->next)
     {
         for (NSVGpath* path = shape->paths; path != NULL; path = path->next)
         {
-            std::vector<ldBezierCurve> tmpCurves;
+            ldBezierPath bezierPath;
+            switch (shape->stroke.type) {
+            case NSVG_PAINT_NONE:
+                bezierPath.setColor(C_WHITE);
+                break;
+            case NSVG_PAINT_COLOR:
+                bezierPath.setColor(ldColorUtil::bgrToRgb(shape->stroke.color));
+                break;
+            case NSVG_PAINT_LINEAR_GRADIENT: {
+                NSVGgradient *gradient = shape->stroke.gradient;
+
+                // get svg x1, y1, x2, y2 positions
+                std::vector<float> t(6, 0);
+                nsvg__xformInverse(t.data(), gradient->xform);
+                float x1 = t[4];
+                float y1 = t[5];
+                float x2 = t[4] + t[2];
+                float y2 = t[5] + t[3];
+                x1 = transformXCoord(x1);
+                y1 = transformYCoord(y1);
+                x2 = transformXCoord(x2);
+                y2 = transformYCoord(y2);
+
+                ldGradient bzrGradient;
+                bzrGradient.setX1(x1);
+                bzrGradient.setY1(y1);
+                bzrGradient.setX2(x2);
+                bzrGradient.setY2(y2);
+
+                for(int stopIndex = 0; stopIndex < gradient->nstops; stopIndex++) {
+                    const NSVGgradientStop &nsvgStop = gradient->stops[stopIndex];
+                    bzrGradient.add(ldGradientStop(nsvgStop.offset, ldColorUtil::abgrToArgb(nsvgStop.color)));
+                }
+                bezierPath.setGradient(bzrGradient);
+            }
+                break;
+            case NSVG_PAINT_RADIAL_GRADIENT:
+                qDebug() << "NSVG_PAINT_RADIAL_GRADIENT";
+                break;
+            }
+
             for (int i = 0; i < path->npts-1; i += 3) {
                 if (pointLimiterCount >= MAX_POINTS) continue;
                 //
-                float sx,sy,ex,ey,c1x,c1y,c2x,c2y;
-                sx = path->pts[(i)*2]-minX;
-                sy = path->pts[(i)*2+1]-minY;
-                ex = path->pts[(i+3)*2]-minX;
-                ey = path->pts[(i+3)*2+1]-minY;
-                c1x = path->pts[(i+1)*2]-minX;
-                c1y = path->pts[(i+1)*2+1]-minY;
-                c2x = path->pts[(i+2)*2]-minX;
-                c2y = path->pts[(i+2)*2+1]-minY;
+                float sx = path->pts[(i)*2];
+                float sy = path->pts[(i)*2+1];
+                float ex = path->pts[(i+3)*2];
+                float ey = path->pts[(i+3)*2+1];
+                float c1x = path->pts[(i+1)*2];
+                float c1y = path->pts[(i+1)*2+1];
+                float c2x = path->pts[(i+2)*2];
+                float c2y = path->pts[(i+2)*2+1];
 
-                //
-                if (type!=Type::Dev)
-                {
-                    // resize to -1/1 keeping framesize
-                    sx = 2.0f*sx*ratio - 1.0f + dx;
-                    sy = 2.0f*sy*ratio - 1.0f + dy;
-                    ex = 2.0f*ex*ratio - 1.0f + dx;
-                    ey = 2.0f*ey*ratio - 1.0f + dy;
-                    c1x = 2.0f*c1x*ratio - 1.0f + dx;
-                    c1y = 2.0f*c1y*ratio - 1.0f + dy;
-                    c2x = 2.0f*c2x*ratio - 1.0f + dx;
-                    c2y = 2.0f*c2y*ratio - 1.0f + dy;
-                }
+                sx = transformXCoord(sx);
+                sy = transformYCoord(sy);
+                ex = transformXCoord(ex);
+                ey = transformYCoord(ey);
+                c1x = transformXCoord(c1x);
+                c1y = transformYCoord(c1y);
+                c2x = transformXCoord(c2x);
+                c2y = transformYCoord(c2y);
 
-                // y is inverted in svg
-                sy = -sy;
-                ey = -ey;
-                c1y = -c1y;
-                c2y = -c2y;
+                bzrCurve.setStart(ldVec2(sx, sy));
+                bzrCurve.setEnd(ldVec2(ex, ey));
+                bzrCurve.setControl1(ldVec2(c1x, c1y));
+                bzrCurve.setControl2(ldVec2(c2x, c2y));
 
-                // reduce a little if maximizing
-                if (type==Type::Maximize) {
-                    float coef = 0.97f;
-                    sx = coef*sx;
-                    sy = coef*sy;
-                    ex = coef*ex;
-                    ey = coef*ey;
-                    c1x = coef*c1x;
-                    c1y = coef*c1y;
-                    c2x = coef*c2x;
-                    c2y = coef*c2y;
-                }
-
-                bzrCurve.setStart(Vec2(sx, sy));
-                bzrCurve.setEnd(Vec2(ex, ey));
-                bzrCurve.setControl1(Vec2(c1x, c1y));
-                bzrCurve.setControl2(Vec2(c2x, c2y));
-                bzrCurve.setColor(ldColorUtil::brgToRgb(shape->stroke.color));
-                tmpCurves.push_back(bzrCurve);
+                bezierPath.add(bzrCurve);
                 pointLimiterCount++;
 
                 //qDebug()<< "sx"<< sx<< "sy"<< sy<< "ex"<< ex<< "ey"<< ey<< "c1x"<< c1x<< "c1y"<< c1y<< "c2x"<< c2x<< "c2y"<< c2y;
             }
             //qDebug()<< "tmpCurves  size:"<< tmpCurves.size();
-            if (pointLimiterCount < MAX_POINTS && tmpCurves.size()>0) res.push_back(tmpCurves);
+            if (pointLimiterCount < MAX_POINTS && bezierPath.size()>0)
+                res.add(bezierPath);
         }
     }
     //qDebug()<< "res  size:"<< res.size();
 
-    nsvgDelete(nsvgImage);
-
-    if (snapDistance>0) res = snapCurves(res, snapDistance);
+    if (snapDistance>0) res = ldBezierCurveObject(snapCurves(res.data(), snapDistance));
 
     // fix for simple (see twitter.svg)
-    int totalPoints = ldSvgReader::totalPoints(res);
+    int totalPoints = res.totalPoints();
     if (type!=Type::Dev && totalPoints < MAX_NUMBER_POINTS_FOR_SVG_POSITIONING_FIX && isTranslate) {
         // interpolate curve
-        SvgDim dim = ldSvgReader::svgDimByInterpolation(res);
+        ldRect dim = res.dim();
         // center svg
         //Vec2 p = Vec2(-1-dim.bottom_left.x + 1 - fabs(dim.top_right.x-dim.bottom_left.x)/2.0, -1-dim.bottom_left.y + 1 - fabs(dim.top_right.y-dim.bottom_left.y)/2.0);
-        Vec2 p = Vec2(-dim.bottom_left.x - dim.width()/2.0f, -dim.bottom_left.y - dim.height()/2.0f);
-        ldMaths::translateSvgBezierCurves(res, p);
+        ldVec2 p = ldVec2(-dim.bottom_left.x - dim.width()/2.0f, -dim.bottom_left.y - dim.height()/2.0f);
+        res.translate(p);
     }
 
     //qDebug() << "EVERY minX:" << minX << " maxX:" << maxX << " minY:" << minY << " maxY:" << maxY;
@@ -293,204 +345,20 @@ svgBezierCurves ldSvgReader::loadSvg(QString qtfilename, Type type, float snapDi
     return res;
 }
 
-// loadSvgFixedScale
-std::vector<std::vector<ldBezierCurve>> ldSvgReader::loadSvgFixedScale(float fixedMinX, float fixedMaxX, float fixedMinY, float fixedMaxY, const QString &qtfilename, Type p_type, float snapDistance)
-{
-    Type type = p_type;
-
-    std::vector<std::vector<ldBezierCurve>> res = std::vector<std::vector<ldBezierCurve>>();
-
-    QFile file(qtfilename);
-    if (!file.exists()) {
-        qDebug() << "error::ldSvgReader::loadSvg: file does not exist" << qtfilename;
-        return res;
-    }
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qDebug() << "error::ldSvgReader::loadSvg: Qt file issue";
-        return res;
-    }
-
-    QByteArray blob = file.readAll();
-
-    NSVGimage* nsvgImage = nsvgParseFromData(blob.data(), blob.length(), "px", 96.0f);
-    if (nsvgImage == NULL) {
-        qDebug() << "nsvgImage == NULL";
-        nsvgDelete(nsvgImage);
-        return res;
-    }
-
-    //
-    float maxValue = 100000000;
-    float im_w = nsvgImage->width;
-    float im_h = nsvgImage->height;
-
-    // stats
-    /*for (NSVGshape* shape = nsvgImage->shapes; shape != NULL; shape = shape->next)
-    {
-        //
-        for (NSVGpath* path = shape->paths; path != NULL; path = path->next)
-        {
-            for (int i = 0; i < path->npts-1; i += 3)
-            {
-                // start
-                //if (path->pts[(i)*2]<minX) minX = path->pts[(i)*2];
-                //if (path->pts[(i)*2]>maxX) maxX = path->pts[(i)*2];
-                //if (path->pts[(i)*2+1]<minY) minY = path->pts[(i)*2+1];
-                //if (path->pts[(i)*2+1]>maxY) maxY = path->pts[(i)*2+1];
-                // end
-                //if (path->pts[(i+3)*2]<minX) minX = path->pts[(i+3)*2];
-                //if (path->pts[(i+3)*2]>maxX) maxX = path->pts[(i+3)*2];
-                //if (path->pts[(i+3)*2+1]<minY) minY = path->pts[(i+3)*2+1];
-                //if (path->pts[(i+3)*2+1]>maxY) maxY = path->pts[(i+3)*2+1];
-                // maybe do the same thing for control point if issue appears with some paths going outside [-1,1]
-            }
-        }
-    }*/
-
-    // should not append
-    if (fixedMinX >= maxValue || fixedMinY >= maxValue || fixedMaxX<=-maxValue || fixedMaxY<=-maxValue)
-    {
-        nsvgDelete(nsvgImage);
-        return res;
-    }
-
-    // some case where we change type auto for ldSvgReader::Type::SvgFrame
-    if (type==Type::SvgFrame) {
-
-        // erase type if some error in svg file
-        if (fixedMinX < 0 || fixedMinY < 0) type=Type::Maximize;
-        if (fixedMaxX > im_w || fixedMaxY > im_h) type=Type::Maximize;
-        if (fabs(im_w) <= 1.0f/maxValue || fabs(im_h) <= 1.0f/maxValue) type=Type::Maximize;
-    }
-
-    // ldSvgReader::Type::Dev
-    // important ! do after check
-    // still ldSvgReader::Type::SvgFrame ?
-    /*if (type == ldSvgReader::Type::Dev || type==ldSvgReader::Type::SvgFrame) {
-        // all clear -> we change the min max value to frame size
-        minX = 0;
-        maxX = im_w;
-        minY = 0;
-        maxY = im_h;
-    }*/
-
-    // test after
-    float max_w = fixedMaxX - fixedMinX;
-    float max_h = fixedMaxY - fixedMinY;
-    // should not append
-    if (fabs(max_w) <= 1.0f/maxValue || fabs(max_h) <= 1.0f/maxValue)
-    {
-        nsvgDelete(nsvgImage);
-        return res;
-    }
-
-    // check landscape or portrait
-    float dx=0;
-    float dy=0;
-    float ratio = max_w>max_h ? 1.0f/max_w : 1.0f/max_h;
-    if (max_w>max_h) {
-        dy=0.5f-0.5f*(2.0f*max_h*ratio-1.0f);
-    } else {
-        dx=0.5f-0.5f*(2.0f*max_w*ratio-1.0f);
-    }
-
-    int pointLimiter = 4000;
-    int pointLimiterCount = 0;
-
-    for (NSVGshape* shape = nsvgImage->shapes; shape != NULL; shape = shape->next)
-    {
-        for (NSVGpath* path = shape->paths; path != NULL; path = path->next)
-        {
-            std::vector<ldBezierCurve> tmpCurves;
-            for (int i = 0; i < path->npts-1; i += 3) {
-                if (pointLimiter<=pointLimiterCount) continue;
-                //
-                float sx,sy,ex,ey,c1x,c1y,c2x,c2y;
-                sx = path->pts[(i)*2]-fixedMinX;
-                sy = path->pts[(i)*2+1]-fixedMinY;
-                ex = path->pts[(i+3)*2]-fixedMinX;
-                ey = path->pts[(i+3)*2+1]-fixedMinY;
-                c1x = path->pts[(i+1)*2]-fixedMinX;
-                c1y = path->pts[(i+1)*2+1]-fixedMinY;
-                c2x = path->pts[(i+2)*2]-fixedMinX;
-                c2y = path->pts[(i+2)*2+1]-fixedMinY;
-
-                //
-                if (type!=Type::Dev)
-                {
-                    // resize to -1/1 keeping framesize
-                    sx = 2.0f*sx*ratio - 1.0f + dx;
-                    sy = 2.0f*sy*ratio - 1.0f + dy;
-                    ex = 2.0f*ex*ratio - 1.0f + dx;
-                    ey = 2.0f*ey*ratio - 1.0f + dy;
-                    c1x = 2.0f*c1x*ratio - 1.0f + dx;
-                    c1y = 2.0f*c1y*ratio - 1.0f + dy;
-                    c2x = 2.0f*c2x*ratio - 1.0f + dx;
-                    c2y = 2.0f*c2y*ratio - 1.0f + dy;
-                }
-
-                // y is inverted in svg
-                sy = -sy;
-                ey = -ey;
-                c1y = -c1y;
-                c2y = -c2y;
-
-                // reduce a little if maximizing
-                if (type==Type::Maximize) {
-                    float coef = 0.97f;
-                    sx = coef*sx;
-                    sy = coef*sy;
-                    ex = coef*ex;
-                    ey = coef*ey;
-                    c1x = coef*c1x;
-                    c1y = coef*c1y;
-                    c2x = coef*c2x;
-                    c2y = coef*c2y;
-                }
-
-                ldBezierCurve bzrCurve;
-                bzrCurve.setStart(Vec2(sx, sy));
-                bzrCurve.setEnd(Vec2(ex, ey));
-                bzrCurve.setControl1(Vec2(c1x, c1y));
-                bzrCurve.setControl2(Vec2(c2x, c2y));
-                bzrCurve.setColor(ldColorUtil::brgToRgb(shape->stroke.color));
-                tmpCurves.push_back(bzrCurve);
-                pointLimiterCount++;
-            }
-            if (pointLimiter>=pointLimiterCount && tmpCurves.size()>0) res.push_back(tmpCurves);
-        }
-    }
-    nsvgDelete(nsvgImage);
-
-    if (snapDistance>0) res = snapCurves(res, snapDistance);
-
-    // fix for simple (see twitter.svg)
-    int totalPoints = ldSvgReader::totalPoints(res);
-    if (type!=Type::Dev && totalPoints < MAX_NUMBER_POINTS_FOR_SVG_POSITIONING_FIX) {
-        // interpolate curve
-        SvgDim dim = ldSvgReader::svgDimByInterpolation(res);
-        // center svg
-        Vec2 p = Vec2(-dim.bottom_left.x - dim.width()/2.0f, -dim.bottom_left.y - dim.height()/2.0f);
-        ldMaths::translateSvgBezierCurves(res, p);
-    }
-    return res;
-}
-
-
 // svgDim
-SvgDim ldSvgReader::svgDim(const svgBezierCurves &bezierCurves)
+ldRect ldSvgReader::svgDim(const ldBezierPaths &bezierPaths)
 {
     // if too few points
-    if (ldSvgReader::totalPoints(bezierCurves) < MAX_NUMBER_POINTS_FOR_SVG_POSITIONING_FIX)
+    if (ldSvgReader::totalPoints(bezierPaths) < MAX_NUMBER_POINTS_FOR_SVG_POSITIONING_FIX)
     {
         // interpolate curve
-        return ldSvgReader::svgDimByInterpolation(bezierCurves);
+        return ldSvgReader::svgDimByInterpolation(bezierPaths);
     }
 
-    SvgDim res;
+    ldRect res;
     bool init = false;
-    for (const std::vector<ldBezierCurve> &curve : bezierCurves) {
-        for (const ldBezierCurve &b : curve) {
+    for (const ldBezierPath &path : bezierPaths) {
+        for (const ldBezierCurve &b : path.data()) {
             if (!init) {
                 // very first point
                 res.bottom_left = b.start();
@@ -517,7 +385,7 @@ SvgDim ldSvgReader::svgDim(const svgBezierCurves &bezierCurves)
 }
 
 
-Svg3dDim ldSvgReader::svgDim(const svgBezier3dCurves &bezierCurves)
+ldRect3 ldSvgReader::svgDim(const ld3dBezierCurves &bezierCurves)
 {
     // if too few points
     if (ldSvgReader::totalPoints(bezierCurves) < MAX_NUMBER_POINTS_FOR_SVG_POSITIONING_FIX)
@@ -526,10 +394,10 @@ Svg3dDim ldSvgReader::svgDim(const svgBezier3dCurves &bezierCurves)
         return ldSvgReader::svgDimByInterpolation(bezierCurves);
     }
 
-    Svg3dDim res;
+    ldRect3 res;
     bool init = false;
-    for (const std::vector<Bezier3dCurve> &curve : bezierCurves) {
-        for (const Bezier3dCurve &b : curve) {
+    for (const std::vector<ld3dBezierCurve> &curve : bezierCurves) {
+        for (const ld3dBezierCurve &b : curve) {
             if (!init) {
                 // very first point
                 res.bottom_left = b.start;
@@ -559,12 +427,12 @@ Svg3dDim ldSvgReader::svgDim(const svgBezier3dCurves &bezierCurves)
     return res;}
 
 // svgDimByInterpolation
-SvgDim ldSvgReader::svgDimByInterpolation(const svgBezierCurves &bezierCurves, int p_interpolate)
+ldRect ldSvgReader::svgDimByInterpolation(const ldBezierPaths &bezierPaths, int p_interpolate)
 {
-    SvgDim res;
+    ldRect res;
     bool init = false;
-    for (const std::vector<ldBezierCurve> &curve : bezierCurves) {
-        for (const ldBezierCurve &b : curve) {
+    for (const ldBezierPath &path : bezierPaths) {
+        for (const ldBezierCurve &b : path.data()) {
             if (!init) {
                 // very first point
                 res.bottom_left = b.start();
@@ -576,7 +444,7 @@ SvgDim ldSvgReader::svgDimByInterpolation(const svgBezierCurves &bezierCurves, i
             for (int k=0; k<p_interpolate; k++)
             {
                 float slope = 1.0f*k/(p_interpolate-1);
-                Vec2 p = b.getPoint(slope);
+                ldVec2 p = b.getPoint(slope);
 
                 // bottom left versus start
                 if (res.bottom_left.x >= p.x) res.bottom_left.x = p.x;
@@ -592,12 +460,12 @@ SvgDim ldSvgReader::svgDimByInterpolation(const svgBezierCurves &bezierCurves, i
 }
 
 
-Svg3dDim ldSvgReader::svgDimByInterpolation(const svgBezier3dCurves &bezierCurves, int p_interpolate)
+ldRect3 ldSvgReader::svgDimByInterpolation(const ld3dBezierCurves &bezierCurves, int p_interpolate)
 {
-    Svg3dDim res;
+    ldRect3 res;
     bool init = false;
-    for (const std::vector<Bezier3dCurve> &curve : bezierCurves) {
-        for (const Bezier3dCurve &b : curve) {
+    for (const std::vector<ld3dBezierCurve> &curve : bezierCurves) {
+        for (const ld3dBezierCurve &b : curve) {
             if (!init) {
                 // very first point
                 res.bottom_left = b.start;
@@ -609,7 +477,7 @@ Svg3dDim ldSvgReader::svgDimByInterpolation(const svgBezier3dCurves &bezierCurve
             for (int i=0; i<p_interpolate; i++)
             {
                 float slope = 1.0f*i/(p_interpolate-1);
-                point3d p = b.getPoint(slope);
+                ldVec3 p = b.getPoint(slope);
 
                 // bottom left versus start
                 if (res.bottom_left.x >= p.x) res.bottom_left.x = p.x;
@@ -627,16 +495,16 @@ Svg3dDim ldSvgReader::svgDimByInterpolation(const svgBezier3dCurves &bezierCurve
 }
 
 // svgDimSequence
-SvgDim ldSvgReader::svgDimSequence(const svgBezierCurvesSequence &bezierCurvesSequence)
+ldRect ldSvgReader::svgDimSequence(const ldBezierPathsSequence &bezierCurvesSequence)
 {
     //qDebug()<<"svgDimSequence " ;
 
-    SvgDim res;
-    res.bottom_left = Vec2();
-    res.top_right = Vec2();
+    ldRect res;
+    res.bottom_left = ldVec2();
+    res.top_right = ldVec2();
     bool init = false;
     //
-    for (const svgBezierCurves &curves : bezierCurvesSequence) {
+    for (const ldBezierPaths &curves : bezierCurvesSequence) {
         if (!init) {
             res = ldSvgReader::svgDim(curves);
 //            qDebug()<<"res_tmp .bottom_left.x "<< res.bottom_left.x ;
@@ -645,7 +513,7 @@ SvgDim ldSvgReader::svgDimSequence(const svgBezierCurvesSequence &bezierCurvesSe
             init = true;
             continue;
         }
-        SvgDim res_tmp = ldSvgReader::svgDim(curves);
+        ldRect res_tmp = ldSvgReader::svgDim(curves);
 
 
 //        qDebug()<<"res_tmp .bottom_left.x "<< res_tmp.bottom_left.x ;
@@ -670,9 +538,9 @@ SvgDim ldSvgReader::svgDimSequence(const svgBezierCurvesSequence &bezierCurvesSe
     return res;
 }
 
-svgBezierCurvesSequence ldSvgReader::loadFromJSArrayText(const char* text) {
+ldBezierPathsSequence ldSvgReader::loadFromJSArrayText(const char* text) {
 
-    svgBezierCurvesSequence curves;
+    ldBezierPathsSequence curves;
 
     typedef std::pair<float, float> tpoint;
     typedef std::vector<tpoint> tline;
@@ -747,20 +615,20 @@ svgBezierCurvesSequence ldSvgReader::loadFromJSArrayText(const char* text) {
     for (size_t i = 0; i < font.size(); i++) {
         tdigit d = font[i];
         //qDebug() << "digit " << i;
-        svgBezierCurves b;
+        ldBezierPaths b;
         if (d.size() > maxstrokes) maxstrokes = d.size();
         for (size_t j = 0; j < d.size(); j++) {
             //qDebug() << "line " << j;
             tline l = d[j];
             if (l.size() == 4) {
                 ldBezierCurve t;
-                t.setStart(Vec2(l[0].first, l[0].second));
-                t.setControl1(Vec2(l[1].first, l[1].second));
-                t.setControl2(Vec2(l[2].first, l[2].second));
-                t.setEnd(Vec2(l[3].first, l[3].second));
-                t.setColor(0xffffffff);
-                std::vector<ldBezierCurve> stroke;
-                stroke.push_back(t);
+                t.setStart(ldVec2(l[0].first, l[0].second));
+                t.setControl1(ldVec2(l[1].first, l[1].second));
+                t.setControl2(ldVec2(l[2].first, l[2].second));
+                t.setEnd(ldVec2(l[3].first, l[3].second));
+                ldBezierPath stroke;
+                stroke.setColor(0xffffffff);
+                stroke.add(t);
                 b.push_back(stroke);
             }
         }
@@ -787,31 +655,33 @@ svgBezierCurvesSequence ldSvgReader::loadFromJSArrayText(const char* text) {
 }
 
 // debugStatCurves
-void ldSvgReader::debugStatCurves(svgBezierCurves bezierCurves)
+void ldSvgReader::debugStatCurves(ldBezierPaths bezierPaths)
 {
     int pointCounter = 0;
-    for (uint i=0; i<bezierCurves.size(); i++) {
-        std::vector<ldBezierCurve> curve = bezierCurves[i];
+    for (uint i=0; i< bezierPaths.size(); i++) {
+        std::vector<ldBezierCurve> curve = bezierPaths[i].data();
         pointCounter += curve.size();
     }
-    qDebug() << "nb curve: " << bezierCurves.size();
+    qDebug() << "nb curve: " << bezierPaths.size();
     qDebug() << "nb bezier points: " << pointCounter;
 }
 
 // snapCurves
-svgBezierCurves ldSvgReader::snapCurves(const svgBezierCurves &bezierCurves, float snapDistance)
+ldBezierPaths ldSvgReader::snapCurves(const ldBezierPaths &bezierPaths, float snapDistance)
 {
-    svgBezierCurves res;
+    ldBezierPaths res;
     //debugStatCurves(bezierCurves);
-    std::vector<ldBezierCurve> newOne;
-    for (uint i=0; i<bezierCurves.size(); i++) {
-        const std::vector<ldBezierCurve> &curve = bezierCurves[i];
+    ldBezierPath newOne;
+    for (uint i=0; i<bezierPaths.size(); i++) {
+        const ldBezierPath &path = bezierPaths[i];
         //
-        for (uint c=0; c<curve.size(); c++) {
-            const ldBezierCurve &a = curve[c];
+        for (uint c=0; c<path.size(); c++) {
+            newOne.setColor(path.color());
+            newOne.setGradient(path.gradient());
+            const ldBezierCurve &a = path[c];
             //qDebug() << "push_back a for c:" << c ;
             if (c == 0 && i>0) { // && i<bezierCurves.size()-1
-                const std::vector<ldBezierCurve> &prevcurve = bezierCurves[i-1];
+                const std::vector<ldBezierCurve> &prevcurve = bezierPaths[i-1].data();
                 const ldBezierCurve &b = prevcurve[prevcurve.size()-1];
                 if (fabs(b.end().x - a.start().x)<snapDistance && fabs(b.end().y - a.start().y)<snapDistance) {
                     // snap -> don't create newone
@@ -822,10 +692,10 @@ svgBezierCurves ldSvgReader::snapCurves(const svgBezierCurves &bezierCurves, flo
                     newOne.clear();
                 }
             }
-            newOne.push_back(a);
+            newOne.add(a);
         }
         // last one
-        if (i==bezierCurves.size()-1) {
+        if (i==bezierPaths.size()-1) {
             res.push_back(newOne);
         }
     }

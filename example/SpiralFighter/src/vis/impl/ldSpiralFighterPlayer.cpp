@@ -95,8 +95,8 @@ void ldSpiralFighterPlayer::drawGameObject(ldRendererOpenlase* p_renderer) {
     p_renderer->end();
 }
 
-Vec2 ldSpiralFighterPlayer::getMissileSpawnPosition() {
-    return Vec2(position.x + size.x * 1.0f * cosf(rotation), position.y + size.y * 0.5f * sinf(rotation));
+ldVec2 ldSpiralFighterPlayer::getMissileSpawnPosition() {
+    return ldVec2(position.x + size.x * 1.0f * cosf(rotation), position.y + size.y * 0.5f * sinf(rotation));
 }
 
 void ldSpiralFighterPlayer::givePowerup() {

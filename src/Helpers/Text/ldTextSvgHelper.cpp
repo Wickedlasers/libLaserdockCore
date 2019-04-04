@@ -128,7 +128,7 @@ std::vector<ldSvgLetter> ldTextSvgHelper::resizedSvgLetters(float p_scale, const
     if (hA < 0.0000001) return res;
 
     for (ldSvgLetter &bezierCurves : res) {
-        Vec2 tr1 = Vec2(0, -a_upper_svg.data().dim().bottom_left.y);
+        ldVec2 tr1 = ldVec2(0, -a_upper_svg.data().dim().bottom_left.y);
         bezierCurves.translate(tr1);
         bezierCurves.scale(p_scale/hA);
     }

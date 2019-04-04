@@ -30,7 +30,7 @@ const float ANGULAR_SPEED = M_PIf * 0.500f;
 
 const float ROTATION_SMOOTHNESS = 0.825f;
 
-ldSpiralFighterEnemy::ldSpiralFighterEnemy(Vec2 pos) : ldGameObject() {
+ldSpiralFighterEnemy::ldSpiralFighterEnemy(ldVec2 pos) : ldGameObject() {
     init();
 
     position = pos;
@@ -54,7 +54,7 @@ void ldSpiralFighterEnemy::init() {
     m_type = rand() % 100 < 20 ? 1 : 0;
     m_speed = m_type == 0 ? SPEED : SPEED_DASHER;
 
-    velocity = Vec2(cosf(rotation) * m_speed, sinf(rotation) * m_speed);
+    velocity = ldVec2(cosf(rotation) * m_speed, sinf(rotation) * m_speed);
 }
 
 void ldSpiralFighterEnemy::updateGameObject(float deltaTime) {
@@ -65,10 +65,10 @@ void ldSpiralFighterEnemy::updateGameObject(float deltaTime) {
 
     // Make enemy move towards center.
     if (!m_rotating) {
-        Vec2 direction = Vec2(-position.x, -position.y).normalize();
-        velocity = Vec2(direction.x * m_speed, direction.y * m_speed);
+        ldVec2 direction = ldVec2(-position.x, -position.y).normalize();
+        velocity = ldVec2(direction.x * m_speed, direction.y * m_speed);
     } else {
-        velocity = Vec2::zero;
+        velocity = ldVec2::zero;
 
         float angleDisplacement = ANGULAR_SPEED * deltaTime;
 
@@ -78,7 +78,7 @@ void ldSpiralFighterEnemy::updateGameObject(float deltaTime) {
         float currentAngle = position.toRadians();
         float newAngle = currentAngle + angleDisplacement;
 
-        position = Vec2(cosf(newAngle) * distanceToCenter, sinf(newAngle) * distanceToCenter);
+        position = ldVec2(cosf(newAngle) * distanceToCenter, sinf(newAngle) * distanceToCenter);
 
         if (m_rotatedAngle >= M_PI) {
             m_rotating = false;

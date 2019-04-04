@@ -30,8 +30,9 @@ namespace ldColorUtil
 {
     LDCORESHARED_EXPORT int lerpInt(int a, int b, float amt);
     LDCORESHARED_EXPORT float lerpF(float a, float b, float amt);
-    LDCORESHARED_EXPORT uint32_t brgToRgb(int brg);
-    
+    LDCORESHARED_EXPORT uint32_t bgrToRgb(uint32_t brg);
+    LDCORESHARED_EXPORT uint32_t abgrToArgb(uint32_t brg);
+
     LDCORESHARED_EXPORT uint32_t colorForStep(float step, float decay = 0);
     
     LDCORESHARED_EXPORT void rgb2hsv(float& r, float& g, float& b, float& h, float& s, float& v);

@@ -45,8 +45,8 @@ class LDCORESHARED_EXPORT ldAbstractGameVisualizer : public ldVisualizer
 {
     Q_OBJECT
 public:
-    static QList<QList<Vec2> > lineListToVertexShapes(const QList<Vec2> &lineListBricks, float precise = 0.005);
-    static QList<QList<Vec2> > optimizeShapesToLaser(const QList<QList<Vec2> > &linePathParts, int repeat = 1);
+    static QList<QList<ldVec2> > lineListToVertexShapes(const QList<ldVec2> &lineListBricks, float precise = 0.005);
+    static QList<QList<ldVec2> > optimizeShapesToLaser(const QList<QList<ldVec2> > &linePathParts, int repeat = 1);
 
     /** Constructor/destructor */
     explicit ldAbstractGameVisualizer();
@@ -109,10 +109,10 @@ protected:
     virtual void draw() override;
 
     /** Optional game effects, they will be drawn in ldAbstractGameVisualizer::draw */
-    void addExplosion(Vec2 position, int color = 0xff7700, float size = 0.2f);
-    void addFireworks(Vec2 position, int amount = 5);
-    void addSparkle(Vec2 position);
-    void addSmoke (Vec2 position);
+    void addExplosion(ldVec2 position, int color = 0xff7700, float size = 0.2f);
+    void addFireworks(ldVec2 position, int amount = 5);
+    void addSparkle(ldVec2 position);
+    void addSmoke (ldVec2 position);
 
     /** Text label */
     void showMessage(const QString &text, float duration = 0.0f);

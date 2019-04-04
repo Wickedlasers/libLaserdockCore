@@ -107,17 +107,17 @@ bool ld3dBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer)
         const ld3dBezierCurveObject &bezier3dCurves = _bezier3dSequence.data()[objectIndex];
         Steps3dTState st = getStateByIndice(objectIndex, inputCoeff);
         //
-        for (const std::vector<Bezier3dCurve> &bezier3dTab : bezier3dCurves.data())
+        for (const std::vector<ld3dBezierCurve> &bezier3dTab : bezier3dCurves.data())
         {
             renderer->begin(OL_LINESTRIP);
-            for (const Bezier3dCurve &b : bezier3dTab) {
+            for (const ld3dBezierCurve &b : bezier3dTab) {
                 // detect max points
                 int maxPoints = 8;//(int) (100*b.length());
                 if(maxPoints < 3) maxPoints = 3;
                 if(maxPoints > 30) maxPoints = 30;
 
                 // united to laser coord for 2d only
-                point3d piv = b.pivot;
+                ldVec3 piv = b.pivot;
                 if(bezier3dCurves.isUnitedCoordinates()) {
                     piv.toLaserCoord();
                 }
@@ -128,7 +128,7 @@ bool ld3dBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer)
                     // get next point in curve
                     float slope = 1.0f*j/(maxPoints-1);
 
-                    point3d p = b.getPoint(slope);
+                    ldVec3 p = b.getPoint(slope);
 
                     float base_y = p.y - _bezier3dSequence.dim().bottom();
 
@@ -142,7 +142,7 @@ bool ld3dBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer)
 
                     // 3d effect
                     float dist = st.position.distance(piv);
-                    point3d t = st.position - piv;
+                    ldVec3 t = st.position - piv;
                     t.norm();
                     t *= inputCoeff*dist;
                     p += t;
@@ -223,23 +223,23 @@ bool ld3dBezierCurveDrawer::innerDrawTwo(ldRendererOpenlase *renderer, int rotat
     renderer->pushMatrix3();
 
     //
-    Svg3dDim dimSequence = _bezier3dSequence.dim();
-    point3d pointRot;
+    ldRect3 dimSequence = _bezier3dSequence.dim();
+    ldVec3 pointRot;
     pointRot.x = dimSequence.left();
     pointRot.y = dimSequence.top() - _bezier3dSequence.dim().bottom();
 
-    point3d pivo = point3d::X_VECTOR;
+    ldVec3 pivo = ldVec3::X_VECTOR;
 
     switch (rotate_step) {
     case 1:
-        pivo = point3d::Y_VECTOR;
+        pivo = ldVec3::Y_VECTOR;
         pointRot.x = dimSequence.right() * 2.0f - 1.0f;
         break;
     case 2:
         pointRot.y = (dimSequence.bottom())*2.0f - 1.0f;
         break;
     case 3:
-        pivo = point3d::Y_VECTOR;
+        pivo = ldVec3::Y_VECTOR;
         pointRot.y = dimSequence.bottom() - _bezier3dSequence.dim().bottom();
         pointRot.x = dimSequence.left() * 2.0f - 1.0f;
         break;
@@ -252,10 +252,10 @@ bool ld3dBezierCurveDrawer::innerDrawTwo(ldRendererOpenlase *renderer, int rotat
         //
         const ld3dBezierCurveObject &bezier3dCurves = _bezier3dSequence.data()[objectIndex];
         //
-        for (const std::vector<Bezier3dCurve> &bezier3dTab : bezier3dCurves.data())
+        for (const std::vector<ld3dBezierCurve> &bezier3dTab : bezier3dCurves.data())
         {
             renderer->begin(OL_LINESTRIP);
-            for (const Bezier3dCurve &b : bezier3dTab) {
+            for (const ld3dBezierCurve &b : bezier3dTab) {
                 // detect max points
                 int maxPoints = 6; //(int) (100*b.length());
 
@@ -264,7 +264,7 @@ bool ld3dBezierCurveDrawer::innerDrawTwo(ldRendererOpenlase *renderer, int rotat
                     // get next point in curve
                     float slope = 1.0f*j/(maxPoints-1);
 
-                    point3d p = b.getPoint(slope);
+                    ldVec3 p = b.getPoint(slope);
 
                     float base_y = p.y - _bezier3dSequence.dim().bottom();
 
@@ -275,7 +275,7 @@ bool ld3dBezierCurveDrawer::innerDrawTwo(ldRendererOpenlase *renderer, int rotat
 
                     // rotation
                     pointRot.z = p.z;
-                    p = ldMaths::rotate3dAtPoint(p, M_PI_2*inputCoeff, pivo, pointRot);
+                    p = ldVec3::rotate3dAtPoint(p, M_PI_2*inputCoeff, pivo, pointRot);
 
                     // detect which color step should be used depending on current state
                     int colorStep = 0;

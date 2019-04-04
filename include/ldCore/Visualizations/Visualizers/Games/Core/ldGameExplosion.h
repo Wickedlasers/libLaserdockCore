@@ -29,7 +29,7 @@
 class LDCORESHARED_EXPORT ldGameExplosion : public ldGameObject
 {
 public:
-    ldGameExplosion(Vec2 pos, int col, float size);
+    ldGameExplosion(ldVec2 pos, int col, float size);
 
 protected:
     virtual void updateGameObject(float deltaTime) override;

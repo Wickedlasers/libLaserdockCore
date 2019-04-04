@@ -18,22 +18,18 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#ifndef ldGameSmoke_H
-#define ldGameSmoke_H
+#ifndef LDANIMATEDANGLE_H
+#define LDANIMATEDANGLE_H
 
-#include <ldCore/Render/ldRendererOpenlase.h>
-#include "ldCore/Helpers/Maths/ldMaths.h"
+#include <ldCore/ldCore_global.h>
 
-#include "ldCore/Visualizations/Visualizers/Games/Core/ldGameObject.h"
-
-class LDCORESHARED_EXPORT ldGameSmoke : public ldGameObject
-{
-public:
-    ldGameSmoke(ldVec2 pos);
-
-protected:
-    virtual void updateGameObject(float deltaTime) override;
-    virtual void drawGameObject(ldRendererOpenlase* p_renderer) override;
+struct LDCORESHARED_EXPORT ldAnimatedAngle {
+    float value;
+    float decay;
+    float sign;
 };
 
-#endif // ldGameSmoke_H
+
+#endif // LDANIMATEDANGLE_H
+
+

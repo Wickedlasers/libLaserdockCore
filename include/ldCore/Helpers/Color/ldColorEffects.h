@@ -33,7 +33,7 @@ public:
 
     void setBaseColorDecay(int baseColorDecay);
 
-    virtual uint32_t getColor(const Vec2& p_point, const SvgDim &p_dim) = 0;
+    virtual uint32_t getColor(const ldVec2& p_point, const ldRect &p_dim) = 0;
     virtual void updateColor();
 
 protected:
@@ -54,7 +54,7 @@ protected:
 
 class LDCORESHARED_EXPORT ldColorEffectOne : public ldAbstractStepColorEffect {
 public:
-    virtual uint32_t getColor(const Vec2& p_point, const SvgDim &p_dim) override;
+    virtual uint32_t getColor(const ldVec2& p_point, const ldRect &p_dim) override;
 
 private:
 
@@ -62,14 +62,14 @@ private:
 class LDCORESHARED_EXPORT ldColorEffectTwo : public ldAbstractStepColorEffect {
 public:
 
-    virtual uint32_t getColor(const Vec2& p_point, const SvgDim &p_dim) override;
+    virtual uint32_t getColor(const ldVec2& p_point, const ldRect &p_dim) override;
 
 private:
 
 };
 class LDCORESHARED_EXPORT ldColorEffectThree : public ldAbstractColorEffect {
 public:
-    virtual uint32_t getColor(const Vec2& p_point, const SvgDim &p_dim) override;
+    virtual uint32_t getColor(const ldVec2& p_point, const ldRect &p_dim) override;
 
 private:
 

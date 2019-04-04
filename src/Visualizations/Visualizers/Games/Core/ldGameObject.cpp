@@ -55,9 +55,9 @@ void ldGameObject::init() {
     useGravity = false;
     gravityScale = 1.0f;
 
-    position = Vec2::zero;
-    velocity = Vec2::zero;
-    acceleration = Vec2::zero;
+    position = ldVec2::zero;
+    velocity = ldVec2::zero;
+    acceleration = ldVec2::zero;
     rotation = 0;
 }
 
@@ -118,7 +118,7 @@ bool ldGameObject::overlaps(ldGameObject other) {
     return false;
 }
 
-bool ldGameObject::overlaps(Vec2 otherPosition) {
+bool ldGameObject::overlaps(ldVec2 otherPosition) {
     if (position.x < otherPosition.x &&
             position.x + size.x > otherPosition.x &&
             position.y + COLLISION_TOLERANCE < otherPosition.y &&
@@ -132,9 +132,9 @@ bool ldGameObject::overlaps(Vec2 otherPosition) {
 void ldGameObject::collide(ldGameObject other) {
     if (!overlaps(other)) return;
 
-    Vec2 currentPosition = position;
-    Vec2 previousPosition = position - velocity;
-    Vec2 movementDirection = (position - previousPosition).normalize();
+    ldVec2 currentPosition = position;
+    ldVec2 previousPosition = position - velocity;
+    ldVec2 movementDirection = (position - previousPosition).normalize();
     float distanceTravelled = (position - previousPosition).magnitude();
 
     int steps = COLLISION_ITERATIONS;
@@ -142,7 +142,7 @@ void ldGameObject::collide(ldGameObject other) {
     for (int i = 0; i < steps; i++) {
         float currentStep = (float) i / (steps - 1);
 
-        Vec2 checkPosition = previousPosition + Vec2(movementDirection.x * distanceTravelled * currentStep, movementDirection.y * distanceTravelled * currentStep);
+        ldVec2 checkPosition = previousPosition + ldVec2(movementDirection.x * distanceTravelled * currentStep, movementDirection.y * distanceTravelled * currentStep);
 
         // Create a dummy GameObject to process collision.
         ldGameObject checker;
@@ -222,8 +222,8 @@ int ldGameObject::getId() const {
     return m_id;
 }
 
-Vec2 ldGameObject::center() {
-    return Vec2(position.x + size.x * 0.5f, position.y + size.y * 0.5f);
+ldVec2 ldGameObject::center() {
+    return ldVec2(position.x + size.x * 0.5f, position.y + size.y * 0.5f);
 }
 
 void ldGameObject::updateGameObject(float /*deltaTime*/) {}
@@ -232,7 +232,7 @@ void ldGameObject::drawGameObject(ldRendererOpenlase* /*p_renderer*/) {}
 /*
  * Draw utils
  */
-void ldGameObject::drawVertexRainbow(ldRendererOpenlase* p_renderer, QList<Vec2> vertices, QList<int> colors, int segmentsPerLine, int repeat) {
+void ldGameObject::drawVertexRainbow(ldRendererOpenlase* p_renderer, QList<ldVec2> vertices, QList<int> colors, int segmentsPerLine, int repeat) {
     // Remember to call p_renderer->begin(OL_LINESTRIP);
 
     int segmentsAmount = segmentsPerLine * (vertices.length() - 1);
@@ -242,8 +242,8 @@ void ldGameObject::drawVertexRainbow(ldRendererOpenlase* p_renderer, QList<Vec2>
             float step = (float) j / (segmentsPerLine - 1);
             float colorStep = (float) (j + ((i - 1) * segmentsPerLine)) / segmentsAmount;
 
-            Vec2 target = vertices[i];
-            Vec2 origin = vertices[i - 1];
+            ldVec2 target = vertices[i];
+            ldVec2 origin = vertices[i - 1];
 
             int startColorIndex = fmin(floorf(colorStep * colors.length()), colors.length() - 2);
 

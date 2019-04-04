@@ -40,16 +40,17 @@ class LDCORESHARED_EXPORT ldBezierCurveObject
 public:
     static const ldBezierCurveObject stub;
 
-    explicit ldBezierCurveObject(const svgBezierCurves &curves = svgBezierCurves(), bool isUnitedCoordinates = false);
+    explicit ldBezierCurveObject(const ldBezierPaths &curves = ldBezierPaths(), bool isUnitedCoordinates = false);
     ~ldBezierCurveObject();
 
     bool isEmpty() const;
 
-    void add(const svgBezierCurves &curves);
+    void add(const ldBezierPath &path);
+    void add(const ldBezierPaths &paths);
     void clear();
 
     /** Get internal curve data */
-    const svgBezierCurves &data() const;
+    const ldBezierPaths &data() const;
 
     /* Convert to united or laser coordinates */
     void setUnitedCoordinates(bool isUnitedCoordinates);
@@ -58,10 +59,11 @@ public:
     bool isValidForLaserOutput() const;
 
     /** Get dimension */
-    const SvgDim &dim() const;
+    const ldRect &dim() const;
+    int totalPoints() const;
 
     /** Translate each curve */
-    void translate(const Vec2 &vec2);
+    void translate(const ldVec2 &vec2);
     void rotate(float rotateValue);
     void scale(float scaleValue);
     void colorize(uint32_t color);
@@ -70,18 +72,18 @@ public:
     ld3dBezierCurveObject to3d() const;
 
     void moveToCenter();
-    void moveTo(const Vec2 &pos);
+    void moveTo(const ldVec2 &pos);
 
 private:
     void resetCache();
 
-    svgBezierCurves m_curves;
+    ldBezierPaths m_paths;
 
     bool m_isUnitedCoordinates = false;
 
     // cached data
     // access it only with dim()
-    mutable SvgDim m_cachedDim;
+    mutable ldRect m_cachedDim;
 };
 
 #endif // LDBEZIERCURVEOBJECT_H

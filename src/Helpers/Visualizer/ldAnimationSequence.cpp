@@ -36,12 +36,12 @@ ldAnimationSequenceBezier::ldAnimationSequenceBezier() {
 }
 
 
-const svgBezierCurvesSequence &ldAnimationSequenceBezier::frames() const
+const ldBezierPathsSequence &ldAnimationSequenceBezier::frames() const
 {
     return m_frames;
 }
 
-void ldAnimationSequenceBezier::setFrames(const svgBezierCurvesSequence &frames)
+void ldAnimationSequenceBezier::setFrames(const ldBezierPathsSequence &frames)
 {
     m_frames = frames;
 }
@@ -80,11 +80,12 @@ void ldAnimationSequenceBezier::drawFrameBezier3(ldRendererOpenlase* r, int inde
 
 
     ldRendererOpenlase* renderer = r;
-    svgBezierCurves dataVect = m_frames[index];
+    ldBezierPaths dataVect = m_frames[index];
     {
         //
-        for (const std::vector<ldBezierCurve> &bezierTab : dataVect)
+        for (const ldBezierPath &bezierPath : dataVect)
         {
+            const std::vector<ldBezierCurve> &curves = bezierPath.data();
 //            if (bezierTab.size() < 2) continue;
             //uint32_t color = ldColorUtil::colorHSV(0, 0, 1);
             uint32_t c = color;
@@ -92,10 +93,10 @@ void ldAnimationSequenceBezier::drawFrameBezier3(ldRendererOpenlase* r, int inde
             float f = 0;
 
             renderer->begin(OL_BEZIERSTRIP);
-            for (uint i = 0; i<bezierTab.size(); i++)
+            for (uint i = 0; i<curves.size(); i++)
             {
-                const ldBezierCurve &b = bezierTab[i];
-                f = (float)i / (bezierTab.size());
+                const ldBezierCurve &b = curves[i];
+                f = (float)i / (curves.size());
                 c = (f >= _fstart && f <= _fend) ? (_c1) : (_c2);
                 s = (f >= _fstart && f <= _fend) ? (_shader1) : (_shader2);
 
@@ -103,8 +104,8 @@ void ldAnimationSequenceBezier::drawFrameBezier3(ldRendererOpenlase* r, int inde
                 vert3(renderer, s, b.control1().x, b.control1().y, c);
                 vert3(renderer, s, b.control2().x, b.control2().y, c);
             }
-            if(!bezierTab.empty()) {
-                const ldBezierCurve &b = bezierTab[0];
+            if(!curves.empty()) {
+                const ldBezierCurve &b = curves[0];
                 vert3(renderer, s, b.start().x, b.start().y, c);
             }
             renderer->end();
@@ -118,10 +119,10 @@ void ldAnimationSequenceBezier::drawFrameBezier3(ldRendererOpenlase* r, int inde
 void ldAnimationSequenceBezier::drawFrameLine4(ldRendererOpenlase* r, int index) {
 
     ldRendererOpenlase* renderer = r;
-    const svgBezierCurves &dataVect = m_frames[index];
+    const ldBezierPaths &dataVect = m_frames[index];
     {
         //
-        for (const std::vector<ldBezierCurve> &bezierTab : dataVect)
+        for (const ldBezierPath &bezierPath : dataVect)
         {
 //            float alt = 0.0;
             uint32_t c = color;
@@ -129,10 +130,10 @@ void ldAnimationSequenceBezier::drawFrameLine4(ldRendererOpenlase* r, int index)
             float f = 0; float ff = 0;
 
             renderer->begin(OL_LINESTRIP);
-            for (uint j = 0; j < bezierTab.size(); j++)
+            for (uint j = 0; j < bezierPath.data().size(); j++)
             {
 
-                const ldBezierCurve &b = bezierTab[j];
+                const ldBezierCurve &b = bezierPath.data()[j];
                 //qDebug() << " bezier " << i << " length " << b.length();
                 int maxPointsLocal = 10;
                 float test = 10.0*b.length();
@@ -144,12 +145,12 @@ void ldAnimationSequenceBezier::drawFrameLine4(ldRendererOpenlase* r, int index)
                 for (int i = 0; i < maxPointsLocal; i++)
                 {
                     ff = (float)i / (maxPointsLocal - 1);
-                    f = (j + ff) / (bezierTab.size());
+                    f = (j + ff) / (bezierPath.data().size());
                     c = (f >= _fstart && f <= _fend) ? (_c1) : (_c2);
                     s = (f >= _fstart && f <= _fend) ? (_shader1) : (_shader2);
 
                     float slope = 1.0*i / (maxPointsLocal - 1);
-                    Vec2 p = b.getPoint(slope);
+                    ldVec2 p = b.getPoint(slope);
 
                     //uint32_t color = ldColorUtil::colorHSV(0, 0, 1);
                     //renderer->vertex(x, y, c);
@@ -167,7 +168,7 @@ void ldAnimationSequenceBezier::drawFrameLine4(ldRendererOpenlase* r, int index)
 void ldAnimationSequenceBezier::drawFrameLights5(ldRendererOpenlase* r, int index) {
 
     ldRendererOpenlase* renderer = r;
-    const svgBezierCurves &dataVect = m_frames[index];
+    const ldBezierPaths &dataVect = m_frames[index];
     {
         //
         int cc = 0;
@@ -177,7 +178,7 @@ void ldAnimationSequenceBezier::drawFrameLights5(ldRendererOpenlase* r, int inde
         //            cc = (1 - ldCore::instance()->musicManager()->tempoACSlower->phaseReactive) * ccc * ccccc;
         int bc = (int)((1 - ldCore::instance()->musicManager()->tempoTrackerSlow->output()) * ccc * ccccc);
 
-        for (const std::vector<ldBezierCurve> &bezierTab : dataVect)
+        for (const ldBezierPath &bezierPath : dataVect)
         {
             //            float alt = 0.0;
             uint32_t c = color;
@@ -190,10 +191,10 @@ void ldAnimationSequenceBezier::drawFrameLights5(ldRendererOpenlase* r, int inde
 
 
             renderer->begin(OL_LINESTRIP);
-            for (uint j = 0; j < bezierTab.size(); j++)
+            for (uint j = 0; j < bezierPath.data().size(); j++)
             {
 
-                const ldBezierCurve &b = bezierTab[j];
+                const ldBezierCurve &b = bezierPath.data()[j];
                 //qDebug() << " bezier " << i << " length " << b.length();
                 int maxPointsLocal = 10;
                 float test = 10.0*b.length();
@@ -206,12 +207,12 @@ void ldAnimationSequenceBezier::drawFrameLights5(ldRendererOpenlase* r, int inde
                 for (int i = 0; i < maxPointsLocal; i++)
                 {
                     ff = (float)i / (maxPointsLocal - 1);
-                    f = (j + ff) / (bezierTab.size());
+                    f = (j + ff) / (bezierPath.data().size());
                     c = (f >= _fstart && f <= _fend) ? (_c1) : (_c2);
 //                    s = (f >= _fstart && f <= _fend) ? (_shader1) : (_shader2);
 
                     float slope = 1.0*i / (maxPointsLocal - 1);
-                    Vec2 p =  b.getPoint(slope);
+                    ldVec2 p =  b.getPoint(slope);
 
                     //uint32_t color = ldColorUtil::colorHSV(0, 0, 1);
                     //renderer->vertex(x, y, c);
@@ -308,10 +309,10 @@ void ldAnimationSequenceBezier::load(const QString &filePath) {
                 float c1y = in.readLine().toFloat();
                 float c2x = in.readLine().toFloat();
                 float c2y = in.readLine().toFloat();
-                m_frames[i][j][k].setStart(Vec2(sx, sy));
-                m_frames[i][j][k].setEnd(Vec2(ex, ey));
-                m_frames[i][j][k].setControl1(Vec2(c1x, c1y));
-                m_frames[i][j][k].setControl2(Vec2(c2x, c2y));
+                m_frames[i][j][k].setStart(ldVec2(sx, sy));
+                m_frames[i][j][k].setEnd(ldVec2(ex, ey));
+                m_frames[i][j][k].setControl1(ldVec2(c1x, c1y));
+                m_frames[i][j][k].setControl2(ldVec2(c2x, c2y));
             }
         }
     }
@@ -386,10 +387,10 @@ void ldAnimationSequenceBezier::save(const QString &filePath) {
 #include "qdatastream.h"
 
 struct BezierCurve2 {
-    Vec2 start;
-    Vec2 end;
-    Vec2 control1;
-    Vec2 control2;
+    ldVec2 start;
+    ldVec2 end;
+    ldVec2 control1;
+    ldVec2 control2;
 };
 
 bool ldAnimationSequenceBezier::save2(const QString &filePath) {
@@ -546,10 +547,10 @@ bool ldAnimationSequenceBezier::load2(const QString &filePath) {
                 in >> c2x;
                 in >> c2y;
 
-                m_frames[i][j][k].setStart(Vec2(sx, sy));
-                m_frames[i][j][k].setEnd(Vec2(ex, ey));
-                m_frames[i][j][k].setControl1(Vec2(c1x, c1y));
-                m_frames[i][j][k].setControl2(Vec2(c2x, c2y));
+                m_frames[i][j][k].setStart(ldVec2(sx, sy));
+                m_frames[i][j][k].setEnd(ldVec2(ex, ey));
+                m_frames[i][j][k].setControl1(ldVec2(c1x, c1y));
+                m_frames[i][j][k].setControl2(ldVec2(c2x, c2y));
             }
         }
     }
@@ -593,7 +594,7 @@ void ldAnimationSequenceBezier::save3(const QString &filePath) {
         out << ncurves;// << endl;
         for (int j = 0; j < ncurves; j++) {
             int npoints = m_frames[i][j].size();
-            out.writeRawData((char*)m_frames[i][j].data(), sizeof(ldBezierCurve)*npoints);
+            out.writeRawData((char*)m_frames[i][j].data().data(), sizeof(ldBezierCurve)*npoints);
         }
     }
 
@@ -648,7 +649,7 @@ void ldAnimationSequenceBezier::load3(const QString &filePath) {
         for (int j = 0; j < ncurves; j++) {
             int npoints; in >> npoints;
             m_frames[i][j].resize(npoints);
-            in.readRawData((char*)m_frames[i][j].data(), sizeof(ldBezierCurve)*npoints);
+            in.readRawData((char*)m_frames[i][j].data().data(), sizeof(ldBezierCurve)*npoints);
         }
     }
 
@@ -670,10 +671,10 @@ void ldAnimationSequenceBezier::autoscale() {
 
     for (uint index = 0; index < m_frames.size(); index++)
     {
-        svgBezierCurves dataVect = m_frames[index];
+        ldBezierPaths dataVect = m_frames[index];
         for (uint p = 0; p < dataVect.size(); p++)
         {
-            std::vector<ldBezierCurve> bezierTab = dataVect.at(p);
+            std::vector<ldBezierCurve> bezierTab = dataVect.at(p).data();
 //            if (bezierTab.size() < 2) continue;
 //            uint32_t color = ldColorUtil::colorHSV(0, 0, 1);
 
@@ -731,19 +732,19 @@ void ldAnimationSequenceBezier::autoscale() {
 
 
 #define XY2(bc, getter, setter) {\
-    Vec2 tmp = bc.getter(); \
-    tmp *= Vec2(f2x, f2y); \
-    tmp += Vec2(f1x, f1y); \
+    ldVec2 tmp = bc.getter(); \
+    tmp *= ldVec2(f2x, f2y); \
+    tmp += ldVec2(f1x, f1y); \
     bc.setter(tmp); \
     }
 
     for (uint index = 0; index < m_frames.size(); index++)
     {
-        svgBezierCurves dataVect = m_frames[index];
+        ldBezierPaths dataVect = m_frames[index];
         //
         for (uint p = 0; p < dataVect.size(); p++)
         {
-            std::vector<ldBezierCurve> bezierTab = dataVect[p];
+            std::vector<ldBezierCurve> bezierTab = dataVect[p].data();
 //            if (bezierTab.size() < 2) continue;
 //            uint32_t color = ldColorUtil::colorHSV(0, 0, 1);
 
@@ -773,7 +774,7 @@ void ldAnimationSequenceBezier::removeblank() {
     for (uint index = 0; index < m_frames.size(); index++)
     {
         bool remove = true;
-        svgBezierCurves dataVect = m_frames[index];
+        ldBezierPaths dataVect = m_frames[index];
         for (uint p = 0; p < dataVect.size(); p++)
         {
 //            std::vector<ldBezierCurve> bezierTab = dataVect.at(p);
@@ -800,10 +801,10 @@ void ldAnimationSequenceBezier::drawFrameBezier3x(ldRendererOpenlase* r, int ind
     if (index < 0 || (uint) index >= m_frames.size()) return;
 
         ldRendererOpenlase* renderer = r;
-        svgBezierCurves dataVect = m_frames[index];
+        ldBezierPaths dataVect = m_frames[index];
         {
             //
-            for (const std::vector<ldBezierCurve> &bezierTab : dataVect)
+            for (const ldBezierPath &bezierPath : dataVect)
             {
 //                if (bezierTab.size() < 2) continue;
                 //uint32_t color = ldColorUtil::colorHSV(0, 0, 1);
@@ -811,19 +812,19 @@ void ldAnimationSequenceBezier::drawFrameBezier3x(ldRendererOpenlase* r, int ind
                 float f = 0;
 
                 renderer->begin(OL_BEZIERSTRIP);
-                for (uint i = 0; i<bezierTab.size(); i++)
+                for (uint i = 0; i<bezierPath.size(); i++)
                 {
-                    f = (float)i / (bezierTab.size());
+                    f = (float)i / (bezierPath.size());
                     c = (f >= fstart && f <= fend) ? (c1) : (c2);
-                    const ldBezierCurve &b = bezierTab[i];
+                    const ldBezierCurve &b = bezierPath[i];
                     renderer->vertex3(b.start().x, b.start().y, 0, c);
                     renderer->vertex3(b.control1().x, b.control1().y, 0, c);
                     renderer->vertex3(b.control2().x, b.control2().y, 0, c);
                 }
                 f = 1;
                 c = (f >= fstart && f <= fend) ? (c1) : (c2);
-                if(!bezierTab.empty()) {
-                    const ldBezierCurve &b = bezierTab[0];
+                if(!bezierPath.empty()) {
+                    const ldBezierCurve &b = bezierPath[0];
                     renderer->vertex3(b.start().x, b.start().y, 0, c);
                 }
                 renderer->end();
@@ -835,15 +836,15 @@ void ldAnimationSequenceBezier::drawFrameBezier3x(ldRendererOpenlase* r, int ind
 void ldAnimationSequenceBezier::scale(float xs, float ys) {
 
 #define XY3(bc,getter,setter) { \
-    Vec2 tmp = bc.getter(); \
-    tmp *= Vec2(xs, ys); \
+    ldVec2 tmp = bc.getter(); \
+    tmp *= ldVec2(xs, ys); \
     bc.setter(tmp); \
 }
 
-    for (svgBezierCurves &dataVect : m_frames) {
-        for (std::vector<ldBezierCurve> &bezierTab : dataVect) {
+    for (ldBezierPaths &paths : m_frames) {
+        for (ldBezierPath &path : paths) {
 //            if (bezierTab.size() < 2) continue;
-            for (ldBezierCurve &b : bezierTab) {
+            for (ldBezierCurve &b : path.data()) {
                 XY3(b, start, setStart);
                 XY3(b, control1, setControl1);
                 XY3(b, control2, setControl2);
@@ -857,15 +858,15 @@ void ldAnimationSequenceBezier::scale(float xs, float ys) {
 void ldAnimationSequenceBezier::move(float xt, float yt) {
 
 #define XY4(bc,getter,setter) { \
-    Vec2 tmp = bc.getter(); \
-    tmp += Vec2(xt, yt); \
+    ldVec2 tmp = bc.getter(); \
+    tmp += ldVec2(xt, yt); \
     bc.setter(tmp); \
 }
 
-    for (svgBezierCurves &dataVect : m_frames) {
-        for (std::vector<ldBezierCurve> &bezierTab : dataVect) {
+    for (ldBezierPaths &paths : m_frames) {
+        for (ldBezierPath &path : paths) {
 //            if (bezierTab.size() < 2) continue;
-            for (ldBezierCurve &b : bezierTab) {
+            for (ldBezierCurve &b : path.data()) {
                 XY4(b, start, setStart);
                 XY4(b, control1, setControl1);
                 XY4(b, control2, setControl2);

@@ -49,7 +49,7 @@ public:
     const std::vector<ld3dBezierCurveObject> &data() const;
 
     /** Get dimension */
-    Svg3dDim dim() const;
+    ldRect3 dim() const;
 
     int countPoints() const;
 
@@ -59,7 +59,7 @@ private:
     std::vector<ld3dBezierCurveObject> m_curves;
 
     // cached data
-    mutable Svg3dDim m_dim;
+    mutable ldRect3 m_dim;
 };
 
 #endif // LD3DBEZIERCURVEFRAME_H

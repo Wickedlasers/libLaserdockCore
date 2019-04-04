@@ -36,7 +36,7 @@ const ldBezierCurveObject &ldSvgLetter::data() const
     return m_object;
 }
 
-void ldSvgLetter::translate(const Vec2 &v)
+void ldSvgLetter::translate(const ldVec2 &v)
 {
     m_translateVec += v;
 
@@ -58,8 +58,8 @@ void ldSvgLetter::resetObject()
 void ldSvgLetter::updateObject() const
 {
     if(m_originalObject.isEmpty()) {
-        m_originalObject = ldBezierCurveObject(ldSvgReader::loadSvg(m_svgPath, ldSvgReader::Type::Dev, 0.01f), true);
-        m_originalObject.translate(Vec2(-m_originalObject.dim().bottom_left.x, 0));
+        m_originalObject = ldBezierCurveObject(ldSvgReader::loadSvg(m_svgPath, ldSvgReader::Type::Dev, 0.01f).data(), true);
+        m_originalObject.translate(ldVec2(-m_originalObject.dim().bottom_left.x, 0));
     }
 
 

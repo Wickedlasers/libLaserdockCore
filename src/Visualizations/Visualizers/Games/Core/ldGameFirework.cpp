@@ -32,7 +32,7 @@ const float SPEED_MIN = 0.5f;
 const float SPEED_MAX = 1.0f;
 }
 
-ldGameFirework::ldGameFirework(Vec2 p_position, float p_rotation) : ldGameObject() {
+ldGameFirework::ldGameFirework(ldVec2 p_position, float p_rotation) : ldGameObject() {
     init();
 
     position = p_position;
@@ -42,7 +42,7 @@ ldGameFirework::ldGameFirework(Vec2 p_position, float p_rotation) : ldGameObject
     float randomSpeed = SPEED_MIN + (SPEED_MAX - SPEED_MIN) * ((rand() % 100) / 100.0f);
 
     setLifetime(randomLifetime);
-    velocity = Vec2(randomSpeed * cosf(rotation), randomSpeed * sinf(rotation));
+    velocity = ldVec2(randomSpeed * cosf(rotation), randomSpeed * sinf(rotation));
     m_color = ldColorUtil::colorForStep(p_rotation / (2 * M_PI));
 }
 

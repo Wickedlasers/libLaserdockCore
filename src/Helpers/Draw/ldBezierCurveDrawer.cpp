@@ -91,7 +91,7 @@ void ldBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer, const ldBezier
     if(m_colorEffect) m_colorEffect->updateColor();
 
     // calculate dim in united coords for later usage
-    SvgDim dimInUnited = dataVect.dim();
+    ldRect dimInUnited = dataVect.dim();
     if(!dataVect.data().empty() && !dataVect.data()[0].isUnitedCoordinates()) {
         dimInUnited = ldMaths::laserToUnitedCoords(dataVect.dim());
     }
@@ -108,7 +108,7 @@ void ldBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer, const ldBezier
     if(m_colorEffect) m_colorEffect->updateColor();
 
     // calculate dim in united coords for later usage
-    SvgDim dimInUnited = dataVect.dim();
+    ldRect dimInUnited = dataVect.dim();
     if(!dataVect.isUnitedCoordinates()) {
         dimInUnited = ldMaths::laserToUnitedCoords(dataVect.dim());
     }
@@ -120,51 +120,65 @@ std::vector<std::vector<OLPoint> > ldBezierCurveDrawer::getDrawingData(const ldB
 {
     std::vector<std::vector<OLPoint> > data;
 
-    const int MAX_SAFE_POINTS = 1000;
-    int safeDrawing = 0;
-
     for(const ldBezierCurveObject &object : frame.data()) {
-//        qDebug() << "dim" << object.isUnitedCoordinates() << object.dim().isValidLaserDim() << object.dim().bottom_left.x << object.dim().bottom_left.y << object.dim().top_right.x << object.dim().top_right.y;
-        for (const std::vector<ldBezierCurve> &bezierTab : object.data()) {
-            std::vector<OLPoint> curvePoints;
-            for (const ldBezierCurve &b : bezierTab) {
-//                qDebug() << "b" << b.start.x << b.start.y << b.end.x << b.end.y;
-                int bezierLengthPoints = (int) (m_bezierLengthCoeff*b.length());
-                if (bezierLengthPoints<3) bezierLengthPoints = 3;
-                if (bezierLengthPoints>m_maxPoints) bezierLengthPoints = m_maxPoints;
-                // if (_firstFrame)  qDebug()<<(int) (100*b.length())<<"maxPoints"<<maxPoints;
-                for (int j=0; j<bezierLengthPoints; j++)
-                {
-                    //qDebug()<<"safeDrawing"<<safeDrawing;
-                    float slope = 1.0f*j/(bezierLengthPoints-1);
-                    Vec2 p = b.getPoint(slope);
-                    // if (_firstFrame) qDebug()<<"p "<<p.x << "x" <<p.y;
-                    if(object.isUnitedCoordinates()) {
-                        p = ldMaths::unitedToLaserCoords(p);
-                    }
-                    if (safeDrawing <= MAX_SAFE_POINTS && ldMaths::isValidLaserPoint(p)) {
-//                        qDebug() << "p" << p.x << p.y;
-                        curvePoints.push_back(OLPoint{p.x, p.y, 0, b.color()});
-                        safeDrawing++;
-                    }
-                }
-
-            }
-            data.push_back(curvePoints);
-        }
+        std::vector<std::vector<OLPoint> > objData = getDrawingData(object, false);
+        data.insert(std::end(data), std::begin(objData), std::end(objData));
     }
 
+    return makeSafeDrawing(data);
+}
+
+std::vector<std::vector<OLPoint> > ldBezierCurveDrawer::getDrawingData(const ldBezierCurveObject &object, bool isSafe) const
+{
+    std::vector<std::vector<OLPoint> > data;
+
+    for (const ldBezierPath &bezierPath : object.data()) {
+        std::vector<OLPoint> curvePoints;
+        uint32_t color = bezierPath.color();
+
+        for (uint i = 0; i < bezierPath.data().size(); i++) {
+            const ldBezierCurve &b = bezierPath.data()[i];
+//                qDebug() << "b" << b.start.x << b.start.y << b.end.x << b.end.y;
+            int bezierLengthPoints = (int) (m_bezierLengthCoeff*b.length());
+            if (bezierLengthPoints<3) bezierLengthPoints = 3;
+            if (bezierLengthPoints>m_maxPoints) bezierLengthPoints = m_maxPoints;
+            // if (_firstFrame)  qDebug()<<(int) (100*b.length())<<"maxPoints"<<maxPoints;
+            for (int j=0; j<bezierLengthPoints; j++)
+            {
+                //qDebug()<<"safeDrawing"<<safeDrawing;
+                float slope = 1.0f*j/(bezierLengthPoints-1);
+                ldVec2 p = b.getPoint(slope);
+                // if (_firstFrame) qDebug()<<"p "<<p.x << "x" <<p.y;
+                if(object.isUnitedCoordinates()) {
+                    p = ldMaths::unitedToLaserCoords(p);
+                }
+                if (ldMaths::isValidLaserPoint(p)) {
+                    if(bezierPath.gradient().isValid()) {
+                        color = bezierPath.gradient().getColor(p.x, p.y);
+                    }
+//                        qDebug() << "p" << p.x << p.y;
+                    curvePoints.push_back(OLPoint{p.x, p.y, 0, color});
+                }
+            }
+
+        }
+        data.push_back(curvePoints);
+    }
+
+    if(isSafe) {
+        data = makeSafeDrawing(data);
+    }
     return data;
 }
 
-void ldBezierCurveDrawer::draw(ldRendererOpenlase *renderer, const ldBezierCurveObject &dataVect, const SvgDim &dimInUnited)
+
+void ldBezierCurveDrawer::draw(ldRendererOpenlase *renderer, const ldBezierCurveObject &dataVect, const ldRect &dimInUnited)
 {
-    ldBezierCurveFrame frame(std::vector<ldBezierCurveObject>{dataVect});
-    std::vector<std::vector<OLPoint> > drawingData = getDrawingData(frame);
+    std::vector<std::vector<OLPoint> > drawingData = getDrawingData(dataVect);
     for(const std::vector<OLPoint> &pointVector : drawingData) {
         renderer->begin(OL_LINESTRIP);
         for(const OLPoint &p: pointVector) {
-            uint32_t color = m_colorEffect ? m_colorEffect->getColor(Vec2(p.x, p.y), dimInUnited) :  p.color;
+            uint32_t color = m_colorEffect ? m_colorEffect->getColor(ldVec2(p.x, p.y), dimInUnited) :  p.color;
             renderer->vertex(p.x, p.y, color, 1);
         }
         renderer->end();
@@ -209,3 +223,28 @@ void ldBezierCurveDrawer::draw(ldRendererOpenlase *renderer, const ldBezierCurve
 //        renderer->end();
 //    }
 }
+
+std::vector<std::vector<OLPoint> > ldBezierCurveDrawer::makeSafeDrawing(const std::vector<std::vector<OLPoint> > &data) const
+{
+    std::vector<std::vector<OLPoint>> res;
+    const int MAX_SAFE_POINTS = 1000;
+    int safePoints = 0;
+    for(const std::vector<OLPoint> &points : data) {
+        std::vector<OLPoint> resPoints;
+        for(const OLPoint &point : points) {
+            resPoints.push_back(point);
+            safePoints++;
+            if(safePoints > MAX_SAFE_POINTS) {
+                break;
+            }
+        }
+        res.push_back(resPoints);
+
+        if(safePoints > MAX_SAFE_POINTS) {
+            break;
+        }
+    }
+
+    return res;
+}
+

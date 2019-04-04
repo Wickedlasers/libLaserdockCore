@@ -40,8 +40,8 @@ public:
 
     ldAnimationSequenceBezier();
 
-    const svgBezierCurvesSequence &frames() const;
-    void setFrames(const svgBezierCurvesSequence &frames);
+    const ldBezierPathsSequence &frames() const;
+    void setFrames(const ldBezierPathsSequence &frames);
 
     void setRenderAlg(RenderAlg renderAlg);
 
@@ -93,7 +93,7 @@ private:
 
 
     RenderAlg m_renderAlg = RenderAlg::Lines;
-    svgBezierCurvesSequence m_frames;
+    ldBezierPathsSequence m_frames;
 };
 
 

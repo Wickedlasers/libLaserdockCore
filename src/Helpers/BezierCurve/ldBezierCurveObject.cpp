@@ -31,8 +31,8 @@
 
 const ldBezierCurveObject ldBezierCurveObject::stub = ldBezierCurveObject();
 
-ldBezierCurveObject::ldBezierCurveObject(const svgBezierCurves &curves, bool isUnitedCoordinates)
-    : m_curves(curves)
+ldBezierCurveObject::ldBezierCurveObject(const ldBezierPaths &curves, bool isUnitedCoordinates)
+    : m_paths(curves)
     , m_isUnitedCoordinates(isUnitedCoordinates)
 {
 }
@@ -43,48 +43,53 @@ ldBezierCurveObject::~ldBezierCurveObject()
 
 bool ldBezierCurveObject::isEmpty() const
 {
-    return m_curves.empty();
+    return m_paths.empty();
 }
 
 
 void ldBezierCurveObject::clear()
 {
-    m_curves.clear();
+    m_paths.clear();
 
     resetCache();
 }
 
-const svgBezierCurves &ldBezierCurveObject::data() const
+const ldBezierPaths &ldBezierCurveObject::data() const
 {
-    return m_curves;
+    return m_paths;
 }
 
-const SvgDim &ldBezierCurveObject::dim() const
+const ldRect &ldBezierCurveObject::dim() const
 {
     if(m_cachedDim.isNull()) {
-        m_cachedDim = ldSvgReader::svgDim(m_curves);
+        m_cachedDim = ldSvgReader::svgDim(m_paths);
     }
 
     return m_cachedDim;
 }
 
-void ldBezierCurveObject::translate(const Vec2 &vec2)
+int ldBezierCurveObject::totalPoints() const
 {
-    ldMaths::translateSvgBezierCurves(m_curves, vec2);
+    return ldSvgReader::totalPoints(m_paths);
+}
+
+void ldBezierCurveObject::translate(const ldVec2 &vec2)
+{
+    ldMaths::translateSvgBezierCurves(m_paths, vec2);
 
     resetCache();
 }
 
 void ldBezierCurveObject::rotate(float rotateValue)
 {
-    ldMaths::rotateSvgBezierCurves(m_curves, rotateValue);
+    ldMaths::rotateSvgBezierCurves(m_paths, rotateValue);
 
     resetCache();
 }
 
 void ldBezierCurveObject::scale(float scaleValue)
 {
-    ldMaths::scaleSvgBezierCurves(m_curves, scaleValue);
+    ldMaths::scaleSvgBezierCurves(m_paths, scaleValue);
 
     resetCache();
 }
@@ -92,21 +97,19 @@ void ldBezierCurveObject::scale(float scaleValue)
 
 void ldBezierCurveObject::colorize(uint32_t color)
 {
-    for (std::vector<ldBezierCurve> &curves : m_curves) {
-        for (ldBezierCurve &curve : curves) {
-            curve.setColor(color);
-        }
+    for (ldBezierPath &path : m_paths) {
+        path.setColor(color);
     }
 }
 
 ld3dBezierCurveObject ldBezierCurveObject::to3d() const
 {
-    svgBezier3dCurves threeDCurves = ldMaths::svgBezierTo3dSvgBezierCurves(m_curves);
+    ld3dBezierCurves threeDCurves = ldMaths::svgBezierTo3dSvgBezierCurves(m_paths);
 
     // pivot in center
     // SG: not sure if we need it always, probably we can do it optional via parameter or move to another function
-    for (std::vector<Bezier3dCurve> &threeDCurve : threeDCurves){
-        for (Bezier3dCurve &b3z : threeDCurve){
+    for (std::vector<ld3dBezierCurve> &threeDCurve : threeDCurves){
+        for (ld3dBezierCurve &b3z : threeDCurve){
             b3z.pivot.x = dim().center().x;
             b3z.pivot.y = dim().center().y;
             b3z.pivot.z = 0;
@@ -120,7 +123,7 @@ void ldBezierCurveObject::moveToCenter()
 {
     const float centerCoord = isUnitedCoordinates() ? 1.0f : 0.f;
 
-    Vec2 centerPos;
+    ldVec2 centerPos;
     centerPos.x = (centerCoord - dim().width())/2.f;
     centerPos.y = (centerCoord - dim().height())/2.f;
 
@@ -128,9 +131,9 @@ void ldBezierCurveObject::moveToCenter()
 }
 
 
-void ldBezierCurveObject::moveTo(const Vec2 &pos)
+void ldBezierCurveObject::moveTo(const ldVec2 &pos)
 {
-    Vec2 moveDiff;
+    ldVec2 moveDiff;
     moveDiff.x = pos.x - dim().left();
     moveDiff.y = pos.y - dim().bottom();
 
@@ -180,13 +183,21 @@ bool ldBezierCurveObject::isValidForLaserOutput() const
 
 void ldBezierCurveObject::resetCache()
 {
-    m_cachedDim = SvgDim();
+    m_cachedDim = ldRect();
 }
 
-void ldBezierCurveObject::add(const svgBezierCurves &curves)
+void ldBezierCurveObject::add(const ldBezierPath &path)
 {
-    for(const auto &curve : curves) {
-        m_curves.push_back(curve);
+    m_paths.push_back(path);
+
+    resetCache();
+}
+
+
+void ldBezierCurveObject::add(const ldBezierPaths &paths)
+{
+    for(const ldBezierPath &path : paths) {
+        m_paths.push_back(path);
     }
 
     resetCache();
@@ -201,9 +212,9 @@ void ldBezierCurveObject::setUnitedCoordinates(bool isUnitedCoordinates)
     m_isUnitedCoordinates = isUnitedCoordinates;
 
     if(isUnitedCoordinates) {
-        ldMaths::svgBezierLaserToUnitedCoords(m_curves);
+        ldMaths::svgBezierLaserToUnitedCoords(m_paths);
     } else {
-        ldMaths::svgBezierUnitedToLaserCoords(m_curves);
+        ldMaths::svgBezierUnitedToLaserCoords(m_paths);
     }
     resetCache();
 }

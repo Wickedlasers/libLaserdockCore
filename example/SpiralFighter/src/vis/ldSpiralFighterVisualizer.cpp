@@ -125,29 +125,29 @@ void ldSpiralFighterVisualizer::loadNewLevel() {
         m_enemiesToDestroy = 15;
         m_enemiesPerStream = 2;
 
-        m_spawnPoints = QList<Vec2>();
-        m_spawnPoints.append(Vec2(-0.8f, 0.2f));
-        m_spawnPoints.append(Vec2(0.8f, 0.7f));
-        m_spawnPoints.append(Vec2(-0.2f, -0.8f));
+        m_spawnPoints = QList<ldVec2>();
+        m_spawnPoints.append(ldVec2(-0.8f, 0.2f));
+        m_spawnPoints.append(ldVec2(0.8f, 0.7f));
+        m_spawnPoints.append(ldVec2(-0.2f, -0.8f));
     } else if (m_levelIndex == 1) {
         m_enemiesToDestroy = 25;
         m_enemiesPerStream = 3;
 
-        m_spawnPoints = QList<Vec2>();
-        m_spawnPoints.append(Vec2(0.8f, 0.0f));
-        m_spawnPoints.append(Vec2(0.0f, 0.8f));
-        m_spawnPoints.append(Vec2(-0.8f, 0.0f));
-        m_spawnPoints.append(Vec2(0.0f, -0.8f));
+        m_spawnPoints = QList<ldVec2>();
+        m_spawnPoints.append(ldVec2(0.8f, 0.0f));
+        m_spawnPoints.append(ldVec2(0.0f, 0.8f));
+        m_spawnPoints.append(ldVec2(-0.8f, 0.0f));
+        m_spawnPoints.append(ldVec2(0.0f, -0.8f));
     } else if (m_levelIndex == 2) {
         m_enemiesToDestroy = 40;
         m_enemiesPerStream = 4;
 
-        m_spawnPoints = QList<Vec2>();
-        m_spawnPoints.append(Vec2(-0.8f, 0.2f));
-        m_spawnPoints.append(Vec2(0.0f, 0.8f));
-        m_spawnPoints.append(Vec2(0.8f, 0.2f));
-        m_spawnPoints.append(Vec2(0.2f, -0.7f));
-        m_spawnPoints.append(Vec2(-0.2f, -0.7f));
+        m_spawnPoints = QList<ldVec2>();
+        m_spawnPoints.append(ldVec2(-0.8f, 0.2f));
+        m_spawnPoints.append(ldVec2(0.0f, 0.8f));
+        m_spawnPoints.append(ldVec2(0.8f, 0.2f));
+        m_spawnPoints.append(ldVec2(0.2f, -0.7f));
+        m_spawnPoints.append(ldVec2(-0.2f, -0.7f));
     }
 
     // Difficulty increaser;
@@ -156,17 +156,17 @@ void ldSpiralFighterVisualizer::loadNewLevel() {
 
     // Save a copy of the current level so
     // we know where each point started.
-    m_spawnPointOrigins = QList<Vec2>();
-    for (Vec2 &levelPoint : m_spawnPoints) {
-        m_spawnPointOrigins.append(Vec2(levelPoint.x, levelPoint.y));
+    m_spawnPointOrigins = QList<ldVec2>();
+    for (ldVec2 &levelPoint : m_spawnPoints) {
+        m_spawnPointOrigins.append(ldVec2(levelPoint.x, levelPoint.y));
     }
 }
 
 void ldSpiralFighterVisualizer::onPlayerFire(ldSpiralFighterPlayer *player) {
     m_soundEffects.play(SFX::FIRE);
 
-    ldSpiralFighterMissile missile = ldSpiralFighterMissile(Vec2(cosf(player->rotation), sinf(player->rotation)).normalize());
-    missile.position = Vec2(player->getMissileSpawnPosition().x - missile.size.x * 0.5f, player->getMissileSpawnPosition().y - missile.size.y * 0.5f);
+    ldSpiralFighterMissile missile = ldSpiralFighterMissile(ldVec2(cosf(player->rotation), sinf(player->rotation)).normalize());
+    missile.position = ldVec2(player->getMissileSpawnPosition().x - missile.size.x * 0.5f, player->getMissileSpawnPosition().y - missile.size.y * 0.5f);
     m_missiles.append(missile);
 }
 
@@ -235,7 +235,7 @@ void ldSpiralFighterVisualizer::updateGame(float deltaTime) {
         float currentAngle = enemy.position.toRadians();
         float newAngle = currentAngle + levelAngularSpeed * m_levelRotationDirection * deltaTime;
 
-        enemy.position = Vec2(cosf(newAngle) * distanceToCenter, sinf(newAngle) * distanceToCenter);
+        enemy.position = ldVec2(cosf(newAngle) * distanceToCenter, sinf(newAngle) * distanceToCenter);
     }
 
     /*
@@ -300,7 +300,7 @@ void ldSpiralFighterVisualizer::updateGame(float deltaTime) {
         float currentAngle = m_spawnPoints[i].toRadians();
         float newAngle = currentAngle + levelAngularSpeed * m_levelRotationDirection * deltaTime;
 
-        m_spawnPoints[i] = Vec2(cosf(newAngle) * distanceToCenter, sinf(newAngle) * distanceToCenter);
+        m_spawnPoints[i] = ldVec2(cosf(newAngle) * distanceToCenter, sinf(newAngle) * distanceToCenter);
     }
 
     // Shrink the game.
@@ -310,12 +310,12 @@ void ldSpiralFighterVisualizer::updateGame(float deltaTime) {
 
         int randomLevelIndex = rand() % m_spawnPoints.length();
 
-        Vec2 randomLevelPoint = m_spawnPoints[randomLevelIndex];
-        Vec2 normalized = randomLevelPoint.normalize();
+        ldVec2 randomLevelPoint = m_spawnPoints[randomLevelIndex];
+        ldVec2 normalized = randomLevelPoint.normalize();
 
         float newDistance = fmax(randomLevelPoint.magnitude() - SHRINK_AMOUNT, 0.0f);
 
-        randomLevelPoint = Vec2(normalized.x * newDistance, normalized.y * newDistance);
+        randomLevelPoint = ldVec2(normalized.x * newDistance, normalized.y * newDistance);
         m_spawnPoints[randomLevelIndex] = randomLevelPoint;
     }
 
@@ -376,8 +376,8 @@ void ldSpiralFighterVisualizer::updateGame(float deltaTime) {
     for (int i = 0; i < m_missiles.length(); i++) {
         ldSpiralFighterMissile &missile = m_missiles[i];
         for (int j = 0; j < m_spawnPoints.length(); j++) {
-            Vec2 &point = m_spawnPoints[j];
-            Vec2 origin = m_spawnPointOrigins[j];
+            ldVec2 &point = m_spawnPoints[j];
+            ldVec2 origin = m_spawnPointOrigins[j];
 
             if (missile.overlaps(point)) {
                 if (origin.magnitude() > point.magnitude() && (point - origin).magnitude() > 0.01f) {
@@ -393,9 +393,9 @@ void ldSpiralFighterVisualizer::updateGame(float deltaTime) {
                     m_missiles.erase(m_missiles.begin() + i);
                     i--;
 
-                    Vec2 normalized = point.normalize();
+                    ldVec2 normalized = point.normalize();
                     float newDistance = fmin(point.magnitude() + SHRINK_AMOUNT, origin.magnitude());
-                    Vec2 newPosition = Vec2(normalized.x * newDistance, normalized.y * newDistance);
+                    ldVec2 newPosition = ldVec2(normalized.x * newDistance, normalized.y * newDistance);
 
                     m_spawnPoints[j] = newPosition;
                 }
@@ -435,7 +435,7 @@ void ldSpiralFighterVisualizer::drawGame(ldRendererOpenlase *p_renderer) {
     float colorStep = 0.1f;
 
     p_renderer->begin(OL_LINESTRIP);
-    QList<Vec2> v = m_spawnPoints;
+    QList<ldVec2> v = m_spawnPoints;
     v.append(m_spawnPoints[0]); // Close the level
     QList<int> c = QList<int>();
     c.append(ldColorUtil::colorForStep(baseColorStep));
@@ -561,7 +561,7 @@ void ldSpiralFighterVisualizer::setStateText(const QString &text) {
     m_stateLabel->setText(text);
 
     float labelWidth = m_stateLabel->getWidth();
-    m_stateLabel->setPosition(Vec2(0.5f - (labelWidth/2.0f), 0.6f));
+    m_stateLabel->setPosition(ldVec2(0.5f - (labelWidth/2.0f), 0.6f));
 }
 
 // Updates the score label.
@@ -571,7 +571,7 @@ void ldSpiralFighterVisualizer::updateScoreLabel() {
 
     float labelWidth = m_scoreLabel->getWidth();
     float labelHeight = m_scoreLabel->getHeight();
-    m_scoreLabel->setPosition(Vec2(0.5f - (labelWidth/2.0f), 0.0f + (labelHeight / 2.0f)));
+    m_scoreLabel->setPosition(ldVec2(0.5f - (labelWidth/2.0f), 0.0f + (labelHeight / 2.0f)));
 }
 
 /*

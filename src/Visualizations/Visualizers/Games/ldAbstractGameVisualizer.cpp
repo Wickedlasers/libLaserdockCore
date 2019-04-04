@@ -40,12 +40,12 @@ const int ldAbstractGameVisualizer::GAME_DEFAULT_RESET_TIME = 1;
 #endif
 
 // convert line list of vertex bricks to plain closed path
-QList<QList<Vec2> > ldAbstractGameVisualizer::lineListToVertexShapes(const QList<Vec2> &lineListBricksInput, float precise)
+QList<QList<ldVec2> > ldAbstractGameVisualizer::lineListToVertexShapes(const QList<ldVec2> &lineListBricksInput, float precise)
 {
-    QList<Vec2> lineListBricks = lineListBricksInput;
+    QList<ldVec2> lineListBricks = lineListBricksInput;
     int i = 0;
-    QList<QList<Vec2>> shapes;
-    QList<Vec2> currentShape;
+    QList<QList<ldVec2>> shapes;
+    QList<ldVec2> currentShape;
 
     // iterate over 'bricks' and find plain vertex path
     while(!lineListBricks.empty()) {
@@ -60,7 +60,7 @@ QList<QList<Vec2> > ldAbstractGameVisualizer::lineListToVertexShapes(const QList
             continue;
         }
 
-        const Vec2 &brickStart = lineListBricks[i];
+        const ldVec2 &brickStart = lineListBricks[i];
 
         // add first 2 points in a raw
         if(currentShape.length() < 2) {
@@ -72,8 +72,8 @@ QList<QList<Vec2> > ldAbstractGameVisualizer::lineListToVertexShapes(const QList
             i = 0;
             continue;
         } else {
-            const Vec2 &lastPoint =  currentShape[currentShape.length() - 1];
-            const Vec2 &brickEnd = lineListBricks[i+1];
+            const ldVec2 &lastPoint =  currentShape[currentShape.length() - 1];
+            const ldVec2 &brickEnd = lineListBricks[i+1];
 
             // if we find next 'brick' remember it's path and go to next iteration
             bool isEqualsBrickStart = cmpf(lastPoint.x, brickStart.x, precise) && cmpf(lastPoint.y, brickStart.y, precise);
@@ -109,19 +109,19 @@ QList<QList<Vec2> > ldAbstractGameVisualizer::lineListToVertexShapes(const QList
     return shapes;
 }
 
-QList<QList<Vec2> > ldAbstractGameVisualizer::optimizeShapesToLaser(const QList<QList<Vec2>> &linePathParts, int repeat)
+QList<QList<ldVec2> > ldAbstractGameVisualizer::optimizeShapesToLaser(const QList<QList<ldVec2>> &linePathParts, int repeat)
 {
-    QList<QList<Vec2>> laserLinePathParts;
+    QList<QList<ldVec2>> laserLinePathParts;
 
     //  current path direction - x or y
     bool isCurrentYAxis = false;
 
     int repeatFirstLast = (repeat+1) / 2;
 
-    for(const QList<Vec2> &line : linePathParts) {
-        QList<Vec2> laserLinePath;
+    for(const QList<ldVec2> &line : linePathParts) {
+        QList<ldVec2> laserLinePath;
 
-        for(const Vec2 &point : line) {
+        for(const ldVec2 &point : line) {
 
             // add first 2 points in plain order
             if(laserLinePath.size() < 2) {
@@ -141,7 +141,7 @@ QList<QList<Vec2> > ldAbstractGameVisualizer::optimizeShapesToLaser(const QList<
             }
 
             // check direction of new point
-            const Vec2 &lastBrick = laserLinePath.last();
+            const ldVec2 &lastBrick = laserLinePath.last();
             bool isNextYAxis = cmpf(lastBrick.y, point.y);
 
             // if we change direction add extra point to this angle
@@ -326,11 +326,11 @@ void ldAbstractGameVisualizer::draw() {
     }
 }
 
-void ldAbstractGameVisualizer::addExplosion(Vec2 position, int color, float size) {
+void ldAbstractGameVisualizer::addExplosion(ldVec2 position, int color, float size) {
     m_explosions.append(ldGameExplosion(position, color, size));
 }
 
-void ldAbstractGameVisualizer::addFireworks(Vec2 position, int amount) {
+void ldAbstractGameVisualizer::addFireworks(ldVec2 position, int amount) {
     for (int i = 0; i < amount; i++) {
         float step = (float) i / (amount - 1);
         float angle = 2 * M_PI * step;
@@ -341,11 +341,11 @@ void ldAbstractGameVisualizer::addFireworks(Vec2 position, int amount) {
     }
 }
 
-void ldAbstractGameVisualizer::addSparkle(Vec2 position) {
+void ldAbstractGameVisualizer::addSparkle(ldVec2 position) {
     m_sparkles.append(ldGameSparkle(position));
 }
 
-void ldAbstractGameVisualizer::addSmoke(Vec2 position) {
+void ldAbstractGameVisualizer::addSmoke(ldVec2 position) {
     m_smokes.append(ldGameSmoke(position));
 }
 
@@ -357,7 +357,7 @@ void ldAbstractGameVisualizer::addSmoke(Vec2 position) {
 void ldAbstractGameVisualizer::showMessage(const QString &text, float duration) {
     m_messageLabel->setText(text);
     float labelWidth = m_messageLabel->getWidth();
-    m_messageLabel->setPosition(Vec2(0.5f - (labelWidth/2.0f), 0.6f));
+    m_messageLabel->setPosition(ldVec2(0.5f - (labelWidth/2.0f), 0.6f));
 
     m_messageLabelTimer = duration;
 }

@@ -135,7 +135,7 @@ void ldAbstractText::initLabelLettersFrame(const QString &word)
 
         ldBezierCurveObject letterObject = m_allSvgLetters[index].data();
         // move letter to position in word
-        letterObject.translate(Vec2(letterOffsetX, -letterOffsetY));
+        letterObject.translate(ldVec2(letterOffsetX, -letterOffsetY));
 
         _labelLettersFrame.add(letterObject);
         // next letter offset

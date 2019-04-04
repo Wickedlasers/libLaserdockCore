@@ -134,8 +134,8 @@ private:
     // Lists.
     QList<ldSpiralFighterEnemy> m_enemies;
     QList<ldSpiralFighterMissile> m_missiles;
-    QList<Vec2> m_spawnPoints;
-    QList<Vec2> m_spawnPointOrigins;
+    QList<ldVec2> m_spawnPoints;
+    QList<ldVec2> m_spawnPointOrigins;
 
     // Timers.
     float m_bonusTimer;

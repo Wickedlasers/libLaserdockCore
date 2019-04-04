@@ -28,6 +28,7 @@
 #include "ldCore/Data/ldDataDispatcher.h"
 #include "ldCore/Filter/ldFilterManager.h"
 #include "ldCore/Hardware/ldHardwareManager.h"
+#include "ldCore/Helpers/Maths/ldVec2.h"
 #include "ldCore/Helpers/ldLaserController.h"
 #ifdef LD_CORE_ENABLE_QT_QUICK
 #include "ldCore/Simulator/ldSimulatorItem.h"
@@ -112,6 +113,8 @@ void ldCore::initResources()
 
     qRegisterMetaType<ldAbstractTask*>();
     qRegisterMetaType<ldSimulatorEngine*>();
+
+    ldVec2::registerMetaTypes();
 
 #ifdef LD_CORE_ENABLE_QT_QUICK
     ldSimulatorItem::registerMetatypes();

@@ -63,7 +63,7 @@ float ldColorUtil::lerpF(float a, float b, float amt)
 }
 
 // brgToRgb
-uint32_t ldColorUtil::brgToRgb(int brg) {
+uint32_t ldColorUtil::bgrToRgb(uint32_t brg) {
     int b = brg >> 16 & 0xFF;
     int g = brg >> 8 & 0xFF;
     int r = brg & 0xFF;
@@ -75,6 +75,19 @@ uint32_t ldColorUtil::brgToRgb(int brg) {
     r =  (r << 16);
     g =  (g << 8);
     return (r+g+b);
+}
+
+uint32_t ldColorUtil::abgrToArgb(uint32_t abrg)
+{
+    uint32_t a = abrg >> 24 & 0xFF;
+    uint32_t b = abrg >> 16 & 0xFF;
+    uint32_t g = abrg >> 8 & 0xFF;
+    uint32_t r = abrg & 0xFF;
+
+    a =  (a << 24);
+    r =  (r << 16);
+    g =  (g << 8);
+    return (a+r+g+b);
 }
 
 // colorForStep

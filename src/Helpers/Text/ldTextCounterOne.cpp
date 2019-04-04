@@ -42,8 +42,7 @@ ldTextCounterOne::ldTextCounterOne(QString p_logo_path, int p_currentCount)
     , _nextCount(p_currentCount)
 {
     if (p_logo_path != "") {
-        ldBezierCurveObject logoSvg2d = ldBezierCurveObject(ldSvgReader::loadSvg(p_logo_path, ldSvgReader::Type::Maximize, 0.01f),
-                                                            false);
+        ldBezierCurveObject logoSvg2d = ldSvgReader::loadSvg(p_logo_path, ldSvgReader::Type::Maximize, 0.01f);
         logoSvg2d.scale(0.7f);
         _logoSvg = ld3dBezierCurveFrame(logoSvg2d.to3d());
     }
@@ -294,11 +293,11 @@ void ldTextCounterOne::innerDraw(ldRendererOpenlase *p_renderer)
         //
         Steps3dTState state = get3dState(bezierCurveObjectIndex, isLogoAnim, coefInput);
 
-        for (const std::vector<Bezier3dCurve> &bezier3dTab : bezier3dCurves.data())
+        for (const std::vector<ld3dBezierCurve> &bezier3dTab : bezier3dCurves.data())
         {
             p_renderer->begin(OL_LINESTRIP);
 
-            for (const Bezier3dCurve &b : bezier3dTab)
+            for (const ld3dBezierCurve &b : bezier3dTab)
             {
                 //
                 int maxPoints = (int) (300*300*300*ldMaths::bezier3dLength(b)/nbPoints);
@@ -306,7 +305,7 @@ void ldTextCounterOne::innerDraw(ldRendererOpenlase *p_renderer)
                 if (maxPoints>10) maxPoints = 10;
 
                 //
-                point3d piv = b.pivot;
+                ldVec3 piv = b.pivot;
                 if (bezier3dCurves.isUnitedCoordinates()) {
                     piv = piv.toLaserCoord();
                 }
@@ -314,7 +313,7 @@ void ldTextCounterOne::innerDraw(ldRendererOpenlase *p_renderer)
                 for (int j=0; j<maxPoints; j++)
                 {
                     float slope = 1.0f*(j)/(maxPoints-1);
-                    point3d p = b.getPoint(slope);
+                    ldVec3 p = b.getPoint(slope);
                     float base_y = p.y - drawFrame.dim().bottom();
 
                     // unitedToLaserCoords
@@ -359,7 +358,7 @@ void ldTextCounterOne::setMessage(const QString &message)
 {
     _suffixMessage = message;
     _messageTextLabel->setText(_suffixMessage);
-    _messageTextLabel->setPosition(Vec2((1.0f - _messageTextLabel->getWidth()) / 2.f, 0.4f));
+    _messageTextLabel->setPosition(ldVec2((1.0f - _messageTextLabel->getWidth()) / 2.f, 0.4f));
 //    updateString();
 }
 
@@ -406,12 +405,12 @@ void ldTextCounterOne::updateString()
     // recenter
     if(_label3dLetters.data().empty()) {
         labelLetters.moveToCenter();
-        labelLetters.translate(Vec2(0, 0.1f));
+        labelLetters.translate(ldVec2(0, 0.1f));
     } else {
         // align with right side
-        Vec2 oldPos(_label3dLetters.dim().right(), _label3dLetters.dim().bottom());
+        ldVec2 oldPos(_label3dLetters.dim().right(), _label3dLetters.dim().bottom());
         labelLetters.moveTo(oldPos);
-        labelLetters.translate(Vec2(-1.f * labelLetters.dim().width(), 0.f));
+        labelLetters.translate(ldVec2(-1.f * labelLetters.dim().width(), 0.f));
     }
 
     // convert to 3d

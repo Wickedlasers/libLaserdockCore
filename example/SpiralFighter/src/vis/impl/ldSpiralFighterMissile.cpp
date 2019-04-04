@@ -27,13 +27,13 @@ const float HEIGHT = 0.05f;
 const float SPEED = 1.2f;
 const float LIFETIME = 5.0f;
 }
-ldSpiralFighterMissile::ldSpiralFighterMissile(Vec2 direction) : ldGameObject() {
+ldSpiralFighterMissile::ldSpiralFighterMissile(ldVec2 direction) : ldGameObject() {
     init();
 
     size.x = WIDTH;
     size.y = HEIGHT;
 
-    velocity = Vec2(direction.x * SPEED, direction.y * SPEED);
+    velocity = ldVec2(direction.x * SPEED, direction.y * SPEED);
 }
 
 ldSpiralFighterMissile::~ldSpiralFighterMissile() {

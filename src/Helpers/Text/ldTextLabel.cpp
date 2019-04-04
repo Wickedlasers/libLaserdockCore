@@ -30,7 +30,7 @@
 #include "ldCore/Helpers/Maths/ldMaths.h"
 
 // ldTextLabel
-ldTextLabel::ldTextLabel(const QString& p_string, float p_fontSize, const Vec2 &p_position)
+ldTextLabel::ldTextLabel(const QString& p_string, float p_fontSize, const ldVec2 &p_position)
     : ldAbstractText()
     , _color(0xFFFFFF)
     , _drawer(new ldBezierCurveDrawer)
@@ -70,14 +70,14 @@ QString ldTextLabel::getText() const
 }
 
 // setPosition
-void ldTextLabel::setPosition(const Vec2 &p_p)
+void ldTextLabel::setPosition(const ldVec2 &p_p)
 {
     _labelLettersFrame.translate(p_p - _position);
 
     _position = p_p;
 }
 
-Vec2 ldTextLabel::getPosition() const
+ldVec2 ldTextLabel::getPosition() const
 {
     return _position;
 }
@@ -94,7 +94,7 @@ bool ldTextLabel::setIncrementXPositionOrLoop(float delta)
         x = _position.x - delta;
     }
     //
-    setPosition(Vec2(x, _position.y));
+    setPosition(ldVec2(x, _position.y));
     return _position.x != 1.f;
 }
 

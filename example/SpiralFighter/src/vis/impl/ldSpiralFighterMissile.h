@@ -31,7 +31,7 @@ class ldSpiralFighterMissile : public ldGameObject
 {
 public:
     // Constructor and destructor.
-    ldSpiralFighterMissile(Vec2 direction);
+    ldSpiralFighterMissile(ldVec2 direction);
     ~ldSpiralFighterMissile();
 
 protected:

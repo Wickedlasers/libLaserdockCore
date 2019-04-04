@@ -69,6 +69,8 @@ extern "C" {
 	nsvgDelete(image);
 */
 
+#define NANOSVG_IMPLEMENTATION
+
 enum NSVGpaintType {
 	NSVG_PAINT_NONE = 0,
 	NSVG_PAINT_COLOR = 1,

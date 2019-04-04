@@ -50,7 +50,7 @@ void ldClockComplexObject::innerDraw(ldRendererOpenlase* p_renderer, const QTime
     // 1-12
     for (int i=0; i<60; i++) {
 
-        Vec2 p = Vec2();
+        ldVec2 p = ldVec2();
         float l = 0.09f;
         bool doBigOne = true;
         if (i%5!=0) {
@@ -128,8 +128,8 @@ void ldClockComplexObject::innerDraw(ldRendererOpenlase* p_renderer, const QTime
 
     int color = ldColorUtil::colorForStep(sign * second/60.0);
 
-    if(_svgHour.empty()) _svgHour = ldSvgReader::loadSvg(ldCore::instance()->resourceDir() + "/svg/clock/hour.svg", ldSvgReader::Type::Dev);
-    if(_svgMin.empty()) _svgMin = ldSvgReader::loadSvg(ldCore::instance()->resourceDir() + "/svg/clock/min.svg", ldSvgReader::Type::Dev);
+    if(_svgHour.empty()) _svgHour = ldSvgReader::loadSvg(ldCore::instance()->resourceDir() + "/svg/clock/hour.svg", ldSvgReader::Type::Dev).data();
+    if(_svgMin.empty()) _svgMin = ldSvgReader::loadSvg(ldCore::instance()->resourceDir() + "/svg/clock/min.svg", ldSvgReader::Type::Dev).data();
 
     drawDataBezierAsLinestrip(p_renderer, _svgHour, sign*hour * M_2PIf / 12.0, color);
     drawDataBezierAsLinestrip(p_renderer, _svgMin, sign*minute * M_2PIf / 60.0, color);
@@ -138,7 +138,7 @@ void ldClockComplexObject::innerDraw(ldRendererOpenlase* p_renderer, const QTime
     // draw second, just a line
     p_renderer->begin(OL_LINESTRIP);
     int pointsCount = 10;
-    Vec2 p = Vec2();
+    ldVec2 p = ldVec2();
     for (int j = 0; j < pointsCount+1; j++) {
         // advance angle to next point
         float step = 0.9*(1.0*j/pointsCount);
@@ -155,12 +155,12 @@ void ldClockComplexObject::innerDraw(ldRendererOpenlase* p_renderer, const QTime
 }
 
 // drawDataBezierAsLinestrip
-void ldClockComplexObject::drawDataBezierAsLinestrip(ldRendererOpenlase* p_renderer, svgBezierCurves &dataVect, float rotation, int color)
+void ldClockComplexObject::drawDataBezierAsLinestrip(ldRendererOpenlase* p_renderer, ldBezierShapes &shapes, float rotation, int color)
 {
-    for (std::vector<ldBezierCurve> &bezierTab : dataVect)
+    for (ldBezierShape &shape : shapes)
     {
         p_renderer->begin(OL_LINESTRIP);
-        for (const ldBezierCurve &b : bezierTab)
+        for (const ldBezierCurve &b : shape.data())
         {
             int maxPoints = (int) (0.5*b.length());
             //qDebug()<<"maxPoints"<<maxPoints;
@@ -170,7 +170,7 @@ void ldClockComplexObject::drawDataBezierAsLinestrip(ldRendererOpenlase* p_rende
             for (int j=0; j<maxPoints; j++)
             {
                 float slope = 1.0*j/(maxPoints-1);
-                Vec2 p = b.getPoint(slope);
+                ldVec2 p = b.getPoint(slope);
                 p.y = p.y + 100;
                 p.x = 2 * p.x / 100.0  - 1;
                 p.y = 2 * p.y / 100.0  - 1;

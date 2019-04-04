@@ -34,7 +34,7 @@ public:
     ~ldSpiralFighterPlayer();
 
     // Functions
-    Vec2 getMissileSpawnPosition();
+    ldVec2 getMissileSpawnPosition();
 
     void givePowerup();
     bool hasUsedPowerup();

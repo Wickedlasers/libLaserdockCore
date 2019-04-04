@@ -301,25 +301,34 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${SRCDIR}/Helpers/Audio/ldTempoTracker.cpp
         ${INCDIR}/Helpers/Audio/ldTempoTracker.h
         #Helpers/BezierCurve
+        ${SRCDIR}/Helpers/BezierCurve/ld3dBezierCurve.cpp
+        ${INCDIR}/Helpers/BezierCurve/ld3dBezierCurve.h
         ${SRCDIR}/Helpers/BezierCurve/ld3dBezierCurveFrame.cpp
         ${INCDIR}/Helpers/BezierCurve/ld3dBezierCurveFrame.h
         ${SRCDIR}/Helpers/BezierCurve/ld3dBezierCurveObject.cpp
         ${INCDIR}/Helpers/BezierCurve/ld3dBezierCurveObject.h
+        ${SRCDIR}/Helpers/BezierCurve/ldBezierCurve.cpp
+        ${INCDIR}/Helpers/BezierCurve/ldBezierCurve.h
         ${SRCDIR}/Helpers/BezierCurve/ldBezierCurveFrame.cpp
         ${INCDIR}/Helpers/BezierCurve/ldBezierCurveFrame.h
         ${SRCDIR}/Helpers/BezierCurve/ldBezierCurveObject.cpp
         ${INCDIR}/Helpers/BezierCurve/ldBezierCurveObject.h
+        ${SRCDIR}/Helpers/BezierCurve/ldBezierPath.cpp
+        ${INCDIR}/Helpers/BezierCurve/ldBezierPath.h
         #Helpers/Color
         ${SRCDIR}/Helpers/Color/ldColorEffects.cpp
         ${INCDIR}/Helpers/Color/ldColorEffects.h
         ${SRCDIR}/Helpers/Color/ldColorUtil.cpp
         ${INCDIR}/Helpers/Color/ldColorUtil.h
+        ${SRCDIR}/Helpers/Color/ldGradient.cpp
+        ${INCDIR}/Helpers/Color/ldGradient.h
         #Helpers/Draw
         ${SRCDIR}/Helpers/Draw/ld3dBezierCurveDrawer.cpp
         ${INCDIR}/Helpers/Draw/ld3dBezierCurveDrawer.h
         ${SRCDIR}/Helpers/Draw/ldBezierCurveDrawer.cpp
         ${INCDIR}/Helpers/Draw/ldBezierCurveDrawer.h
         #Helpers/Maths
+        ${INCDIR}/Helpers/Maths/ldAnimatedAngle.h
         ${SRCDIR}/Helpers/Maths/ldGeometryUtil.cpp
         ${INCDIR}/Helpers/Maths/ldGeometryUtil.h
         ${SRCDIR}/Helpers/Maths/ldMathSpectrum.cpp
@@ -328,10 +337,18 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/Maths/ldMathStat.h
         ${SRCDIR}/Helpers/Maths/ldMaths.cpp
         ${INCDIR}/Helpers/Maths/ldMaths.h
+        ${SRCDIR}/Helpers/Maths/ldRect.cpp
+        ${INCDIR}/Helpers/Maths/ldRect.h
+        ${SRCDIR}/Helpers/Maths/ldRect3.cpp
+        ${INCDIR}/Helpers/Maths/ldRect3.h
         ${SRCDIR}/Helpers/Maths/ldSimpleVector.cpp
         ${INCDIR}/Helpers/Maths/ldSimpleVector.h
         ${SRCDIR}/Helpers/Maths/ldSmoothUtil.cpp
         ${INCDIR}/Helpers/Maths/ldSmoothUtil.h
+        ${SRCDIR}/Helpers/Maths/ldVec2.cpp
+        ${INCDIR}/Helpers/Maths/ldVec2.h
+        ${SRCDIR}/Helpers/Maths/ldVec3.cpp
+        ${INCDIR}/Helpers/Maths/ldVec3.h
         #Helpers/Sound
         ${SRCDIR}/Helpers/Sound/ldQSound.cpp
         ${INCDIR}/Helpers/Sound/ldQSound.h

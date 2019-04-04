@@ -31,7 +31,7 @@ const float WIDTH_MAX = 0.20f;
 const int COLOR = 0xffff00;
 }
 
-ldGameSparkle::ldGameSparkle(Vec2 pos) : ldGameObject() {
+ldGameSparkle::ldGameSparkle(ldVec2 pos) : ldGameObject() {
     init();
 
     position = pos;

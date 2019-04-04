@@ -18,22 +18,40 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#ifndef ldGameSmoke_H
-#define ldGameSmoke_H
+#ifndef LDRECT3_H
+#define LDRECT3_H
 
-#include <ldCore/Render/ldRendererOpenlase.h>
-#include "ldCore/Helpers/Maths/ldMaths.h"
+#include "ldCore/ldCore_global.h"
 
-#include "ldCore/Visualizations/Visualizers/Games/Core/ldGameObject.h"
+#include "ldVec3.h"
 
-class LDCORESHARED_EXPORT ldGameSmoke : public ldGameObject
-{
-public:
-    ldGameSmoke(ldVec2 pos);
+#ifdef _MSC_VER
+// we want to use words far and near in our code
+#undef far
+#undef near
+#endif
 
-protected:
-    virtual void updateGameObject(float deltaTime) override;
-    virtual void drawGameObject(ldRendererOpenlase* p_renderer) override;
+/// Try to have the same API as QRectF. QRectF is based on qreal primitive but we need to use float
+struct LDCORESHARED_EXPORT ldRect3 {
+    ldVec3 bottom_left;
+    ldVec3 top_right;
+
+    bool isNull() const;
+
+    float width() const;
+    float height() const;
+    float depth() const;
+
+    float bottom() const;
+    float top() const;
+    float left() const;
+    float right() const;
+    float far() const;
+    float near() const;
+
+    ldVec3 center() const;
 };
 
-#endif // ldGameSmoke_H
+#endif // LDRECT3_H
+
+
