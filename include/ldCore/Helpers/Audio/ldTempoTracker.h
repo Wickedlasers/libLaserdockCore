@@ -26,8 +26,8 @@
 //  Copyright (c) 2015 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __ldCore__ldTempoTracker__
-#define __ldCore__ldTempoTracker__
+#ifndef LDTEMPOTRACKER_H
+#define LDTEMPOTRACKER_H
 
 #include <memory>
 
@@ -38,7 +38,7 @@
 class LDCORESHARED_EXPORT ldTempoTracker {
 
 public:
-    explicit ldTempoTracker(char* _algorithm = (char*)"default", bool _fastBeats = true, bool _allowPartialBeats = true, float _newBeatConfidenceCutoff = 0);
+    explicit ldTempoTracker(const QString &algorithm = "default", bool _fastBeats = true, bool _allowPartialBeats = true, float _newBeatConfidenceCutoff = 0);
     virtual ~ldTempoTracker();
 
     float process(ldSoundData* pSoundData);
@@ -50,7 +50,7 @@ public:
 private:
     // options
     // string for algorithm selection "default" for default
-    char* algorithm;
+    QString m_algorithm;
 
     // notes on algorithms:
     //"specflux" is defailt, looks good and is stable
@@ -67,7 +67,7 @@ private:
     // 0-1 value to prefer slow-fast tempos.  not yet implemented.
     //float speed;
 
-    int hop_size;
+    uint_t hop_size;
     int overdriveSkip;
     float oldbeat;
     aubio_tempo_t* m_aubioTempoDetector;
@@ -81,4 +81,4 @@ private:
 
 
 
-#endif /* defined(__ldCore__ldTempoTracker__) */
+#endif // LDTEMPOTRACKER_H

@@ -34,11 +34,9 @@ public:
 	~ldAppakPeaks();
     
     void process(ldSoundData* pSoundData);
-    void processBpm(float bestBpm, float delta);
 
     float lastBpmApproximation() const;
     float output() const;
-    int bpm() const;
 
 private:
     static const int minDiff = 3*AUDIO_OVERDRIVE_FACTOR;
@@ -88,13 +86,6 @@ private:
     float bufferTmp[buffersize];
     float bufferTmpTwo[buffersize];
     
-    float m_milliSecondsCounter = 0;
-    float m_milliSecondsCounter2 = 0;
-    int m_minCurrentMillis = 500;
-    bool m_isRunningBPMCounter = false;
-    int bpmCount = 0;
-
-    int m_bpm = 0;
 };
 
 #endif // LDAPPAKPEAKS_H

@@ -278,6 +278,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/Audio/ldDurationalStatEstimator.h
         ${SRCDIR}/Helpers/Audio/ldHybridReactor.cpp
         ${INCDIR}/Helpers/Audio/ldHybridReactor.h
+        ${SRCDIR}/Helpers/Audio/ldManualBpm.cpp
+        ${INCDIR}/Helpers/Audio/ldManualBpm.h
         ${SRCDIR}/Helpers/Audio/ldMusicFeature.cpp
         ${INCDIR}/Helpers/Audio/ldMusicFeature.h
         ${SRCDIR}/Helpers/Audio/ldNoiseField.cpp
@@ -349,6 +351,9 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/Maths/ldVec2.h
         ${SRCDIR}/Helpers/Maths/ldVec3.cpp
         ${INCDIR}/Helpers/Maths/ldVec3.h
+        #Helpers/SimpleCrypt
+        ${SRCDIR}/Helpers/SimpleCrypt/ldSimpleCrypt.cpp
+        ${INCDIR}/Helpers/SimpleCrypt/ldSimpleCrypt.h
         #Helpers/Sound
         ${SRCDIR}/Helpers/Sound/ldQSound.cpp
         ${INCDIR}/Helpers/Sound/ldQSound.h
@@ -553,6 +558,9 @@ endif()
 # OpenLase
 add_subdirectory(3rdparty/openlase)
 target_link_libraries(${PROJECT_NAME} PUBLIC openlase)
+# simplecrypt
+add_subdirectory(3rdparty/simplecrypt)
+target_link_libraries(${PROJECT_NAME} PUBLIC simplecrypt)
 
 # platform specific libraries
 if(WIN32)

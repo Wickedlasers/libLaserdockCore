@@ -29,9 +29,9 @@ public:
     explicit ldBezierPath(const std::vector<ldBezierCurve> &curves = std::vector<ldBezierCurve>());
 
     void add(const ldBezierCurve &curve);
+    void setCurve(uint index, const ldBezierCurve &curve);
 
     const std::vector<ldBezierCurve> &data() const;
-    std::vector<ldBezierCurve> &data();
 
     uint32_t color() const;
     void setColor(const uint32_t &value);
@@ -41,16 +41,12 @@ public:
 
     void rotate(float value);
     void scale(float value);
+    void scale(float x, float y);
     void translate(const ldVec2 &v);
 
-    // for backward compatibility with std::vector, consider refactoring later
-    void resize(uint size);
-    uint size() const;
+    size_t size() const;
     bool empty() const;
     void clear();
-
-    ldBezierCurve& operator [](int index);
-    const ldBezierCurve& operator [](int index) const;
 
 private:
     std::vector<ldBezierCurve> m_curves;

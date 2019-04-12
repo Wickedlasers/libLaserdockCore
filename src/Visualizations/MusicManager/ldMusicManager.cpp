@@ -24,14 +24,17 @@
 
 #include <ldCore/Sound/ldSoundInterface.h>
 
-#include "ldCore/Helpers/Audio/ldHybridReactor.h"
-#include "ldCore/Helpers/Audio/ldTempoAC.h"
+#include "ldCore/Helpers/Audio/ldAppakBpmSelector.h"
 #include "ldCore/Helpers/Audio/ldAppakPeaks.h"
 #include "ldCore/Helpers/Audio/ldAppakSpectrum.h"
+#include "ldCore/Helpers/Audio/ldTempoAC.h"
+#include "ldCore/Helpers/Audio/ldHybridReactor.h"
+#include "ldCore/Helpers/Audio/ldManualBpm.h"
 
 // initial state
 ldMusicManager::ldMusicManager(QObject* parent)
     : QObject(parent)
+    , m_manualBpm(new ldManualBpm(this))
 {
     qDebug() << __FUNCTION__;
 
@@ -56,8 +59,8 @@ ldMusicManager::ldMusicManager(QObject* parent)
     // style detectors
     musicFeature1.reset(new MusicFeature1());
 
-    tempoTrackerFast.reset(new ldTempoTracker((char*)"default", true, true, 0));
-    tempoTrackerSlow.reset(new ldTempoTracker((char*)"default", false, true, 0));
+    tempoTrackerFast.reset(new ldTempoTracker("default", true, true, 0));
+    tempoTrackerSlow.reset(new ldTempoTracker("default", false, true, 0));
 
     // music reactor
     mrSlowBass.reset(new ldMusicReactor());
@@ -125,7 +128,7 @@ ldMusicManager::ldMusicManager(QObject* parent)
 ldMusicManager::~ldMusicManager() {}
 
 // process all algorithms
-void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float delta) {
+void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float /*delta*/) {
 
     // first measurements
     m_psd = psd;
@@ -154,7 +157,7 @@ void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float delta) {
     spectFrame.update(psd.get());
     spectrogram->addFrame(spectFrame);
     {
-        ldSpectrumFrame t = spectrogram->getNoisedFrame(10, sqrt(2), sqrt(2), 1, 0);
+        ldSpectrumFrame t = spectrogram->getNoisedFrame(10, sqrtf(2.f), sqrtf(2.f), 1, 0);
         spectrogram2->addFrame(t);
     }
     spectFrame = spectrogram->currentFrame();
@@ -199,7 +202,7 @@ void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float delta) {
     onsetBeatWarm = beatWarm->output;
     clampfp(onsetBeatWarm, 0, 1);
 
-    beatFresh->update(spectrogram2->currentFrame().sls, (1/tempoACSlow->freqSmooth)/4);
+    beatFresh->update(spectrogram2->currentFrame().sls, static_cast<int>((1/tempoACSlow->freqSmooth)/4));
     onsetBeatFresh = beatFresh->outputVar / 12;
     onsetBeatFresh = powf(onsetBeatFresh, 1/2.414f);
     clampfp(onsetBeatFresh, 0, 1);
@@ -207,8 +210,8 @@ void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float delta) {
     //if (onsetLargeBeat2 > 0.125) {
         //if (onsetBeatFresh > 0.0125 || onsetBeatWarm > 0.0125) {
             //wfr = onsetBeatFresh / (onsetBeatFresh + onsetBeatWarm);
-            wfr = 0.5 + 2*(onsetLargeBeat2+1)*(onsetBeatFresh - onsetBeatWarm);
-            dsewfr.rho = 0.212/(1+onsetLargeBeat2);
+            wfr = 0.5f + 2.f*(onsetLargeBeat2+1)*(onsetBeatFresh - onsetBeatWarm);
+            dsewfr.rho = 0.212f/(1+onsetLargeBeat2);
             //extern bool ABTEST;
             //if (ABTEST) dsewfr.rho = 0.0202/(1+onsetLargeBeat2);
             dsewfr.add(wfr);
@@ -229,7 +232,6 @@ void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float delta) {
     // appak bpm selector
     appakaBpmSelector->process(tempoTrackerFast->bpm(), appakaBeat->bpm, m_peaks->lastBpmApproximation());
 
-    m_peaks->processBpm(appakaBpmSelector->bestBpm, delta);
     emit updated();
 }
 
@@ -278,6 +280,11 @@ const ldAppakPeaks *ldMusicManager::peaks() const
     return m_peaks.get();
 }
 
+ldManualBpm *ldMusicManager::manualBpm() const
+{
+    return m_manualBpm;
+}
+
 bool ldMusicManager::isSilent() const
 {
     if(isFakeSound)
@@ -312,6 +319,9 @@ bool ldMusicManager::isSilent3() const
 
 float ldMusicManager::bestBpm() const
 {
-    return appakaBpmSelector->bestBpm;
+    if(m_manualBpm->isEnabled())
+        return m_manualBpm->bpm();
+    else
+        return appakaBpmSelector->bestBpm();
 }
 

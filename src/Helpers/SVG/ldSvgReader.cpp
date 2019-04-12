@@ -31,11 +31,12 @@
 #include <QtCore/QFile>
 #include <QtCore/QString>
 
-#include <nanosvg-master/src/nanosvg.h>
-
 #include "ldCore/Helpers/Color/ldColorUtil.h"
+#include <ldCore/Helpers/SimpleCrypt/ldSimpleCrypt.h>
 #include "ldCore/Helpers/SVG/ldSvgDir.h"
 #include "ldCore/Render/ldRendererOpenlase.h"
+
+#include <nanosvg-master/src/nanosvg.h>
 
 namespace {
     const int MAX_NUMBER_POINTS_FOR_SVG_POSITIONING_FIX = 200;
@@ -104,19 +105,11 @@ ldBezierCurveObject ldSvgReader::loadSvg(QString qtfilename, Type type, float sn
 
     //qDebug() << "ldSvgReader::loadSvg " << qtfilename;
 
-    QFile file(qtfilename);
-    if (!file.exists()) {
-        qDebug() << "error::ldSvgReader::loadSvg: file does not exist" << qtfilename;
+    QByteArray blob = readFile(qtfilename);
+    if(blob.isEmpty())
         return res;
-    }
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qDebug() << "error::ldSvgReader::loadSvg: Qt file issue";
-        return res;
-    }
 
-    QByteArray blob = file.readAll();
-
-    std::unique_ptr<NSVGimage, void(*)(NSVGimage*)> nsvgImage(nsvgParseFromData(blob.data(), blob.length(), "px", 96.0f), nsvgDelete);
+    std::unique_ptr<NSVGimage, void(*)(NSVGimage*)> nsvgImage(nsvgParse(blob.data(), "px", 96.0f), nsvgDelete);
     if (nsvgImage == NULL) {
         qDebug() << "nsvgImage == NULL";
         return res;
@@ -678,7 +671,7 @@ ldBezierPaths ldSvgReader::snapCurves(const ldBezierPaths &bezierPaths, float sn
         for (uint c=0; c<path.size(); c++) {
             newOne.setColor(path.color());
             newOne.setGradient(path.gradient());
-            const ldBezierCurve &a = path[c];
+            const ldBezierCurve &a = path.data()[c];
             //qDebug() << "push_back a for c:" << c ;
             if (c == 0 && i>0) { // && i<bezierCurves.size()-1
                 const std::vector<ldBezierCurve> &prevcurve = bezierPaths[i-1].data();
@@ -702,4 +695,34 @@ ldBezierPaths ldSvgReader::snapCurves(const ldBezierPaths &bezierPaths, float sn
     //qDebug() << "snapCurves" ;
     //debugStatCurves(res);
     return res;
+}
+
+QByteArray ldSvgReader::readFile(const QString &filePath)
+{
+    if(filePath.endsWith(ldSimpleCrypt::LDS_EXTENSION)) {
+        if(QFile::exists(filePath)) {
+            return ldSimpleCrypt::instance()->decrypt(filePath);
+        } else {
+            qWarning() << __FUNCTION__ << "file does not exist" << filePath;
+            return QByteArray();
+        }
+    }
+
+    QFile file(filePath);
+    if (!file.exists()) {
+        // check for secured file
+        QString filePathSecured = filePath + ldSimpleCrypt::LDS_EXTENSION;
+        if(QFile::exists(filePathSecured)) {
+            return ldSimpleCrypt::instance()->decrypt(filePathSecured);
+        }
+
+        qWarning() << __FUNCTION__ << "file does not exist" << filePath;
+        return QByteArray();
+    }
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << __FUNCTION__ << "Qt file issue";
+        return QByteArray();
+    }
+
+    return file.readAll();
 }

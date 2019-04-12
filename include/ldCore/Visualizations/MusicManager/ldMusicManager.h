@@ -115,7 +115,6 @@ is required.
 
 #include "ldCore/Helpers/Audio/ldAppakaBeat.h"
 #include "ldCore/Helpers/Audio/ldAppakGate.h"
-#include "ldCore/Helpers/Audio/ldAppakBpmSelector.h"
 #include "ldCore/Helpers/Audio/ldAudioBasic.h"
 #include "ldCore/Helpers/Audio/ldDurationalStatEstimator.h"
 #include "ldCore/Helpers/Audio/ldMusicFeature.h"
@@ -125,6 +124,7 @@ is required.
 #include "ldCore/Helpers/Audio/ldTempoTracker.h"
 #include "ldCore/Helpers/Visualizer/ldVisualizerHelper.h"
 
+class ldAppakBpmSelector;
 class ldAppakPeaks;
 class ldAppakSpectrum;
 class ldSpectrogram;
@@ -132,6 +132,7 @@ class ldHybridAnima;
 class ldHybridFlash;
 class ldHybridAutoColor2;
 class ldHybridColorPalette;
+class ldManualBpm;
 class ldTempoAC;
 
 class LDCORESHARED_EXPORT ldMusicManager : public QObject
@@ -160,6 +161,15 @@ public:
     int realSoundLevel() const;
 
     const ldAppakPeaks* peaks() const;
+    ldManualBpm* manualBpm() const;
+
+    // sound gate
+    bool isSilent() const;
+    bool isSilent2() const;
+    float isSilent2float() const;
+    bool isSilent3() const;
+
+    float bestBpm() const;
 
     std::unique_ptr<ldTempoAC> tempoACSlower;
     std::unique_ptr<ldTempoAC> tempoACSlow;
@@ -185,11 +195,6 @@ public:
     ldSpectrumFrame spectFrame;
     std::unique_ptr<ldSpectAdvanced> spectAdvanced;
 
-    // sound gate
-    bool isSilent() const;
-    bool isSilent2() const;
-    float isSilent2float() const;
-    bool isSilent3() const;
 
 	// onset
     float onsetLargeBeat1 = 0.f;
@@ -206,7 +211,6 @@ public:
     std::unique_ptr<ldHybridColorPalette> hybridColorPalette;
     std::unique_ptr<ldHybridFlash> hybridFlash;
 
-    float bestBpm() const;
 
 signals:
     void updated();
@@ -222,6 +226,7 @@ private:
     std::unique_ptr<ldSoundGate> soundGate;
     std::unique_ptr<ldSilentThree> silentThree;
 
+    ldManualBpm *m_manualBpm = nullptr;
     std::unique_ptr<ldAppakBpmSelector> appakaBpmSelector;
     std::unique_ptr<ldAppakPeaks> m_peaks;
 

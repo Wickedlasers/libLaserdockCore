@@ -60,6 +60,7 @@ public:
 private:
     static void debugStatCurves(ldBezierPaths bezierPaths);
     static ldBezierPaths snapCurves(const ldBezierPaths &bezierPaths, float snapDistance);
+    static QByteArray readFile(const QString &filePath);
 };
 
 #endif // ldSvgReader_H

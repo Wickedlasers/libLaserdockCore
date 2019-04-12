@@ -33,24 +33,26 @@ public:
     ~ldAppakBpmSelector();
 	
     void process(float aubioFastBpm, float appakaBeatBpm, float appakaPeakBpm);
-    float bestBpm = 120;
+
+    float bestBpm() const;
 
 private:
+    static const int BUFFER_FPS = 30.f*AUDIO_OVERDRIVE_FACTOR;
+    static const int BUFFER_SECONDS = 1;
+    static const int BUFFER_SIZE = BUFFER_SECONDS * BUFFER_FPS;
+
     void doStats();
 
-    float lastTrustableBPM = 0;
-    float lastSomehowTrustableBPM = 0;
-    float lastVeryTrustableBPM = 0;
+    float m_lastTrustableBPM = 0;
+    float m_lastSomehowTrustableBPM = 0;
+    float m_lastVeryTrustableBPM = 0;
 //    float trustableTime = 0;
 
-    static const int fps = 30*AUDIO_OVERDRIVE_FACTOR;
-    //static const int seconds = 1;
-    static const int buffersize = fps;//seconds*fps;
-    float bpmAubio[buffersize];
-    float bpmAppakBeat[buffersize];
-    float bpmAppakPeak[buffersize];
+    float m_bpmAubio[BUFFER_SIZE];
+    float m_bpmAppakBeat[BUFFER_SIZE];
+    float m_bpmAppakPeak[BUFFER_SIZE];
 
-
+    float m_bestBpm = 60.f;
 };
 
 

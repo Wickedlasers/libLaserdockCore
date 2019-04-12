@@ -43,7 +43,7 @@ float ldMaths::rndFloatBetween(float min, float max)
     float tmp;
     int precision=RAND_MAX;
     tmp = 1.0f * (rand() % precision);
-    tmp *= 1.0*(max-min)/(precision-1);
+    tmp *= 1.0f*(max-min)/(precision-1);
     tmp += min;
     tmp = clampf(tmp, min, max);
     return tmp;
@@ -60,8 +60,8 @@ float ldMaths::rndFloatBetweenWithInterval(float min, float max, float actual, f
     float maxVar=(max-min)*pourcentVarHigh/100.0f;
     float var=rndFloatBetween(minVar, maxVar);
     float sign;
-    if (actual==min) sign=1.0;
-    else if (actual==max) sign=-1.0f;
+    if (cmpf(actual, min)) sign=1.0;
+    else if (cmpf(actual,max)) sign=-1.0f;
     else sign=rndSign();
     float res=actual+sign*var;
     //qDebug() << res;
@@ -106,10 +106,10 @@ float ldMaths::periodIntervalKeeper(float x, float min, float max)
 
     float len = max - min;
     if(x > max) {
-        int xCount = ceil(fabsf(x - max) / len);
+        int xCount = static_cast<int> (ceilf(fabsf(x - max) / len));
         x -= xCount*len;
     } else if(x < min) {
-        int xCount = ceil(fabsf(x - min) / len);
+        int xCount = static_cast<int> (ceilf(fabsf(x - min) / len));
         x += xCount*len;
     }
 
@@ -123,10 +123,10 @@ int ldMaths::periodIntervalKeeperInt(int x, int min, int max)
 
     double len = max - min;
     if(x > max) {
-        int xCount = ceil(fabs((double) x - max) / len);
+        int xCount = static_cast<int> (ceil(fabs(x - max) / len));
         x -= xCount*len;
     } else if(x < min) {
-        int xCount = ceil(fabs((double) x - min) / len);
+        int xCount = static_cast<int> (ceil(fabs(x - min) / len));
         x += xCount*len;
     }
 
@@ -159,8 +159,8 @@ CCPoint ldMaths::changeCoords(const CCPoint &m, float rotation, const CCPoint &t
 {
     // rotate
     // m = ccp(m.x*cosf(2.0*M_PI*rotation)+m.y*sinf(2.0*M_PI*rotation), m.x*sinf(2.0*M_PI*rotation)-m.y*cosf(2.0*M_PI*rotation));
-    CCPoint res = CCPoint(m.x*cosf(M_2PI*rotation)-m.y*sinf(M_2PI*rotation),
-                          m.x*sinf(M_2PI*rotation)+m.y*cosf(M_2PI*rotation));
+    CCPoint res = CCPoint(m.x*cosf(M_2PIf*rotation)-m.y*sinf(M_2PIf*rotation),
+                          m.x*sinf(M_2PIf*rotation)+m.y*cosf(M_2PIf*rotation));
     // translate
     res = CCPoint(res.x+translation.x, res.y+translation.y);
     //
@@ -179,7 +179,7 @@ float ldMaths::distanceToPlan(float a, float b, float c, float d, ldVec3 m)
 {
     // where ax+by+cz+d=0 is the plan equation
     float L=a*a+b*b+c*c;
-    if (L==0.0) return 0.0;
+    if (cmpf(L,0.0)) return 0.0;
     return fabsf(a*m.x+b*m.y+c*m.z+d)/sqrtf(L);
 }
 
@@ -253,7 +253,7 @@ float ldMaths::bezier3dLengthFast(const ld3dBezierCurve &b)
 bool ldMaths::isValueNearFrom(float refValue, float checkedValue, float percentAcceptable)
 {
     // some bad trick for value near zero
-    if (fabs(refValue) < 0.001) {
+    if (fabs(refValue) < 0.001f) {
         if (fabs(checkedValue) < 0.001f*percentAcceptable) return true;
         return false;
     }
@@ -366,13 +366,13 @@ std::vector<std::vector<ldVec2>> ldMaths::svgBezierToPointLists(const ldBezierPa
             {
                 int maxPointsLocal = 10;
                 float test = detail*b.length();
-                if (test < 1.0) test *= 2.0;
-                maxPointsLocal = (int) (test);
+                if (test < 1.0f) test *= 2.0f;
+                maxPointsLocal = static_cast<int>(test);
                 if (maxPointsLocal<4) maxPointsLocal = 4;
 
                 for (int i=0; i<maxPointsLocal; i++)
                 {
-                    float slope = 1.0*i/(maxPointsLocal-1);
+                    float slope = 1.0f*i/(maxPointsLocal-1);
                     ldVec2 point = b.getPoint(slope);
                     pointcurve.push_back(point);
                 }

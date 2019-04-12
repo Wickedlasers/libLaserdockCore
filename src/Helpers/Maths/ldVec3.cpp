@@ -62,7 +62,7 @@ ldVec3 ldVec3::rotate3d(const ldVec3 &p, float angle, const ldVec3 &axis)
     float v2 = v * v;
     float w2 = w * w;
     float L = (u2 + v2 + w2);
-    if (L<1.0e-4) return p;
+    if (L<1.0e-4f) return p;
 
     // rotationMatrix
     rotationMatrix[0][0] = (u2 + (v2 + w2) * cosf(angle)) / L;
@@ -146,7 +146,7 @@ float ldVec3::distance(const ldVec3 &n) const
 void ldVec3::norm()
 {
     float d = distance(ZERO_VECTOR);
-    if(d == 0)
+    if(cmpf(d, 0.f))
         return;
 
     *this /= d;

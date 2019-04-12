@@ -96,42 +96,6 @@ void ldAppakPeaks::process(ldSoundData* pSoundData)
     prevOutput=m_output;
 }
 
-void ldAppakPeaks::processBpm(float bestBpm, float delta)
-{
-    if (bestBpm < 1) bestBpm = 1;
-
-
-    if (!m_isRunningBPMCounter) {
-        m_minCurrentMillis = static_cast<int>(500.f * 60.f / bestBpm);
-        //qDebug() << "  m_minCurrentMillis" << m_minCurrentMillis;
-        m_isRunningBPMCounter = true;
-        m_milliSecondsCounter = 0;
-    } else {
-        if (m_milliSecondsCounter > m_minCurrentMillis) {
-            // wait a peak and time out -> emit and reset
-            if (m_output >= 0.9f ) {
-                // qDebug() << "  m_milliSecondsCounter" << m_milliSecondsCounter;
-                bpmCount++;
-                //
-                m_isRunningBPMCounter = false;
-                m_milliSecondsCounter = 0;
-            }
-        }
-    }
-
-    //
-    m_milliSecondsCounter+=delta * 1000;
-    m_milliSecondsCounter2+=delta * 1000;
-
-    if(m_milliSecondsCounter2 > 2000) { // each 2 sec
-        m_bpm = bpmCount * 30; // 2* 30 sec = 1 min
-
-        bpmCount = 0;
-        m_milliSecondsCounter2 = 0;
-        m_isRunningBPMCounter = false;
-    }
-}
-
 float ldAppakPeaks::lastBpmApproximation() const
 {
     return m_lastBpmApproximation;
@@ -140,11 +104,6 @@ float ldAppakPeaks::lastBpmApproximation() const
 float ldAppakPeaks::output() const
 {
     return m_output;
-}
-
-int ldAppakPeaks::bpm() const
-{
-    return m_bpm;
 }
 
 // doRealTimeCompute

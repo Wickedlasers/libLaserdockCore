@@ -44,12 +44,13 @@
 #include <QtCore/QDebug>
 
 #include "ldCore/Helpers/Audio/ldTempoTracker.h"
+#include "ldCore/Helpers/Maths/ldMaths.h"
 
 static const uint_t samplerate = 44100;
 static const uint_t win_size = AUDIO_BLOCK_SIZE/2; // /2 is for convert to mono
 
-ldTempoTracker::ldTempoTracker(char* _algorithm, bool _fastBeats, bool _allowPartialBeats, float _newBeatConfidenceCutoff)
-    : algorithm(_algorithm),
+ldTempoTracker::ldTempoTracker(const QString &algorithm, bool _fastBeats, bool _allowPartialBeats, float _newBeatConfidenceCutoff)
+    : m_algorithm(algorithm),
       fastBeats(_fastBeats),
       allowPartialBeats(_allowPartialBeats),
       newBeatConfidenceCutoff(_newBeatConfidenceCutoff) {
@@ -60,7 +61,7 @@ ldTempoTracker::ldTempoTracker(char* _algorithm, bool _fastBeats, bool _allowPar
         hop_size = win_size;
 
     // create tempo object
-    m_aubioTempoDetector = new_aubio_tempo(algorithm, win_size, hop_size, samplerate);
+    m_aubioTempoDetector = new_aubio_tempo(m_algorithm.toLatin1().constData(), win_size, hop_size, samplerate);
 
     oldbeat = -1;
     fade = 0;
@@ -101,7 +102,7 @@ float ldTempoTracker::process(ldSoundData* pSoundData) {
 
 
     // put some fresh data in input vector
-    for (int i = 0; i < hop_size; i++) {
+    for (uint_t i = 0; i < hop_size; i++) {
         float samp = pSoundData->GetWaveformL(i) + pSoundData->GetWaveformR(i);
         fvec_set_sample(in, 8*samp, i);
     }
@@ -109,7 +110,7 @@ float ldTempoTracker::process(ldSoundData* pSoundData) {
     aubio_tempo_do(o,in,out);
 
     if (fastBeats) {
-        for (int i = 0; i < hop_size; i++) {
+        for (uint_t i = 0; i < hop_size; i++) {
             float samp = pSoundData->GetWaveformL(i+hop_size) + pSoundData->GetWaveformR(i+hop_size);
             fvec_set_sample(in, 8*samp, i);
         }
@@ -120,7 +121,7 @@ float ldTempoTracker::process(ldSoundData* pSoundData) {
     //qDebug() << aubio_tempo_get_confidence(o) << "c - b" << aubio_tempo_get_bpm(o);
 
     // do something with the beats
-    if (out->data[0] != 0 && (allowPartialBeats || m_output <= 0)) {
+    if (cmpf(out->data[0], 0.f) && (allowPartialBeats || m_output <= 0)) {
         /* char s[1024];
             sprintf(s, "beat at %.3fms, %.3fs, frame %d, %.2fbpm with confidence %.2f\n",
                     aubio_tempo_get_last_ms(o), aubio_tempo_get_last_s(o),

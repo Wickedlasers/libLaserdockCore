@@ -62,7 +62,7 @@ float ldVec2::distance(const ldVec2 &n) const
 
 float ldVec2::magnitude() const
 {
-    return sqrt(pow(x, 2) + pow(y, 2));
+    return sqrtf(powf(x, 2) + powf(y, 2));
 }
 
 ldVec2 ldVec2::normalize() const
@@ -81,7 +81,7 @@ float ldVec2::toRadians() const
 {
     ldVec2 normalized = normalize();
     float angle = atan2(normalized.y, normalized.x);
-    angle = (normalized.x > 0 ? angle : 2 * M_PI + angle);
+    angle = (normalized.x > 0 ? angle : 2 * M_PIf + angle);
 
     return angle;
 }

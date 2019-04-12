@@ -31,12 +31,14 @@ void ldBezierPath::add(const ldBezierCurve &curve)
     m_curves.push_back(curve);
 }
 
-const std::vector<ldBezierCurve> &ldBezierPath::data() const
+void ldBezierPath::setCurve(uint index, const ldBezierCurve &curve)
 {
-    return m_curves;
+    Q_ASSERT(index < m_curves.size());
+
+    m_curves[index] = curve;
 }
 
-std::vector<ldBezierCurve> &ldBezierPath::data()
+const std::vector<ldBezierCurve> &ldBezierPath::data() const
 {
     return m_curves;
 }
@@ -51,12 +53,7 @@ void ldBezierPath::setColor(const uint32_t &value)
     m_color = value;
 }
 
-void ldBezierPath::resize(uint size)
-{
-    m_curves.resize(size);
-}
-
-uint ldBezierPath::size() const
+size_t ldBezierPath::size() const
 {
     return m_curves.size();
 }
@@ -69,18 +66,8 @@ bool ldBezierPath::empty() const
 void ldBezierPath::clear()
 {
     m_curves.clear();
-    m_color = 0xFFFFFFFF;
+    m_color = 0;
     m_gradient = ldGradient();
-}
-
-ldBezierCurve &ldBezierPath::operator [](int index)
-{
-    return m_curves[index];
-}
-
-const ldBezierCurve &ldBezierPath::operator [](int index) const
-{
-    return m_curves[index];
 }
 
 const ldGradient &ldBezierPath::gradient() const
@@ -111,6 +98,17 @@ void ldBezierPath::scale(float value)
 
     if(m_gradient.isValid())
         m_gradient.scale(value);
+}
+
+void ldBezierPath::scale(float x, float y)
+{
+    for (ldBezierCurve &bZ : m_curves) {
+        bZ.scaleX(x);
+        bZ.scaleY(y);
+    }
+
+    if(m_gradient.isValid())
+        m_gradient.scale(x, y);
 }
 
 void ldBezierPath::translate(const ldVec2 &v)

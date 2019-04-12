@@ -33,16 +33,20 @@
 #include "ldCore/Helpers/Maths/ldMaths.h"
 #include "ldCore/Helpers/Visualizer/ldLaserFilter.h"
 
-ldFilterColorFade::ldFilterColorFade() {
-    huebase = 0;
-    huerange = 0.5;
-    offset = 0;
-    freq=0.5;
-    y = false;
+ldFilterColorFade::ldFilterColorFade(bool isProcessMusic)
+    : m_isProcessMusic(isProcessMusic)
+{
 }
 
 void ldFilterColorFade::process(Vertex &input) {
-    
+    if(m_isProcessMusic) {
+        ldMusicManager *m = ldCore::instance()->musicManager();
+        offset = 1 - m->hybridAnima->outputTrackPosition;
+        huebase = m->hybridAutoColor2->selectorColorHue1.indexFloat / 4.0f + 0.17f;
+        huerange = (m->hybridAutoColor2->selectorColorHue2.indexFloat / 5.0f + 0.33f) / 4.0f / 4.0f;
+        freq = 0.33f;
+    }
+
     LaserPoint t(input);
     float hue = 0;
     float sat = 1;

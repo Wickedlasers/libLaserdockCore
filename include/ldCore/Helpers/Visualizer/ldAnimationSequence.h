@@ -47,20 +47,28 @@ public:
 
     void drawFrame(ldRendererOpenlase* r, int index);
 
-//load svg sequence
+    //load svg sequence
     void loadDir(const QString &dirPath, const QString &filePrefix = "", int maskSize = -1, bool isExternal = false);
 
-//.ldva1 format
+    //ldva1 format (deprecated)
     void load(const QString &filePath);
     void save(const QString &filePath);
 
-//.ldva2 format
+    //ldva2 format (animation)
     bool load2(const QString &filePath);
     bool save2(const QString &filePath);
 
-//.ldva3 format
+    //ldva3 format (not used)
     void load3(const QString &filePath);
     void save3(const QString &filePath);
+
+    //ldva4 format (animation with colors and gradients)
+    bool load4(const QString &filePath);
+    bool save4(const QString &filePath);
+
+
+
+    bool isGradient() const;
 
 // util funcs
     void autoscale();
@@ -84,6 +92,27 @@ public:
     ldShader* _shader2 = nullptr;
 
 private:
+    struct BezierCurve {
+        ldVec2 start;
+        ldVec2 end;
+        ldVec2 control1;
+        ldVec2 control2;
+    };
+
+    struct GradientStop {
+        float offset;
+        uint32_t color;
+    };
+    struct Gradient {
+        float x1;
+        float y1;
+        float x2;
+        float y2;
+
+        std::vector<GradientStop> stops;
+    };
+
+
     void drawFrameLights5(ldRendererOpenlase* r, int index);
     void drawFrameLine4(ldRendererOpenlase* r, int index);
     void drawFrameBezier3(ldRendererOpenlase* r, int index);
@@ -94,6 +123,10 @@ private:
 
     RenderAlg m_renderAlg = RenderAlg::Lines;
     ldBezierPathsSequence m_frames;
+
+    QByteArray readFile(const QString &filePath);
+
+    bool m_isGradient = false;
 };
 
 

@@ -25,15 +25,18 @@
 
 class LDCORESHARED_EXPORT ldFilterColorFade: public ldFilter { // rising fade effect
 public:
-    ldFilterColorFade();
-    float offset;
-    float huebase;
-    float huerange;
-    float freq;
-    bool y;
+    ldFilterColorFade(bool isProcessMusic = false);
+
+    bool m_isProcessMusic = false;
+    float offset = 0.f;
+    float huebase = 0.f;
+    float huerange = 0.5f;
+    float freq = 0.5f;
+    bool y = false;
 
     virtual void process(Vertex &input) override;
     virtual QString name() override { return QObject::tr("Color Fade"); }
+    virtual bool isMusicAware() const override { return true; }
 
 };
 

@@ -62,6 +62,7 @@ public:
     float y2() const;
     void setY2(float value);
 
+    void addStop(const ldGradientStop &stop);
     std::vector<ldGradientStop> stops() const;
 
     bool isValid() const;
@@ -70,6 +71,7 @@ public:
 
     void rotate(float value);
     void scale(float value);
+    void scale(float x, float y);
     void translate(const ldVec2 &v);
 
 private:

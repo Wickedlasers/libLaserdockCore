@@ -26,8 +26,9 @@
 //  Copyright (c) 2014 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __ldCore__ldSoundData__
-#define __ldCore__ldSoundData__
+#ifndef LDSOUNDDATA_H
+#define LDSOUNDDATA_H
+
 #include "ldCore/ldCore_global.h"
 
 #include <math.h>
@@ -95,7 +96,7 @@ class LDCORESHARED_EXPORT ldSoundData : public QObject
 
 public:
 
-    ldSoundData(const QAudioFormat &format, QObject* parent = 0);
+    ldSoundData(const QAudioFormat &format, QObject* parent = nullptr);
     ~ldSoundData();
 
 
@@ -127,7 +128,7 @@ public:
 
      @return the value between -1 and 1
      */
-    float GetWaveformL(int seek) const;
+    float GetWaveformL(uint seek) const;
 
     /**
      Gets the power value of right channel.
@@ -140,7 +141,7 @@ public:
 
      */
 
-    float GetWaveformR(int seek) const;
+    float GetWaveformR(uint seek) const;
 
     /**
      Gets the power value of low frequency range.
@@ -348,4 +349,4 @@ public:
     //DCRejectionFilter filterL, filterR; // Removes DC component prior to FFT for cleaner results
 };
 
-#endif /* defined(__ldCore__ldSoundData__) */
+#endif // LDSOUNDDATA_H

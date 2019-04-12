@@ -99,6 +99,11 @@ void ldGradient::setY2(float value)
     m_v2.y = value;
 }
 
+void ldGradient::addStop(const ldGradientStop &stop)
+{
+    m_stops.push_back(stop);
+}
+
 std::vector<ldGradientStop> ldGradient::stops() const
 {
     return m_stops;
@@ -111,7 +116,7 @@ bool ldGradient::isValid() const
 
 uint32_t ldGradient::getColor(float x, float y) const
 {
-    // to united coords
+    // get color offset at this point
     float offset = getOffset(y, x);
 
     // find gradient stops for this point
@@ -138,7 +143,15 @@ uint32_t ldGradient::getColor(float x, float y) const
 
 //    qDebug() << "stops" << this << offset << s1.offset() << s1.color() << s2.offset() << s2.color();
 
-    return mixColors(s1.color(), s2.color(), offset);
+
+    // calculate relative grade offset for color between offsets
+    float stopsLength = s2.offset() - s1.offset();
+    float stopOffset = offset - s1.offset();
+    float colorOffset = stopsLength != 0.f ? 1.f / stopsLength * stopOffset : 1;
+
+//    qDebug() << "colorOffset" << this << s1.offset() << offset << s2.offset() << stopSize << offsetSize << colorOffset;
+
+    return mixColors(s1.color(), s2.color(), colorOffset);
 }
 
 void ldGradient::rotate(float value)
@@ -153,6 +166,14 @@ void ldGradient::scale(float value)
     m_v2 *= value;
 }
 
+void ldGradient::scale(float x, float y)
+{
+    m_v1.x *= x;
+    m_v1.y *= y;
+    m_v2.x *= x;
+    m_v2.y *= y;
+}
+
 void ldGradient::translate(const ldVec2 &v)
 {
     m_v1 += v;
@@ -161,6 +182,7 @@ void ldGradient::translate(const ldVec2 &v)
 
 float ldGradient::getOffset(float y, float x) const
 {
+    // to united coords
     auto unitedCoord = [](float coord) ->float {
             return (coord+1.f)*0.5f;
     };
@@ -175,7 +197,7 @@ float ldGradient::getOffset(float y, float x) const
     float x2 = unitedCoord(this->x2());
     float y2 = unitedCoord(this->y2());
 
-    // find slope for current point
+    // find offset x and y for current point
     float offsetX = (x2 != x1)
             ? (x - x1) / (x2 - x1)
             : -1.f;

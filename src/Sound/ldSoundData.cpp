@@ -30,6 +30,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/qendian.h>
 
+#include "ldCore/Helpers/Maths/ldMaths.h"
 #include "ldCore/Sound/ldSoundData.h"
 #include "ldCore/Sound/ldSoundInterface.h"
 #include <ldCore/Utilities/ldBasicDataStructures.h>
@@ -111,13 +112,14 @@ ldSoundData::ldSoundData(const QAudioFormat &format, QObject* parent) :
             break;
         case QAudioFormat::Float:
             m_maxAmplitude = 0x7fffffff; // Kind of
+            break;
         default:
             break;
         }
         break;
 
     default:
-        m_maxAmplitude = (float) 0x8FFF; // default value
+        m_maxAmplitude = 0x8FFF; // default value
         break;
     }
 }
@@ -215,8 +217,8 @@ void ldSoundData::volumeCorrectionInit() {
     
     //rms version
     currentpower = 0;
-    int size =  m_waveform.GetSize();
-    for (int i = 0; i < size; i++) {
+    uint size =  m_waveform.GetSize();
+    for (uint i = 0; i < size; i++) {
         float m = 1;// ((float)(size - i)) / size;
         float f;
         f = fabsf(m_waveform.GetLeft()[i]);
@@ -278,7 +280,7 @@ void ldSoundData::volumeCorrectionInit() {
     float &mpto = volumePowerMaxTimer;    
     mpto += AUDIO_UPDATE_DELTA_S / falltime;
     if (mpto > 1) mpto = 1;
-    maxpower += AUDIO_UPDATE_DELTA_S / falltime * cosf((mpto+1)*M_PI/2);
+    maxpower += AUDIO_UPDATE_DELTA_S / falltime * cosf((mpto+1)*M_PIf/2);
     if (maxpower < 0) maxpower = 0;
     if (volumePowerLastDBScaled >= maxpower) {
         maxpower = current;
@@ -288,7 +290,7 @@ void ldSoundData::volumeCorrectionInit() {
     float &ap = volumePowerSmoothedDBScaled;    
     float dd = volumePowerMaxDBScaled - ap;
     float mx = AUDIO_UPDATE_DELTA_S / risetime / 2;
-    if (dd > 0.10) mx *= 1 + qMin<float>(1, (dd - 0.10) / (0.40))*4;
+    if (dd > 0.10f) mx *= 1 + qMin<float>(1, (dd - 0.10f) / (0.40f))*4;
     if (dd > 1 * mx) {
         //dd = 1*mx + qMin<float>(1*mx, (dd-1*mx)/4); 
         dd = 1 * mx;
@@ -329,7 +331,7 @@ void ldSoundData::volumeCorrectionInit() {
         if (right[i] < -1) right[i] = -1;
         if (left[i]  >  1) left[i] =   1;
         if (right[i] >  1) right[i] =  1;
-        if (left[i] * left[i] > 0.999 || right[i] * right[i] > 0.999) {            
+        if (left[i] * left[i] > 0.999f || right[i] * right[i] > 0.999f) {
             clipped = true;
         }       
     }
@@ -428,7 +430,7 @@ void ldSoundData::GetFullFFT(std::vector<float>& fftArray, bool normalize, bool 
         max = qMax<float>(max, v);
     }
     //qDebug() << "max" << max;
-    if (fabs(max) < 0.0000001) return;
+    if (fabsf(max) < 0.0000001f) return;
     for (int i = s; i < e; i++) {
         float r = tmp[i]/max;
         r = qMax<float>(0, r);
@@ -486,7 +488,7 @@ int ldSoundData::GetSoundLevel() const
 
 float ldSoundData::GetFFTValueForBlock(unsigned blockIndex, unsigned numBlocks) const {
     float totalBins = (float)SAMPLE_SIZE;
-    float scale = 1.0 /  totalBins;
+    float scale = 1.0f /  totalBins;
     // We have 2940 bins in total, but Nyquist limits usable data range to first half of values
     // Bins 0 - 1470 will have data for freqs 0 - 22kHz
     // Bins 0 - 735  will have data for freqs 0 - 11kHz
@@ -497,7 +499,7 @@ float ldSoundData::GetFFTValueForBlock(unsigned blockIndex, unsigned numBlocks) 
     // Bins 0 - 22   will have data for freqs 0 - 225Hz
     // Bins 0 - 11   will have data for freqs 0 - 115Hz
     unsigned firstBinIndex = 10;                            // start from about 100 Hz
-    float numBins = floorf(totalBins / 8.0);                // go up to around 5000 Hz
+    float numBins = floorf(totalBins / 8.0f);                // go up to around 5000 Hz
     unsigned binsPerBlock = floorf(numBins / numBlocks);    // find num bins per block
     firstBinIndex += blockIndex * binsPerBlock;             // move to first bin in block
     unsigned lastBinIndex = firstBinIndex + binsPerBlock;   // range of bins to sample
@@ -515,7 +517,7 @@ float ldSoundData::GetWaveformL() const
     return _peakL; // only returns the first value per frame
 }
 
-float ldSoundData::GetWaveformL(int seek) const
+float ldSoundData::GetWaveformL(uint seek) const
 {
     float value = m_waveform.GetLeft()[seek];
     value = fminf(fmaxf(value, -8.0f), 8.0f) / 8.0f;
@@ -530,7 +532,7 @@ float ldSoundData::GetWaveformR() const
     return _peakR; // only returns the first value per frame
 }
 
-float ldSoundData::GetWaveformR(int seek) const
+float ldSoundData::GetWaveformR(uint seek) const
 {
     float value = m_waveform.GetRight()[seek];
 
