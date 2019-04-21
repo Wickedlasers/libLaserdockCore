@@ -41,7 +41,7 @@ public:
     explicit ldTempoTracker(const QString &algorithm = "default", bool _fastBeats = true, bool _allowPartialBeats = true, float _newBeatConfidenceCutoff = 0);
     virtual ~ldTempoTracker();
 
-    float process(ldSoundData* pSoundData);
+    void process(ldSoundData* pSoundData);
 
     float output() const;
     float confidence() const;
@@ -58,20 +58,19 @@ private:
     //"specdiff" and "phase" seem to work decently but no better than default
 
     // turn this on for faster beats
-    bool fastBeats;
+    bool m_fastBeats = false;
     // register a new beat even if the old beat is still fading out
-    bool allowPartialBeats;
+    bool m_allowPartialBeats = true;
     // beats below this confidence level are ignored
-    float newBeatConfidenceCutoff;
+    float m_newBeatConfidenceCutoff = 0.f;
 
     // 0-1 value to prefer slow-fast tempos.  not yet implemented.
     //float speed;
 
-    uint_t hop_size;
-    int overdriveSkip;
-    float oldbeat;
-    aubio_tempo_t* m_aubioTempoDetector;
-    float fade;
+    uint_t m_hop_size = SAMPLE_SIZE;
+    int m_overdriveSkip = -1;
+    std::unique_ptr<aubio_tempo_t, void(*)(aubio_tempo_t*)> m_aubio;
+    float m_fade = 0.f;
 
 
     float m_output = 0;

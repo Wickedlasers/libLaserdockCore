@@ -30,17 +30,12 @@
 #include "ldCore/Helpers/Maths/ldMaths.h"
 
 // ldTextLabel
-ldTextLabel::ldTextLabel(const QString& p_string, float p_fontSize, const ldVec2 &p_position)
-    : ldAbstractText()
-    , _color(0xFFFFFF)
-    , _drawer(new ldBezierCurveDrawer)
+ldTextLabel::ldTextLabel(const QString &text, float fontSize, const ldVec2 &p_position)
+    : ldAbstractText(text, fontSize)
+    , m_position(p_position)
+    , m_drawer(new ldBezierCurveDrawer)
 {
-    _position = p_position;
-
-    setFontSize(p_fontSize);
-    this->setText(p_string);
-
-    _drawer->setMaxPoints(30);
+    m_drawer->setMaxPoints(30);
 }
 
 // ~ldTextLabel
@@ -49,14 +44,11 @@ ldTextLabel::~ldTextLabel()
 }
 
 // updateString
-void ldTextLabel::setText(const QString &p_string)
+void ldTextLabel::setText(const QString &text)
 {
-    m_string = p_string;
+    ldAbstractText::setText(text);
 
-    initLabelLettersFrame(p_string);
-
-    _labelLettersFrame.translate(_position);
-    _labelLettersFrame.colorize(_color);
+    initTextFrame(text);
 }
 
 void ldTextLabel::clear()
@@ -64,22 +56,17 @@ void ldTextLabel::clear()
     setText("");
 }
 
-QString ldTextLabel::getText() const
-{
-    return m_string;
-}
-
 // setPosition
 void ldTextLabel::setPosition(const ldVec2 &p_p)
 {
-    _labelLettersFrame.translate(p_p - _position);
+    m_textFrame.translate(p_p - m_position);
 
-    _position = p_p;
+    m_position = p_p;
 }
 
 ldVec2 ldTextLabel::getPosition() const
 {
-    return _position;
+    return m_position;
 }
 
 // setIncrementXPositionOrLoop
@@ -87,37 +74,43 @@ bool ldTextLabel::setIncrementXPositionOrLoop(float delta)
 {
     //qDebug() << _position.x << " this->getWidth()" << this->getWidth();
 
-    float x = 0.f;
-    if (_position.x < -getWidth()) {
-        x = 1.f;
-    } else {
-        x = _position.x - delta;
-    }
-    //
-    setPosition(ldVec2(x, _position.y));
-    return _position.x != 1.f;
+    float x = (m_position.x < -getWidth())
+            ? 1.f
+            : m_position.x - delta;
+
+    setPosition(ldVec2(x, m_position.y));
+
+    return m_position.x != 1.f;
 }
 
 // getColor
 uint32_t ldTextLabel::getColor() const
 {
-    return _color;
+    return m_color;
 }
 
 // setColor
 void ldTextLabel::setColor(uint32_t p_color)
 {
-    _color = p_color;
-    _labelLettersFrame.colorize(_color);
+    m_color = p_color;
+    m_textFrame.colorize(m_color);
 }
 
 // innerDraw
 void ldTextLabel::innerDraw(ldRendererOpenlase* p_renderer)
 {
-    _drawer->innerDraw(p_renderer, _labelLettersFrame);
+    m_drawer->innerDraw(p_renderer, m_textFrame);
 }
 
 std::vector<std::vector<OLPoint> > ldTextLabel::getDrawingData() const
 {
-    return _drawer->getDrawingData(_labelLettersFrame);
+    return m_drawer->getDrawingData(m_textFrame);
+}
+
+void ldTextLabel::initTextFrame(const QString &word)
+{
+    ldAbstractText::initTextFrame(word);
+
+    m_textFrame.translate(m_position);
+    m_textFrame.colorize(m_color);
 }

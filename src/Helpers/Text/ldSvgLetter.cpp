@@ -20,7 +20,12 @@
 
 #include "ldCore/Helpers/Text/ldSvgLetter.h"
 
+#include <QtCore/QtDebug>
+#include <QtCore/QHash>
+
 #include "ldCore/Helpers/SVG/ldSvgReader.h"
+
+QMap<QString, ldBezierCurveObject> SVG_LETTERS_CACHE;
 
 ldSvgLetter::ldSvgLetter(const QString &svgPath)
     : m_svgPath(svgPath)
@@ -58,8 +63,14 @@ void ldSvgLetter::resetObject()
 void ldSvgLetter::updateObject() const
 {
     if(m_originalObject.isEmpty()) {
-        m_originalObject = ldBezierCurveObject(ldSvgReader::loadSvg(m_svgPath, ldSvgReader::Type::Dev, 0.01f).data(), true);
-        m_originalObject.translate(ldVec2(-m_originalObject.dim().bottom_left.x, 0));
+        if(SVG_LETTERS_CACHE.contains(m_svgPath)) {
+            m_originalObject = SVG_LETTERS_CACHE.value(m_svgPath);
+        } else {
+            m_originalObject = ldBezierCurveObject(ldSvgReader::loadSvg(m_svgPath, ldSvgReader::Type::Dev, 0.01f).data(), true);
+            m_originalObject.translate(ldVec2(-m_originalObject.dim().bottom_left.x, 0));
+
+            SVG_LETTERS_CACHE.insert(m_svgPath, m_originalObject);
+        }
     }
 
 

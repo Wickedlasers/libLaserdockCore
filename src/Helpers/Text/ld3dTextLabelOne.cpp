@@ -33,13 +33,10 @@
 
 
 // ld3dTextLabelOne
-ld3dTextLabelOne::ld3dTextLabelOne(const QString& p_string, float p_fontSize)
-    : ldAbstractText()
-    , _drawer(new ld3dBezierCurveDrawer)
+ld3dTextLabelOne::ld3dTextLabelOne(const QString& text, float fontSize)
+    : ldAbstractText(text, fontSize)
+    , m_drawer(new ld3dBezierCurveDrawer)
 {
-    //setText(p_string);
-    m_string = p_string;
-    setFontSize(p_fontSize);
 }
 
 // ~ld3dTextLabelOne
@@ -47,63 +44,57 @@ ld3dTextLabelOne::~ld3dTextLabelOne()
 {
 }
 
-// setModeRotate
-void ld3dTextLabelOne::setModeRotate(bool mode_rotate)
+void ld3dTextLabelOne::setText(const QString &text)
 {
-    m_mode_rotate = mode_rotate;
+    ldAbstractText::setText(text);
+    m_currentIndex = 0;
+
+    QString wordsText = text;
+    wordsText = wordsText.replace("\n" , "");
+    m_words = wordsText.split(" ");
+
+    if(m_currentIndex <= m_words.size())
+        initTextFrame(m_words[m_currentIndex]);
 }
 
-// innerDraw
 void ld3dTextLabelOne::innerDraw(ldRendererOpenlase* p_renderer)
 {
-    bool test = false;
-    if (m_mode_rotate) test = _drawer->innerDrawTwo(p_renderer, m_rotate_step);
-    else test = _drawer->innerDraw(p_renderer);
-    if (!test) {
-        _currentIndice++;
-        if(_currentIndice >= _words.size()) {
-            _currentIndice = 0;
+    bool isInProgress = m_mode_rotate
+            ? m_drawer->innerDrawTwo(p_renderer, m_rotate_step)
+            : m_drawer->innerDraw(p_renderer);
+
+    if (!isInProgress) {
+        m_currentIndex++;
+        if(m_currentIndex >= m_words.size()) {
+            m_currentIndex = 0;
         }
 
-        m_rotate_step++;
-        if (m_rotate_step>3)m_rotate_step=0;
+        if(m_mode_rotate) {
+            m_rotate_step++;
+            if (m_rotate_step > 3)
+                m_rotate_step = 0;
+        }
 
-        updateCurrentString();
+        if(m_currentIndex <= m_words.size())
+            initTextFrame(m_words[m_currentIndex]);
     }
 }
 
 void ld3dTextLabelOne::setSpeedCoeff(float speedCoeff)
 {
-   _drawer->setSpeedCoeff(speedCoeff);
+   m_drawer->setSpeedCoeff(speedCoeff);
 }
 
-// setText
-void ld3dTextLabelOne::setText(const QString &p_string)
+void ld3dTextLabelOne::setModeRotate(bool mode_rotate)
 {
-    m_string = p_string;
-
-    _currentIndice = 0;
-
-    //
-    QString qString = p_string;
-    qString = qString.replace("\n" , "");
-    _words = qString.split(" ");
-
-    //
-    updateCurrentString();
+    m_mode_rotate = mode_rotate;
 }
 
-void ld3dTextLabelOne::updateCurrentString()
+void ld3dTextLabelOne::initTextFrame(const QString &word)
 {
-    if(_currentIndice >= _words.size()) {
-        return;
-    }
-
-    initLabelLettersFrame(_words[_currentIndice]);
-
+    ldAbstractText::initTextFrame(word);
     // recenter
-    _labelLettersFrame.moveToCenter();
-
-    // detect new properties
-    _drawer->setFrame(_labelLettersFrame.to3d());
+    m_textFrame.moveToCenter();
+    // set to drawer
+    m_drawer->setFrame(m_textFrame.to3d());
 }

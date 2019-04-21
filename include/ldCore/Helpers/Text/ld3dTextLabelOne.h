@@ -36,28 +36,28 @@
 class LDCORESHARED_EXPORT ld3dTextLabelOne : public ldAbstractText
 {
 public:
-    explicit ld3dTextLabelOne(const QString &p_string = "", float p_fontSize = 1.0f/16);
+    explicit ld3dTextLabelOne(const QString &text = "", float fontSize = 1.0f/16);
     ~ld3dTextLabelOne();
 
-    virtual void setText(const QString& p_string) override;
+    virtual void setText(const QString& text) override;
 
     void innerDraw(ldRendererOpenlase* p_renderer);
-    //void setFontSize(float fontSize);
 
     void setSpeedCoeff(float speedCoeff);
 
     void setModeRotate(bool mode_rotate);
 
-private:
-    void updateCurrentString();
+protected:
+    virtual void initTextFrame(const QString &word) override;
 
-    QStringList _words;
-    int _currentIndice = 0;
+private:
+    QStringList m_words;
+    int m_currentIndex = 0;
 
     bool m_mode_rotate = false;
     int m_rotate_step = 0;
 
-    std::unique_ptr<ld3dBezierCurveDrawer> _drawer;
+    std::unique_ptr<ld3dBezierCurveDrawer> m_drawer;
 };
 
 #endif // ld3dTextLabelOne_H

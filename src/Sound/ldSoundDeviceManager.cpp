@@ -38,7 +38,6 @@
 // midi
 #ifdef LD_CORE_ENABLE_MIDI
 #include "ldCore/Sound/Midi/ldMidiInfo.h"
-#include "ldCore/Sound/Midi/ldMidiInput.h"
 #endif
 
 #include "Sound/ldMidiDevice.h"
@@ -113,7 +112,7 @@ void ldSoundDeviceManager::refreshAvailableDevices()
 
 #ifdef LD_CORE_ENABLE_MIDI
     // midi devices
-    QList<ldMidiInfo> midiInfos = m_midiDevice->input()->getDevices();
+    QList<ldMidiInfo> midiInfos = m_midiDevice->getDevices();
     for(const ldMidiInfo &midiInfo : midiInfos) {
         m_devices.append(midiInfo.toSoundDeviceInfo());
     }

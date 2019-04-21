@@ -42,10 +42,11 @@ class LDCORESHARED_EXPORT ldAbstractText : public QObject
     Q_OBJECT
 
 public:
-    ldAbstractText();
+    ldAbstractText(const QString &text, float fontSize);
     ~ldAbstractText();
 
     virtual void setText(const QString &p_string);
+    QString getText() const;
 
     void setFontSize(float fontSize);
     float getFontSize() const;
@@ -65,23 +66,23 @@ public:
     float getWidth();
     float getHeight();
 
-
 protected:
-    void initLabelLettersFrame(const QString &word);
+    virtual void initTextFrame(const QString &word);
 
+    ldBezierCurveFrame m_textFrame;
+
+private:
     float getLetterAWidth();
     float getInterLetterWidth();
     float getSpaceWidth();
 
     void reloadAllSvgLetters();
 
+    QString m_text;
     float m_fontSize = 1.0f/16.f;
-    double m_letterSpace = 1.;
-    QString m_string;
+    double m_letterSpaceScale = 1.;
     ldFont::Family m_fontFamily = ldFont::Family::Roboto;
     std::vector<ldSvgLetter> m_allSvgLetters;
-
-    ldBezierCurveFrame _labelLettersFrame;
 };
 
 #endif // LDABSTRACTTEXT_H

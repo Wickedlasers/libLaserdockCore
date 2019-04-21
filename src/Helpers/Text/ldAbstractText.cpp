@@ -30,7 +30,9 @@
 #include "ldCore/Helpers/SVG/ldSvgReader.h"
 
 // ldAbstractText()
-ldAbstractText::ldAbstractText()
+ldAbstractText::ldAbstractText(const QString &text, float fontSize)
+    : m_text(text)
+    , m_fontSize(fontSize)
 {
     reloadAllSvgLetters();
 }
@@ -43,7 +45,12 @@ ldAbstractText::~ldAbstractText()
 
 void ldAbstractText::setText(const QString &p_string)
 {
-    initLabelLettersFrame(p_string);
+    m_text = p_string;
+}
+
+QString ldAbstractText::getText() const
+{
+    return m_text;
 }
 
 // setText to override
@@ -77,36 +84,36 @@ ldFont::Family ldAbstractText::font() const
 
 double ldAbstractText::letterSpace() const
 {
-    return m_letterSpace;
+    return m_letterSpaceScale;
 }
 
 void ldAbstractText::setLetterSpace(double letterSpace)
 {
-    m_letterSpace = letterSpace;
-    setText(m_string);
+    m_letterSpaceScale = letterSpace;
+    setText(m_text);
 }
 
 const ldBezierCurveFrame &ldAbstractText::getFrame() const
 {
-    return _labelLettersFrame;
+    return m_textFrame;
 }
 
 // getWidth
 float ldAbstractText::getWidth()
 {
-    return _labelLettersFrame.dim().width();
+    return m_textFrame.dim().width();
 }
 
 // getHeight
 float ldAbstractText::getHeight()
 {
-    return _labelLettersFrame.dim().height();
+    return m_textFrame.dim().height();
 }
 
 
-void ldAbstractText::initLabelLettersFrame(const QString &word)
+void ldAbstractText::initTextFrame(const QString &word)
 {
-    _labelLettersFrame.clear();
+    m_textFrame.clear();
 
     // here in _allSvgLetters
     const float interLetter = getInterLetterWidth();
@@ -137,7 +144,7 @@ void ldAbstractText::initLabelLettersFrame(const QString &word)
         // move letter to position in word
         letterObject.translate(ldVec2(letterOffsetX, -letterOffsetY));
 
-        _labelLettersFrame.add(letterObject);
+        m_textFrame.add(letterObject);
         // next letter offset
         letterOffsetX += letterObject.dim().width() + interLetter;
     }
@@ -148,7 +155,8 @@ float ldAbstractText::getLetterAWidth()
 {
     int a_upper_index = ldTextSvgHelper::instance()->indexForSvgValidChars('A');
     // should not happen
-    if (a_upper_index >= (int)m_allSvgLetters.size()) return 0.10f;
+    if (a_upper_index < 0 || a_upper_index >= (int) m_allSvgLetters.size())
+        return 0.10f;
     //
     ldBezierCurveObject a_upper_svg = m_allSvgLetters[a_upper_index].data();
     return a_upper_svg.dim().width();
@@ -159,15 +167,11 @@ float ldAbstractText::getInterLetterWidth()
 {
     float interLetter = 0.36f*getLetterAWidth();
 
-    switch (m_fontFamily) {
-    case ldFont::Family::Elixia:
-         interLetter = getLetterAWidth();
-        break;
-    default:
-        break;
-    }
+    // special inter letter case for font Elixia
+    if(m_fontFamily == ldFont::Family::Elixia)
+        interLetter = getLetterAWidth();
 
-    return interLetter * m_letterSpace;
+    return interLetter * m_letterSpaceScale;
 }
 
 // getSpaceWidth
@@ -182,7 +186,7 @@ void ldAbstractText::reloadAllSvgLetters()
 {
     m_allSvgLetters = ldTextSvgHelper::instance()->resizedSvgLetters(m_fontSize, m_fontFamily);
 
-    setText(m_string);
+    setText(m_text);
 }
 
 

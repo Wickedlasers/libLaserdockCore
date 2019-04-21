@@ -42,7 +42,7 @@ public:
     * p_string is the string to write
     * p_fontSize is 1.0 to show a upper A on the whole laser projection. 1/2.0 would mean half the projection and so on
     */
-    ldTextLabel(const QString &p_string = "", float p_fontSize = 1.0f/16, const ldVec2 &p_position = ldVec2());
+    ldTextLabel(const QString &text = "", float fontSize = 1.0f/16, const ldVec2 &p_position = ldVec2());
     ~ldTextLabel();
 
     void setPosition(const ldVec2 &p_p);
@@ -51,8 +51,7 @@ public:
     void setColor(uint32_t p_color);
     uint32_t getColor() const;
 
-    virtual void setText(const QString& p_string) override;
-    QString getText() const;
+    virtual void setText(const QString &text) override;
     void clear();
 
     /**
@@ -68,15 +67,18 @@ public:
      */
     void innerDraw(ldRendererOpenlase* p_renderer);
 
-    ldBezierCurveDrawer *drawer() const { return _drawer.get(); }
+    ldBezierCurveDrawer *drawer() const { return m_drawer.get(); }
 
     std::vector<std::vector<OLPoint>> getDrawingData() const;
 
-private:
-    uint32_t _color;
-    ldVec2 _position; // working in [0,1]x[0,1]
+protected:
+    virtual void initTextFrame(const QString &word) override;
 
-    std::unique_ptr<ldBezierCurveDrawer> _drawer;
+private:
+    uint32_t m_color = 0xFFFFFF;
+    ldVec2 m_position; // working in [0,1]x[0,1]
+
+    std::unique_ptr<ldBezierCurveDrawer> m_drawer;
 
 };
 

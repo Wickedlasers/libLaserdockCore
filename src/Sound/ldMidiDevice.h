@@ -16,6 +16,8 @@ public:
     explicit ldMidiDevice(QObject *parent);
     ~ldMidiDevice();
         
+    QList<ldMidiInfo> getDevices() const;
+
     void start(const ldMidiInfo &info);
     void stop() override;
 
