@@ -151,10 +151,9 @@ void ldAnimationVisualizer::onUpdate(ldSoundData* /*pSoundData*/, float delta) {
         // bpm
         float bpm = 0;
         if(m_usePeakBpm) {
-            bpm = m->peaks()->bpm();
             //        bpm = m->appakaPeak->bpm;
             //        bpm = m->appakaBeat->bpm;
-//                    bpm = m->bestBpm();
+                    bpm = m->bestBpm();
             //        qDebug() << m->appakaPeak->lastBmpApproximation;
             //        qDebug() << m->tempoACSlower->bpmSmooth << m->tempoTrackerSlow->bpm() << m->appakaBeat->bpm << m->bestBpm();
             //        qDebug() << bpm << asb.sourceBPM;
