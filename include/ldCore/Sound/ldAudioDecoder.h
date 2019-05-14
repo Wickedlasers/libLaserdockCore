@@ -32,9 +32,13 @@
 
 #include <QQmlHelpers>
 
-//#ifndef Q_OS_LINUX
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+#define Q_OS_LINUX_DESKTOP
+#endif
+
+#ifndef Q_OS_LINUX_DESKTOP
 #define AUIDIO_DECODER_SUPPORTED
-//#endif
+#endif
 
 class QMediaPlayer;
 

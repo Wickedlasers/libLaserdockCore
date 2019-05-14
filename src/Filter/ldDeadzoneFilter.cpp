@@ -32,7 +32,7 @@ void ldDeadzoneFilter::process(Vertex &v) {
         return;
 
     // see if we're on
-    bool ison = isOutside(v.position[0], v.position[1]);
+    bool ison = isOutside(v.x(), v.y());
     if (m_reverse) ison = !ison;
     bool dzison = ison;
     // compare on-status with last frame
@@ -43,18 +43,18 @@ void ldDeadzoneFilter::process(Vertex &v) {
         attenuate(v);
     } else {
         // snap to border
-        float bestx = m_lastVertex.position[0];
-        float besty = m_lastVertex.position[1];
-        //float bestx = v.position[0];
-        //float besty = v.position[1];
+        float bestx = m_lastVertex.x();
+        float besty = m_lastVertex.y();
+        //float bestx = v.x();
+        //float besty = v.y();
         int z32 = 8; // quality of interpolation, 8 should be fine?
         for (int i = 0; i < z32; i++) {
             float f = (i + 0.5f) / z32; float cf = 1-f;
             //f = 0.5f + f * 0.5f;
             float tx;
             float ty;
-            tx = m_lastVertex.position[0]*cf + v.position[0]*f;
-            ty = m_lastVertex.position[1]*cf + v.position[1]*f;
+            tx = m_lastVertex.x()*cf + v.x()*f;
+            ty = m_lastVertex.y()*cf + v.y()*f;
             bool teston = isOutside(tx, ty);
             if (teston == m_laston) {
                 bestx = tx;
@@ -66,12 +66,12 @@ void ldDeadzoneFilter::process(Vertex &v) {
         {
             // smooth the snap at lower attenuations
             Vertex vt = v; vt.color[0] = 1; attenuate(vt); float att = vt.color[0]; float catt = 1-att;
-            bestx = catt*bestx + att*v.position[0];
-            besty = catt*besty + att*v.position[1];
+            bestx = catt*bestx + att*v.x();
+            besty = catt*besty + att*v.y();
         }
 
-        v.position[0] = bestx;
-        v.position[1] = besty;
+        v.x() = bestx;
+        v.y() = besty;
 
         if (!ison)
             attenuate(v);
@@ -138,7 +138,7 @@ ldDeadzoneFilter::Deadzone ldDeadzoneFilter::getDeadzone(float x, float y) const
 }
 
 void ldDeadzoneFilter::attenuate(Vertex& v) {
-    const Deadzone &dz = getDeadzone(v.position[0], v.position[1]);
+    const Deadzone &dz = getDeadzone(v.x(), v.y());
     v.color[0] *= (1-dz.m_attenuation);
     v.color[1] *= (1-dz.m_attenuation);
     v.color[2] *= (1-dz.m_attenuation);

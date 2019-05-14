@@ -49,7 +49,7 @@ ldTempoAC::ldTempoAC(float _targetTempoBPM, float _fadeHalfLife, float _trebleBi
 }
 
 
-void ldTempoAC::update(ldSpectrogram* spectrogram, bool ismusic)
+void ldTempoAC::update(ldSpectrogram* spectrogram, bool ismusic, float delta)
 {
     if (!ismusic) {
         clear();
@@ -64,7 +64,7 @@ void ldTempoAC::update(ldSpectrogram* spectrogram, bool ismusic)
 
     float sum = 0, total = 0;
     for (int t = 4; t < (histLen-2)/2-2; t++) { // 4 <= t < 357
-        float et = envelope(t);
+        float et = envelope(t, delta);
 
         float p = powf(offsetPower[t]*et, 5);
 
@@ -84,7 +84,7 @@ void ldTempoAC::update(ldSpectrogram* spectrogram, bool ismusic)
     confidence = sqrt(confidence-0.5)*3;
     clampfp(confidence, 0, 1);
 
-    bpmInstant = 60/(bestt*AUDIO_UPDATE_DELTA_S);
+    bpmInstant = 60/(bestt*delta);
     wavelenInstant = bestt;
 
     int bestp = calcBestP(spectrogram, bestt);
@@ -123,7 +123,7 @@ void ldTempoAC::update(ldSpectrogram* spectrogram, bool ismusic)
 
     if (phaseInstant >= (1-h*2)) phaseReactive = phaseInstant;
 
-    bpmSmooth = freqSmooth / AUDIO_UPDATE_DELTA_S * 60.0f;
+    bpmSmooth = freqSmooth / delta * 60.0f;
 }
 
 void ldTempoAC::clear() {
@@ -136,10 +136,11 @@ void ldTempoAC::clear() {
     std::fill(offsetPower2.begin(), offsetPower2.end(), 0.f);
 }
 
-float ldTempoAC::envelope(float t) {
+float ldTempoAC::envelope(float t, float delta)
+{
     // faster
     {
-        float m = (60.0 / m_targetTempoBpm) / AUDIO_UPDATE_DELTA_S;
+        float m = (60.0 / m_targetTempoBpm) / delta;
         if (t > m * 1.5) return 0;
         if (t < m / 1.5) return 0;
         return 1;
@@ -149,7 +150,7 @@ float ldTempoAC::envelope(float t) {
     return 1;//
 
     // normal
-    float midt = (60.0/m_targetTempoBpm) / AUDIO_UPDATE_DELTA_S;
+    float midt = (60.0/m_targetTempoBpm) / delta;
     float widt = midt/2;//0.5 / AUDIO_UPDATE_DELTA_S;
     float e = (t-midt)/widt;
     e = powf(e, 8);

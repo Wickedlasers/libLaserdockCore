@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.11)
 
-message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
-message(STATUS "CMAKE_GENERATOR: ${CMAKE_GENERATOR}")
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_LIST_DIR)
+    message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+    message(STATUS "CMAKE_GENERATOR: ${CMAKE_GENERATOR}")
+endif()
 
 # main app configuration
 option(LD_ANDROID_BUILD "Build for Android" OFF)
@@ -35,6 +37,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 # setup C++
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # setup Qt
 set(CMAKE_AUTOMOC ON)
@@ -75,7 +78,10 @@ if(DEFINED QT_BASE_DIR AND NOT DEFINED QTDIR)
         endif()
     endif()
 endif()
-message(STATUS "Qt Dir: ${QTDIR}")
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_LIST_DIR)
+    message(STATUS "Qt Dir: ${QTDIR}")
+endif()
 
 # Android toolchain: should be before project() call
 if(LD_ANDROID_BUILD)
@@ -274,6 +280,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/Audio/ldAppakSpectrum.h
         ${SRCDIR}/Helpers/Audio/ldAudioBasic.cpp
         ${INCDIR}/Helpers/Audio/ldAudioBasic.h
+        ${SRCDIR}/Helpers/Audio/ldBestBpmBeatDetector.cpp
+        ${INCDIR}/Helpers/Audio/ldBestBpmBeatDetector.h
         ${SRCDIR}/Helpers/Audio/ldDurationalStatEstimator.cpp
         ${INCDIR}/Helpers/Audio/ldDurationalStatEstimator.h
         ${SRCDIR}/Helpers/Audio/ldHybridReactor.cpp
@@ -458,6 +466,12 @@ if(LD_CORE_ENABLE_MIDI)
     if(WIN32)
         target_sources(${PROJECT_NAME} PRIVATE
             ${SRCDIR}/Sound/Midi/ldMidiInput_win.cpp
+            )
+    endif()
+
+    if(LINUX)
+        target_sources(${PROJECT_NAME} PRIVATE
+            ${SRCDIR}/Sound/Midi/ldMidiInput_linux.cpp
             )
     endif()
 endif()

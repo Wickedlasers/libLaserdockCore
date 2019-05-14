@@ -29,7 +29,7 @@ public:
     ldTempoAC();
     ldTempoAC(float _targetTempoBPM, float _fadeHalfLife, float _trebleBias, bool _alg);
 
-    void update(ldSpectrogram* spectrogram, bool ismusic = true);
+    void update(ldSpectrogram* spectrogram, bool ismusic, float delta);
 
     // rhythm phazors
     int wavelenInstant = 0;
@@ -46,7 +46,7 @@ public:
 
 private:
     void clear();
-    float envelope(float t);
+    float envelope(float t, float delta);
     
     void preCalcValues();
 

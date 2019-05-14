@@ -25,9 +25,12 @@
 //  Copyright (c) 2016 Wicked Lasers. All rights reserved.
 //
 #include "ldCore/Helpers/Audio/ldHybridReactor.h"
+
 #include <QtCore/QDebug>
+
 #include <ldCore/Helpers/Color/ldColorUtil.h>
 #include "ldCore/Helpers/Audio/ldTempoAC.h"
+#include "ldCore/Helpers/Audio/ldTempoTracker.h"
 
 
 ldHybridFlash::ldHybridFlash() {
@@ -72,7 +75,7 @@ void ldHybridFlash::process(ldMusicManager* m) {
     static int last = 0;
     last++;
     if (last > 15) {
-        if (beatValue > 0.15f && m->tempoTrackerSlow->output() == 1) {
+        if (beatValue > 0.15f && m->tempoTrackerSlow()->output() == 1) {
             for (int i = 0; i < 8; i++) {
                 int j = rand() % 16;
                 int k = rand() % 16;
@@ -161,7 +164,7 @@ void ldHybridFlash::process(ldMusicManager* m) {
 ldHybridAnima::ldHybridAnima() {
 }
 
-void ldHybridAnima::process(ldMusicManager* m) {
+void ldHybridAnima::process(ldMusicManager* m, float delta) {
 
     // selctor for hybrd algorithm
     float beatConfid = ((m->tempoACSlow->confidence + m->tempoACFast->confidence) / 2) * 1.0f;
@@ -259,8 +262,8 @@ void ldHybridAnima::process(ldMusicManager* m) {
         }
         // lock out
         //        lockout = 2.0/(m->tempoACSlower->bpmSmooth); // 2 long beat
-        lockout = 4.0 / ((m->tempoTrackerSlow->bpm() * 60.0f)*(AUDIO_UPDATE_DELTA_S));  // 4 aubio slow beats
-        lockout = clampf(lockout, 2.0f/(AUDIO_UPDATE_DELTA_S), 10.0f/(AUDIO_UPDATE_DELTA_S)); // range 2-10s of lockout time
+        lockout = 4.0 / ((m->tempoTrackerSlow()->bpm() * 60.0f)*(delta));  // 4 aubio slow beats
+        lockout = clampf(lockout, 2.0f/(delta), 10.0f/(delta)); // range 2-10s of lockout time
     }
     //qDebug() << "anim lockout " << lockout;
 

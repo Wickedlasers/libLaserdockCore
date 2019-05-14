@@ -143,8 +143,8 @@ void ldSimulatorEngine::bigger_dots(Vertex* inData, Vertex* outData, unsigned in
 
         // distance calcs
         if (ison) {
-            float dx = (outData[i].position[0] - m_last.position[0]);
-            float dy = (outData[i].position[1] - m_last.position[1]);
+            float dx = (outData[i].x() - m_last.x());
+            float dy = (outData[i].y() - m_last.y());
             float delta2 = dx*dx + dy*dy;
             float delta = sqrtf(delta2);
             m_moveDist += delta;
@@ -166,8 +166,8 @@ void ldSimulatorEngine::bigger_dots(Vertex* inData, Vertex* outData, unsigned in
 
             // force line length to be a minimum
             if (m_moveDist < mindist) {
-                outData[i].position[0] += m_lastDeltaX;
-                outData[i].position[1] += m_lastDeltaY;
+                outData[i].x() += m_lastDeltaX;
+                outData[i].y() += m_lastDeltaY;
             }
         }
 

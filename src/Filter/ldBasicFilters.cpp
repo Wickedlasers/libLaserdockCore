@@ -114,8 +114,8 @@ void ldHueShiftFilter::process(Vertex &input)
 void ldFlipFilter::process(Vertex &v)
 {
     // flip xy
-    if (flipX) v.position[0] *= -1;
-    if (flipY) v.position[1] *= -1;
+    if (flipX) v.x() *= -1;
+    if (flipY) v.y() *= -1;
 }
 
 
@@ -127,13 +127,13 @@ void ldRotateFilter::process(Vertex &v)
         return;
 
     // rotate
-    float tx = v.position[0];
-    float ty = v.position[1];
+    float tx = v.x();
+    float ty = v.y();
     float angle = -degCW * M_PI / 180.0f;
     float sinangle = sinf(angle);
     float cosangle = cosf(angle);
-    v.position[1] = tx*sinangle + ty*cosangle;
-    v.position[0] = tx*cosangle - ty*sinangle;
+    v.y() = tx*sinangle + ty*cosangle;
+    v.x() = tx*cosangle - ty*sinangle;
 }
 
 
@@ -165,8 +165,8 @@ void ldScaleFilter::setRelativeScaleActive(bool active)
 
 void ldScaleFilter::process(Vertex &v)
 {
-    v.position[0] *= xScale();
-    v.position[1] *= yScale();
+    v.x() *= xScale();
+    v.y() *= yScale();
 }
 
 void ldScaleFilter::setRelativeScale(float value)
@@ -220,7 +220,7 @@ void ldShiftFilter::process(Vertex &v)
     // shift
     float fsx = x * (1.0f - m_scaleFilter->xScale());
     float fsy = y * (1.0f - m_scaleFilter->yScale());
-    v.position[0] += fsx;
-    v.position[1] += fsy;
+    v.x() += fsx;
+    v.y() += fsy;
 }
 

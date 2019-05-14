@@ -237,6 +237,7 @@ ldBezierCurveObject ldSvgReader::loadSvg(QString qtfilename, Type type, float sn
     };
 
     ldBezierCurve bzrCurve;
+    bool isColored = true;
     for (NSVGshape* shape = nsvgImage->shapes; shape != NULL; shape = shape->next)
     {
         for (NSVGpath* path = shape->paths; path != NULL; path = path->next)
@@ -244,6 +245,7 @@ ldBezierCurveObject ldSvgReader::loadSvg(QString qtfilename, Type type, float sn
             ldBezierPath bezierPath;
             switch (shape->stroke.type) {
             case NSVG_PAINT_NONE:
+                isColored = false;
                 bezierPath.setColor(C_WHITE);
                 break;
             case NSVG_PAINT_COLOR:
@@ -278,7 +280,7 @@ ldBezierCurveObject ldSvgReader::loadSvg(QString qtfilename, Type type, float sn
             }
                 break;
             case NSVG_PAINT_RADIAL_GRADIENT:
-                qDebug() << "NSVG_PAINT_RADIAL_GRADIENT";
+                qWarning() << "NSVG_PAINT_RADIAL_GRADIENT IS NOT SUPPORTED";
                 break;
             }
 
@@ -320,7 +322,7 @@ ldBezierCurveObject ldSvgReader::loadSvg(QString qtfilename, Type type, float sn
     }
     //qDebug()<< "res  size:"<< res.size();
 
-    if (snapDistance>0) res = ldBezierCurveObject(snapCurves(res.data(), snapDistance));
+    if (snapDistance>0 && !isColored) res = ldBezierCurveObject(snapCurves(res.data(), snapDistance));
 
     // fix for simple (see twitter.svg)
     int totalPoints = res.totalPoints();

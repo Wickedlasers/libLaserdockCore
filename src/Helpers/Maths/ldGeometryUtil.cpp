@@ -46,8 +46,8 @@ void particle3d::advance (float t) {
 
 float angleIncrement(float& angle, float increment) {
     angle += increment;
-    if (angle >= TWOPI) angle -= TWOPI;
-    if (angle <=     0) angle += TWOPI;
+    if (angle >= M_2PIf) angle -= M_2PIf;
+    if (angle <=     0) angle += M_2PIf;
     return angle;
 }
 

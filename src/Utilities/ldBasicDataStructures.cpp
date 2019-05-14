@@ -38,6 +38,41 @@ bool Vertex::isBlank() const
     return color[0] == 0 && color[1] == 0 && color[2] == 0;
 }
 
+float &Vertex::x()
+{
+    return position[0];
+}
+
+float &Vertex::y()
+{
+    return position[1];
+}
+
+float &Vertex::z()
+{
+    return position[2];
+}
+
+float &Vertex::r()
+{
+    return color[0];
+}
+
+float &Vertex::g()
+{
+    return color[1];
+}
+
+float &Vertex::b()
+{
+    return color[2];
+}
+
+float &Vertex::a()
+{
+    return color[3];
+}
+
 CompressedSample::CompressedSample()
 {
 }

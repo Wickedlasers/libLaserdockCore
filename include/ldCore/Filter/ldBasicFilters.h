@@ -29,7 +29,7 @@
 // ---------- ldColorCurveFilter ----------
 
 /** Smooth filters output colors to the only required one */
-class LDCORESHARED_EXPORT ldColorCurveFilter : ldFilter {
+class LDCORESHARED_EXPORT ldColorCurveFilter : public ldFilter {
 public:
     explicit ldColorCurveFilter();
 
@@ -129,7 +129,7 @@ const float DEFAULT_MAX_SCALE_VALUE = 1.f;
 const float DEFAULT_RELATIVE_SCALE_VALUE = 0.5f;
 
 /** Scale filter*/
-class LDCORESHARED_EXPORT ldScaleFilter : ldFilter {
+class LDCORESHARED_EXPORT ldScaleFilter : public ldFilter {
 public:
     explicit ldScaleFilter();
 

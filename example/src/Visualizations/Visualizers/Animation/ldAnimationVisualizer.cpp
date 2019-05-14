@@ -14,6 +14,7 @@
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
 #include "ldCore/Helpers/Audio/ldAppakPeaks.h"
 #include "ldCore/Helpers/Audio/ldTempoAC.h"
+#include "ldCore/Helpers/Audio/ldTempoTracker.h"
 #include "ldCore/Helpers/Audio/ldHybridReactor.h"
 #include "ldCore/Helpers/SVG/ldSvgReader.h"
 #include "ldCore/Helpers/Visualizer/ldAnimationSequence.h"
@@ -151,18 +152,20 @@ void ldAnimationVisualizer::onUpdate(ldSoundData* /*pSoundData*/, float delta) {
         // bpm
         float bpm = 0;
         if(m_usePeakBpm) {
+//            bpm = m->peaks()->bpm();
             //        bpm = m->appakaPeak->bpm;
             //        bpm = m->appakaBeat->bpm;
-                    bpm = m->bestBpm();
+            bpm = m->bestBpm();
             //        qDebug() << m->appakaPeak->lastBmpApproximation;
             //        qDebug() << m->tempoACSlower->bpmSmooth << m->tempoTrackerSlow->bpm() << m->appakaBeat->bpm << m->bestBpm();
             //        qDebug() << bpm << asb.sourceBPM;
-            if(bpm == 0) {
-                bpm = m_asb.sourceBPM;
-            }
         } else {
-            bpm = m->tempoTrackerSlow->bpm();
+            bpm = m->tempoTrackerSlow()->bpm();
             bpm = getClosestBeat(bpm, m_asb.sourceBPM, m_speedAllowSlow);
+        }
+
+        if(bpm == 0) {
+            bpm = m_asb.sourceBPM;
         }
 
         // set speed
@@ -233,15 +236,8 @@ void ldAnimationVisualizer::draw()
     m_renderer->loadIdentity3();
 
     // color filter    s
-    static ldFilterColorFade colorFilter;
-    ldMusicManager*m = m_musicManager;
-    colorFilter.offset = 1 - m_musicManager->hybridAnima->outputTrackPosition;
-    colorFilter.huebase = m_musicManager->hybridAutoColor2->selectorColorHue1.indexFloat / 4.0f + 0.17f;
-    colorFilter.huerange = (m_musicManager->hybridAutoColor2->selectorColorHue2.indexFloat / 5.0f + 0.33f) / 4.0f / 4.0f;
-    colorFilter.freq = 0.33f;
-
+    static ldFilterColorFade colorFilter(true);
     static ldFilterColorDrop colorFilter2;
-
     static ldFilterColorLift colorFilter3;
     //colorFilter.customize = false; // nyi
     //colorFilter3.cde = m_musicManager->musicFeature1->statMoodFunky * 250;//m_musicManager->mrSlowTreb->spinOutput4 * 180;
@@ -250,18 +246,20 @@ void ldAnimationVisualizer::draw()
     //(no)//colorFilter3.nde = m_musicManager->musicFeature1->statMoodMelodic * 250;// m_musicManager->mrSlowTreb->spinOutput4*250;
     //colorFilter3.nde = m_musicManager->mrSlowTreb->spinOutput4*250;
 
-    if (m_doColorCircle) {
-        setPixelShader((ldShader*)&colorFilter2);
-    } else if (m_doColorRise) {
-        setPixelShader((ldShader*)&colorFilter3);
-    } else {
-        setPixelShader((ldShader*)&colorFilter);
+    if(!m_asb.isGradient()) {
+        if (m_doColorCircle) {
+            setPixelShader((ldShader*)&colorFilter2);
+        } else if (m_doColorRise) {
+            setPixelShader((ldShader*)&colorFilter3);
+        } else {
+            setPixelShader((ldShader*)&colorFilter);
+        }
     }
         
     this->prepareBeforeRender();
 
     // get zoom values
-    float beat1 = m->tempoTrackerSlow->output();
+    float beat1 = m_musicManager->tempoTrackerSlow()->output();
 //    float beat2 = m->tempoTrackerFast->output;
     float zoom1 = 1;
     float zoom2 = 1;    

@@ -199,10 +199,10 @@ public:
      */
 
 
-    int GetWaveformBufferLength() const { return SAMPLE_SIZE; }
+    int GetWaveformBufferLength() const;
 
-    float * GetWaveformBufferL() { return m_waveform.GetLeft();  }
-    float * GetWaveformBufferR() { return m_waveform.GetRight(); }
+    const float *GetWaveformBufferL() const;
+    const float *GetWaveformBufferR() const;
 
     float GetFFTInFreqRange(float startHz, float endHz, bool normalize, bool weight, bool max) const;
     void GetFullFFT(std::vector<float> &fftArray, bool normalize, bool weight) const;
@@ -240,9 +240,7 @@ public:
      @return  value in range 0..1
 
      */
-    float GetFFTValueForFrequency(float frequencyInHertz) const {
-            return GetFFTValueForFrequency(frequencyInHertz, 0);
-    }
+    float GetFFTValueForFrequency(float frequencyInHertz) const;
 
     /**
 
@@ -296,9 +294,7 @@ public:
      @return  void, spectrum is filled to spectrumLength with values in range 0..1
 
      */
-    void GetMusicSpectrum(float *spectrum, unsigned spectrumLength) const {
-        GetSpectrum(spectrum, spectrumLength, 100.0, 4000.0);
-    }
+    void GetMusicSpectrum(float *spectrum, unsigned spectrumLength) const;
 
 
     float GetSampleRate() const { return soundMaxFrequency * 2.0f; }
@@ -312,6 +308,7 @@ protected:
     quint32 m_maxAmplitude;
 
     QScopedPointer<LDFFT>                   m_fft;
+    ldAudioBuffer<float>    m_waveformOriginal; // waveform data buffer
     ldAudioBuffer<float>    m_waveform; // waveform data buffer
     ldBuffer<float>         m_frequency; // fruenqcy data buffer
     ldBuffer<short>         m_rawdata; // raw data buffer

@@ -18,36 +18,35 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-//
-//  ldOnsetDetector.h
-//  ldCore
-//
-//  Created by feldspar on 3/22/15.
-//  Copyright (c) 2015 Wicked Lasers. All rights reserved.
-//
-
-#ifndef __ldCore__ldOnsetDetector__
-#define __ldCore__ldOnsetDetector__
-
-#include <aubio/src/aubio.h>
+#ifndef LDBESTBPMBEATDETECTOR_H
+#define LDBESTBPMBEATDETECTOR_H
 
 #include <ldCore/Sound/ldSoundData.h>
 
-class LDCORESHARED_EXPORT OnsetDetector {
-public:    
-    OnsetDetector(char* _algorithm = (char*)"specflux", float _gapTime = 0.35, float _decayTime = 0, float _threshold = 0.5);
-    float process(ldSoundData* pSoundData, float delta);
-    float output;
+class LDCORESHARED_EXPORT ldBestBpmBeatDetector : public QObject
+{
+    Q_OBJECT
+public:
+    ldBestBpmBeatDetector(QObject *parent = nullptr);
+    ~ldBestBpmBeatDetector();
+    
+    void processBpm(float bestBpm, float output, float delta);
+
+    int bpm() const;
+
+signals:
+    void beatDetected();
 
 private:
-    char* algorithm;
-    float gapTime;
-    float decayTime;
-    float threshold;
+    float m_milliSecondsCounter = 0;
+    float m_milliSecondsCounter2 = 0;
+    int m_minCurrentMillis = 500;
+    bool m_isRunningBPMCounter = false;
+    int bpmCount = 0;
 
-    aubio_onset_t* o;
-    int hop_size;
-    int overdriveSkip;
+    int m_bpm = 0;
 };
 
-#endif /* defined(__ldCore__ldOnsetDetector__) */
+#endif // LDBESTBPMBEATDETECTOR_H
+
+

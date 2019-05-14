@@ -46,13 +46,13 @@
 #include "ldCore/Helpers/Audio/ldTempoTracker.h"
 #include "ldCore/Helpers/Maths/ldMaths.h"
 
-ldTempoTracker::ldTempoTracker(const QString &algorithm, bool _fastBeats, bool _allowPartialBeats, float _newBeatConfidenceCutoff)
-    : m_algorithm(algorithm)
-    , m_fastBeats(_fastBeats)
-    , m_allowPartialBeats(_allowPartialBeats)
-    , m_newBeatConfidenceCutoff(_newBeatConfidenceCutoff)
-    , m_hop_size(m_fastBeats ? SAMPLE_SIZE/2 : SAMPLE_SIZE)
-    , m_aubio(new_aubio_tempo(m_algorithm.toLatin1().constData(), SAMPLE_SIZE, m_hop_size, SAMPLE_RATE), del_aubio_tempo)
+ldTempoTracker::ldTempoTracker(bool fastBeats, bool allowPartialBeats, QObject *parent)
+    : QObject(parent)
+    , m_allowPartialBeats(allowPartialBeats)
+    , m_hop_size(fastBeats ? SAMPLE_SIZE / 3 : SAMPLE_SIZE)
+    , m_aubio(new_aubio_tempo("default", SAMPLE_SIZE, m_hop_size, SAMPLE_RATE), del_aubio_tempo)
+    , m_in(new_fvec (m_hop_size), del_fvec)
+    , m_out(new_fvec (2), del_fvec)
 {
 }
 
@@ -61,11 +61,8 @@ ldTempoTracker::~ldTempoTracker()
 }
 
 
-void ldTempoTracker::process(ldSoundData* pSoundData) {
-
-    // update time
-    float delta = AUDIO_UPDATE_DELTA_S;
-
+void ldTempoTracker::process(ldSoundData* pSoundData, float delta)
+{
     //static int s = 99999; s++;
     //qDebug() << "called " << s << " with delta " << delta << "and hop size" << hop_size;
 
@@ -79,32 +76,41 @@ void ldTempoTracker::process(ldSoundData* pSoundData) {
     if (m_overdriveSkip)
         return;
 
-    // create some vectors
-    std::unique_ptr<fvec_t, void(*)(fvec_t*)> in(new_fvec (m_hop_size), del_fvec);
-    std::unique_ptr<fvec_t, void(*)(fvec_t*)> out(new_fvec (2), del_fvec);
-    std::unique_ptr<fvec_t, void(*)(fvec_t*)> out2(new_fvec (2), del_fvec);
-
     // put some fresh data in input vector
-    for (uint_t i = 0; i < m_hop_size; i++) {
-        float samp = pSoundData->GetWaveformL(i) + pSoundData->GetWaveformR(i);
-        fvec_set_sample(in.get(), 8*samp, i);
-    }
-    // execute tempo
-    aubio_tempo_do(m_aubio.get(), in.get(), out.get());
-
-    if (m_fastBeats) {
+    smpl_t isBeat = 0.f;
+    int soundDataIndex = 0;
+    while(soundDataIndex < SAMPLE_SIZE) {
         for (uint_t i = 0; i < m_hop_size; i++) {
-            float samp = pSoundData->GetWaveformL(i+m_hop_size) + pSoundData->GetWaveformR(i+m_hop_size);
-            fvec_set_sample(in.get(), 8*samp, i);
+            float samp = (pSoundData->GetWaveformBufferL()[soundDataIndex] + pSoundData->GetWaveformBufferR()[soundDataIndex]) / 2.f;
+            fvec_set_sample(m_in.get(), samp, i);
+            soundDataIndex++;
         }
-        aubio_tempo_do(m_aubio.get(), in.get(), out2.get());
-        out->data[0] += out2->data[0]; // combine
+        // execute tempo
+        aubio_tempo_do(m_aubio.get(), m_in.get(), m_out.get());
+
+        isBeat += m_out->data[0];
     }
 
-    //qDebug() << aubio_tempo_get_confidence(o) << "c - b" << aubio_tempo_get_bpm(o);
+
+    float confidence = aubio_tempo_get_confidence(m_aubio.get());
+    float bpm = aubio_tempo_get_bpm(m_aubio.get());
+    if(!cmpf(bpm, 0)
+            && !cmpf(confidence, 0.f)
+            && !isnan(confidence)) {
+        m_bpm = bpm;
+        m_confidence = confidence;
+//        if(m_hop_size < SAMPLE_SIZE) qDebug() << m_bpm << m_confidence;
+    }
+
+
+    float beatMs = aubio_tempo_get_last_ms(m_aubio.get());
+    if(!cmpf(beatMs, m_lastBeatMs)) {
+        emit beatDetected();
+        m_lastBeatMs = beatMs;
+    }
 
     // do something with the beats
-    if (cmpf(out->data[0], 0.f) && (m_allowPartialBeats || m_output <= 0)) {
+    if (isBeat && (m_allowPartialBeats || m_output <= 0)) {
         /* char s[1024];
             sprintf(s, "beat at %.3fms, %.3fs, frame %d, %.2fbpm with confidence %.2f\n",
                     aubio_tempo_get_last_ms(o), aubio_tempo_get_last_s(o),
@@ -112,17 +118,13 @@ void ldTempoTracker::process(ldSoundData* pSoundData) {
             qDebug() << s;*/
 
         // remember confid and bpm
-        m_confidence = aubio_tempo_get_confidence(m_aubio.get());
-        m_bpm = aubio_tempo_get_bpm(m_aubio.get());
-
         // set beat
-        if (m_confidence >= m_newBeatConfidenceCutoff) {
+        if (m_confidence >= 0.f) {
             // activate output
             m_output = 1;
             // beat fade out in bets per second
             m_fade = m_bpm/60;
             if (m_fade < 0) m_fade = 0;
-            //qDebug() << fade;
         }
 
     }

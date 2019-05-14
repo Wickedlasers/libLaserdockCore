@@ -27,9 +27,11 @@
 #include "ldCore/Helpers/Audio/ldAppakBpmSelector.h"
 #include "ldCore/Helpers/Audio/ldAppakPeaks.h"
 #include "ldCore/Helpers/Audio/ldAppakSpectrum.h"
-#include "ldCore/Helpers/Audio/ldTempoAC.h"
+#include "ldCore/Helpers/Audio/ldBestBpmBeatDetector.h"
 #include "ldCore/Helpers/Audio/ldHybridReactor.h"
 #include "ldCore/Helpers/Audio/ldManualBpm.h"
+#include "ldCore/Helpers/Audio/ldTempoAC.h"
+#include "ldCore/Helpers/Audio/ldTempoTracker.h"
 
 // initial state
 ldMusicManager::ldMusicManager(QObject* parent)
@@ -59,8 +61,8 @@ ldMusicManager::ldMusicManager(QObject* parent)
     // style detectors
     musicFeature1.reset(new MusicFeature1());
 
-    tempoTrackerFast.reset(new ldTempoTracker("default", true, true, 0));
-    tempoTrackerSlow.reset(new ldTempoTracker("default", false, true, 0));
+    m_tempoTrackerFast.reset(new ldTempoTracker());
+    m_tempoTrackerSlow.reset(new ldTempoTracker(false, true));
 
     // music reactor
     mrSlowBass.reset(new ldMusicReactor());
@@ -122,13 +124,15 @@ ldMusicManager::ldMusicManager(QObject* parent)
     hybridFlash.reset(new ldHybridFlash);
     hybridAutoColor2.reset(new ldHybridAutoColor2);
     hybridColorPalette.reset(new ldHybridColorPalette);
+
+    m_bestBpmBeatDetector.reset(new ldBestBpmBeatDetector());
 }
 
 
 ldMusicManager::~ldMusicManager() {}
 
 // process all algorithms
-void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float /*delta*/) {
+void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float delta) {
 
     // first measurements
     m_psd = psd;
@@ -170,15 +174,15 @@ void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float /*delta*
     // autocorrelative tempo processing
     spectrogram2->calculateS();
     bool ismusic = ((isSilent()?0:1) + (isSilent2()?0:1) + (silentThree?0:1)) > 0;
-    tempoACSlower->update(spectrogram2.get(), ismusic);
-    tempoACSlow->update(spectrogram2.get(), ismusic);
-    tempoACFast->update(spectrogram2.get(), ismusic);
-    tempoACFaster->update(spectrogram2.get(), ismusic);
+    tempoACSlower->update(spectrogram2.get(), ismusic, delta);
+    tempoACSlow->update(spectrogram2.get(), ismusic, delta);
+    tempoACFast->update(spectrogram2.get(), ismusic, delta);
+    tempoACFaster->update(spectrogram2.get(), ismusic, delta);
 
     // aubio library tempo trackers
     // test fix
-    tempoTrackerFast->process(psd.get());
-    tempoTrackerSlow->process(psd.get());
+    m_tempoTrackerFast->process(psd.get(), delta);
+    m_tempoTrackerSlow->process(psd.get(), delta);
 
     // feature metaprocessing
     musicFeature1->update(spectFrame, psd.get());
@@ -224,14 +228,15 @@ void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float /*delta*
 #endif
 
     // hybrid algos
-    hybridAnima->process(this);
+    hybridAnima->process(this, delta);
     hybridFlash->process(this);
     hybridAutoColor2->process(this);
     hybridColorPalette->process(this);
 
     // appak bpm selector
-    appakaBpmSelector->process(tempoTrackerFast->bpm(), appakaBeat->bpm, m_peaks->lastBpmApproximation());
+    appakaBpmSelector->process(m_tempoTrackerFast->bpm(), appakaBeat->bpm, m_peaks->lastBpmApproximation());
 
+    m_bestBpmBeatDetector->processBpm(appakaBpmSelector->bestBpm(), m_peaks->output(), delta);
     emit updated();
 }
 
@@ -283,6 +288,16 @@ const ldAppakPeaks *ldMusicManager::peaks() const
 ldManualBpm *ldMusicManager::manualBpm() const
 {
     return m_manualBpm;
+}
+
+const ldTempoTracker *ldMusicManager::tempoTrackerFast() const
+{
+    return m_tempoTrackerFast.get();
+}
+
+const ldTempoTracker *ldMusicManager::tempoTrackerSlow() const
+{
+    return m_tempoTrackerSlow.get();
 }
 
 bool ldMusicManager::isSilent() const

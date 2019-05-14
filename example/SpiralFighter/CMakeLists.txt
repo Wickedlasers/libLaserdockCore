@@ -10,6 +10,13 @@ target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/src)
 target_link_libraries(${PROJECT_NAME} PRIVATE ldCore)
 
+if(UNIX AND NOT APPLE AND NOT ANDROID)
+    set(LINUX TRUE)
+endif()
+if(LINUX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE m stdc++)
+endif()
+
 set(SRCDIR ${CMAKE_CURRENT_LIST_DIR}/src)
 
 target_sources(${PROJECT_NAME} PRIVATE

@@ -34,6 +34,11 @@ ldFilterManager::ldFilterManager(QObject *parent)
     m_dataFilter.addFilter(m_rotateFilter.get());
 }
 
+ldFilter *ldFilterManager::globalFilter() const
+{
+    return m_globalFilter;
+}
+
 void ldFilterManager::setGlobalFilter(ldFilter *globalFilter)
 {
     m_globalFilter = globalFilter;
@@ -46,18 +51,18 @@ void ldFilterManager::setFrameModes(int frameModes)
 
 void ldFilterManager::process(Vertex &tval, Vertex &simVal)
 {
-    m_basicGlobalFilter.process(tval);
+    m_basicGlobalFilter.processFilter(tval);
 
     // apply global filter to simulator output
     if (m_globalFilter)
-        m_globalFilter->process(tval);
+        m_globalFilter->processFilter(tval);
 
     // store similator value
     simVal = tval;
 
     // apply data filter to data output
     // give filter proper settings
-    m_dataFilter.process(tval);
+    m_dataFilter.processFilter(tval);
 }
 
 ldColorCurveFilter *ldFilterManager::baseColorCurveFilter() const

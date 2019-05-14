@@ -121,19 +121,20 @@ is required.
 #include "ldCore/Helpers/Audio/ldSoundGate.h"
 #include "ldCore/Helpers/Audio/ldSilentThree.h"
 #include "ldCore/Helpers/Audio/ldSpectrumFrame.h"
-#include "ldCore/Helpers/Audio/ldTempoTracker.h"
 #include "ldCore/Helpers/Visualizer/ldVisualizerHelper.h"
 
 class ldAppakBpmSelector;
 class ldAppakPeaks;
 class ldAppakSpectrum;
-class ldSpectrogram;
+class ldBestBpmBeatDetector;
 class ldHybridAnima;
 class ldHybridFlash;
 class ldHybridAutoColor2;
 class ldHybridColorPalette;
 class ldManualBpm;
+class ldSpectrogram;
 class ldTempoAC;
+class ldTempoTracker;
 
 class LDCORESHARED_EXPORT ldMusicManager : public QObject
 {
@@ -163,6 +164,9 @@ public:
     const ldAppakPeaks* peaks() const;
     ldManualBpm* manualBpm() const;
 
+    const ldTempoTracker* tempoTrackerFast() const;
+    const ldTempoTracker* tempoTrackerSlow() const;
+
     // sound gate
     bool isSilent() const;
     bool isSilent2() const;
@@ -183,12 +187,10 @@ public:
     std::unique_ptr<ldMusicReactor> mrFastTreb;
     std::unique_ptr<ldMusicReactor> mrVolume;
 
-    std::shared_ptr<ldTempoTracker> tempoTrackerFast;
-    std::unique_ptr<ldTempoTracker> tempoTrackerSlow;
-
     std::unique_ptr<ldAppakaBeat> appakaBeat;
     std::unique_ptr<ldAppakGate> appakaGate;
     std::unique_ptr<ldAppakSpectrum> appakaSpectrum;
+
 
     std::unique_ptr<ldAudioBasic> audioBasic ;
 
@@ -230,12 +232,18 @@ private:
     std::unique_ptr<ldAppakBpmSelector> appakaBpmSelector;
     std::unique_ptr<ldAppakPeaks> m_peaks;
 
+    std::shared_ptr<ldTempoTracker> m_tempoTrackerFast;
+    std::unique_ptr<ldTempoTracker> m_tempoTrackerSlow;
+
+
     std::unique_ptr<ldBeatWarm> beatWarm;
     std::unique_ptr<ldBeatFresh> beatFresh;
     float wfr = 0.f;
     ldDurationalStatEstimator dsewfr;
 
     int m_realSoundLevel = 0;
+
+    std::unique_ptr<ldBestBpmBeatDetector> m_bestBpmBeatDetector;
 };
 
 #endif // LDMUSICMANAGER_H

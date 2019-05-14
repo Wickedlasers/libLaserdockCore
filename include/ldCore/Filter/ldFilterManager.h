@@ -37,7 +37,9 @@ class LDCORESHARED_EXPORT ldFilterManager : public QObject
 public:
     explicit ldFilterManager(QObject *parent = 0);    
 
+    ldFilter *globalFilter() const;
     void setGlobalFilter(ldFilter *globalFilter);
+
     void setFrameModes(int frameModes);
 
     void process(Vertex &tval, Vertex &simVal);

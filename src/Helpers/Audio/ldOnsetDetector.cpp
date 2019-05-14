@@ -77,11 +77,11 @@ OnsetDetector::OnsetDetector(char* _algorithm, float _gapTime, float _decayTime,
 }
 
 
-float OnsetDetector::process(ldSoundData* pSoundData) {
+float OnsetDetector::process(ldSoundData* pSoundData, float delta) {
 
     // decay
-    if (decayTime > AUDIO_UPDATE_DELTA_S) {
-        output -= AUDIO_UPDATE_DELTA_S / decayTime;
+    if (decayTime > delta) {
+        output -= delta / decayTime;
         output = std::max(0.f, output);
     } else output = 0;
 

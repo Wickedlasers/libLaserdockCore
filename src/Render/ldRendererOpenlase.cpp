@@ -90,9 +90,9 @@ float ldRendererOpenlase::renderFrame(ldFrameBuffer * buffer, int max_fps){
     buffer->setFrameModes(m_frameModes);
     for(int i = 0; i < rendered_frame->pnext; i++ ){
         OLPoint *p = rendered_frame->points+i;
-        v.position[0] = p->x;
-        v.position[1] = p->y;
-        v.position[2] = 0.0f;
+        v.x() = p->x;
+        v.y() = p->y;
+        v.z() = 0.0f;
         v.color[0] =((p->color & 0xFF0000) >> 16) / 255.0f;
         v.color[1] =((p->color & 0x00FF00) >> 8) / 255.0f;
         v.color[2] =((p->color & 0x0000FF) >> 0) / 255.0f;

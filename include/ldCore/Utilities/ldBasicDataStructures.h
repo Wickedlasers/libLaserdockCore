@@ -45,6 +45,15 @@ struct LDCORESHARED_EXPORT Vertex
 
     bool isValid() const;
     bool isBlank() const;
+
+    float &x();
+    float &y();
+    float &z();
+
+    float &r();
+    float &g();
+    float &b();
+    float &a();
 };
 
 /** Samples that are used by laser hardware */

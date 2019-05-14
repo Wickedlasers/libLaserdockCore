@@ -68,21 +68,21 @@ void ldFilterBasicGlobal::process(Vertex &v)
     }
     
     if (m_tracerFilter->m_enabled)
-        m_tracerFilter->process(v);
+        m_tracerFilter->processFilter(v);
 
     if (m_hueMatrixFilter->m_enabled)
-        m_hueMatrixFilter->process(v);
+        m_hueMatrixFilter->processFilter(v);
 
     if(m_hueShiftFilter->m_enabled)
-        m_hueShiftFilter->process(v);
+        m_hueShiftFilter->processFilter(v);
 
     if(m_hueFilter->m_enabled)
-        m_hueFilter->process(v);
+        m_hueFilter->processFilter(v);
 
     if(m_colorCurveFilter->m_enabled)
-        m_colorCurveFilter->process(v);
+        m_colorCurveFilter->processFilter(v);
 
-     m_soundLevelFilter->process(v);
+     m_soundLevelFilter->processFilter(v);
 }
 
 ldColorCurveFilter *ldFilterBasicGlobal::colorCurveFilter() const

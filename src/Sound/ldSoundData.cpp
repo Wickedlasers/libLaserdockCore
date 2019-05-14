@@ -68,6 +68,7 @@ ldSoundData::ldSoundData(const QAudioFormat &format, QObject* parent) :
     m_format(format),
     m_maxAmplitude(0),
     m_fft(new LDFFT(SAMPLE_SIZE)),
+    m_waveformOriginal(SAMPLE_SIZE),
     m_waveform(SAMPLE_SIZE),
     m_frequency(SAMPLE_SIZE),
     m_rawdata(SAMPLE_SIZE * 2),
@@ -151,6 +152,8 @@ void ldSoundData::Update(const AudioBlock &block) {
         float tRight = block.data[i*2+1];
         m_waveform.GetLeft()[i]  = tLeft;
         m_waveform.GetRight()[i] = tRight;
+        m_waveformOriginal.GetLeft()[i]  = tLeft;
+        m_waveformOriginal.GetRight()[i] = tRight;
 
         // Accumulate peak & average power
         tAbs = fabs(tLeft); if(tAbs > tMaxL) tMaxL = tAbs; tSumL += tAbs;
@@ -440,6 +443,11 @@ void ldSoundData::GetFullFFT(std::vector<float>& fftArray, bool normalize, bool 
     }
 }
 
+float ldSoundData::GetFFTValueForFrequency(float frequencyInHertz) const
+{
+    return GetFFTValueForFrequency(frequencyInHertz, 0);
+}
+
 float ldSoundData::GetFFTValueForFrequency(float frequencyInHertz, unsigned windowSize) const {
     if (frequencyInHertz < 0 || frequencyInHertz >= soundMaxFrequency) return 0;
     int fIdx = floorf((frequencyInHertz / (soundMaxFrequency * 2.0)) * SAMPLE_SIZE);
@@ -478,6 +486,11 @@ void ldSoundData::GetSpectrum(float *spectrum, unsigned spectrumLength, float mi
         spectrum[i] = value/(float)binsPerBlock;    // store averaged;
         firstBinIndex += binsPerBlock;              // increment to next block
     }
+}
+
+void ldSoundData::GetMusicSpectrum(float *spectrum, unsigned spectrumLength) const
+{
+    GetSpectrum(spectrum, spectrumLength, 100.0, 4000.0);
 }
 
 int ldSoundData::GetSoundLevel() const
@@ -670,3 +683,19 @@ float ldSoundData::powerAt(int index, int spectrumLength) const
 
     //return GetFFTValue(frequency);
 }
+
+int ldSoundData::GetWaveformBufferLength() const
+{
+    return SAMPLE_SIZE;
+}
+
+const float *ldSoundData::GetWaveformBufferL()  const
+{
+    return m_waveformOriginal.GetLeft();
+}
+
+const float *ldSoundData::GetWaveformBufferR() const
+{
+    return m_waveformOriginal.GetRight();
+}
+

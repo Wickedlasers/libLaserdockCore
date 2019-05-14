@@ -49,6 +49,7 @@ LDCORESHARED_EXPORT bool cmpf(float a, float b, float epsilon = 0.005f);
 class LDCORESHARED_EXPORT ldMaths
 {
 public:
+    static float normalize(float value, float normalValue, float scale);
     static float rndFloatBetween(float min, float max);
     static float rndFloatBetweenWithInterval(float min, float max, float actualValue, float pourcentLimitLow, float pourcentLimitUp);
     static float rndSign();

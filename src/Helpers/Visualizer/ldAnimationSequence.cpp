@@ -29,6 +29,7 @@
 #include "ldCore/Visualizations/ldVisualizer.h"
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
 #include "ldCore/Helpers/Audio/ldTempoAC.h"
+#include "ldCore/Helpers/Audio/ldTempoTracker.h"
 #include "ldCore/Helpers/Maths/ldMaths.h"
 #include "ldCore/Helpers/SimpleCrypt/ldSimpleCrypt.h"
 #include "ldCore/Helpers/SVG/ldSvgReader.h"
@@ -185,7 +186,7 @@ void ldAnimationSequenceBezier::drawFrameLights5(ldRendererOpenlase* r, int inde
         int cccc = 0;
         int ccccc = 4;
         //            cc = (1 - ldCore::instance()->musicManager()->tempoACSlower->phaseReactive) * ccc * ccccc;
-        int bc = (int)((1 - ldCore::instance()->musicManager()->tempoTrackerSlow->output()) * ccc * ccccc);
+        int bc = (int)((1 - ldCore::instance()->musicManager()->tempoTrackerSlow()->output()) * ccc * ccccc);
 
         for (const ldBezierPath &bezierPath : dataVect)
         {

@@ -31,6 +31,7 @@
 
 #include "ldCore/ldCore.h"
 #include "ldCore/Helpers/Audio/ldAppakPeaks.h"
+#include "ldCore/Helpers/Audio/ldTempoTracker.h"
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
 
 // ldSoundEventUtil
@@ -139,7 +140,7 @@ void ldSoundEventUtil::updateSystem(System system, int channel)
         if ( m->mrSlowBass->statOutput > m_systems_channel[system][channel].ceil ) isEvent=true;
         break;
     case TempoTracker:
-        if ( m->tempoTrackerSlow->output() >= 1.0 ) isEvent=true;
+        if ( m->tempoTrackerSlow()->output() >= 1.0 ) isEvent=true;
         break;
     case AppakabarBeat:
             if ( m->peaks()->output() >= 0.9 ) {
@@ -174,7 +175,7 @@ void ldSoundEventUtil::updateSystem(System system, int channel)
         m_systems_channel[system][channel].dropCount++;
     }
 
-    if (m_isTempoTracker && m->tempoTrackerSlow->bpm() > 0 && m_isAppakaBeat && m->appakaBeat->bpm > 0) {
+    if (m_isTempoTracker && m->tempoTrackerSlow()->bpm() > 0 && m_isAppakaBeat && m->appakaBeat->bpm > 0) {
        // qDebug() <<"tempoTracker " << tempoTracker->bpm<<" | appakaBeat bpm" << appakaBeat->bpm<<"bpmPeak" << appakaBeat->bpmPeak ;
     }
 }

@@ -31,8 +31,9 @@
 
 #include "ldCore/ldCore_global.h"
 
-#define TWOPI 6.28318530718f
-#define TAU TWOPI
+#include <ldCore/Helpers/Maths/ldMaths.h>
+
+const float TAU = M_2PIf;
 
 class LDCORESHARED_EXPORT ldControlValue {
 public:

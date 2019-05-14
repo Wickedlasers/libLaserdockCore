@@ -33,36 +33,34 @@
 
 #include <aubio/src/aubio.h>
 
+#include <QtCore/QElapsedTimer>
+
 #include <ldCore/Sound/ldSoundData.h>
 
-class LDCORESHARED_EXPORT ldTempoTracker {
-
+class LDCORESHARED_EXPORT ldTempoTracker : public QObject
+{
+    Q_OBJECT
 public:
-    explicit ldTempoTracker(const QString &algorithm = "default", bool _fastBeats = true, bool _allowPartialBeats = true, float _newBeatConfidenceCutoff = 0);
+    explicit ldTempoTracker(bool fastBeats = true, bool allowPartialBeats = true, QObject *parent = nullptr);
     virtual ~ldTempoTracker();
 
-    void process(ldSoundData* pSoundData);
+    void process(ldSoundData* pSoundData, float delta);
 
     float output() const;
     float confidence() const;
     float bpm() const;
 
-private:
-    // options
-    // string for algorithm selection "default" for default
-    QString m_algorithm;
+signals:
+    void beatDetected();
 
+private:
     // notes on algorithms:
     //"specflux" is defailt, looks good and is stable
     //"rolloff" looks good and is more expressive but less consistent
     //"specdiff" and "phase" seem to work decently but no better than default
 
-    // turn this on for faster beats
-    bool m_fastBeats = false;
     // register a new beat even if the old beat is still fading out
     bool m_allowPartialBeats = true;
-    // beats below this confidence level are ignored
-    float m_newBeatConfidenceCutoff = 0.f;
 
     // 0-1 value to prefer slow-fast tempos.  not yet implemented.
     //float speed;
@@ -72,10 +70,15 @@ private:
     std::unique_ptr<aubio_tempo_t, void(*)(aubio_tempo_t*)> m_aubio;
     float m_fade = 0.f;
 
-
     float m_output = 0;
     float m_confidence = 0;
-    float m_bpm = 0;
+    float m_bpm = 120;
+
+    // create some vectors
+    std::unique_ptr<fvec_t, void(*)(fvec_t*)> m_in;
+    std::unique_ptr<fvec_t, void(*)(fvec_t*)> m_out;
+
+    float m_lastBeatMs = 0;
 };
 
 

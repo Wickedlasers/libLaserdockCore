@@ -30,7 +30,8 @@
 #include <QtCore/QDebug>
 
 // ldAppakPeaks
-ldAppakPeaks::ldAppakPeaks() {
+ldAppakPeaks::ldAppakPeaks()
+{
     memset(powerDataOne, 0.0, buffersize * sizeof(float));
     memset(powerDataTwo, 0.0, buffersize * sizeof(float));
     memset(bufferTmp, 0.0, buffersize * sizeof(float));

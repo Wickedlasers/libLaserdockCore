@@ -56,7 +56,7 @@ ldFilterBasicData::ldFilterBasicData()
     // data for offset correction
     // init old[] buffer with zeroes
     Vertex t;
-    t.position[0] = t.position[1] = t.position[2] = 0;
+    t.x() = t.y() = t.z() = 0;
     t.color[0] = t.color[1] = t.color[2] = t.color[3] = 0;
     for (int i = 0; i < OFFSET_MAX; i++) old[i] = t;
 }
@@ -73,7 +73,7 @@ void ldFilterBasicData::addFilter(ldFilter *filter)
 void ldFilterBasicData::process(Vertex &v) {
     
     for(ldFilter *filter : m_filters)
-        filter->process(v);
+        filter->processFilter(v);
 
     bool mode_disable_scale = frameModes & FRAME_MODE_SKIP_TRANSFORM;
     bool mode_disable_projection = frameModes & FRAME_MODE_SKIP_TRANSFORM;
@@ -83,8 +83,8 @@ void ldFilterBasicData::process(Vertex &v) {
 
     if (!mode_disable_scale) {
         // scale
-        m_scaleFilter->process(v);
-        m_shiftFilter->process(v);
+        m_scaleFilter->processFilter(v);
+        m_shiftFilter->processFilter(v);
     }
 
     // keystone
@@ -92,27 +92,27 @@ void ldFilterBasicData::process(Vertex &v) {
         bool nullTransform = (m_projectionBasic->pitch() == 0 && m_projectionBasic->yaw() == 0);
         if(!nullTransform) {
             // map
-            float x = v.position[0];
-            float y = v.position[1];
+            float x = v.x();
+            float y = v.y();
             // correct for size
             x *= 1.0f/m_projectionBasic->maxdim();
             y *= 1.0f/m_projectionBasic->maxdim();
             // transform
             m_projectionBasic->transform(x, y);
 
-            v.position[0] = x;
-            v.position[1] = y;
+            v.x() = x;
+            v.y() = y;
         }
     }
 
     // borders and clamp
-    m_borderFilter->process(v);
-    v.position[0] = std::min<float>(std::max<float>(v.position[0], -1), 1);
-    v.position[1] = std::min<float>(std::max<float>(v.position[1], -1), 1);
+    m_borderFilter->processFilter(v);
+    v.x() = std::min<float>(std::max<float>(v.x(), -1), 1);
+    v.y() = std::min<float>(std::max<float>(v.y(), -1), 1);
 
     // deadzone
     // disable rotate before applying deadzone
-    m_deadzoneFilter->process(v);
+    m_deadzoneFilter->processFilter(v);
 
     // color
     if (!mode_disable_colorcorrection) {
@@ -123,7 +123,7 @@ void ldFilterBasicData::process(Vertex &v) {
 
         // apply color curves
         for (int i = 0; i < 3; i++) v.color[i] = fminf(fmaxf(v.color[i], 0), 1);
-        m_colorCurveFilter->process(v);
+        m_colorCurveFilter->processFilter(v);
         for (int i = 0; i < 3; i++) v.color[i] = fminf(fmaxf(v.color[i], 0), 1);
     }
 
@@ -135,8 +135,8 @@ void ldFilterBasicData::process(Vertex &v) {
         // quiet algorithm
         if (!mode_disable_overscan) {
             float maxDistance = overscan_speed; // (per point)
-            float tx = v.position[0];
-            float ty = v.position[1];
+            float tx = v.x();
+            float ty = v.y();
             static float lastx = 0;
             static float lasty = 0;
             float dx = tx - lastx;
@@ -157,8 +157,8 @@ void ldFilterBasicData::process(Vertex &v) {
                 tx = lastx + dx;
                 ty = lasty + dy;
             }
-            v.position[0] = lastx = tx;
-            v.position[1] = lasty = ty;
+            v.x() = lastx = tx;
+            v.y() = lasty = ty;
             
         }
         
@@ -172,13 +172,13 @@ void ldFilterBasicData::process(Vertex &v) {
         {
             static float lastx = 0;
             static float lasty = 0;
-            float dx = v.position[0] - lastx;
-            float dy = v.position[1] - lasty;
+            float dx = v.x() - lastx;
+            float dy = v.y() - lasty;
             float d = sqrtf(dx*dx+dy*dy);
             if (d > underscan_speed) {
                 d = 1;
-                lastx = v.position[0];
-                lasty = v.position[1];
+                lastx = v.x();
+                lasty = v.y();
             } else {
                 d = 0;
             }

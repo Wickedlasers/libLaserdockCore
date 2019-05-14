@@ -38,6 +38,15 @@ bool cmpf(float a, float b, float epsilon)
 // -------------------------- ldMaths ---------------------------------
 
 // rndFloatBetween
+float ldMaths::normalize(float value, float normalValue, float scale)
+{
+    // 300 1 1
+    // 299
+    // 1 + 299 * 1 = 1
+    float diff = value - normalValue;
+    return normalValue + diff * scale;
+}
+
 float ldMaths::rndFloatBetween(float min, float max)
 {
     float tmp;

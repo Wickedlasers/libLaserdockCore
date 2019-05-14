@@ -22,10 +22,39 @@
 
 #include "ldCore/Helpers/Color/ldColorUtil.h"
 
+ldFilter::ldFilter()
+    : ldShader ()
+    , m_intensity(1)
+    , m_min_intensity(0)
+    , m_max_intensity(1)
+{
+}
+
+void ldFilter::processFilter(Vertex &input)
+{
+    if(m_intensity != 1.f) {
+        Vertex source = input;
+        process(input);
+        normalize(input, source);
+    } else {
+        process(input);
+    }
+}
+
+void ldFilter::normalize(Vertex &input, const Vertex &source)
+{
+    for(int i = 0; i < 3; i++) {
+        input.position[i] = ldMaths::normalize(input.position[i], source.position[i], m_intensity);
+    }
+    for(int i = 0; i < 4; i++) {
+        input.color[i] = ldMaths::normalize(input.color[i], source.color[i], m_intensity);
+    }
+}
+
 void ldFilter::ShaderFunc(float *x, float *y, uint32_t *color) {
     Vertex input;
-    input.position[0] = *x;
-    input.position[1] = *y;
+    input.x() = *x;
+    input.y() = *y;
     input.color[0] =  1;
     input.color[1] =  1;
     input.color[2] =  1;
@@ -33,7 +62,7 @@ void ldFilter::ShaderFunc(float *x, float *y, uint32_t *color) {
     input.color[1] =(float) (((*color & 0x00FF00) >> 8) / 255.0f);
     input.color[2] =(float) (((*color & 0x0000FF) >> 0) / 255.0f);
     process(input);
-    *x = input.position[0];
-    *y = input.position[1];
+    *x = input.x();
+    *y = input.y();
     *color = ldColorUtil::colorRGB(input.color[0]*255, input.color[1]*255, input.color[2]*255);
 }

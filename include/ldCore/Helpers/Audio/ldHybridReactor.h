@@ -56,7 +56,7 @@ private:
 class LDCORESHARED_EXPORT ldHybridAnima {
 public:
     ldHybridAnima();
-    void process(ldMusicManager* m);
+    void process(ldMusicManager* m, float delta);
 
     int outputBaseFrameIndex = 0;
     float outputTrackPosition = 0;
