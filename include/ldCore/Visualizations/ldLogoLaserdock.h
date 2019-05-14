@@ -60,7 +60,7 @@ protected:
     virtual float targetFPS() const override { return 60; }
     virtual void draw() override;
 
-    void render(ldRendererOpenlase* m_renderer);
+    void render();
 
     QList<ldLogoLine> lines;
     bool finished;

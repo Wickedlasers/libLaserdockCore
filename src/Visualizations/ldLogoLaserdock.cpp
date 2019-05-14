@@ -45,10 +45,10 @@ void ldLogo::onShouldStart()
 
 void ldLogo::draw()
 {
-    render(m_renderer);
+    render();
 }
 
-void ldLogo::render(ldRendererOpenlase *m_renderer) {
+void ldLogo::render() {
 
     OLRenderParams params;
     memset(&params, 0, sizeof params);

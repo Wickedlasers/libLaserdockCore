@@ -120,10 +120,8 @@ if(WIN32)
     target_compile_definitions(aubio PRIVATE _USE_MATH_DEFINES)
 endif()
 
-if(UNIX AND NOT APPLE AND NOT ANDROID)
-    set(LINUX TRUE)
-endif()
 
+include(DetectLinux)
 if(LINUX)
     target_compile_options(aubio PRIVATE -fPIC)
 endif()

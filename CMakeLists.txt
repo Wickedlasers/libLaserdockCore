@@ -44,6 +44,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
+set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 # try to set QTDIR from environment variable
 if(EXISTS $ENV{QTDIR})
     set(QTDIR $ENV{QTDIR} CACHE STRING "Path to Qt dir")
