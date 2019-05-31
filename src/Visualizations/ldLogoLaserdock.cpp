@@ -40,16 +40,6 @@ bool ldLogo::init()
 
 void ldLogo::onShouldStart()
 {
-
-}
-
-void ldLogo::draw()
-{
-    render();
-}
-
-void ldLogo::render() {
-
     OLRenderParams params;
     memset(&params, 0, sizeof params);
     params.rate = m_renderer->rate();
@@ -66,6 +56,15 @@ void ldLogo::render() {
     params.max_framelen = 30000/60 -2;
     params.render_flags = RENDER_NOREVERSE | RENDER_NOREORDER;
     m_renderer->setRenderParams(&params);
+}
+
+void ldLogo::draw()
+{
+    render();
+}
+
+void ldLogo::render() {
+
     m_renderer->loadIdentity();
     m_renderer->loadIdentity3();
     timer += 1.0f/60.0f;
