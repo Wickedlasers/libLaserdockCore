@@ -126,7 +126,7 @@ is required.
 class ldAppakBpmSelector;
 class ldAppakPeaks;
 class ldAppakSpectrum;
-class ldBestBpmBeatDetector;
+class ldBpmBeatDetector;
 class ldHybridAnima;
 class ldHybridFlash;
 class ldHybridAutoColor2;
@@ -166,6 +166,8 @@ public:
 
     const ldTempoTracker* tempoTrackerFast() const;
     const ldTempoTracker* tempoTrackerSlow() const;
+
+    const ldBpmBeatDetector *bpmBeatDetector() const;
 
     // sound gate
     bool isSilent() const;
@@ -243,7 +245,7 @@ private:
 
     int m_realSoundLevel = 0;
 
-    std::unique_ptr<ldBestBpmBeatDetector> m_bestBpmBeatDetector;
+    std::unique_ptr<ldBpmBeatDetector> m_bpmBeatDetector;
 };
 
 #endif // LDMUSICMANAGER_H

@@ -23,59 +23,73 @@
 //  Created by Eric Brugère on 4/13/16.
 //  Copyright (c) 2015 Wicked Lasers. All rights reserved.
 
-#include "ldCore/Helpers/Audio/ldBestBpmBeatDetector.h"
+#include "ldCore/Helpers/Audio/ldBpmBeatDetector.h"
+
+#include <QtCore/QDebug>
 
 #include "ldCore/Helpers/Maths/ldMaths.h"
 #include "ldCore/Helpers/Maths/ldMathStat.h"
-#include <QtCore/QDebug>
 
-ldBestBpmBeatDetector::ldBestBpmBeatDetector(QObject *parent)
+ldBpmBeatDetector::ldBpmBeatDetector(QObject *parent)
     : QObject(parent)
 {
 }
 
-ldBestBpmBeatDetector::~ldBestBpmBeatDetector()
+ldBpmBeatDetector::~ldBpmBeatDetector()
 {
 }
 
-void ldBestBpmBeatDetector::processBpm(float bestBpm, float output, float delta)
+void ldBpmBeatDetector::process(float bpm, float output, float delta)
 {
-    if (bestBpm < 1) bestBpm = 1;
+    if (bpm < 1) bpm = 1;
 
-    if (!m_isRunningBPMCounter) {
-        m_minCurrentMillis = static_cast<int>(500.f * 60.f / bestBpm);
+    if (!m_isRunningBpmCounter) {
+        m_minCurrentMillis = static_cast<int>(m_duration * 1000.f * 60.f / bpm);
         //qDebug() << "  m_minCurrentMillis" << m_minCurrentMillis;
-        m_isRunningBPMCounter = true;
-        m_milliSecondsCounter = 0;
+        m_isRunningBpmCounter = true;
+        m_msCounter = 0;
     } else {
-        if (m_milliSecondsCounter > m_minCurrentMillis) {
+        if (m_msCounter > m_minCurrentMillis) {
             // wait a peak and time out -> emit and reset
             if (output >= 0.9f ) {
                 // qDebug() << "  m_milliSecondsCounter" << m_milliSecondsCounter;
-                bpmCount++;
+                m_beatCount++;
                 emit beatDetected();
                 //
-                m_isRunningBPMCounter = false;
-                m_milliSecondsCounter = 0;
+                m_isRunningBpmCounter = false;
+                m_msCounter = 0;
             }
         }
     }
+    m_msCounter+=delta * 1000;
 
-    //
-    m_milliSecondsCounter+=delta * 1000;
-    m_milliSecondsCounter2+=delta * 1000;
-
-    if(m_milliSecondsCounter2 > 2000) { // each 2 sec
-        m_bpm = bpmCount * 30; // 2* 30 sec = 1 min
-
-        bpmCount = 0;
-        m_milliSecondsCounter2 = 0;
-        m_isRunningBPMCounter = false;
+    // calculate bpm based on peaks
+    m_msBpmCounter+=delta * 1000;
+    if(m_msBpmCounter > 2000) { // each 2 sec
+        m_bpm = m_beatCount * 30; // 2* 30 sec = 1 min
+        m_beatCount = 0;
+        m_msBpmCounter = 0;
+//        m_isRunningBPMCounter = false;
     }
 }
 
-int ldBestBpmBeatDetector::bpm() const
+int ldBpmBeatDetector::bpm() const
 {
     return m_bpm;
+}
+
+void ldBpmBeatDetector::setDuration(float duration)
+{
+    m_duration = duration;
+}
+
+void ldBpmBeatDetector::reset()
+{
+    m_msCounter = 0;
+    m_isRunningBpmCounter = 0;
+    m_minCurrentMillis = 500;
+    m_msBpmCounter = 0;
+    m_beatCount = 0;
+    m_bpm = 0;
 }
 

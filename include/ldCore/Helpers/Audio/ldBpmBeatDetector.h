@@ -18,35 +18,41 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#ifndef LDBESTBPMBEATDETECTOR_H
-#define LDBESTBPMBEATDETECTOR_H
+#ifndef LDBPMBEATDETECTOR_H
+#define LDBPMBEATDETECTOR_H
 
 #include <ldCore/Sound/ldSoundData.h>
 
-class LDCORESHARED_EXPORT ldBestBpmBeatDetector : public QObject
+class LDCORESHARED_EXPORT ldBpmBeatDetector : public QObject
 {
     Q_OBJECT
+
 public:
-    ldBestBpmBeatDetector(QObject *parent = nullptr);
-    ~ldBestBpmBeatDetector();
+    ldBpmBeatDetector(QObject *parent = nullptr);
+    ~ldBpmBeatDetector();
     
-    void processBpm(float bestBpm, float output, float delta);
+    void process(float bpm, float output, float delta);
 
     int bpm() const;
+
+    void setDuration(float duration);
+    void reset();
 
 signals:
     void beatDetected();
 
 private:
-    float m_milliSecondsCounter = 0;
-    float m_milliSecondsCounter2 = 0;
-    int m_minCurrentMillis = 500;
-    bool m_isRunningBPMCounter = false;
-    int bpmCount = 0;
+    float m_duration = 1.f;
 
+    float m_msCounter = 0;
+    bool m_isRunningBpmCounter = false;
+    int m_minCurrentMillis = 500;
+
+    float m_msBpmCounter = 0;
+    int m_beatCount = 0;
     int m_bpm = 0;
 };
 
-#endif // LDBESTBPMBEATDETECTOR_H
+#endif // LDBPMBEATDETECTOR_H
 
 

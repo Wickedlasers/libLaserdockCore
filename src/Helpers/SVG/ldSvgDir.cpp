@@ -30,7 +30,7 @@ ldSvgDir::ldSvgDir(const QString &dirPath, const QString filePrefix, int maskSiz
     , m_maskSize(maskSize)
 {
     if(filePrefix.isEmpty() || maskSize == -1) {
-        QStringList fileList = QDir(m_dirPath).entryList(QStringList("*.svg"), QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
+        QStringList fileList = QDir(m_dirPath).entryList(QStringList{"*.svg", "*.svg.lds" }, QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
         if(fileList.length() > 0) {
             QFileInfo fileInfo(fileList.first());
             QString baseName = fileInfo.baseName(); // except .svg
@@ -77,7 +77,8 @@ QStringList ldSvgDir::getSvgFiles() const
     for (int i=0;i<size+1;i++) {
         QString indexStr = QString::number(i).rightJustified(m_maskSize, '0');
         QString filePath = m_filePrefix + indexStr + ".svg";
-        if(QFile::exists(m_dirPath + "/" + filePath))
+        QString ldsFilePath = filePath + ".lds";
+        if(QFile::exists(m_dirPath + "/" + filePath) || QFile::exists(m_dirPath + "/" + ldsFilePath))
             res += filePath;
     }
 

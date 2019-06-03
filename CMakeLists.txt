@@ -282,8 +282,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/Audio/ldAppakSpectrum.h
         ${SRCDIR}/Helpers/Audio/ldAudioBasic.cpp
         ${INCDIR}/Helpers/Audio/ldAudioBasic.h
-        ${SRCDIR}/Helpers/Audio/ldBestBpmBeatDetector.cpp
-        ${INCDIR}/Helpers/Audio/ldBestBpmBeatDetector.h
+        ${SRCDIR}/Helpers/Audio/ldBpmBeatDetector.cpp
+        ${INCDIR}/Helpers/Audio/ldBpmBeatDetector.h
         ${SRCDIR}/Helpers/Audio/ldDurationalStatEstimator.cpp
         ${INCDIR}/Helpers/Audio/ldDurationalStatEstimator.h
         ${SRCDIR}/Helpers/Audio/ldHybridReactor.cpp

@@ -27,7 +27,7 @@
 #include "ldCore/Helpers/Audio/ldAppakBpmSelector.h"
 #include "ldCore/Helpers/Audio/ldAppakPeaks.h"
 #include "ldCore/Helpers/Audio/ldAppakSpectrum.h"
-#include "ldCore/Helpers/Audio/ldBestBpmBeatDetector.h"
+#include "ldCore/Helpers/Audio/ldBpmBeatDetector.h"
 #include "ldCore/Helpers/Audio/ldHybridReactor.h"
 #include "ldCore/Helpers/Audio/ldManualBpm.h"
 #include "ldCore/Helpers/Audio/ldTempoAC.h"
@@ -125,7 +125,8 @@ ldMusicManager::ldMusicManager(QObject* parent)
     hybridAutoColor2.reset(new ldHybridAutoColor2);
     hybridColorPalette.reset(new ldHybridColorPalette);
 
-    m_bestBpmBeatDetector.reset(new ldBestBpmBeatDetector());
+    m_bpmBeatDetector.reset(new ldBpmBeatDetector());
+    m_bpmBeatDetector->setDuration(0.7);
 }
 
 
@@ -236,7 +237,7 @@ void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float delta) {
     // appak bpm selector
     appakaBpmSelector->process(m_tempoTrackerFast->bpm(), appakaBeat->bpm, m_peaks->lastBpmApproximation());
 
-    m_bestBpmBeatDetector->processBpm(appakaBpmSelector->bestBpm(), m_peaks->output(), delta);
+    m_bpmBeatDetector->process(appakaBpmSelector->bestBpm(), m_peaks->output(), delta);
     emit updated();
 }
 
@@ -298,6 +299,11 @@ const ldTempoTracker *ldMusicManager::tempoTrackerFast() const
 const ldTempoTracker *ldMusicManager::tempoTrackerSlow() const
 {
     return m_tempoTrackerSlow.get();
+}
+
+const ldBpmBeatDetector *ldMusicManager::bpmBeatDetector() const
+{
+    return m_bpmBeatDetector.get();
 }
 
 bool ldMusicManager::isSilent() const
