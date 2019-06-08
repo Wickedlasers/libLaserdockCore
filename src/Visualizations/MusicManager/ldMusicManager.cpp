@@ -126,7 +126,7 @@ ldMusicManager::ldMusicManager(QObject* parent)
     hybridColorPalette.reset(new ldHybridColorPalette);
 
     m_bpmBeatDetector.reset(new ldBpmBeatDetector());
-    m_bpmBeatDetector->setDuration(0.7);
+    m_bpmBeatDetector->setDuration(0.7f);
 }
 
 
@@ -344,5 +344,13 @@ float ldMusicManager::bestBpm() const
         return m_manualBpm->bpm();
     else
         return appakaBpmSelector->bestBpm();
+}
+
+float ldMusicManager::slowBpm() const
+{
+    if(m_manualBpm->isEnabled())
+        return m_manualBpm->bpm();
+    else
+        return m_tempoTrackerSlow->bpm();
 }
 

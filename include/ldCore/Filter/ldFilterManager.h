@@ -43,6 +43,7 @@ public:
     void setFrameModes(int frameModes);
 
     void process(Vertex &tval, Vertex &simVal);
+    void resetFilters();
 
     ldColorCurveFilter *baseColorCurveFilter() const;
     ldColorCurveFilter *colorCurveFilter() const;

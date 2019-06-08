@@ -176,6 +176,7 @@ public:
     bool isSilent3() const;
 
     float bestBpm() const;
+    float slowBpm() const;
 
     std::unique_ptr<ldTempoAC> tempoACSlower;
     std::unique_ptr<ldTempoAC> tempoACSlow;

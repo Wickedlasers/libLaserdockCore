@@ -65,6 +65,15 @@ void ldFilterManager::process(Vertex &tval, Vertex &simVal)
     m_dataFilter.processFilter(tval);
 }
 
+void ldFilterManager::resetFilters()
+{
+    m_basicGlobalFilter.resetFilter();
+   // apply global filter to simulator output
+    if (m_globalFilter)
+        m_globalFilter->resetFilter();
+    m_dataFilter.resetFilter();
+}
+
 ldColorCurveFilter *ldFilterManager::baseColorCurveFilter() const
 {
     return m_dataFilter.colorCurveFilter();

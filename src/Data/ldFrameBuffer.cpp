@@ -101,6 +101,9 @@ void ldFrameBuffer::commit()
 
 void ldFrameBuffer::setFrameModes(int flags) {
     m_frameModes = flags;
+
+    ldFilterManager *fm = ldCore::instance()->filterManager();
+    fm->resetFilters();
 }
 
 qint32 ldFrameBuffer::getAvailable() const

@@ -36,6 +36,7 @@ ldTextLabel::ldTextLabel(const QString &text, float fontSize, const ldVec2 &p_po
     , m_drawer(new ldBezierCurveDrawer)
 {
     m_drawer->setMaxPoints(30);
+    initTextFrame(text);
 }
 
 // ~ldTextLabel

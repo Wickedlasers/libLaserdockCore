@@ -227,7 +227,7 @@ void ldBezierCurveDrawer::draw(ldRendererOpenlase *renderer, const ldBezierCurve
 std::vector<std::vector<OLPoint> > ldBezierCurveDrawer::makeSafeDrawing(const std::vector<std::vector<OLPoint> > &data) const
 {
     std::vector<std::vector<OLPoint>> res;
-    const int MAX_SAFE_POINTS = 1000;
+    const int MAX_SAFE_POINTS = 4000;
     int safePoints = 0;
     for(const std::vector<OLPoint> &points : data) {
         std::vector<OLPoint> resPoints;

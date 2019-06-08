@@ -57,6 +57,7 @@ public:
 
     /** ldFilter impl */
     virtual void process(Vertex &v) override;
+    virtual void resetFilter() override;
 
     /** Add new deadzone */
     void add(const Deadzone &deadzone);
@@ -80,12 +81,13 @@ public:
 private:
     // for dead zone
     void attenuate(Vertex &v);
+    bool isOn(float x, float y) const;
     bool isOutside(float x, float y) const;
     ldDeadzoneFilter::Deadzone getDeadzone(float x, float y) const;
 
 
-    bool m_laston = false;
-    Vertex m_lastVertex;
+    bool m_lastOn = true;
+    Vertex m_lastV;
 
     QList<Deadzone> m_deadzones;
 };

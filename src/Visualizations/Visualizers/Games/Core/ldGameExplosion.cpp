@@ -28,12 +28,12 @@ namespace  {
 const float LIFETIME = 0.25f;
 }
 
-ldGameExplosion::ldGameExplosion(ldVec2 pos, int col, float size) : ldGameObject() {
+ldGameExplosion::ldGameExplosion(ldVec2 pos, int col, float explosionSize) : ldGameObject() {
     init();
 
     position = pos;
     m_color = col;
-    m_size = size;
+    m_explosionSize = explosionSize;
 
     setLifetime(LIFETIME);
 }
@@ -46,6 +46,6 @@ void ldGameExplosion::drawGameObject(ldRendererOpenlase* p_renderer) {
     ldGameObject::drawGameObject(p_renderer);
 
     p_renderer->begin(OL_LINESTRIP);
-    p_renderer->drawCircle(position.x, position.y, m_size * getLifetimePercentage(), m_color);
+    p_renderer->drawCircle(position.x, position.y, m_explosionSize * getLifetimePercentage(), m_color);
     p_renderer->end();
 }

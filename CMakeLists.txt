@@ -564,6 +564,10 @@ endif()
 add_subdirectory(3rdparty/lua)
 target_link_libraries(${PROJECT_NAME} PRIVATE liblua)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/lua/src)
+# sol2
+add_subdirectory(3rdparty/sol2)
+target_link_libraries(${PROJECT_NAME} PRIVATE sol2)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/sol2)
 # nanosvg
 # No need to do anything, header-only library
 # opencv (optional)

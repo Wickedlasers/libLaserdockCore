@@ -225,7 +225,12 @@ void ldFilterBasicData::process(Vertex &v) {
 	if (m_offset < 0) po = -m_offset;
 	// take values from old buffer depending on offsets
 	for (int i = 0; i < 4; i++) v.color[i] = old[co].color[i];
-	for (int i = 0; i < 3; i++) v.position[i] = old[po].position[i];
+    for (int i = 0; i < 3; i++) v.position[i] = old[po].position[i];
+}
+
+void ldFilterBasicData::resetFilter()
+{
+    m_deadzoneFilter->resetFilter();
 }
 
 ldColorCurveFilter *ldFilterBasicData::colorCurveFilter() const

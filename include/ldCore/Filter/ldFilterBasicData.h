@@ -63,6 +63,7 @@ public:
 
     /** ldFilter impl */
     virtual void process(Vertex &v) override;
+    virtual void resetFilter() override;
     
     /** filter classes */
     ldColorCurveFilter *colorCurveFilter() const;

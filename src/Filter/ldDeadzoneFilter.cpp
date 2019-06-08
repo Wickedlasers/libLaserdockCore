@@ -24,7 +24,7 @@
 
 ldDeadzoneFilter::ldDeadzoneFilter()
 {
-    m_lastVertex.clear();
+    m_lastV.clear();
 }
 
 void ldDeadzoneFilter::process(Vertex &v) {
@@ -32,55 +32,63 @@ void ldDeadzoneFilter::process(Vertex &v) {
         return;
 
     // see if we're on
-    bool ison = isOutside(v.x(), v.y());
-    if (m_reverse) ison = !ison;
-    bool dzison = ison;
+    bool isOn = this->isOn(v.x(), v.y());
     // compare on-status with last frame
-    if (m_laston && ison) {
+    if (m_lastOn && isOn) {
         // both points visible, do nothing
-    } else if (!m_laston && !ison) {
+    } else if (!m_lastOn && !isOn) {
         // both points not visible, keep laser black
         attenuate(v);
     } else {
-        // snap to border
-        float bestx = m_lastVertex.x();
-        float besty = m_lastVertex.y();
-        //float bestx = v.x();
-        //float besty = v.y();
-        int z32 = 8; // quality of interpolation, 8 should be fine?
-        for (int i = 0; i < z32; i++) {
-            float f = (i + 0.5f) / z32; float cf = 1-f;
-            //f = 0.5f + f * 0.5f;
-            float tx;
-            float ty;
-            tx = m_lastVertex.x()*cf + v.x()*f;
-            ty = m_lastVertex.y()*cf + v.y()*f;
-            bool teston = isOutside(tx, ty);
-            if (teston == m_laston) {
-                bestx = tx;
-                besty = ty;
-                break;
+
+        if(m_lastV.isValid()) {
+            // snap to border
+            float bestx = m_lastV.x();
+            float besty = m_lastV.y();
+            //float bestx = v.x();
+            //float besty = v.y();
+            const int INTERVAL_COUNT = 32; // quality of interpolation, 8 should be fine?
+            float deltaX = v.x() - m_lastV.x();
+            float deltaY = v.y() - m_lastV.y();
+            for (int i = 0; i < INTERVAL_COUNT; i++) {
+                float f = (float) i / INTERVAL_COUNT;
+                float tx = m_lastV.x() + deltaX * f;
+                float ty = m_lastV.y() + deltaY * f;
+                bool testOn = this->isOn(tx, ty);
+                if (testOn == m_lastOn) {
+                    bestx = tx;
+                    besty = ty;
+                    break;
+                }
             }
+
+            {
+                // smooth the snap at lower attenuations
+                Vertex vt = v;
+                vt.color[0] = 1;
+                attenuate(vt);
+                float att = vt.color[0];
+                float catt = 1-att;
+                bestx = catt*bestx + att*v.x();
+                besty = catt*besty + att*v.y();
+            }
+
+            v.x() = bestx;
+            v.y() = besty;
         }
 
-        {
-            // smooth the snap at lower attenuations
-            Vertex vt = v; vt.color[0] = 1; attenuate(vt); float att = vt.color[0]; float catt = 1-att;
-            bestx = catt*bestx + att*v.x();
-            besty = catt*besty + att*v.y();
-        }
-
-        v.x() = bestx;
-        v.y() = besty;
-
-        if (!ison)
+        if (!isOn)
             attenuate(v);
     }
     // memory for dead zones
-    m_laston = dzison;
+    m_lastOn = isOn;
+    m_lastV = v;
+}
 
-
-    m_lastVertex = v;
+void ldDeadzoneFilter::resetFilter()
+{
+    m_lastOn = true;
+    m_lastV.clear();
 }
 
 const QList<ldDeadzoneFilter::Deadzone> &ldDeadzoneFilter::deadzones() const
@@ -107,6 +115,13 @@ void ldDeadzoneFilter::add(const ldDeadzoneFilter::Deadzone &deadzone)
 void ldDeadzoneFilter::clear()
 {
     m_deadzones.clear();
+}
+
+bool ldDeadzoneFilter::isOn(float x, float y) const
+{
+    bool isOut = isOutside(x, y);
+    if(m_reverse) isOut = !isOut;
+    return isOut;
 }
 
 bool ldDeadzoneFilter::isOutside(float x, float y) const {

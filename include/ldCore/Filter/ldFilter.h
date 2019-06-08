@@ -52,6 +52,8 @@ public:
 
     virtual void processFilter(Vertex &input);
 
+    virtual void resetFilter() {}
+
     /** Optional filter name */
     virtual QString name() { return QString(); }
 
