@@ -18,10 +18,13 @@ public:
 
     void setKey(quint64 key);
 
-    bool encrypt(const QString &file);
+    bool decryptToFile(const QString &filePath);
+    bool encryptToFile(const QString &file);
+
     QByteArray decrypt(const QString &filePath);
 
     void encryptFolderR(const QString &folder);
+    void decryptFolderR(const QString &folder);
 
 private:
     ldSimpleCrypt();

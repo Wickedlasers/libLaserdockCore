@@ -21,8 +21,28 @@ void ldSimpleCrypt::setKey(quint64 key)
     m_crypto->setKey(key);
 }
 
+bool ldSimpleCrypt::decryptToFile(const QString &filePath)
+{
+    QByteArray data = decrypt(filePath);
+    if(data.isEmpty())
+        return false;
 
-bool ldSimpleCrypt::encrypt(const QString &filePath)
+    // save to file
+    QString newFilePath = filePath;
+    newFilePath.remove(LDS_EXTENSION);
+
+    bool isOk = writeFile(newFilePath, data);
+    if(isOk) {
+        bool isRemoved = QFile(filePath).remove();
+        if(!isRemoved)
+            qWarning() << "can't remove" << filePath;
+    }
+
+    return isOk;
+}
+
+
+bool ldSimpleCrypt::encryptToFile(const QString &filePath)
 {
     // read file
     QByteArray data = readFile(filePath);
@@ -37,7 +57,7 @@ bool ldSimpleCrypt::encrypt(const QString &filePath)
     }
 
     // save to file
-    bool isOk =  writeFile(filePath, encodedData);
+    bool isOk =  writeFile(filePath + LDS_EXTENSION, encodedData);
     if(isOk) {
         bool isRemoved = QFile(filePath).remove();
         if(!isRemoved)
@@ -68,7 +88,16 @@ void ldSimpleCrypt::encryptFolderR(const QString &folder)
     qDebug() << __FUNCTION__ << folder;
     QDirIterator it(folder, QStringList() << "*.svg" << "*.ldva2" << "*.ldva4", QDir::Files, QDirIterator::Subdirectories);
     while (it.hasNext()) {
-        encrypt(it.next());
+        encryptToFile(it.next());
+    }
+}
+
+void ldSimpleCrypt::decryptFolderR(const QString &folder)
+{
+    qDebug() << __FUNCTION__ << folder;
+    QDirIterator it(folder, QStringList() << "*.lds", QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        decryptToFile(it.next());
     }
 }
 
@@ -102,7 +131,7 @@ QByteArray ldSimpleCrypt::readFile(const QString &filePath)
 
 bool ldSimpleCrypt::writeFile(const QString &filePath, const QByteArray &encodedData)
 {
-    QFile encodedFile(filePath + LDS_EXTENSION);
+    QFile encodedFile(filePath);
     if(encodedFile.exists())
         encodedFile.remove();
 
