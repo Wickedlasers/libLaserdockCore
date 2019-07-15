@@ -22,3 +22,8 @@ if(WIN32)
     target_compile_definitions ( libluadll PRIVATE _CRT_SECURE_NO_WARNINGS LUA_BUILD_AS_DLL )
     set_target_properties ( libluadll PROPERTIES OUTPUT_NAME lua53 )
 endif()
+
+if(LINUX)
+    target_link_libraries(liblua PRIVATE dl)
+    target_compile_definitions(liblua PRIVATE LUA_USE_LINUX)
+endif()

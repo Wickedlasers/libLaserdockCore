@@ -21,6 +21,8 @@ option(LD_CORE_REDUCE_ANALYZER_SUPPORT "Reduce music analyzer support for perfor
 include(CMakeDependentOption)
 CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_QT_QUICK "Enable Qt Quick module" OFF
                        "NOT LD_CORE_BUILD_EXAMPLE" ON)
+CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_MIDI "Enable midi" OFF
+                        "NOT LD_ANDROID_BUILD" OFF)
 
 if(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.12")
@@ -72,7 +74,7 @@ if(DEFINED QT_BASE_DIR AND NOT DEFINED QTDIR)
     else()
         # win
         if(WIN32)
-            set(QTDIR "${QT_BASE_DIR}/msvc2015")
+            set(QTDIR "${QT_BASE_DIR}/msvc2017")
         endif()
         # mac
         if(APPLE)
@@ -115,6 +117,7 @@ set(Qt5Network_DIR "${QTDIR}/lib/cmake/Qt5Network")
 set(Qt5OpenGL_DIR "${QTDIR}/lib/cmake/Qt5OpenGL")
 set(Qt5Qml_DIR "${QTDIR}/lib/cmake/Qt5Qml")
 set(Qt5Test_DIR "${QTDIR}/lib/cmake/Qt5Test")
+set(Qt5Widgets_DIR "${QTDIR}/lib/cmake/Qt5Widgets")
 
 # project
 project(ldCore)

@@ -8,7 +8,7 @@ void ldMidiInput::init()
 {
 }
 
-bool ldMidiInput::openMidi(const ldMidiInfo &info) {
+bool ldMidiInput::openMidi(const ldMidiInfo & /*info*/) {
 
     return false;
 }

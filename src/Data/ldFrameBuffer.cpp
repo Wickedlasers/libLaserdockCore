@@ -21,6 +21,7 @@
 #include "ldCore/Data/ldFrameBuffer.h"
 
 #include "ldCore/ldCore.h"
+#include "ldCore/Filter/ldDeadzoneFilter.h"
 #include "ldCore/Filter/ldFilterBasicData.h"
 #include "ldCore/Filter/ldFilter.h"
 #include "ldCore/Filter/ldFilterManager.h"
@@ -59,8 +60,12 @@ void ldFrameBuffer::push(Vertex& val, bool skip_filters, bool alter_val)
         if (alter_val) val = simVal; // save this for screenshot feature
     } else {
         m_buffer[m_fill] = val;
+
+        ldFilterManager *fm = ldCore::instance()->filterManager();
+        fm->deadzoneFilter()->processFilter(val);
         m_compressed_buffer[m_fill] = CompressedSample(val);
     }
+
     m_fill++;
 }
 

@@ -47,6 +47,8 @@ public:
 
     void setModeRotate(bool mode_rotate);
 
+    virtual void setPosition(const ldVec2 &p_p) override;
+
 protected:
     virtual void initTextFrame(const QString &word) override;
 

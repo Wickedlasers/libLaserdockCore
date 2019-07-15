@@ -81,32 +81,32 @@ class DllExport AudioDecoderBase
         virtual ~AudioDecoderBase();
 
         /** Opens the file for decoding */
-        int open() { return 0; };
+        int open() { return 0; }
 
         /** Seek to a sample in the file */
-        int seek(int filepos) { return 0l; };
+        int seek(int /*filepos*/) { return 0l; }
 
         /** Read a maximum of 'size' samples of audio into buffer. 
             Samples are always returned as 32-bit floats, with stereo interlacing.
             Returns the number of samples read. */
-        int read(int size, const SAMPLE *buffer) { return 0u; };
+        int read(int /*size*/, const SAMPLE * /*buffer*/) { return 0u; }
 
         /** Get the number of audio samples in the file. This will be a good estimate of the 
             number of samples you can get out of read(), though you should not rely on it
             being perfectly accurate always. (eg. it might be slightly inaccurate with VBR MP3s)*/
-        inline int    numSamples()        const { return m_iNumSamples; };
+        inline int    numSamples()        const { return m_iNumSamples; }
 
         /** Get the number of channels in the audio file */
-        inline int    channels()          const { return m_iChannels; };
+        inline int    channels()          const { return m_iChannels; }
 
         /** Get the sample rate of the audio file (samples per second) */
-        inline int    sampleRate()        const { return m_iSampleRate; };
+        inline int    sampleRate()        const { return m_iSampleRate; }
 
         /** Get the duration of the audio file (seconds) */
-        inline float  duration()          const { return m_fDuration; };
+        inline float  duration()          const { return m_fDuration; }
 
         /** Get the current playback position in samples */
-        inline int    positionInSamples() const { return m_iPositionInSamples; };
+        inline int    positionInSamples() const { return m_iPositionInSamples; }
 
         /** Get a list of the filetypes supported by the decoder, by extension */
         static std::vector<std::string> supportedFileExtensions()

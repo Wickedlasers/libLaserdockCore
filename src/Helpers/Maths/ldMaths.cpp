@@ -37,7 +37,23 @@ bool cmpf(float a, float b, float epsilon)
 
 // -------------------------- ldMaths ---------------------------------
 
-// rndFloatBetween
+double ldMaths::adjustToRange(double value, double sourceMin, double sourceMid, double sourceMax, double targetMin, double targetMid, double targetMax)
+{
+    double speedCoeff = 1.;
+
+    if(value < sourceMid) {
+        const double sourceSpeedRange = sourceMid - sourceMin;
+        const double targetSpeedRange = targetMid - targetMin;
+        speedCoeff = (value - sourceMin) * (targetSpeedRange / sourceSpeedRange) + targetMin;
+    } else {
+        const double sourceSpeedRange = sourceMax - sourceMid;
+        const double targetSpeedRange = targetMax - targetMid;
+        speedCoeff = (value - sourceMid) * (targetSpeedRange / sourceSpeedRange) + targetMid;
+    }
+
+    return speedCoeff;
+}
+
 float ldMaths::normalize(float value, float normalValue, float scale)
 {
     float diff = value - normalValue;
@@ -189,22 +205,39 @@ float ldMaths::distanceToPlan(float a, float b, float c, float d, ldVec3 m)
     return fabsf(a*m.x+b*m.y+c*m.z+d)/sqrtf(L);
 }
 
+float ldMaths::unitedToLaserCoords(float value)
+{
+    return 2.0f * value - 1.0f;
+}
+
 // unitedToLaserCoords
 ldVec2 ldMaths::unitedToLaserCoords(const ldVec2 &p)
 {
     ldVec2 r = ldVec2();
-    r.x = 2.0f * p.x - 1.0f;
-    r.y = 2.0f * p.y - 1.0f;
+    r.x = unitedToLaserCoords(p.x);
+    r.y = unitedToLaserCoords(p.y);
     return r;
+}
+
+float ldMaths::laserToUnitedCoords(float value)
+{
+    return 0.5f * (value + 1.0f);
 }
 
 // laserToUnitedCoords
 ldVec2 ldMaths::laserToUnitedCoords(const ldVec2 &p)
 {
     ldVec2 r = ldVec2();
-    r.x = 0.5f * (p.x + 1.0f);
-    r.y = 0.5f * (p.y + 1.0f);
+    r.x = laserToUnitedCoords(p.x);
+    r.y = laserToUnitedCoords(p.y);
     return r;
+}
+
+ldRect ldMaths::laserToUnitedCoords(const ldRect &dim)
+{
+    ldVec2 bottomLeft = ldMaths::laserToUnitedCoords(dim.bottom_left);
+    ldVec2 topRight = ldMaths::laserToUnitedCoords(dim.top_right);
+    return ldRect{bottomLeft, topRight};
 }
 
 // isValidLaserPoint
@@ -413,13 +446,6 @@ QTime ldMaths::timeFromMs(int millis)
     int h = (millis / 1000 / 60 / 60) % 24;
 
     return QTime(h, min, sec, ms);;
-}
-
-ldRect ldMaths::laserToUnitedCoords(const ldRect &dim)
-{
-    ldVec2 bottomLeft = ldMaths::laserToUnitedCoords(dim.bottom_left);
-    ldVec2 topRight = ldMaths::laserToUnitedCoords(dim.top_right);
-    return ldRect{bottomLeft, topRight};
 }
 
 //MEO 2016-03-14 - maps value from input range to output range

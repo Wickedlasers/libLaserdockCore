@@ -24,6 +24,9 @@
 #include "ldFilter.h"
 
 class LDCORESHARED_EXPORT ldFilterColorFade: public ldFilter { // rising fade effect
+    Q_OBJECT
+    LD_WRITABLE_MIN_MAX_PROPERTY(float, colors)
+
 public:
     ldFilterColorFade(bool isProcessMusic = false);
 

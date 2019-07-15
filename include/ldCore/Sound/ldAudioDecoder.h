@@ -44,7 +44,6 @@ class QMediaPlayer;
 
 class AudioDecoder;
 
-
 class LDCORESHARED_EXPORT ldAudioDecoder : public ldSoundInterface
 {
     Q_OBJECT
@@ -65,6 +64,13 @@ protected slots:
     void timerSlot();
 
 private:
+    void reset();
+
+    static const int IS_PRELOAD_FILE;
+
+    static const int SAMPLE_SIZE_TO_SEND;
+    static const int MAX_PRELOADED_BLOCKS = 3;
+    static const int BLOCK_SIZE;
     const int STUBFPS = 30*2;
 
     QMutex mutex;
@@ -79,6 +85,9 @@ private:
 #endif
 
     std::vector<float> m_sampleData;
+
+    int m_fileSamplePos = 0;
+    uint m_currentBlockPos = 0;
 };
 
 #endif //LDAUDIODECODER_H

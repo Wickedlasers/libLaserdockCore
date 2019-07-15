@@ -668,6 +668,8 @@ bool ldAnimationSequenceBezier::load4(const QString &filePath)
     m_renderAlg = RenderAlg(renderAlgInt);
 
     int nframes; in >> nframes;
+    Q_ASSERT_X(nframes >= 0, "ldAnimationSequenceBezier", "nframes is negative!");
+
     m_frames.resize(nframes);
 
     for (int i = 0; i < 8; i++) {
@@ -1009,6 +1011,11 @@ QByteArray ldAnimationSequenceBezier::readFile(const QString &filePath)
         qWarning() << "error::ldSvgReader::loadSvg: file does not exist" << filePath << file.errorString();
         return QByteArray();
     }
+
+    if(filePath.endsWith(ldSimpleCrypt::LDS_EXTENSION)) {
+        return ldSimpleCrypt::instance()->decrypt(filePath);
+    }
+
     if (!file.open(QIODevice::ReadOnly)) {
         qWarning() << "error::ldSvgReader::loadSvg: Qt file issue" << file.errorString();
         return QByteArray();

@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
+set(CMAKE_AUTOMOC OFF)
+
 add_library(simplecrypt)
 
 target_sources(simplecrypt PRIVATE

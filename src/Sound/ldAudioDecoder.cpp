@@ -31,15 +31,14 @@
 
 #include <ldCore/Sound/ldSoundData.h>
 
-namespace  {
 #ifdef _WIN32
-    const int IS_PRELOAD_FILE = true;
+const int ldAudioDecoder::IS_PRELOAD_FILE = true;
 #else
-    const int IS_PRELOAD_FILE = false;
+const int ldAudioDecoder::IS_PRELOAD_FILE = false;
 #endif
-    const int SAMPLE_SIZE_TO_SEND = SAMPLE_SIZE;  // stereo int
-//    const int BUFFER_SIZE = 2000;
-}
+
+const int ldAudioDecoder::SAMPLE_SIZE_TO_SEND = SAMPLE_SIZE;  // stereo int
+const int ldAudioDecoder::BLOCK_SIZE = SAMPLE_SIZE_TO_SEND * 70;  // stereo int
 
 ldAudioDecoder::ldAudioDecoder(QObject *parent)
     : ldSoundInterface(parent)
@@ -60,6 +59,7 @@ void ldAudioDecoder::start(const QString &filePath, qint64 elapsedTime)
         return;
     }
 
+    reset();
 
 #ifdef AUIDIO_DECODER_SUPPORTED
     m_audioDecoder.reset(new AudioDecoder(filePath.toStdString()));
@@ -79,11 +79,10 @@ void ldAudioDecoder::start(const QString &filePath, qint64 elapsedTime)
     m_elapsedTimer.start();
     m_timer.start();
 
-    m_sampleData.clear();
-
     if(IS_PRELOAD_FILE) {
-        m_sampleData.resize(m_audioDecoder->numSamples());
-        m_audioDecoder->read(m_audioDecoder->numSamples(), &m_sampleData[0]);
+        m_sampleData.resize(BLOCK_SIZE * MAX_PRELOADED_BLOCKS);
+        int readed = m_audioDecoder->read(m_sampleData.size(), &m_sampleData[0]);
+        m_fileSamplePos = readed;
     } else {
         m_sampleData.resize(SAMPLE_SIZE_TO_SEND);
     }
@@ -97,11 +96,7 @@ void ldAudioDecoder::start(const QString &filePath, qint64 elapsedTime)
 void ldAudioDecoder::stop()
 {
 #ifdef AUIDIO_DECODER_SUPPORTED
-    m_timer.stop();
-    m_elapsedTimer.invalidate();
-    m_duration = -1;
-
-    m_audioDecoder.reset();
+    reset();
     update_isActive(false);
 #endif
 }
@@ -132,10 +127,13 @@ void ldAudioDecoder::timerSlot()
 
     //    qDebug() << elapsedTime << m_duration << elapsedPercent;
 
+    // calculate current sample index
     int sampleIndex = elapsedPercent * m_audioDecoder->numSamples();
+    // check for last block
     if(sampleIndex + SAMPLE_SIZE_TO_SEND >= m_audioDecoder->numSamples()) {
         sampleIndex = m_audioDecoder->numSamples() - SAMPLE_SIZE_TO_SEND;
     }
+    // it should be even (stereo)
     if(sampleIndex % 2 != 0)
         sampleIndex -= 1;
 
@@ -144,7 +142,26 @@ void ldAudioDecoder::timerSlot()
 
     int sampleSizeToSend = SAMPLE_SIZE_TO_SEND;
     if(IS_PRELOAD_FILE) {
-        sampleToSend = &m_sampleData[sampleIndex];
+        int currentBufferPos = sampleIndex % m_sampleData.size();
+        // check if it is last portion in buffer
+        if(currentBufferPos + SAMPLE_SIZE_TO_SEND >= m_sampleData.size())
+            sampleSizeToSend = m_sampleData.size() - currentBufferPos;
+        // prepare data to send
+        sampleToSend = &m_sampleData[currentBufferPos];
+
+        // read next portion of if required
+        bool isBufferOverflow = currentBufferPos > m_currentBlockPos + BLOCK_SIZE;
+        bool isNewCycle = m_currentBlockPos > 0 && currentBufferPos < BLOCK_SIZE;
+        if(isBufferOverflow || isNewCycle) {
+            if(m_fileSamplePos < m_audioDecoder->numSamples()) {
+                m_audioDecoder->seek(m_fileSamplePos);
+                int readed = m_audioDecoder->read(BLOCK_SIZE, &m_sampleData[m_currentBlockPos]);
+                m_fileSamplePos += readed;
+                m_currentBlockPos += readed;
+                if(m_currentBlockPos >= m_sampleData.size())
+                    m_currentBlockPos = 0;
+            }
+        }
     } else {
         m_audioDecoder->seek(sampleIndex);
         sampleSizeToSend = m_audioDecoder->read(SAMPLE_SIZE_TO_SEND, &m_sampleData[0]);
@@ -154,3 +171,18 @@ void ldAudioDecoder::timerSlot()
     processAudioBuffer(sampleToSend, sampleSizeToSend / 2);
 #endif
 }
+
+void ldAudioDecoder::reset()
+{
+    m_timer.stop();
+    m_elapsedTimer.invalidate();
+    m_duration = -1;
+
+    m_audioDecoder.reset();
+
+    m_sampleData.clear();
+
+    m_fileSamplePos = 0;
+    m_currentBlockPos = 0;
+}
+

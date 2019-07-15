@@ -32,6 +32,7 @@ QList<QAudioDeviceInfo> ldQAudioInputDevice::getDevices()
     QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
 
 #ifdef Q_OS_ANDROID
+    // filter some internal devices on android
     auto it = devices.begin();
     while (it != devices.end()) {
         if(it->deviceName() == "camcorder"

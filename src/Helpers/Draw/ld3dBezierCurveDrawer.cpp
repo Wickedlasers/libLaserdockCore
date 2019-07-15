@@ -233,25 +233,21 @@ bool ld3dBezierCurveDrawer::innerDrawTwo(ldRendererOpenlase *renderer, int rotat
     switch (rotate_step) {
     case 1:
         pivo = ldVec3::Y_VECTOR;
-        pointRot.x = dimSequence.right() * 2.0f - 1.0f;
+        pointRot.x = ldMaths::unitedToLaserCoords(dimSequence.right());
         break;
     case 2:
-        pointRot.y = (dimSequence.bottom())*2.0f - 1.0f;
+        pointRot.y = ldMaths::unitedToLaserCoords(dimSequence.bottom());
         break;
     case 3:
         pivo = ldVec3::Y_VECTOR;
         pointRot.y = dimSequence.bottom() - _bezier3dSequence.dim().bottom();
-        pointRot.x = dimSequence.left() * 2.0f - 1.0f;
+        pointRot.x = ldMaths::unitedToLaserCoords(dimSequence.left());
         break;
     default:
         break;
     }
-
     //
-    for (uint objectIndex = 0; objectIndex < _bezier3dSequence.data().size(); objectIndex++) {
-        //
-        const ld3dBezierCurveObject &bezier3dCurves = _bezier3dSequence.data()[objectIndex];
-        //
+    for (const ld3dBezierCurveObject &bezier3dCurves  : _bezier3dSequence.data()) {
         for (const std::vector<ld3dBezierCurve> &bezier3dTab : bezier3dCurves.data())
         {
             renderer->begin(OL_LINESTRIP);

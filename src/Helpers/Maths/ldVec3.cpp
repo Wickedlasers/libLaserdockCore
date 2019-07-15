@@ -155,9 +155,9 @@ void ldVec3::norm()
 ldVec3 ldVec3::toLaserCoord() const
 {
     ldVec3 result;
-    result.x = 2.0f * x - 1.0f;
-    result.y = 2.0f * y - 1.0f;
-//    result.z = 2.0f * z - 1.0f;
+    result.x = ldMaths::unitedToLaserCoords(x);
+    result.y = ldMaths::unitedToLaserCoords(y);
+//    result.z = ldMaths::unitedToLaserCoords(z);
     return result;
 }
 

@@ -90,11 +90,23 @@ void ld3dTextLabelOne::setModeRotate(bool mode_rotate)
     m_mode_rotate = mode_rotate;
 }
 
+void ld3dTextLabelOne::setPosition(const ldVec2 &p_p)
+{
+    if(getPosition().isNull()) {
+        m_textFrame.moveTo(getPosition());
+    }
+    ldAbstractText::setPosition(p_p);
+    m_drawer->setFrame(m_textFrame.to3d());
+}
+
 void ld3dTextLabelOne::initTextFrame(const QString &word)
 {
     ldAbstractText::initTextFrame(word);
     // recenter
-    m_textFrame.moveToCenter();
+    if(getPosition().isNull())
+        m_textFrame.moveToCenter();
+    else
+        m_textFrame.translate(getPosition());
     // set to drawer
     m_drawer->setFrame(m_textFrame.to3d());
 }

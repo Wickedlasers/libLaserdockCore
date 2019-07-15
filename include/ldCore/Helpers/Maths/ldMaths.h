@@ -49,6 +49,7 @@ LDCORESHARED_EXPORT bool cmpf(float a, float b, float epsilon = 0.005f);
 class LDCORESHARED_EXPORT ldMaths
 {
 public:
+    static double adjustToRange(double value, double sourceMin, double sourceMid, double sourceMax, double targetMin, double targetMid, double targetMax);
     static float normalize(float value, float normalValue, float scale);
     static float rndFloatBetween(float min, float max);
     static float rndFloatBetweenWithInterval(float min, float max, float actualValue, float pourcentLimitLow, float pourcentLimitUp);
@@ -62,7 +63,9 @@ public:
     static CCPoint changeCoords(const CCPoint &m, float rotation, const CCPoint &translation);
     static float dotProduct(const ldVec3 &u, const ldVec3 &v);
     static float distanceToPlan(float a, float b, float c, float d, ldVec3 m);
+    static float unitedToLaserCoords(float value);
     static ldVec2 unitedToLaserCoords(const ldVec2 &p);
+    static float laserToUnitedCoords(float value);
     static ldVec2 laserToUnitedCoords(const ldVec2 &p);
     static ldRect laserToUnitedCoords(const ldRect &dim);
     static bool isValidLaserPoint(const ldVec2 &p);

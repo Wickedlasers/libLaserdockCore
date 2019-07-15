@@ -533,14 +533,14 @@ bool AudioDecoderMediaFoundation::configureAudioStream()
 	hr = m_pAudioType->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &numChannels);
 	hr = m_pAudioType->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &samplesPerSecond);
 
-    qDebug() << "bitsPerSample: " << bitsPerSample;
-    qDebug() << "allSamplesIndependent: " << allSamplesIndependent;
-    qDebug() << "fixedSizeSamples: " << fixedSizeSamples;
-    qDebug() << "sampleSize: " << sampleSize;
-    qDebug() << "bitsPerSample: " << bitsPerSample;
-    qDebug() << "blockAlignment: " << blockAlignment;
-    qDebug() << "numChannels: " << numChannels;
-    qDebug() << "samplesPerSecond: " << samplesPerSecond;
+//    qDebug() << "bitsPerSample: " << bitsPerSample;
+//    qDebug() << "allSamplesIndependent: " << allSamplesIndependent;
+//    qDebug() << "fixedSizeSamples: " << fixedSizeSamples;
+//    qDebug() << "sampleSize: " << sampleSize;
+//    qDebug() << "bitsPerSample: " << bitsPerSample;
+//    qDebug() << "blockAlignment: " << blockAlignment;
+//    qDebug() << "numChannels: " << numChannels;
+//    qDebug() << "samplesPerSecond: " << samplesPerSecond;
 
 	m_iChannels = numChannels;
 	m_iSampleRate = samplesPerSecond;
@@ -661,7 +661,7 @@ bool AudioDecoderMediaFoundation::readProperties()
     // -bkgood
     m_fDuration = secondsFromMF(prop.hVal.QuadPart);
     m_mfDuration = prop.hVal.QuadPart;
-    qDebug() << "SSMF: Duration: " << m_fDuration;
+//    qDebug() << "SSMF: Duration: " << m_fDuration;
     PropVariantClear(&prop);
 
     // presentation attribute MF_PD_AUDIO_ENCODING_BITRATE only exists for

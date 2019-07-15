@@ -45,9 +45,6 @@ public:
     ldTextLabel(const QString &text = "", float fontSize = 1.0f/16, const ldVec2 &p_position = ldVec2());
     ~ldTextLabel();
 
-    void setPosition(const ldVec2 &p_p);
-    ldVec2 getPosition() const;
-
     void setColor(uint32_t p_color);
     uint32_t getColor() const;
 
@@ -76,10 +73,8 @@ protected:
 
 private:
     uint32_t m_color = 0xFFFFFF;
-    ldVec2 m_position; // working in [0,1]x[0,1]
 
     std::unique_ptr<ldBezierCurveDrawer> m_drawer;
-
 };
 
 #endif // ldTextLabel_H

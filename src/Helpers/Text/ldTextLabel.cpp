@@ -31,8 +31,7 @@
 
 // ldTextLabel
 ldTextLabel::ldTextLabel(const QString &text, float fontSize, const ldVec2 &p_position)
-    : ldAbstractText(text, fontSize)
-    , m_position(p_position)
+    : ldAbstractText(text, fontSize, p_position)
     , m_drawer(new ldBezierCurveDrawer)
 {
     m_drawer->setMaxPoints(30);
@@ -57,31 +56,19 @@ void ldTextLabel::clear()
     setText("");
 }
 
-// setPosition
-void ldTextLabel::setPosition(const ldVec2 &p_p)
-{
-    m_textFrame.translate(p_p - m_position);
-
-    m_position = p_p;
-}
-
-ldVec2 ldTextLabel::getPosition() const
-{
-    return m_position;
-}
 
 // setIncrementXPositionOrLoop
 bool ldTextLabel::setIncrementXPositionOrLoop(float delta)
 {
     //qDebug() << _position.x << " this->getWidth()" << this->getWidth();
 
-    float x = (m_position.x < -getWidth())
+    float x = (getPosition().x < -getWidth())
             ? 1.f
-            : m_position.x - delta;
+            : getPosition().x - delta;
 
-    setPosition(ldVec2(x, m_position.y));
+    setPosition(ldVec2(x, getPosition().y));
 
-    return m_position.x != 1.f;
+    return getPosition().x != 1.f;
 }
 
 // getColor
@@ -112,6 +99,6 @@ void ldTextLabel::initTextFrame(const QString &word)
 {
     ldAbstractText::initTextFrame(word);
 
-    m_textFrame.translate(m_position);
+    m_textFrame.translate(getPosition());
     m_textFrame.colorize(m_color);
 }

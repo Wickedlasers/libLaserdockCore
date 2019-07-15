@@ -44,6 +44,8 @@ bool ldSimpleCrypt::decryptToFile(const QString &filePath)
 
 bool ldSimpleCrypt::encryptToFile(const QString &filePath)
 {
+    qDebug() << __FUNCTION__ << filePath;
+
     // read file
     QByteArray data = readFile(filePath);
     if(data.isEmpty())

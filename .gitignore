@@ -11,6 +11,6 @@ local.*cmake
 local.cmake
 
 # qt creator local file
-CMakeLists.txt.user
+CMakeLists.txt.user*
 
 *.autosave

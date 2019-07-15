@@ -30,9 +30,10 @@
 #include "ldCore/Helpers/SVG/ldSvgReader.h"
 
 // ldAbstractText()
-ldAbstractText::ldAbstractText(const QString &text, float fontSize)
+ldAbstractText::ldAbstractText(const QString &text, float fontSize, const ldVec2 &p_position)
     : m_text(text)
     , m_fontSize(fontSize)
+    , m_position(p_position)
 {
     reloadAllSvgLetters();
 }
@@ -93,19 +94,32 @@ void ldAbstractText::setLetterSpace(double letterSpace)
     setText(m_text);
 }
 
+// setPosition
+void ldAbstractText::setPosition(const ldVec2 &p_p)
+{
+    m_textFrame.translate(p_p - m_position);
+
+    m_position = p_p;
+}
+
+ldVec2 ldAbstractText::getPosition() const
+{
+    return m_position;
+}
+
 const ldBezierCurveFrame &ldAbstractText::getFrame() const
 {
     return m_textFrame;
 }
 
 // getWidth
-float ldAbstractText::getWidth()
+float ldAbstractText::getWidth() const
 {
     return m_textFrame.dim().width();
 }
 
 // getHeight
-float ldAbstractText::getHeight()
+float ldAbstractText::getHeight() const
 {
     return m_textFrame.dim().height();
 }
