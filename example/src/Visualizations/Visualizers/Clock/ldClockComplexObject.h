@@ -29,7 +29,7 @@ public:
 private:
     bool _all_visible;
     ldBezierPaths _svgHour, _svgMin;
-    void drawDataBezierAsLinestrip(ldRendererOpenlase* p_renderer, ldBezierPaths &shapes, float rotation, int color);
+    void drawDataBezierAsLinestrip(ldRendererOpenlase* p_renderer, ldBezierPaths &paths, float rotation, int color);
 };
 
 #endif /*__LaserdockVisualizer__ldClockComplexObject__*/
