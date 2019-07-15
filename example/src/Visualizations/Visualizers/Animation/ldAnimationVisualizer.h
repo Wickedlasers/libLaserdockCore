@@ -39,7 +39,6 @@ protected:
     float m_fps = 42;
         
     // animation settings and styles
-    bool m_useOldAlg = false; // use old algorithm (loops an animation between key frames) this disregards previous settings
     bool m_doReverse = false; // allow animation to reverse on some types of beats
     bool m_doSynchSpeed = false; // match speed of dancer
     bool m_speedAllowSlow = false; // allow slow motion when using speed matching

@@ -30,7 +30,6 @@ void ldGoGoGirlAnimationVisualizer::loadAnimation() {
     m_doJumpToKeyStartOnBeat = true;
     m_jumpBeatMidpoint = false; 
     m_jumpBeatCount = 2; 
-    m_useOldAlg = false;
     m_doColorCircle = true;
     m_doZoom = false;
     m_doEcho = false;
