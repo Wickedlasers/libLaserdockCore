@@ -24,14 +24,7 @@
 
 #include "ldCore/Helpers/Maths/ldGeometryUtil.h"
 
-// ---------------------- LogoPoint ---------------------
-
-ldLogoPoint::ldLogoPoint(float _x, float _y) {
-    x = _x; y = _y;
-}
-
 // ---------------------- Logo ---------------------
-
 
 bool ldLogo::init()
 {
@@ -40,6 +33,8 @@ bool ldLogo::init()
 
 void ldLogo::onShouldStart()
 {
+    QMutexLocker lock(&m_mutex);
+
     OLRenderParams params;
     memset(&params, 0, sizeof params);
     params.rate = m_renderer->rate();
@@ -60,6 +55,7 @@ void ldLogo::onShouldStart()
 
 void ldLogo::draw()
 {
+    QMutexLocker lock(&m_mutex);
     render();
 }
 
@@ -67,20 +63,20 @@ void ldLogo::render() {
 
     m_renderer->loadIdentity();
     m_renderer->loadIdentity3();
-    timer += 1.0f/60.0f;
-    if (timer >= timerMax) {
-        timer = timerMax;
-        finished = true;
+    m_timer += 1.0f/60.0f;
+    if (m_timer >= TIMER_MAX) {
+        m_timer = TIMER_MAX;
+        m_finished = true;
     }
 
-    float progress = timer / timerMax;
+    float progress = m_timer / TIMER_MAX;
 
     float color = 1;
     if (progress > 0.68) {
         float s = (progress - 0.68) * 3;
         clampfp(s, 0, 1);
         color = (1-s*s);
-        s = 3*(s*s*s) + 0;
+        s = 3*(s*s*s);
         s = 3.5 / (3.5 - s);
         m_renderer->scale(s, s);
     }
@@ -106,7 +102,7 @@ void ldLogo::render() {
 
         m_renderer->begin(OL_LINESTRIP);
         for (int i = istart; i <= iend; i++) {
-            const ldLogoPoint &r = line.points[i];
+            const ldVec2 &r = line.points[i];
 
             float x = r.x;
             float y = r.y;
@@ -128,21 +124,12 @@ void ldLogo::render() {
             }
         }
         m_renderer->end();
-        /*
-        float distance = 0;
-        for (int i = 0; i < points; i++) {
-
-
-        }*/
     }
 }
 
 // ---------------------- LogoLaserdock ---------------------
 
 ldLogoLaserdock::ldLogoLaserdock() {
-    timer = 0;
-    timerMax = 4.25;
-    finished = false;
     /*{
          LogoLine l;
          l.points.append(LogoPoint( 0.00,  0.00));
@@ -153,21 +140,21 @@ ldLogoLaserdock::ldLogoLaserdock() {
          }*/
     {
         ldLogoLine l;
-        l.points.append(ldLogoPoint(1402,532));
-        l.points.append(ldLogoPoint(1068,1120));
-        l.points.append(ldLogoPoint(1369,1120));
-        l.points.append(ldLogoPoint(1414,1046));
-        l.points.append(ldLogoPoint(1201,1046));
-        l.points.append(ldLogoPoint(1446,616));
+        l.points.append(ldVec2(1402,532));
+        l.points.append(ldVec2(1068,1120));
+        l.points.append(ldVec2(1369,1120));
+        l.points.append(ldVec2(1414,1046));
+        l.points.append(ldVec2(1201,1046));
+        l.points.append(ldVec2(1446,616));
 
-        l.points.append(ldLogoPoint(1402,532));
-        l.points.append(ldLogoPoint(1068,1120));
-        l.points.append(ldLogoPoint(1369,1120));
-        l.points.append(ldLogoPoint(1414,1046));
-        l.points.append(ldLogoPoint(1201,1046));
-        l.points.append(ldLogoPoint(1446,616));
+        l.points.append(ldVec2(1402,532));
+        l.points.append(ldVec2(1068,1120));
+        l.points.append(ldVec2(1369,1120));
+        l.points.append(ldVec2(1414,1046));
+        l.points.append(ldVec2(1201,1046));
+        l.points.append(ldVec2(1446,616));
 
-        l.points.append(ldLogoPoint(1402,532));
+        l.points.append(ldVec2(1402,532));
 
         float s = 1.0f/800.0f;
         float cx = 1400;
@@ -183,21 +170,21 @@ ldLogoLaserdock::ldLogoLaserdock() {
     }
     {
         ldLogoLine l;
-        l.points.append(ldLogoPoint(1460,643));
-        l.points.append(ldLogoPoint(1417,716));
-        l.points.append(ldLogoPoint(1608,1046));
-        l.points.append(ldLogoPoint(1442,1046));
-        l.points.append(ldLogoPoint(1402,1120));
-        l.points.append(ldLogoPoint(1736,1120));
+        l.points.append(ldVec2(1460,643));
+        l.points.append(ldVec2(1417,716));
+        l.points.append(ldVec2(1608,1046));
+        l.points.append(ldVec2(1442,1046));
+        l.points.append(ldVec2(1402,1120));
+        l.points.append(ldVec2(1736,1120));
 
-        l.points.append(ldLogoPoint(1460,643));
-        l.points.append(ldLogoPoint(1417,716));
-        l.points.append(ldLogoPoint(1608,1046));
-        l.points.append(ldLogoPoint(1442,1046));
-        l.points.append(ldLogoPoint(1402,1120));
-        l.points.append(ldLogoPoint(1736,1120));
+        l.points.append(ldVec2(1460,643));
+        l.points.append(ldVec2(1417,716));
+        l.points.append(ldVec2(1608,1046));
+        l.points.append(ldVec2(1442,1046));
+        l.points.append(ldVec2(1402,1120));
+        l.points.append(ldVec2(1736,1120));
 
-        l.points.append(ldLogoPoint(1460,643));
+        l.points.append(ldVec2(1460,643));
 
         float s = 1.0f/800.0f;
         float cx = 1400;

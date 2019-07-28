@@ -464,6 +464,7 @@ void RGBtoHSV(quint8 r, quint8 g, quint8 b, quint16 hsv[3]) {
     }
 }
 
+
 } // namespace
 
 

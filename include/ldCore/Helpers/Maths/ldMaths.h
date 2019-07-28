@@ -33,18 +33,11 @@
 #include "ldCore/Shape/ldParticleGeometry.h"
 
 #include "ldAnimatedAngle.h"
+#include "ldGlobals.h"
 #include "ldRect.h"
 #include "ldRect3.h"
 #include "ldVec2.h"
 #include "ldVec3.h"
-
-const float M_PIf = static_cast<float> (M_PI);
-const float M_PI_2f = static_cast<float> (M_PI_2);
-const float M_PI_4f = static_cast<float> (M_PI_4);
-const double M_2PI  = 2.0*M_PI;
-const float M_2PIf = static_cast<float> (M_2PI);
-
-LDCORESHARED_EXPORT bool cmpf(float a, float b, float epsilon = 0.005f);
 
 class LDCORESHARED_EXPORT ldMaths
 {

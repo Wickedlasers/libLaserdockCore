@@ -15,7 +15,6 @@ option(LD_CORE_ENABLE_MIDI "Enable midi" OFF)
 option(LD_CORE_ENABLE_OPENCV "Enable opencv support" OFF)
 option(LD_CORE_ENABLE_QT_QUICK "Enable Qt Quick module" OFF) # required for example
 option(LD_CORE_GAMES_ALWAYS_PLAY_STATE "Games play after pause automatically" OFF)
-option(LD_CORE_SHOW_LOGO "Show Laserdock logo on start" ON)
 option(LD_CORE_REDUCE_ANALYZER_SUPPORT "Reduce music analyzer support for performance on slow devices" OFF)
 
 include(CMakeDependentOption)
@@ -48,10 +47,6 @@ set(CMAKE_AUTORCC ON)
 
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# try to set QTDIR from environment variable
-if(EXISTS $ENV{QTDIR})
-    set(QTDIR $ENV{QTDIR} CACHE STRING "Path to Qt dir")
-endif()
 
 # android
 if(NOT DEFINED LD_ANDROID_BUILD)
@@ -62,6 +57,10 @@ endif()
 include(local.cmake OPTIONAL)
 
 # set desktop qt dir
+# try to set QTDIR from environment variable
+if((DEFINED $ENV{QTDIR}) AND (NOT DEFINED QTDIR))
+    set(QTDIR $ENV{QTDIR} CACHE STRING "Path to Qt dir")
+endif()
 if(DEFINED QT_BASE_DIR AND NOT DEFINED QTDIR)
     if(LD_ANDROID_BUILD )
         if(ANDROID_ABI STREQUAL "armeabi-v7a")
@@ -343,9 +342,12 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${SRCDIR}/Helpers/Draw/ldBezierCurveDrawer.cpp
         ${INCDIR}/Helpers/Draw/ldBezierCurveDrawer.h
         #Helpers/Maths
+        ${INCDIR}/Helpers/Maths/ldAnimatedAngle.cpp
         ${INCDIR}/Helpers/Maths/ldAnimatedAngle.h
         ${SRCDIR}/Helpers/Maths/ldGeometryUtil.cpp
         ${INCDIR}/Helpers/Maths/ldGeometryUtil.h
+        ${INCDIR}/Helpers/Maths/ldGlobals.cpp
+        ${INCDIR}/Helpers/Maths/ldGlobals.h
         ${SRCDIR}/Helpers/Maths/ldMathSpectrum.cpp
         ${INCDIR}/Helpers/Maths/ldMathSpectrum.h
         ${SRCDIR}/Helpers/Maths/ldMathStat.cpp
@@ -506,10 +508,6 @@ if(WIN32)
     target_compile_definitions(${PROJECT_NAME} PUBLIC _USE_MATH_DEFINES)
 endif()
 
-if(LD_CORE_SHOW_LOGO)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_SHOW_LOGO)
-endif()
-
 if(LD_BUILD_RELEASE_VERSION)
     target_compile_definitions(${PROJECT_NAME} PRIVATE LD_BUILD_RELEASE_VERSION)
 endif()
@@ -521,7 +519,7 @@ endif()
 
 # ---------------------------- DEPENDENCIES  ----------------------
 
-set(QT5_MIN_VERSION 5.11)
+set(BT5_MIN_VERSION 5.13)
 find_package(Qt5 ${QT5_MIN_VERSION} COMPONENTS Core Gui Multimedia Gamepad REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Multimedia Qt5::Gamepad)
 

@@ -148,6 +148,11 @@ int ldVisualizationTask::soundLevelGate() const
     return m_soundLevelGate;
 }
 
+void ldVisualizationTask::setIsShowLogo(bool showLogo)
+{
+    m_isShowLogo = showLogo;
+}
+
 void ldVisualizationTask::setCurrentVisualizer(ldVisualizer *visualizer)
 {
     QMutexLocker lock(&m_mutex);
@@ -283,9 +288,7 @@ ldVisualizer * ldVisualizationTask::getActiveVis() const
     ldVisualizer* vis = m_currentVisualizer;
     if (m_tempVisualizer != nullptr) vis = m_tempVisualizer;
 
-#ifdef LD_CORE_SHOW_LOGO
-    if(!m_logo->isFinished()) vis = m_logo.get();
-#endif
+    if(m_isShowLogo && !m_logo->isFinished()) vis = m_logo.get();
     return vis;
 }
 

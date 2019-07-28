@@ -51,6 +51,7 @@ namespace ldColorUtil
 
     LDCORESHARED_EXPORT void HSVtoRGB(quint16 h, quint8 s, quint8 v, quint8 wheelLine, quint8 color[3]);
     LDCORESHARED_EXPORT void RGBtoHSV(quint8 r, quint8 g, quint8 b, quint16 hsv[3]);
+
 }
 
 #endif // LDCOLORUTIL_H

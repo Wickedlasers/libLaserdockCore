@@ -62,6 +62,8 @@ public slots:
     void setSoundLevelGate(int value);
     int soundLevelGate() const;
 
+    void setIsShowLogo(bool showLogo);
+
 signals:
     void currentVisualizerChanged(ldVisualizer *visualizer);
 
@@ -86,6 +88,7 @@ private:
     ldRendererOpenlase * m_openlase;
 
     int m_soundLevelGate = 0;
+    bool m_isShowLogo = true;
 };
 
 #endif // LDVISUALIZATIONTASK_H

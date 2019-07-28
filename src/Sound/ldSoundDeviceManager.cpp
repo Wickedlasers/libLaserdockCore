@@ -228,9 +228,9 @@ bool ldSoundDeviceManager::initializeAudio(const ldSoundDeviceInfo &info)
 {
 	deleteAudioInput();
 
-	bool isSuccess = false;
+    bool isSuccess = false;
 
-	// find device
+    // find device
     switch (info.type()) {
     case ldSoundDeviceInfo::Type::QAudioInput:
     {

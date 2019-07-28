@@ -24,36 +24,26 @@
 #include <QtCore/QList>
 
 #include "ldVisualizer.h"
-
-class ldRendererOpenlase;
-
-// ---------------------- LogoPoint ---------------------
-
-class ldLogoPoint {
-public:
-    ldLogoPoint(float _x, float _y);
-
-    float x, y;
-};
+#include <ldCore/Helpers/Maths/ldVec2.h>
 
 // ---------------------- LogoLine ---------------------
 
 class ldLogoLine {
 public:
-    QList<ldLogoPoint> points;
+    QList<ldVec2> points;
 };
 
 // ---------------------- Logo ---------------------
 
-class ldLogo : public ldVisualizer{
+class ldLogo : public ldVisualizer
+{
     Q_OBJECT
-public:
 
-    
+public:
     virtual QString visualizerName() const override { return "Laserdock Logo"; }
     bool init();
 
-    bool isFinished() const { return finished; }
+    bool isFinished() const { return m_finished; }
     virtual void onShouldStart() override;
 
 protected:
@@ -63,9 +53,9 @@ protected:
     void render();
 
     QList<ldLogoLine> lines;
-    bool finished;
-    float timer;
-    float timerMax;
+    bool m_finished = false;
+    float m_timer = 0.f;
+    constexpr static const float TIMER_MAX = 4.25f;
 };
 
 // ---------------------- LogoLaserdock ---------------------
@@ -73,7 +63,6 @@ protected:
 class ldLogoLaserdock : public ldLogo {
 public:
     ldLogoLaserdock();
-
 };
 
 

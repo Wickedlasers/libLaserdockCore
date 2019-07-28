@@ -18,22 +18,21 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#ifndef LDANIMATEDANGLE_H
-#define LDANIMATEDANGLE_H
+#ifndef LDGLOBALS_H
+#define LDGLOBALS_H
 
-#include <ldCore/ldCore_global.h>
-#include <ldCore/Helpers/Maths/ldGlobals.h>
+#include <math.h>
 
-struct LDCORESHARED_EXPORT ldAnimatedAngle
-{
-    float value = 0.f;
-    float decay = 0.f;
-    float sign = 0.f;
+#include "ldCore/ldCore_global.h"
 
-    void update(float minInterval = 0.f, float maxInterval = M_2PIf, bool keepdirection = true);
-};
+const float M_PIf = static_cast<float> (M_PI);
+const float M_PI_2f = static_cast<float> (M_PI_2);
+const float M_PI_4f = static_cast<float> (M_PI_4);
+const double M_2PI  = 2.0*M_PI;
+const float M_2PIf = static_cast<float> (M_2PI);
 
+LDCORESHARED_EXPORT bool cmpf(float a, float b, float epsilon = 0.005f);
 
-#endif // LDANIMATEDANGLE_H
+#endif // LDGLOBALS_H
 
 

@@ -29,14 +29,6 @@
 #include <QtCore/QDebug>
 #include <QtCore/QTime>
 
-
-bool cmpf(float a, float b, float epsilon)
-{
-    return (fabsf(a - b) < epsilon);
-}
-
-// -------------------------- ldMaths ---------------------------------
-
 double ldMaths::adjustToRange(double value, double sourceMin, double sourceMid, double sourceMax, double targetMin, double targetMid, double targetMax)
 {
     double speedCoeff = 1.;
@@ -154,7 +146,6 @@ int ldMaths::periodIntervalKeeperInt(int x, int min, int max)
 
     return x;
 }
-
 
 // normLog
 float ldMaths::normLog(float v, float power)

@@ -105,7 +105,6 @@ void ldAudioDecoder::setElapsedTime(qint64 time)
 {
     m_elapsedTime = time;
     m_elapsedTimer.restart();
-    update_isActive(true);
 }
 
 void ldAudioDecoder::timerSlot()

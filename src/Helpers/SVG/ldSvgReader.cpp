@@ -163,15 +163,6 @@ ldBezierCurveObject ldSvgReader::loadSvg(QString qtfilename, Type type, float sn
         return res;
     }
 
-    // some case where we change type auto for ldSvgReader::Type::SvgFrame
-    if (type==Type::SvgFrame) {
-
-        // erase type if some error in svg file
-        if (minX < 0 || minY < 0) type=Type::Maximize;
-        if (maxX > im_w || maxY > im_h) type=Type::Maximize;
-        if (fabs(im_w) <= 1.0f/maxValue || fabs(im_h) <= 1.0f/maxValue) type=Type::Maximize;
-    }
-
     // ldSvgReader::Type::Dev
     // important ! do after check
     // still ldSvgReader::Type::SvgFrame ?
@@ -716,6 +707,20 @@ QByteArray ldSvgReader::readFile(const QString &filePath)
         QString filePathSecured = filePath + ldSimpleCrypt::LDS_EXTENSION;
         if(QFile::exists(filePathSecured)) {
             return ldSimpleCrypt::instance()->decrypt(filePathSecured);
+        }
+        // check for qrc file
+        if(filePath.startsWith("qrc:/")) {
+            QString qrcFilePath = filePath;
+            qrcFilePath.remove("qrc");
+            if(QFile::exists(qrcFilePath)) {
+                QFile qrcFile(qrcFilePath);
+                if (!qrcFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                    qWarning() << __FUNCTION__ << "Qt file issue";
+                    return QByteArray();
+                }
+
+                return qrcFile.readAll();
+            }
         }
 
         qWarning() << __FUNCTION__ << "file does not exist" << filePath;
