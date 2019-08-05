@@ -48,6 +48,7 @@ ldCoreExample::ldCoreExample(QQmlApplicationEngine *engine, QObject *parent)
     qmlRegisterType<ldSpiralFighterGame>();
 
     m_ldCore->initialize();
+    m_ldCore->task()->setIsShowLogo(false);
     m_ldCore->soundDeviceManager()->setDeviceInfo(m_ldCore->soundDeviceManager()->getDefaultDevice(ldSoundDeviceInfo::Type::QAudioInput));
 
     m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldCircleVisualizer));

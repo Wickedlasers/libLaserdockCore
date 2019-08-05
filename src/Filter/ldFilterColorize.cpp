@@ -360,5 +360,31 @@ void FilterColorFreq::process(Vertex &input) {
 
 }
 
+// ---------- ldShimmerFilter ----------
+
+ldShimmerFilter::ldShimmerFilter()
+    : ldFilter()
+    , m_colors(1)
+    , m_min_colors(0.5f)
+    , m_max_colors(2.0f)
+{
+}
+
+void ldShimmerFilter::process(Vertex &input) {
+    float hueoffset = 0;
+    ldMusicManager* m = ldCore::instance()->musicManager();
+    //hueoffset = 1.0f/3.0f * m->tempoACFaster->phaseSmooth;
+    float fps = 1.0f/AUDIO_UPDATE_DELTA_S * 1.0f/30000.0f;
+    m_counter += m->tempoACFaster->freqSmooth*fps*512;
+//    bool reset = (((int) counter) != 0);
+    m_counter -= (int) m_counter;
+    float fc = m_counter;
+
+    float str = 1.0f/3.0f * 0.50f;
+    //str *= clampf(0.0f+1.0f*m->tempoACSlow->phaseSmooth*4-3, 0, 1);
+    hueoffset = 1 + sinf(fc*M_PI*2) * str * m_colors;
+    ldColorUtil::hueShift(input.color[0], input.color[1], input.color[2], hueoffset);
+}
+
 
 

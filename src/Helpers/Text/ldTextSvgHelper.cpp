@@ -114,17 +114,9 @@ std::vector<ldSvgLetter> ldTextSvgHelper::resizedSvgLetters(float p_scale, const
     // will return [0,1]x[0,1] coordinates, with the letter starting at 0,0 at any scale.
     //
     int a_upper_index = indexForSvgValidChars('A');
-
     if (a_upper_index >= (int)res.size()) return res;
-
     ldSvgLetter a_upper_svg = res[a_upper_index];
-
-    //
     float hA = a_upper_svg.data().dim().height();
-    // Vec2 trA = Vec2(-a_upper_dim.bottom_left.x, -a_upper_dim.bottom_left.y);
-    // we gonna divide by hA
-    // qDebug() << "hA:" <<hA;
-
     if (hA < 0.0000001) return res;
 
     for (ldSvgLetter &bezierCurves : res) {

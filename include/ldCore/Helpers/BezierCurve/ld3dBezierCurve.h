@@ -32,6 +32,8 @@ struct LDCORESHARED_EXPORT ld3dBezierCurve {
     ldVec3 pivot;
 
     ldVec3 getPoint(float slope) const;
+    float length(int maxPoints = 100) const;
+    float lengthFast() const;
 };
 
 typedef std::vector< std::vector<ld3dBezierCurve> > ld3dBezierCurves;

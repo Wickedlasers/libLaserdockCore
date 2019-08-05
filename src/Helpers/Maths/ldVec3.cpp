@@ -111,16 +111,6 @@ ldVec3 ldVec3::rotate3dAtPoint(const ldVec3 &p, float angle, const ldVec3 &axis,
 }
 
 
-// vectProduct
-ldVec3 ldVec3::vectProduct(const ldVec3 &u, const ldVec3 &v)
-{
-    ldVec3 res;
-    res.x=u.y*v.z-u.z*v.y;
-    res.y=u.z*v.x-u.x*v.z;
-    res.z=u.x*v.y-u.y*v.x;
-    return res;
-}
-
 ldVec3::ldVec3()
 {
 }
@@ -150,6 +140,20 @@ void ldVec3::norm()
         return;
 
     *this /= d;
+}
+
+float ldVec3::dotProduct(const ldVec3 &v) const
+{
+    return x*v.x + y*v.y + z*v.z;
+}
+
+ldVec3 ldVec3::vectProduct(const ldVec3 &v) const
+{
+    ldVec3 res;
+    res.x=y*v.z-z*v.y;
+    res.y=z*v.x-x*v.z;
+    res.z=x*v.y-y*v.x;
+    return res;
 }
 
 ldVec3 ldVec3::toLaserCoord() const

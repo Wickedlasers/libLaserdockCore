@@ -38,11 +38,12 @@ public:
         Elixia,
         Reeniebeanie,
         Brave,
+        Myriad,
         First = Roboto,
-        Last = Brave
+        Last = Myriad
     };
 
-    static QStringList titles();
+    static QStringList titles(bool excludeCounter = true);
 
     explicit ldFont(const Family &family = Family::Roboto);
 

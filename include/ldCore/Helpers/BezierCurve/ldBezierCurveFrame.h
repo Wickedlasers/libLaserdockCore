@@ -62,6 +62,8 @@ public:
     /** Convert 2D curve object to 3D representation. Pivot will be centered too */
     ld3dBezierCurveFrame to3d() const;
 
+    ldBezierPathsSequence toSequence() const;
+
     ldBezierCurveObject asObject() const;
 
     /** Move it, move it */

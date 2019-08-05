@@ -26,11 +26,14 @@
 
 #include <ldCore/Helpers/ldEnumHelper.h>
 
-QStringList ldFont::titles()
+QStringList ldFont::titles(bool excludeCounter)
 {
     QStringList titlest;
 
     for(const auto &fontFamily : ldEnumHelper::Enum<ldFont::Family>()) {
+        if(fontFamily == ldFont::Family::Myriad && excludeCounter)
+            continue;
+
         titlest << ldFont(fontFamily).title();
     }
 
@@ -58,6 +61,7 @@ QString ldFont::title() const
     case Family::Elixia: return "Elixia";
     case Family::Reeniebeanie: return "Reeniebeanie";
     case Family::Brave: return "Brave";
+    case Family::Myriad: return "Myriad";
     }
 
     return "";
@@ -73,6 +77,7 @@ QString ldFont::prefix() const
     case Family::Elixia: return "elixia";
     case Family::Reeniebeanie: return "reeniebeanie";
     case Family::Brave: return "brave";
+    case Family::Myriad: return "myriad";
     }
 
     return "";

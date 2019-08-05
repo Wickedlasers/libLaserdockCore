@@ -27,6 +27,7 @@
 
 #include <vector>
 
+#include "ldCore/Helpers/BezierCurve/ldBezierCurveFrame.h"
 #include "ldCore/Helpers/BezierCurve/ldBezierCurveObject.h"
 #include "ldCore/Helpers/Maths/ldMaths.h"
 
@@ -46,9 +47,13 @@ public:
 
     static int totalPoints(const ldBezierPaths &bezierPaths);
     static int totalPoints(const ld3dBezierCurves &bezierCurves);
+
+    static bool isSvgExists(const QString &filePath);
+
     static ldBezierCurveObject loadSvg(QString qtfilename, Type type = Type::Maximize, float snapDistance = -1, bool isTranslate = true,
                                        float fixedMinX = -1.f, float fixedMaxX = -1.f, float fixedMinY = -1.f, float fixedMaxY = -1.f);
-    static ldBezierPathsSequence loadSvgSequence(const QString &dirPath, Type p_type = Type::Maximize, float snapDistance = -1, const QString &filePrefix = "", int masksize = -1);
+    static ldBezierCurveFrame loadSvgSequence(const QString &dirPath, Type p_type = Type::Maximize, float snapDistance = -1, const QString &filePrefix = "", int masksize = -1);
+
     static ldBezierPathsSequence loadSvgSequenceFixedScale(float fixedMinX, float fixedMaxX, float fixedMinY, float fixedMaxY, int size, int masksize, char const* qtbasefilename, Type p_type = Type::Maximize, float snapDistance = -1);
     static ldBezierPathsSequence loadFromJSArrayText(const char* text);
     static ldRect svgDim(const ldBezierPaths &bezierPaths);

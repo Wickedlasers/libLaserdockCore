@@ -63,9 +63,9 @@ int ldSvgReader::totalPoints(const ld3dBezierCurves &bezierCurves)
     return pointCounter;
 }
 
-ldBezierPathsSequence ldSvgReader::loadSvgSequence(const QString &dirPath, Type p_type, float snapDistance, const QString &filePrefix, int masksize)
+ldBezierCurveFrame ldSvgReader::loadSvgSequence(const QString &dirPath, Type p_type, float snapDistance, const QString &filePrefix, int masksize)
 {
-    ldBezierPathsSequence res;
+    ldBezierCurveFrame frame;
 
     ldSvgDir svgDir(dirPath);
     if(masksize != -1)
@@ -75,9 +75,9 @@ ldBezierPathsSequence ldSvgReader::loadSvgSequence(const QString &dirPath, Type 
 
     QStringList svgFiles = svgDir.getSvgFiles();
     for(const QString &svgFile : svgFiles) {
-        res.push_back(ldSvgReader::loadSvg(dirPath + "/" + svgFile, p_type, snapDistance, false).data());
+        frame.add(ldSvgReader::loadSvg(dirPath + "/" + svgFile, p_type, snapDistance, false));
     }
-    return res;
+    return frame;
 }
 
 // loadSvgSequenceFixedScale
@@ -187,10 +187,13 @@ ldBezierCurveObject ldSvgReader::loadSvg(QString qtfilename, Type type, float sn
     float dx=0;
     float dy=0;
     float ratio = max_w>max_h ? 1.0f/max_w : 1.0f/max_h;
+
+    float height = 2.0f*max_h*ratio-1.0f;
+    float width = 2.0f*max_w*ratio-1.0f;
     if (max_w>max_h) {
-        dy=0.5f-0.5f*(2.0f*max_h*ratio-1.0f);
+        dy=0.5f-0.5f*height;
     } else {
-        dx=0.5f-0.5f*(2.0f*max_w*ratio-1.0f);
+        dx=0.5f-0.5f*width;
     }
 
     const int MAX_POINTS = 4000;
@@ -200,10 +203,12 @@ ldBezierCurveObject ldSvgReader::loadSvg(QString qtfilename, Type type, float sn
 
     // resize to -1/1 keeping framesize
     auto resizeFrameSize = [&](float value, float d) -> float {
-      return  2.0f*value*ratio - 1.0f + d;
+        value *= ratio;
+        return  2.0f*value - 1.0f + d;
     };
 
     const float MAX_COEFF = 0.97f;
+
     auto transformXCoord = [&](float value) {
         value = value - minX;
         if (type!=Type::Dev) {
@@ -326,6 +331,14 @@ ldBezierCurveObject ldSvgReader::loadSvg(QString qtfilename, Type type, float sn
         res.translate(p);
     }
 
+    ldRect explicitRect;
+    float h = max_h*ratio;
+    float w = max_w*ratio;
+    float x = w < h ? 0.5f - 0.5f*w : 0.f;
+    float y = w > h ? 0.5f - 0.5f*h : 0.f;
+    explicitRect.bottom_left = ldMaths::unitedToLaserCoords(ldVec2(x, y + h));
+    explicitRect.top_right = ldMaths::unitedToLaserCoords(ldVec2(x + w, y));
+    res.setExplicitRect(explicitRect);
     //qDebug() << "EVERY minX:" << minX << " maxX:" << maxX << " minY:" << minY << " maxY:" << maxY;
 
     return res;
@@ -688,6 +701,29 @@ ldBezierPaths ldSvgReader::snapCurves(const ldBezierPaths &bezierPaths, float sn
     //qDebug() << "snapCurves" ;
     //debugStatCurves(res);
     return res;
+}
+
+bool ldSvgReader::isSvgExists(const QString &filePath)
+{
+    // check for file itself
+    bool isFilePathExists = QFile::exists(filePath);
+    if(isFilePathExists)
+        return true;
+
+    // check for lds file
+    isFilePathExists = QFile::exists(filePath + ldSimpleCrypt::LDS_EXTENSION);
+    if(isFilePathExists)
+        return true;
+
+    // check for qrc file
+    if(filePath.startsWith("qrc:/")) {
+        QString qrcFilePath = filePath;
+        qrcFilePath.remove("qrc");
+        if(QFile::exists(qrcFilePath))
+            return true;
+    }
+
+    return false;
 }
 
 QByteArray ldSvgReader::readFile(const QString &filePath)

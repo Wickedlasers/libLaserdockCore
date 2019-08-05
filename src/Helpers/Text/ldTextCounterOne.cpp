@@ -300,7 +300,7 @@ void ldTextCounterOne::innerDraw(ldRendererOpenlase *p_renderer)
             for (const ld3dBezierCurve &b : bezier3dTab)
             {
                 //
-                int maxPoints = (int) (300*300*300*ldMaths::bezier3dLength(b)/nbPoints);
+                int maxPoints = (int) (300*300*300*b.length()/nbPoints);
                 if (maxPoints<2) maxPoints = 2;
                 if (maxPoints>10) maxPoints = 10;
 

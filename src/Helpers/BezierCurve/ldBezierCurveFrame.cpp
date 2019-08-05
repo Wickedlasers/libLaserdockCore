@@ -106,6 +106,15 @@ ld3dBezierCurveFrame ldBezierCurveFrame::to3d() const
     return ld3dBezierCurveFrame(m_3dObjects);
 }
 
+ldBezierPathsSequence ldBezierCurveFrame::toSequence() const
+{
+    ldBezierPathsSequence seq;
+    for(const ldBezierCurveObject &object : m_curves) {
+        seq.push_back(object.data());
+    }
+    return seq;
+}
+
 ldBezierCurveObject ldBezierCurveFrame::asObject() const
 {
     if(m_cachedObject.data().empty()) {
@@ -143,12 +152,12 @@ void ldBezierCurveFrame::updateCachedDim() const
         }
 
         // bottom left
-        res.bottom_left.x = std::min(res.bottom_left.x, curveObject.dim().left());
-        res.bottom_left.y = std::min(res.bottom_left.y, curveObject.dim().bottom());
+        res.bottom_left.x = std::min(res.left(), curveObject.dim().left());
+        res.bottom_left.y = std::min(res.bottom(), curveObject.dim().bottom());
 
         // top right
-        res.top_right.x = std::max(res.top_right.x, curveObject.dim().right());
-        res.top_right.y = std::max(res.top_right.y, curveObject.dim().top());
+        res.top_right.x = std::max(res.right(), curveObject.dim().right());
+        res.top_right.y = std::max(res.top(), curveObject.dim().top());
     }
 
     m_cachedDim = res;

@@ -173,7 +173,11 @@ float ldAbstractText::getLetterAWidth()
         return 0.10f;
     //
     ldBezierCurveObject a_upper_svg = m_allSvgLetters[a_upper_index].data();
-    return a_upper_svg.dim().width();
+    float width = a_upper_svg.dim().width();
+    if(cmpf(width, 0))
+        return 0.10f;
+
+    return width;
 }
 
 // getInterLetterWidth

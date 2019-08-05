@@ -27,7 +27,6 @@ struct LDCORESHARED_EXPORT ldVec3
 {
     static ldVec3 rotate3d(const ldVec3 &p, float angle, const ldVec3 &axis);
     static ldVec3 rotate3dAtPoint(const ldVec3 &p, float angle, const ldVec3 &axis, const ldVec3 &point);
-    static ldVec3 vectProduct(const ldVec3 &u, const ldVec3 &v);
 
     const static ldVec3 X_VECTOR;
     const static ldVec3 Y_VECTOR;
@@ -47,6 +46,9 @@ struct LDCORESHARED_EXPORT ldVec3
 
     float distance(const ldVec3 &n) const;
     void norm();
+
+    float dotProduct(const ldVec3 &v) const;
+    ldVec3 vectProduct(const ldVec3 &v) const;
 
     ldVec3 toLaserCoord() const;
 

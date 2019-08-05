@@ -54,7 +54,6 @@ public:
     static float normLog(float v, float power);
     static float normExp(float v, float power);
     static CCPoint changeCoords(const CCPoint &m, float rotation, const CCPoint &translation);
-    static float dotProduct(const ldVec3 &u, const ldVec3 &v);
     static float distanceToPlan(float a, float b, float c, float d, ldVec3 m);
     static float unitedToLaserCoords(float value);
     static ldVec2 unitedToLaserCoords(const ldVec2 &p);
@@ -63,8 +62,6 @@ public:
     static ldRect laserToUnitedCoords(const ldRect &dim);
     static bool isValidLaserPoint(const ldVec2 &p);
     static float cubicBezier(float t, float start, float c1, float c2, float end);
-    static float bezier3dLength(const ld3dBezierCurve &b, int maxPoints = 100);
-    static float bezier3dLengthFast(const ld3dBezierCurve &b);
     static bool isValueNearFrom(float refValue, float checkedValue, float percentAcceptable);
     static void translateSvgBezierCurves(ldBezierPaths &p_svgBC, const ldVec2 &p_t);
     static void rotateSvgBezierCurves(ldBezierPaths &p_svgBC, float rotateValue);

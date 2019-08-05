@@ -180,13 +180,6 @@ CCPoint ldMaths::changeCoords(const CCPoint &m, float rotation, const CCPoint &t
     return res;
 }
 
-// dotProduct
-float ldMaths::dotProduct(const ldVec3 &u, const ldVec3 &v)
-{
-    return u.x*v.x + u.y*v.y + u.z*v.z;
-}
-
-
 // distanceToPlan
 float ldMaths::distanceToPlan(float a, float b, float c, float d, ldVec3 m)
 {
@@ -249,34 +242,6 @@ float ldMaths::cubicBezier(float t, float start, float c1, float c2, float end)
     float tt = t * t;
     float ttt = tt * t;
     return start * ttt_ + 3.0f *  c1 * tt_ * t + 3.0f *  c2 * t_ * tt + end * ttt;
-}
-
-// bezier3dLength
-float ldMaths::bezier3dLength(const ld3dBezierCurve &b, int maxPoints)
-{
-    float res = 0;
-    for (int i=0; i<maxPoints-1; i++)
-    {
-        float slope_i = 1.0f*i/(maxPoints-1);
-        float slope_ib = 1.0f*(i+1)/(maxPoints-1);
-        ldVec3 p_i = b.getPoint(slope_i);
-        ldVec3 p_ib = b.getPoint(slope_ib);
-
-        res += sqrtf( (p_ib.x-p_i.x)*(p_ib.x-p_i.x) + (p_ib.y-p_i.y)*(p_ib.y-p_i.y) + (p_ib.z-p_i.z)*(p_ib.z-p_i.z) );
-    }
-    return res;
-}
-
-float ldMaths::bezier3dLengthFast(const ld3dBezierCurve &b)
-{
-    float chord = b.end.distance(b.start);
-
-    float cont_net = b.start.distance(b.control1)
-            + b.control2.distance(b.control1)
-            + b.end.distance(b.control2);
-
-    float app_arc_length = (cont_net + chord) / 2;
-    return app_arc_length;
 }
 
 // isValueNearFrom

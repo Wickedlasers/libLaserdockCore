@@ -74,10 +74,14 @@ public:
     void moveToCenter();
     void moveTo(const ldVec2 &pos);
 
+    const ldRect &explicitRect() const;
+    void setExplicitRect(const ldRect &rect);
+
 private:
     void resetCache();
 
     ldBezierPaths m_paths;
+    ldRect m_explicitRect;
 
     bool m_isUnitedCoordinates = false;
 

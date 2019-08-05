@@ -142,6 +142,16 @@ void ldBezierCurveObject::moveTo(const ldVec2 &pos)
     resetCache();
 }
 
+const ldRect &ldBezierCurveObject::explicitRect() const
+{
+    return m_explicitRect;
+}
+
+void ldBezierCurveObject::setExplicitRect(const ldRect &rect)
+{
+    m_explicitRect = rect;
+}
+
 bool ldBezierCurveObject::isUnitedCoordinates() const
 {
     return m_isUnitedCoordinates;

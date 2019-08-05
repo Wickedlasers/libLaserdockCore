@@ -89,6 +89,22 @@ public:
     virtual bool isMusicAware() const override { return true; }
 };
 
+// ---------- ldShimmerFilter ----------
+
+class LDCORESHARED_EXPORT ldShimmerFilter : public ldFilter
+{
+    Q_OBJECT
+    LD_WRITABLE_MIN_MAX_PROPERTY(float, colors)
+public:
+    ldShimmerFilter();
+    virtual void process(Vertex &input) override;
+    virtual QString name() override { return QObject::tr("Shimmer A"); }
+    virtual bool isMusicAware() const override { return true; }
+
+private:
+    float m_counter = 0;
+};
+
 
 
 #endif // LDFILTERCOLORIZE_H

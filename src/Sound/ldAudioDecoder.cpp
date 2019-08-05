@@ -177,7 +177,9 @@ void ldAudioDecoder::reset()
     m_elapsedTimer.invalidate();
     m_duration = -1;
 
+#ifdef AUIDIO_DECODER_SUPPORTED
     m_audioDecoder.reset();
+#endif
 
     m_sampleData.clear();
 

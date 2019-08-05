@@ -253,7 +253,8 @@ void ldAnimationSequenceBezier::drawFrameLights5(ldRendererOpenlase* r, int inde
 
 void ldAnimationSequenceBezier::loadDir(const QString &dirPath, const QString &filePrefix, int maskSize, bool isExternal)
 {
-    m_frames = ldSvgReader::loadSvgSequence(dirPath, isExternal ? ldSvgReader::Type::SvgFrame : ldSvgReader::Type::Dev, 0.01f, filePrefix, maskSize);
+    m_baseFrame = ldSvgReader::loadSvgSequence(dirPath, isExternal ? ldSvgReader::Type::SvgFrame : ldSvgReader::Type::Dev, 0.01f, filePrefix, maskSize);
+    m_frames = m_baseFrame.toSequence();
     for (int k = 0; k < 8; k++) {
         keyStart[k] = 0;
         keyEnd[k] = m_frames.size() - 1;
@@ -860,6 +861,19 @@ void ldAnimationSequenceBezier::autoscale() {
             //BezierCurve b = bezierTab.at(0);
             //XY(b.start.x, b.start.y);
 
+        }
+    }
+
+    if(m_baseFrame.data().size() > 0){
+        const ldRect &explicitRect =  m_baseFrame.data().front().explicitRect();
+        if(!explicitRect.isNull()) {
+//            qDebug() << xmin << xmax << ymin << ymax;
+//            qDebug() << explicitRect.left() << explicitRect.right() << explicitRect.bottom() << explicitRect.top();
+
+            if(xmin < explicitRect.left()) xmin = explicitRect.left();
+            if(xmax > explicitRect.right()) xmax = explicitRect.right();
+            if(ymin < explicitRect.bottom()) ymin = explicitRect.bottom();
+            if(ymax > explicitRect.top()) ymax = explicitRect.top();
         }
     }
 

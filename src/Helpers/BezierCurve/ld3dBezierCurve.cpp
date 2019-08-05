@@ -32,4 +32,31 @@ ldVec3 ld3dBezierCurve::getPoint(float slope) const
     return r;
 }
 
+float ld3dBezierCurve::length(int maxPoints) const
+{
+    float res = 0;
+    for (int i=0; i<maxPoints-1; i++)
+    {
+        float slope_i = 1.0f*i/(maxPoints-1);
+        float slope_ib = 1.0f*(i+1)/(maxPoints-1);
+        ldVec3 p_i = getPoint(slope_i);
+        ldVec3 p_ib = getPoint(slope_ib);
+
+        res += sqrtf( (p_ib.x-p_i.x)*(p_ib.x-p_i.x) + (p_ib.y-p_i.y)*(p_ib.y-p_i.y) + (p_ib.z-p_i.z)*(p_ib.z-p_i.z) );
+    }
+    return res;
+}
+
+float ld3dBezierCurve::lengthFast() const
+{
+    float chord = end.distance(start);
+
+    float cont_net = start.distance(control1)
+            + control2.distance(control1)
+            + end.distance(control2);
+
+    float app_arc_length = (cont_net + chord) / 2;
+    return app_arc_length;
+}
+
 

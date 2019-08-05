@@ -234,6 +234,67 @@ void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float delta) {
     hybridAutoColor2->process(this);
     hybridColorPalette->process(this);
 
+    // drop detector
+    float dropDetectValue = 0;
+
+#ifndef LD_CORE_REDUCE_ANALYZER_SUPPORT
+    {
+        float tf2 = (0.5f-mrSlowBass->walkerOutput);
+        tf2 = tf2*tf2 / 0.25f;
+        float tf3 = (0.5f-mrFastBass->walkerOutput);
+        tf3 = tf3*tf3 / 0.25f;
+
+        float dropDetectValue2;
+        dropDetectValue2 = 0;
+        dropDetectValue2 += clampf(mrSlowBass->output * 1.25f - 0.25f, 0, 1);
+        dropDetectValue2 += clampf(mrSlowTreb->output * 1.25f - 0.25f, 0, 1);
+        dropDetectValue2 += tf2 / 2;
+        dropDetectValue2 += tf3 / 2;
+        dropDetectValue2 *= 1.0f/3.0f;
+        clampfp(dropDetectValue2, 0, 1);
+        dropDetectValue2 *= clampf(soundLevel() / 100.0f, 0.125f, 0.5f) / 0.5f;
+        clampfp(dropDetectValue2, 0, 1);
+
+        dropDetectValue = dropDetectValue2;
+    }
+#else
+    {
+        float dropDetectValue3;
+        dropDetectValue3 = 0;
+        float f = 0.20f;
+        dropDetectValue3 += clampf((onsetBeatFresh - 0.88f + f) * 3, 0, 1);
+        dropDetectValue3 += clampf((onsetBeatWarm - 0.84f + f) * 3, 0, 1);
+        dropDetectValue3 += clampf((onsetLargeBeat2 - 0.92f + f) * 3, 0, 1);
+        dropDetectValue3 += clampf((onsetBeatFresh - 0.83f + f) * 2, 0, 1);
+        dropDetectValue3 += clampf((onsetBeatWarm - 0.74f + f) * 2, 0, 1);
+        dropDetectValue3 += clampf((onsetLargeBeat2 - 0.85f + f) * 2, 0, 1);
+        dropDetectValue3 /= 5;
+        clampfp(dropDetectValue3, 0, 1);
+        dropDetectValue3 = powf(dropDetectValue3, 1.0f/3.0f);
+        clampfp(dropDetectValue3, 0, 1);
+        dropDetectValue = dropDetectValue3;
+    }
+#endif
+    // apply drop detect
+    {
+        bool change = false;
+        if (m_dropDetectorLockout > 0) {
+            m_dropDetectorLockout -= delta;
+        } else if (m_dropDetectorEnabled) {
+            if (dropDetectValue > (1.1f - m_dropDetectorSens)) change = true;
+            if (change) {
+                float lockout = 10;
+                float bpm = 120; // todo
+                float secondsPerBeat = 60.0f / bpm;
+                lockout = 3.75f * secondsPerBeat;
+                clampfp(lockout, 0.5f, 4.0f);
+                m_dropDetectorLockout = lockout;
+                qDebug() << "drop detected, value " << int(dropDetectValue*100) << " cooldown is " << m_dropDetectorLockout;
+            }
+            if (change) emit dropDetected();
+        }
+    }
+
     // appak bpm selector
     appakaBpmSelector->process(m_tempoTrackerFast->bpm(), appakaBeat->bpm, m_peaks->lastBpmApproximation());
 
@@ -354,3 +415,5 @@ float ldMusicManager::slowBpm() const
         return m_tempoTrackerSlow->bpm();
 }
 
+void ldMusicManager::setDropDetectEnabledValue(bool value) { m_dropDetectorEnabled = value; }
+void ldMusicManager::setDropDetectSensValue(int value) { m_dropDetectorSens = clampf(value / 100.0f, 0, 1);}

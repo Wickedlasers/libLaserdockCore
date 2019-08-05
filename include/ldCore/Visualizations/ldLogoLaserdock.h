@@ -25,6 +25,7 @@
 
 #include "ldVisualizer.h"
 #include <ldCore/Helpers/Maths/ldVec2.h>
+#include <ldCore/Filter/ldFilterColorize.h>
 
 // ---------------------- LogoLine ---------------------
 
@@ -50,8 +51,7 @@ protected:
     virtual float targetFPS() const override { return 60; }
     virtual void draw() override;
 
-    void render();
-
+    ldShimmerFilter m_filter;
     QList<ldLogoLine> lines;
     bool m_finished = false;
     float m_timer = 0.f;

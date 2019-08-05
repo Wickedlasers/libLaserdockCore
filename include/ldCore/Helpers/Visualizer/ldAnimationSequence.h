@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <vector>
 
+#include <ldCore/Helpers/BezierCurve/ldBezierCurveFrame.h>
 #include <ldCore/Helpers/Color/ldColorUtil.h>
 #include "ldCore/Visualizations/ldVisualizer.h"
 #include "ldCore/Helpers/Maths/ldMaths.h"
@@ -122,6 +123,7 @@ private:
 
 
     RenderAlg m_renderAlg = RenderAlg::Lines;
+    ldBezierCurveFrame m_baseFrame;
     ldBezierPathsSequence m_frames;
 
     QByteArray readFile(const QString &filePath);

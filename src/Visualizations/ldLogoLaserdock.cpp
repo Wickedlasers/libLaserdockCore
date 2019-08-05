@@ -56,13 +56,12 @@ void ldLogo::onShouldStart()
 void ldLogo::draw()
 {
     QMutexLocker lock(&m_mutex);
-    render();
-}
 
-void ldLogo::render() {
+    setPixelShader(&m_filter);
 
     m_renderer->loadIdentity();
     m_renderer->loadIdentity3();
+
     m_timer += 1.0f/60.0f;
     if (m_timer >= TIMER_MAX) {
         m_timer = TIMER_MAX;
@@ -71,11 +70,11 @@ void ldLogo::render() {
 
     float progress = m_timer / TIMER_MAX;
 
-    float color = 1;
+    float opacity = 1;
     if (progress > 0.68) {
         float s = (progress - 0.68) * 3;
         clampfp(s, 0, 1);
-        color = (1-s*s);
+        opacity = 1-s*s;
         s = 3*(s*s*s);
         s = 3.5 / (3.5 - s);
         m_renderer->scale(s, s);
@@ -93,6 +92,8 @@ void ldLogo::render() {
 
     clampfp(fstart, 0, 1);
     clampfp(fend, 0, 1);
+
+    uint32_t color = C_BLUE_I(255*opacity);
 
     for(const ldLogoLine &line : lines) {
         //LogoPoint p;
@@ -113,14 +114,14 @@ void ldLogo::render() {
                     y = (1-f)*y + (f)*line.points[i+1].y;
                 }
             }
-            m_renderer->vertex(x, y, C_GREY(255*color));
+            m_renderer->vertex(x, y, color);
             if (i == iend) {
                 float f = fend*(points-1) - iend;
                 if (i+1 < points) {
                     x = (1-f)*x + (f)*line.points[i+1].x;
                     y = (1-f)*y + (f)*line.points[i+1].y;
                 }
-                m_renderer->vertex(x, y, C_GREY(255*color));
+                m_renderer->vertex(x, y, color);
             }
         }
         m_renderer->end();
