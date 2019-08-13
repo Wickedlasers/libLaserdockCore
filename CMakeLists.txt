@@ -16,12 +16,17 @@ option(LD_CORE_ENABLE_OPENCV "Enable opencv support" OFF)
 option(LD_CORE_ENABLE_QT_QUICK "Enable Qt Quick module" OFF) # required for example
 option(LD_CORE_GAMES_ALWAYS_PLAY_STATE "Games play after pause automatically" OFF)
 option(LD_CORE_REDUCE_ANALYZER_SUPPORT "Reduce music analyzer support for performance on slow devices" OFF)
+option(LD_CORE_RESOURCES_EXTRACTOR "Support of resources extraction (android)" OFF)
+set(LD_CORE_PACKAGE_NAME "com.wickedlasers.example" CACHE STRING "Android package name")
+set(LD_CORE_RESOURCES_VERSION_CODE "1" CACHE STRING "Android resources version code")
 
 include(CMakeDependentOption)
 CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_QT_QUICK "Enable Qt Quick module" OFF
                        "NOT LD_CORE_BUILD_EXAMPLE" ON)
 CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_MIDI "Enable midi" OFF
                         "NOT LD_ANDROID_BUILD" OFF)
+CMAKE_DEPENDENT_OPTION(LD_CORE_RESOURCES_EXTRACTOR "Enable resource extractor" OFF
+                        "NOT LD_ANDROID_BUILD" ON)
 
 if(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.12")
@@ -435,6 +440,14 @@ if(WIN32)
         )
 endif()
 
+# android
+if(LD_CORE_RESOURCES_EXTRACTOR)
+    target_sources(${PROJECT_NAME} PRIVATE
+        ${SRCDIR}/Android/ldResourcesExtractor.cpp
+        ${INCDIR}/Android/ldResourcesExtractor.h
+        )
+endif()
+
 # opencv
 if(LD_CORE_ENABLE_OPENCV)
     target_sources(${PROJECT_NAME} PRIVATE
@@ -516,6 +529,12 @@ if(LD_CORE_GAMES_ALWAYS_PLAY_STATE)
     target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_GAMES_ALWAYS_PLAY_STATE)
 endif()
 
+if(LD_CORE_RESOURCES_EXTRACTOR)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC LD_CORE_RESOURCES_EXTRACTOR)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_PACKAGE_NAME=\"${LD_CORE_PACKAGE_NAME}\")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_RESOURCES_VERSION_CODE=\"${LD_CORE_RESOURCES_VERSION_CODE}\")
+endif()
+
 
 # ---------------------------- DEPENDENCIES  ----------------------
 
@@ -561,39 +580,36 @@ if(LD_CORE_ENABLE_LIBLZR)
     add_subdirectory(3rdparty/liblzr)
     target_link_libraries(${PROJECT_NAME} PUBLIC liblzr)
 endif()
-# lua
-add_subdirectory(3rdparty/lua)
-target_link_libraries(${PROJECT_NAME} PRIVATE liblua)
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/lua/src)
-# sol2
-add_subdirectory(3rdparty/sol2)
-target_link_libraries(${PROJECT_NAME} PRIVATE sol2)
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/sol2)
 # nanosvg
 # No need to do anything, header-only library
 # opencv (optional)
 if(LD_CORE_ENABLE_OPENCV)
     include(3rdparty/opencv/CMakeLists.txt)
-    target_link_libraries(${PROJECT_NAME} PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_videoio) # opencv_imgcodecs is dependency
+    target_link_libraries(${PROJECT_NAME} PUBLIC opencv_core opencv_imgproc opencv_highgui opencv_videoio) # opencv_imgcodecs is dependency
 endif()
 # OpenLase
 add_subdirectory(3rdparty/openlase)
 target_link_libraries(${PROJECT_NAME} PUBLIC openlase)
+# quazip git@github.com:akforrest/quazip.git
+if(LD_CORE_RESOURCES_EXTRACTOR)
+    add_subdirectory(3rdparty/quazip)
+    target_link_libraries(${PROJECT_NAME} PRIVATE quazip)
+endif()
 # simplecrypt
 add_subdirectory(3rdparty/simplecrypt)
-target_link_libraries(${PROJECT_NAME} PUBLIC simplecrypt)
+target_link_libraries(${PROJECT_NAME} PRIVATE simplecrypt)
 
 # platform specific libraries
-if(WIN32)
-    if(LD_CORE_ENABLE_MIDI)
+if(LD_CORE_ENABLE_MIDI)
+    if(WIN32)
         target_link_libraries(${PROJECT_NAME} PRIVATE winmm.lib)
     endif()
-endif()
 
-if(APPLE)
-    find_library(COREMIDI_LIBRARY CoreMIDI)
-    mark_as_advanced(COREMIDI_LIBRARY)
-    target_link_libraries(${PROJECT_NAME}  PRIVATE ${COREMIDI_LIBRARY})
+    if(APPLE)
+        find_library(COREMIDI_LIBRARY CoreMIDI)
+        mark_as_advanced(COREMIDI_LIBRARY)
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${COREMIDI_LIBRARY})
+    endif()
 endif()
 
 if(ANDROID)

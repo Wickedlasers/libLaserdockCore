@@ -30,9 +30,6 @@
 #include "ldCore/Hardware/ldHardwareManager.h"
 #include "ldCore/Helpers/Maths/ldVec2.h"
 #include "ldCore/Helpers/ldLaserController.h"
-#ifdef LD_CORE_ENABLE_QT_QUICK
-#include "ldCore/Simulator/ldSimulatorItem.h"
-#endif
 #include "ldCore/Simulator/ldSimulatorEngine.h"
 #include "ldCore/Sound/ldAudioDecoder.h"
 #include "ldCore/Sound/ldSoundDeviceManager.h"
@@ -42,7 +39,13 @@
 #include "ldCore/Visualizations/ldVisualizationTask.h"
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
 
+#ifdef LD_CORE_ENABLE_QT_QUICK
+#include "ldCore/Simulator/ldSimulatorItem.h"
+#endif
 
+#ifdef LD_CORE_RESOURCES_EXTRACTOR
+#include <ldCore/Android/ldResourcesExtractor.h>
+#endif
 /*!
 
   \class ldCore
@@ -170,7 +173,33 @@ void ldCore::initialize()
 
     update_laserController(new ldLaserController(this));
 
+#ifdef LD_CORE_RESOURCES_EXTRACTOR
+    m_resourcesExtractor = new ldResourcesExtractor(this);
+#endif
+
     qDebug() << "Core initialized";
+}
+
+QString ldCore::storageDir() const
+{
+    QString storageLocation;
+
+    QStringList appDataLocations = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
+    if(!appDataLocations.isEmpty()) {
+#ifdef Q_OS_ANDROID
+        // store in external storage on Android, simple last() works
+        storageLocation = appDataLocations.last();
+#else
+        // default on other systems
+        storageLocation = appDataLocations.first();
+#endif
+    } else {
+        // probably won't work, but at least we tried
+        storageLocation = qApp->applicationDirPath();
+        qWarning() << "Can't locate QStandardPaths::AppDataLocation. Use app dir";
+    }
+
+    return storageLocation;
 }
 
 QString ldCore::resourceDir() const
@@ -179,6 +208,8 @@ QString ldCore::resourceDir() const
     return qApp->applicationDirPath() + "/../Resources";
 #elif defined(Q_OS_WIN32)
     return qApp->applicationDirPath() + "/Resources";
+#elif defined(Q_OS_ANDROID)
+    return storageDir() + "/resources";
 #else
     return qApp->applicationDirPath();
 #endif

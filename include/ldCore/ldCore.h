@@ -37,6 +37,11 @@ class ldSoundDeviceManager;
 class ldTaskManager;
 class ldVisualizationTask;
 
+#ifdef LD_CORE_RESOURCES_EXTRACTOR
+class ldResourcesExtractor;
+#endif
+
+
 /** Base class for laserdock usage. Provides access to control laserdock activation/filters/audio processing/visualizations */
 class LDCORESHARED_EXPORT ldCore : public QObject
 {
@@ -59,6 +64,8 @@ public:
     /** Initialize ldCore managers. Must be called in order to use it*/
     virtual void initialize();
 
+    /** Path to storage location */
+    virtual QString storageDir() const;
     /** Path to external resources, like fonts, svgs, etc */
     virtual QString resourceDir() const;
 
@@ -74,6 +81,10 @@ public:
     ldVisualizationTask *task() const;
     ldTaskManager *taskManager() const;
 
+#ifdef LD_CORE_RESOURCES_EXTRACTOR
+    ldResourcesExtractor* resourcesExtractor() const { return  m_resourcesExtractor; }
+#endif
+
 protected:
     explicit ldCore(QObject *parent = 0);
 
@@ -87,6 +98,11 @@ protected:
     ldSoundDeviceManager *m_soundDeviceManager = nullptr;
     ldVisualizationTask *m_task = nullptr;
     ldTaskManager *m_taskManager = nullptr;
+
+#ifdef LD_CORE_RESOURCES_EXTRACTOR
+    ldResourcesExtractor* m_resourcesExtractor = nullptr;
+#endif
+
 
 private:
     static ldCore *m_instance;

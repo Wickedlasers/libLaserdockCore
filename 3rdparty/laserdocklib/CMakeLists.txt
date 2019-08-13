@@ -80,8 +80,7 @@ endif()
 
 # libusb
 add_subdirectory(3rdparty/libusb)
-target_link_libraries(laserdocklib PUBLIC libusb)
-
+target_link_libraries(laserdocklib PRIVATE libusb)
 
 if(NOT WIN32)
     include(GNUInstallDirs)

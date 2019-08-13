@@ -96,7 +96,7 @@ macro(add_qt_android_apk TARGET SOURCE_TARGET)
             set(QT_ANDROID_SDK_BUILDTOOLS_REVISION ${BUILD_TOOLS_VERSION})
         endif()
     endforeach()
-    message("Detected Android SDK build tools version ${QT_ANDROID_SDK_BUILDTOOLS_REVISION}")
+    message(STATUS "Detected Android SDK build tools version ${QT_ANDROID_SDK_BUILDTOOLS_REVISION}")
 
     # define the application source package directory
     if(ARG_PACKAGE_SOURCES)
