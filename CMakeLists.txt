@@ -63,7 +63,7 @@ include(local.cmake OPTIONAL)
 
 # set desktop qt dir
 # try to set QTDIR from environment variable
-if((DEFINED $ENV{QTDIR}) AND (NOT DEFINED QTDIR))
+if((EXISTS $ENV{QTDIR}) AND (NOT DEFINED QTDIR))
     set(QTDIR $ENV{QTDIR} CACHE STRING "Path to Qt dir")
 endif()
 if(DEFINED QT_BASE_DIR AND NOT DEFINED QTDIR)

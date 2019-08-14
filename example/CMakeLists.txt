@@ -63,6 +63,12 @@ set(CMAKE_PREFIX_PATH "${QTDIR}/lib/cmake")
 find_package(Qt5 CONFIG REQUIRED Core Gui Multimedia Qml)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core  Qt5::Gui Qt5::Multimedia Qt5::Qml)
 
+if(ANDROID)
+    set(Qt5AndroidExtras_DIR "${QTDIR}/lib/cmake/Qt5AndroidExtras")
+    find_package(Qt5 ${QT5_MIN_VERSION} COMPONENTS AndroidExtras REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::AndroidExtras)
+endif()
+
 
 # ldCore
 target_include_directories(${PROJECT_NAME} PRIVATE ../3rdparty)
@@ -172,4 +178,9 @@ if(APPLE)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND cp -R -n ${SOURCE_RESOURCES_PATH} ${BUNDLE_RESOURCES_PATH} || true) # "|| true" - trick to return always no error code
 
+endif()
+
+if (ANDROID)
+    # create apk for android
+    include(install/android/ldAndroidApk.cmake)
 endif()

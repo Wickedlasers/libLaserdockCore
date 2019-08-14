@@ -11,16 +11,13 @@ Item {
     Window {
         id: mainWindow
 
-        width: 640
-        height: 480
+        width: 480
+        height: 640
 
-        RowLayout {
+        ColumnLayout {
             anchors.fill: parent
 
-            ColumnLayout {
-                Layout.alignment: Qt.AlignTop
-
-
+            RowLayout {
                 Button {
                     focusPolicy: Qt.NoFocus
                     enabled: ldCore.laserController.connectedDevices > 0
@@ -60,12 +57,11 @@ Item {
 
                     onActivated: activateVis(index)
                 }
+            }
 
-
+            RowLayout {
+                visible: visComboBox.currentIndex === 5 // Spiral Fighter
                 Button {
-
-                    visible: visComboBox.currentIndex === 5 // Spiral Fighter
-
                     focusPolicy: Qt.NoFocus
 
                     text: checked ? qsTr("Stop") : qsTr("Start")
@@ -75,16 +71,12 @@ Item {
                     onClicked: game.toggle()
                 }
                 Button {
-
-                    visible: visComboBox.currentIndex === 5 // Spiral Fighter
-
                     focusPolicy: Qt.NoFocus
 
                     text: qsTr("Reset")
 
                     onClicked: game.reset()
                 }
-
             }
 
             Item {
@@ -93,12 +85,15 @@ Item {
 
                 LdSimulatorItem {
                     id: simulator
-                    anchors.fill: parent
+                    width: parent.width
+                    height: width
 
                     autostart: true
                     clearColor: "black"
                 }
             }
+            Item {  Layout.fillHeight: true }
+
         }
 
 

@@ -3,16 +3,19 @@ cmake repository for laserdock library
 
 # Supported platforms
 
-Windows (msvc2015)
+Windows (msvc2017 x86)
 <br>
 macOS (clang)
 <br>
-Android (library only, arm)
+android (ndk r19 + the latest sdk, arm64/armv7 supported)
 
 # Prepare to development
 
 1) Download Qt Online installer from https://www.qt.io/download-qt-installer
-2) Run installer and install Qt for mac/windows (the latest version is recommended, library was tested on 5.11)
+2) Run installer and install Qt for mac/windows (the latest version is recommended, library was tested on 5.13)
+3) Download the latest stable cmake if you don't have it already https://cmake.org/download/ Minimum cmake version is 3.11
+4) Ensure that Cmake  is available in Qt Creator Preferences -> Kits -> CMake. Ensure that "Auto-create build directories" in bottom is checked, otherwise you have to create build dirs manually.
+5) Check Qt Creator Preferences -> Kits -> Kits page for any warnings
 
 # How to start:
 

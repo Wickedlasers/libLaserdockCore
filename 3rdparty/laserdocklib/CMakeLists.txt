@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 
 option(LD_ANDROID_BUILD "Android build" OFF)
-if(NOT DEFINED QTDIR)
+if((EXISTS $ENV{QTDIR}) AND (NOT DEFINED QTDIR))
     set(QTDIR $ENV{QTDIR} CACHE STRING "Path to Qt dir")
 endif()
 

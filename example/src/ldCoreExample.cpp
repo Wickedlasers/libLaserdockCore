@@ -29,6 +29,10 @@
 #include <ldCore/Sound/ldSoundDeviceManager.h>
 #include <ldCore/Visualizations/ldVisualizationTask.h>
 
+#ifdef Q_OS_ANDROID
+#include <ldCore/Android/ldResourcesExtractor.h>
+#endif
+
 #include "ldSpiralFighterGame.h"
 
 #include "src/Visualizations/Visualizers/Animation/ldGoGoGirlAnimationVisualizer.h"
@@ -43,6 +47,9 @@ ldCoreExample::ldCoreExample(QQmlApplicationEngine *engine, QObject *parent)
     , m_ldCore(ldCore::create(parent))
     , m_game(nullptr)
     , m_qmlEngine(engine)
+    #ifdef Q_OS_ANDROID
+    , m_resExtractor(new ldResourcesExtractor(this))
+    #endif
 {
     qmlRegisterType<ldCore>();
     qmlRegisterType<ldSpiralFighterGame>();
@@ -51,15 +58,13 @@ ldCoreExample::ldCoreExample(QQmlApplicationEngine *engine, QObject *parent)
     m_ldCore->task()->setIsShowLogo(false);
     m_ldCore->soundDeviceManager()->setDeviceInfo(m_ldCore->soundDeviceManager()->getDefaultDevice(ldSoundDeviceInfo::Type::QAudioInput));
 
-    m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldCircleVisualizer));
-    m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldSquareVisualizer));
-    m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldSpectrumBandVisualizer));
-    m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldGoGoGirlAnimationVisualizer));
-    m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldAnalogClockVisualizer));
-
-    m_game = new ldSpiralFighterGame(this);
-
-    QTimer::singleShot(0, this, &ldCoreExample::init);
+#ifdef Q_OS_ANDROID
+    connect(m_resExtractor, &ldResourcesExtractor::finished, this, &ldCoreExample::startApp);
+    if(m_resExtractor->get_needExtraction())
+        m_resExtractor->startExtraction();
+    else
+#endif
+        startApp();
 }
 
 ldCoreExample::~ldCoreExample()
@@ -92,4 +97,17 @@ void ldCoreExample::activateVis(int index)
 void ldCoreExample::setWindow(QObject *window)
 {
     window->installEventFilter(m_game);
+}
+
+void ldCoreExample::startApp()
+{
+    m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldCircleVisualizer));
+    m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldSquareVisualizer));
+    m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldSpectrumBandVisualizer));
+    m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldGoGoGirlAnimationVisualizer));
+    m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldAnalogClockVisualizer));
+
+    m_game = new ldSpiralFighterGame(this);
+
+    QTimer::singleShot(0, this, &ldCoreExample::init);
 }

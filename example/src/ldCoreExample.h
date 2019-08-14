@@ -31,6 +31,10 @@ class ldCore;
 class ldSpiralFighterGame;
 class ldVisualizer;
 
+#ifdef Q_OS_ANDROID
+class ldResourcesExtractor;
+#endif
+
 class ldCoreExample : public QObject
 {
     Q_OBJECT
@@ -50,9 +54,15 @@ public slots:
     void setWindow(QObject *window);
 
 private:
+    void startApp();
+
     QQmlApplicationEngine *m_qmlEngine;
 
     std::vector<std::unique_ptr<ldVisualizer>> m_visualizers;
+
+#ifdef Q_OS_ANDROID
+    ldResourcesExtractor* m_resExtractor;
+#endif
 };
 
 #endif // LDCOREEXAMPLE_H
