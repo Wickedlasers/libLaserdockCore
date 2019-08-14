@@ -14,7 +14,7 @@ android (ndk r19 + the latest sdk, arm64/armv7 supported)
 1) Download Qt Online installer from https://www.qt.io/download-qt-installer
 2) Run installer and install Qt for mac/windows (the latest version is recommended, library was tested on 5.13)
 3) Download the latest stable cmake if you don't have it already https://cmake.org/download/ Minimum cmake version is 3.11
-4) Ensure that Cmake  is available in Qt Creator Preferences -> Kits -> CMake. Ensure that "Auto-create build directories" in bottom is checked, otherwise you have to create build dirs manually.
+4) Ensure that Cmake  is available in Qt Creator Preferences -> Kits -> CMake. 
 5) Check Qt Creator Preferences -> Kits -> Kits page for any warnings
 
 # How to start:
@@ -22,7 +22,8 @@ android (ndk r19 + the latest sdk, arm64/armv7 supported)
 1) copy dist.local.cmake and rename it to local.cmake
 2) Open local.cmake and set the path QT_BASE_DIR to your local Qt installation directory
 3) Open root CMakeLists.txt with IDE you like. Qt Creator is recommended. Also you should be able to generate solutions for MSVS or Xcode, or open it with CLion.
-4) Compile and run example
+4) In case of Qt Creator create build dir manually, Qt Creator won't do it until you check the checkbox in Preferences -> Kits -> Cmake. However this checkbox creates many unnecessary dirs if you change build dir later.
+5) Compile and run example
 
 # Code Style
 Code style helps to read and edit the project easier to all of us.  Please follow it.
