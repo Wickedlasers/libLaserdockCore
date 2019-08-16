@@ -3,6 +3,7 @@
 *~*
 __generated_files
 
+build
 build-*
 
 .idea
