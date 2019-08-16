@@ -95,7 +95,7 @@ if(WIN32)
         set(BUILD_SUB_PATH "")
     endif()
 
-    set(EXEDIR_PATH ${CMAKE_CURRENT_BINARY_DIR})
+    set(EXEDIR_PATH ${CMAKE_CURRENT_BINARY_DIR}/${BUILD_SUB_PATH})
 
     set(LDCORELIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/../${BUILD_SUB_PATH}/ldCore.dll")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -159,7 +159,7 @@ if(WIN32)
 
     # copy resources
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SOURCE_RESOURCES_PATH} "${EXEDIR_PATH}" || true) # "|| true" - trick to return always no error code
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SOURCE_RESOURCES_PATH} "${EXEDIR_PATH}/Resources" || true) # "|| true" - trick to return always no error code
 endif()
 
 if(APPLE)
@@ -184,3 +184,11 @@ if (ANDROID)
     # create apk for android
     include(install/android/ldAndroidApk.cmake)
 endif()
+
+
+# debug environment for windows
+if(CMAKE_GENERATOR STREQUAL "Visual Studio 14 2015" OR CMAKE_GENERATOR STREQUAL "Visual Studio 15 2017")
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+    configure_file(project.vcxproj.user.in ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.vcxproj.user @ONLY)
+endif()
+
