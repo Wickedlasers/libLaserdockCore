@@ -41,6 +41,17 @@ cmake -G "Visual Studio 15 2017" -DQTDIR="d:\Dev\Qt\5.13.0\msvc2017" ..
 
 7) Build & run
 
+### Xcode
+
+1) copy dist.local.cmake and rename it to local.cmake
+2) Open local.cmake and set the path QT_BASE_DIR to your local Qt installation directory, e.g /Users/ncuxer/dev/Qt/5.13.0
+3) cd laserdock_apps_cmake
+4) mkdir build && cd build
+5) cmake -G "Xcode" .. 
+instead of steps 1-2 you can set QTDIR on this step 
+cmake -G "Xcode" -DQTDIR="/Users/ncuxer/dev/Qt/5.13.0/clang_64" ..
+6) open ldCore.xcodeproj
+7) build and run
 
 # Code Style
 Code style helps to read and edit the project easier to all of us.  Please follow it.
