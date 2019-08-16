@@ -48,8 +48,10 @@ cmake -G "Visual Studio 15 2017" -DQTDIR="d:\Dev\Qt\5.13.0\msvc2017" ..
 3) cd laserdock_apps_cmake
 4) mkdir build && cd build
 5) cmake -G "Xcode" .. 
+
 instead of steps 1-2 you can set QTDIR on this step 
 cmake -G "Xcode" -DQTDIR="/Users/ncuxer/dev/Qt/5.13.0/clang_64" ..
+
 6) open ldCore.xcodeproj
 7) build and run
 
