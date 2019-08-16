@@ -35,6 +35,7 @@ android (ndk r19 + the latest sdk, arm64/armv7 supported)
 4) mkdir build
 5) cd build
 6) cmake -G "Visual Studio 15 2017"  ..
+
 Instead of step 1-2 you can set QTDIR manually by passing it to cmake on this step:
 <br>
 cmake -G "Visual Studio 15 2017" -DQTDIR="d:\Dev\Qt\5.13.0\msvc2017" ..
@@ -48,6 +49,7 @@ cmake -G "Visual Studio 15 2017" -DQTDIR="d:\Dev\Qt\5.13.0\msvc2017" ..
 3) cd laserdock_apps_cmake
 4) mkdir build && cd build
 5) cmake -G "Xcode" .. 
+
 Instead of steps 1-2 you can set QTDIR on this step:
 <br>
 cmake -G "Xcode" -DQTDIR="/Users/ncuxer/dev/Qt/5.13.0/clang_64" ..
