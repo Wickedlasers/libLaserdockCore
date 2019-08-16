@@ -14,16 +14,33 @@ android (ndk r19 + the latest sdk, arm64/armv7 supported)
 1) Download Qt Online installer from https://www.qt.io/download-qt-installer
 2) Run installer and install Qt for mac/windows (the latest version is recommended, library was tested on 5.13)
 3) Download the latest stable cmake if you don't have it already https://cmake.org/download/ Minimum cmake version is 3.11
+
+### Qt Creator:
 4) Ensure that Cmake  is available in Qt Creator Preferences -> Kits -> CMake. 
 5) Check Qt Creator Preferences -> Kits -> Kits page for any warnings
 
 # How to start:
 
+### Qt Creator:
+
+1) Open root CMakeLists.txt. 
+2) Setup build dirs and create them manually. Qt Creator won't do it until you check the corresponding checkbox in Preferences -> Kits -> Cmake. However this checkbox can create unnecessary dirs if you decide to change build dir later.
+3) Build & run
+
+### Visual Studio:
+
 1) copy dist.local.cmake and rename it to local.cmake
-2) Open local.cmake and set the path QT_BASE_DIR to your local Qt installation directory
-3) Open root CMakeLists.txt with IDE you like. Qt Creator is recommended. Also you should be able to generate solutions for MSVS or Xcode, or open it with CLion.
-4) In case of Qt Creator create build dir manually, Qt Creator won't do it until you check the checkbox in Preferences -> Kits -> Cmake. However this checkbox creates many unnecessary dirs if you change build dir later.
-5) Compile and run example
+2) Open local.cmake and set the path QT_BASE_DIR to your local Qt installation directory, e.g d:\Dev\Qt\5.13.0\
+3) Open x86 "Native tools command prompt for VS 2017" and go to laserdock_apps_cmake dir
+4) mkdir build
+5) cd build
+6) cmake -G "Visual Studio 15 2017"  ..
+
+Also instead of step 1-2 you can set QTDIR manually by passing it to cmake on this step:
+cmake -G "Visual Studio 15 2017" -DQTDIR="d:\Dev\Qt\5.13.0\msvc2017" ..
+
+7) Build & run
+
 
 # Code Style
 Code style helps to read and edit the project easier to all of us.  Please follow it.
