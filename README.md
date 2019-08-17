@@ -31,7 +31,7 @@ android (ndk r19 + the latest sdk, arm64/armv7 supported)
 
 1) copy dist.local.cmake and rename it to local.cmake
 2) Open local.cmake and set the path QT_BASE_DIR to your local Qt installation directory, e.g d:\Dev\Qt\5.13.0\
-3) Open x86 "Native tools command prompt for VS 2017" and go to laserdock_apps_cmake dir
+3) Open x86 "Native tools command prompt for VS 2017" and go to libLaserdockCore dir
 4) mkdir build
 5) cd build
 6) cmake -G "Visual Studio 15 2017"  ..
@@ -46,7 +46,7 @@ cmake -G "Visual Studio 15 2017" -DQTDIR="d:\Dev\Qt\5.13.0\msvc2017" ..
 
 1) copy dist.local.cmake and rename it to local.cmake
 2) Open local.cmake and set the path QT_BASE_DIR to your local Qt installation directory, e.g /Users/ncuxer/dev/Qt/5.13.0
-3) cd laserdock_apps_cmake
+3) cd libLaserdockCore
 4) mkdir build && cd build
 5) cmake -G "Xcode" .. 
 
