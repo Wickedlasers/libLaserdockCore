@@ -41,14 +41,13 @@ ldQSound::~ldQSound()
 void ldQSound::play()
 {
     QMutexLocker lock(&m_mutex);
-
-    QTimer::singleShot(0, [&]() { playImpl(); });
+    QMetaObject::invokeMethod(this, "playImpl", Qt::QueuedConnection);
 }
 
 void ldQSound::stop()
 {
     QMutexLocker lock(&m_mutex);
-    QTimer::singleShot(0, [&]() { stopImpl(); });
+    QMetaObject::invokeMethod(this, "stopImpl", Qt::QueuedConnection);
 }
 
 void ldQSound::setForce(bool force)

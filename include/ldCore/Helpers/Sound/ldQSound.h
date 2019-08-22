@@ -60,10 +60,11 @@ public:
     void setVolumeCoeff(qreal volume); // 0..1
     void setVolumeLevel(int level); // 0..100
 
-private:
+private slots:
     void playImpl();
     void stopImpl();
 
+private:
     QMutex m_mutex;
 
     bool m_force = true;
