@@ -77,8 +77,6 @@ void ldThreadedDataWorker::run()
     std::vector<Vertex> vertexVec(SAMPLES_PER_PACKET);
     std::vector<CompressedSample> compressedSampleVec(SAMPLES_PER_PACKET);
 
-    ldFrameBuffer *currentBuffer = m_frameBuffer;
-
     m_simulatedBufferFullCount = 0;
     m_simTimer.start();
 
@@ -133,7 +131,7 @@ void ldThreadedDataWorker::run()
         // everything is ok, process buffer flow
         } else {
             // count local
-            qint32 localBuffer = currentBuffer->getAvailable();
+            qint32 localBuffer = m_frameBuffer->getAvailable();
 
             // send
             if (localBuffer > 0) {
@@ -148,7 +146,7 @@ void ldThreadedDataWorker::run()
                     samples_to_send = SAMPLES_PER_PACKET;
 
                 Vertex *simulatorBuffer = isSimulatorActive ? vertexVec.data() : nullptr;
-                unsigned int actualSamplesToSend = currentBuffer->get(simulatorBuffer, *compressedSampleVec.data(), samples_to_send);
+                unsigned int actualSamplesToSend = m_frameBuffer->get(simulatorBuffer, *compressedSampleVec.data(), samples_to_send);
                 if (actualSamplesToSend > 0) {
                     // send
                     if (m_isActive) m_usbDeviceManager->sendData(compressedSampleVec.data(), actualSamplesToSend);
@@ -163,10 +161,8 @@ void ldThreadedDataWorker::run()
             }
 
             // refill if needed
-            if (localBuffer <= 0) {
-                currentBuffer->reset();
-//                m_bufferManager->refillBuffer(currentBuffer);
-            }
+            if(localBuffer <= 0)
+                m_frameBuffer->reset();
         }
     }
 //    qDebug() << "ThreadedDataWorker2: End of loop";

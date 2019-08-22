@@ -31,6 +31,8 @@
 ldFrameBuffer::ldFrameBuffer(QObject *parent) :
     QObject(parent)
 {
+    m_buffer.resize(FRAMEBUFFER_CAPACITY);
+    m_compressed_buffer.resize(FRAMEBUFFER_CAPACITY);
 }
 
 ldFrameBuffer::~ldFrameBuffer()
@@ -81,8 +83,8 @@ unsigned int ldFrameBuffer::get(Vertex * pbuffer, CompressedSample &pcbuffer, un
         actual = std::min((unsigned int) available, size);
 
         // pbuffer is optional
-        if(pbuffer) memcpy(pbuffer, (m_buffer + m_exhuasted_index), actual*sizeof(Vertex));
-        memcpy(&pcbuffer, (m_compressed_buffer + m_exhuasted_index), actual*sizeof(CompressedSample));
+        if(pbuffer) memcpy(pbuffer, &m_buffer[m_exhuasted_index], actual*sizeof(Vertex));
+        memcpy(&pcbuffer, &m_compressed_buffer[m_exhuasted_index], actual*sizeof(CompressedSample));
 
         m_exhuasted_index += actual;
     }

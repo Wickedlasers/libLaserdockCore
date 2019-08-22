@@ -61,8 +61,8 @@ private:
     qint32 m_fill = 0;
     bool m_isFilled = false;
 
-    Vertex m_buffer[FRAMEBUFFER_CAPACITY] = {};
-    CompressedSample m_compressed_buffer[FRAMEBUFFER_CAPACITY] = {};
+    std::vector<Vertex> m_buffer;
+    std::vector<CompressedSample> m_compressed_buffer;
 
     int m_frameModes = 0;
 };

@@ -499,7 +499,7 @@ endif()
 # setup C++
 if(UNIX)
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wuninitialized -Winit-self -Wno-unknown-pragmas -Wpedantic)
-    if(LINUX)
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         target_compile_options(${PROJECT_NAME} PRIVATE -fPIC)
     endif()
     if(NOT ANDROID)

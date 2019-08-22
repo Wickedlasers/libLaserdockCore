@@ -14,7 +14,6 @@ target_sources(kiss_fft130 PRIVATE
     tools/kiss_fftr.h
     )
 
-include(DetectLinux)
-if(LINUX)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     target_compile_options(kiss_fft130 PRIVATE -fPIC)
 endif()
