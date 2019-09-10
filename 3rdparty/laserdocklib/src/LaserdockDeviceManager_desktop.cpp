@@ -2,7 +2,9 @@
 
 #include <algorithm>
 
+#pragma warning(push, 0)
 #include <libusb/libusb.h>
+#pragma warning(pop)
 
 #include <laserdocklib/LaserdockDevice.h>
 

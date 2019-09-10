@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # library
 add_library(liblzr SHARED)
 
+target_include_directories(liblzr PUBLIC .)
+
 target_sources(liblzr PRIVATE
     #    engine.hpp
         liblzr.hpp
@@ -42,3 +44,6 @@ if(ANDROID)
     target_compile_definitions(liblzr PRIVATE __STDC_LIMIT_MACROS)
 endif()
 
+if(NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    add_library(${PROJECT_NAME}::liblzr ALIAS liblzr)
+endif()

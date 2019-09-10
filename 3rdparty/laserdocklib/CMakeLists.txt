@@ -22,8 +22,6 @@ if(LD_ANDROID_BUILD)
     set(CMAKE_TOOLCHAIN_FILE ${ANDROID_NDK}/build/cmake/android.toolchain.cmake)
 endif()
 
-project(laserdocklib)
-
 add_library(laserdocklib SHARED)
 
 target_include_directories(laserdocklib PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
@@ -95,3 +93,8 @@ if(NOT WIN32)
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/laserdocklib)
 endif()
+
+if(NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    add_library(${PROJECT_NAME}::laserdocklib ALIAS laserdocklib)
+endif()
+

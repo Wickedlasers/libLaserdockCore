@@ -4,20 +4,23 @@ cmake_minimum_required(VERSION 3.11)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-project(openlase)
-
 # library
-add_library(${PROJECT_NAME} SHARED)
+add_library(openlase SHARED)
 
-target_sources(${PROJECT_NAME} PRIVATE
+target_sources(openlase PRIVATE
     src/libol.c
     include/openlase/libol.h)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core)
+find_package(Qt5 CONFIG REQUIRED Core)
+target_link_libraries(openlase PRIVATE Qt5::Core)
 
-target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_include_directories(${PROJECT_NAME} PRIVATE src)
+target_include_directories(openlase PUBLIC include)
+target_include_directories(openlase PRIVATE src)
 
 if(WIN32)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
+    target_compile_definitions(openlase PRIVATE _USE_MATH_DEFINES)
+endif()
+
+if(NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    add_library(${PROJECT_NAME}::openlase ALIAS openlase)
 endif()

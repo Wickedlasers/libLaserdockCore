@@ -1,3 +1,5 @@
+# quazip git@github.com:akforrest/quazip.git
+
 add_library(quazip SHARED IMPORTED GLOBAL)
 
 set_property(TARGET quazip PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/include")
@@ -24,4 +26,8 @@ endif()
 
 if(ANDROID)
     set_property(TARGET quazip PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/lib/android/${ANDROID_ABI}/libquazip.so")
+endif()
+
+if(NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    add_library(${PROJECT_NAME}::quazip ALIAS quazip)
 endif()

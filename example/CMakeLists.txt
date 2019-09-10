@@ -24,6 +24,8 @@ else()
     add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32)
 endif()
 
+set_target_properties(${PROJECT_NAME} PROPERTIES RESOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/resExt")
+
 if(WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 endif()
@@ -83,7 +85,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ldSpiralFighter)
 # ---------------------------- DEPLOY  ----------------------
 
 # resources dir
-set(SOURCE_RESOURCES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resExt")
+get_target_property(SOURCE_RESOURCES_PATH ${PROJECT_NAME} RESOURCE_DIR)
+get_target_property(SOURCE_LDCORE_RESOURCES_PATH ldCore RESOURCE_DIR)
 
 if(WIN32)
     # Copy required dlls to output folder
@@ -97,69 +100,52 @@ if(WIN32)
 
     set(EXEDIR_PATH ${CMAKE_CURRENT_BINARY_DIR}/${BUILD_SUB_PATH})
 
-    set(LDCORELIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/../${BUILD_SUB_PATH}/ldCore.dll")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${LDCORELIB_PATH} ${EXEDIR_PATH})
+        $<TARGET_FILE:ldCore> ${EXEDIR_PATH})
 
-    set(LIBUSB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/laserdocklib/3rdparty/libusb/lib/win/libusb-1.0.dll")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${LIBUSB_PATH} ${EXEDIR_PATH})
+        $<TARGET_FILE:libusb> ${EXEDIR_PATH})
 
-    set(LASERDOCKLIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/../3rdparty/laserdocklib/${BUILD_SUB_PATH}/laserdocklib.dll")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${LASERDOCKLIB_PATH} ${EXEDIR_PATH})
+        $<TARGET_FILE:laserdocklib> ${EXEDIR_PATH})
 
-    set(OPENLASE_PATH "${CMAKE_CURRENT_BINARY_DIR}/../3rdparty/openlase/${BUILD_SUB_PATH}/OpenLase.dll")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${OPENLASE_PATH} ${EXEDIR_PATH})
+        $<TARGET_FILE:openlase> ${EXEDIR_PATH})
 
-    if(LD_CORE_ENABLE_LIBLZR)
-        set(LIBLZR_PATH "${CMAKE_CURRENT_BINARY_DIR}/../3rdparty/liblzr/${BUILD_SUB_PATH}/liblzr.dll")
+    if(TARGET liblzr)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${LIBLZR_PATH} ${EXEDIR_PATH}
-            )
+            $<TARGET_FILE:liblzr>  ${EXEDIR_PATH})
     endif()
 
     if(LD_CORE_ENABLE_OPENCV)
         #opencv
         include(../3rdparty/opencv/CMakeLists.txt)
 
-        if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-            set(DEBUG_SUFFIX "d")
-        else()
-            set(DEBUG_SUFFIX "")
-        endif()
-
-        set(OPENCVCORE_PATH "${OpenCV_DIR}/x86/vc14/bin/opencv_core320${DEBUG_SUFFIX}.dll")
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${OPENCVCORE_PATH} ${EXEDIR_PATH})
-        set(OPENCVHIGHGUI_PATH "${OpenCV_DIR}/x86/vc14/bin/opencv_highgui320${DEBUG_SUFFIX}.dll")
+            $<TARGET_FILE:opencv_core> ${EXEDIR_PATH})
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${OPENCVHIGHGUI_PATH} ${EXEDIR_PATH})
-        set(OPENCVIMGCODECS_PATH "${OpenCV_DIR}/x86/vc14/bin/opencv_imgcodecs320${DEBUG_SUFFIX}.dll")
+            $<TARGET_FILE:opencv_highgui> ${EXEDIR_PATH})
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${OPENCVIMGCODECS_PATH} ${EXEDIR_PATH})
-        set(OPENCVIMGPROC_PATH "${OpenCV_DIR}/x86/vc14/bin/opencv_imgproc320${DEBUG_SUFFIX}.dll")
+            $<TARGET_FILE:opencv_imgcodecs> ${EXEDIR_PATH})
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${OPENCVIMGPROC_PATH} ${EXEDIR_PATH})
-        set(OPENCVVIDEOIO_PATH "${OpenCV_DIR}/x86/vc14/bin/opencv_videoio320${DEBUG_SUFFIX}.dll")
+            $<TARGET_FILE:opencv_imgproc> ${EXEDIR_PATH})
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${OPENCVVIDEOIO_PATH} ${EXEDIR_PATH})
+            $<TARGET_FILE:opencv_videoio> ${EXEDIR_PATH})
     endif()
 
     # copy resources
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SOURCE_RESOURCES_PATH} "${EXEDIR_PATH}/Resources" || true) # "|| true" - trick to return always no error code
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SOURCE_RESOURCES_PATH} ${SOURCE_LDCORE_RESOURCES_PATH} "${EXEDIR_PATH}/Resources")
 endif()
 
 if(APPLE)
@@ -173,11 +159,9 @@ if(APPLE)
     set(BUNDLE_PATH "${BUNDLE_SUB_PATH}/${PROJECT_NAME}.app")
     set(BUNDLE_RESOURCES_PATH "${BUNDLE_PATH}/Contents/Resources")
 
-    # copy resourceas
-    message(STATUS ${SOURCE_RESOURCES_PATH} ${BUNDLE_RESOURCES_PATH})
+    # copy resources
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND cp -R -n ${SOURCE_RESOURCES_PATH} ${BUNDLE_RESOURCES_PATH} || true) # "|| true" - trick to return always no error code
-
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SOURCE_RESOURCES_PATH} ${SOURCE_LDCORE_RESOURCES_PATH} ${BUNDLE_RESOURCES_PATH})
 endif()
 
 if (ANDROID)

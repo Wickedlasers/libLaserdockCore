@@ -3,7 +3,9 @@
 //
 #include <laserdocklib/LaserdockDevice.h>
 
+#pragma warning(push, 0)
 #include <libusb/libusb.h>
+#pragma warning(pop)
 
 #include "LaserdockDevice_p.h"
 

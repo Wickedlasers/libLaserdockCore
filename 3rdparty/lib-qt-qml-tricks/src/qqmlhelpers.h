@@ -93,6 +93,17 @@
         Q_ENUMS (Type) \
     };
 
+// -------- ldCore modifications ----------
+
+#define LD_WRITABLE_MIN_MAX_PROPERTY(type, property) QML_WRITABLE_PROPERTY(type, property) \
+    QML_CONSTANT_PROPERTY(type, min_##property) \
+    QML_CONSTANT_PROPERTY(type, max_##property)
+
+#define LD_READONLY_MIN_MAX_PROPERTY(type, property) QML_READONLY_PROPERTY(type, property) \
+    QML_CONSTANT_PROPERTY(type, min_##property) \
+    QML_CONSTANT_PROPERTY(type, max_##property)
+
+
 class QmlProperty : public QObject { Q_OBJECT }; // NOTE : to avoid "no suitable class found" MOC note
 
 #endif // QQMLHELPERS_H

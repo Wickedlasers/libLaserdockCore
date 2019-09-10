@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.11)
 
-set(CMAKE_AUTOMOC OFF)
-
 add_library(aubio)
+
+set_property(TARGET aubio PROPERTY AUTOMOC OFF)
 
 target_sources(aubio PRIVATE
     src/aubio.h
@@ -114,7 +114,7 @@ target_sources(aubio PRIVATE
     )
 
 
-target_include_directories(aubio PRIVATE src)
+target_include_directories(aubio PUBLIC src)
 
 if(WIN32)
     target_compile_definitions(aubio PRIVATE _USE_MATH_DEFINES)
@@ -123,4 +123,8 @@ endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     target_compile_options(aubio PRIVATE -fPIC)
+endif()
+
+if(NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    add_library(${PROJECT_NAME}::aubio ALIAS aubio)
 endif()

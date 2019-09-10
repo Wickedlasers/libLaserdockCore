@@ -4,6 +4,8 @@ set(CMAKE_AUTOMOC OFF)
 
 add_library(libaudiodecoder)
 
+target_include_directories(libaudiodecoder PUBLIC include)
+
 target_sources(libaudiodecoder PRIVATE
     include/audiodecoder.h
     include/audiodecoderbase.h
@@ -11,6 +13,7 @@ target_sources(libaudiodecoder PRIVATE
     )
 
 # qdebug only is used
+find_package(Qt5 CONFIG REQUIRED Core)
 target_link_libraries(libaudiodecoder PRIVATE  Qt5::Core)
 
 if(WIN32)
@@ -64,4 +67,9 @@ if(ANDROID)
         ${OPENSLES_LIBRARY})
 
     target_link_libraries(libaudiodecoder PRIVATE log)
+endif()
+
+
+if(NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    add_library(${PROJECT_NAME}::libaudiodecoder ALIAS libaudiodecoder)
 endif()

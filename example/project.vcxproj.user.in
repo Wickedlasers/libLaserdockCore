@@ -4,7 +4,15 @@
  	<LocalDebuggerEnvironment>PATH=@QTDIR@\bin;%PATH%</LocalDebuggerEnvironment>
 	<DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
  </PropertyGroup>	 	
+ <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|win32'">	 	
+ 	<LocalDebuggerEnvironment>PATH=@QTDIR@\bin;%PATH%</LocalDebuggerEnvironment>
+	<DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+ </PropertyGroup>
  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|win32'">	 	
+ 	<LocalDebuggerEnvironment>PATH=@QTDIR@\bin;%PATH%</LocalDebuggerEnvironment>
+	<DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+ </PropertyGroup>
+ <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|win32'">	 	
  	<LocalDebuggerEnvironment>PATH=@QTDIR@\bin;%PATH%</LocalDebuggerEnvironment>
 	<DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
  </PropertyGroup>
