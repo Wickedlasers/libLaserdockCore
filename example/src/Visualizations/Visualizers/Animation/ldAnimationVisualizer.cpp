@@ -69,22 +69,10 @@ static float getClosestBeat(float currentBpm, float sourceBpm, bool slow) {
 
 ldAnimationVisualizer::ldAnimationVisualizer()
 {
-    init();
+    setPosition(ccp(1, 1));
 }
 
 ldAnimationVisualizer::~ldAnimationVisualizer() {}
-
-bool ldAnimationVisualizer::init()
-{
-    if (ldVisualizer::init())
-    {
-        setPosition(ccp(1, 1));
-        setContentSize(CCSizeMake(2, 2));
-        setAnchorPoint(ccp(0.5, 0.5));
-        return true;
-    }
-    return false;
-}
 
 void ldAnimationVisualizer::onShouldStart()
 {

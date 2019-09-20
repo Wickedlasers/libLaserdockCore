@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.11)
 add_library(aubio)
 
 set_property(TARGET aubio PROPERTY AUTOMOC OFF)
+set_property(TARGET aubio PROPERTY AUTORCC OFF)
+set_property(TARGET aubio PROPERTY AUTOUIC OFF)
 
 target_sources(aubio PRIVATE
     src/aubio.h

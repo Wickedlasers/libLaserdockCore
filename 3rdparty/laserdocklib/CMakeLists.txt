@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.11)
 
 option(LD_ANDROID_BUILD "Android build" OFF)
+option(LASERDOCKLIB_INSTALL "Install laserdocklib" OFF)
+
 if((EXISTS $ENV{QTDIR}) AND (NOT DEFINED QTDIR))
     set(QTDIR $ENV{QTDIR} CACHE STRING "Path to Qt dir")
 endif()
@@ -13,7 +15,7 @@ if(LD_ANDROID_BUILD)
         set(ANDROID_ABI "arm64-v8a" CACHE STRING "Android ABI version")  # "arm64-v8a" and "armeabi-v7a" values are supported
     endif()
     if(NOT DEFINED ANDROID_NATIVE_API_LEVEL)
-        set(ANDROID_NATIVE_API_LEVEL 21 CACHE STRING "Android native API level")
+        set(ANDROID_NATIVE_API_LEVEL 24 CACHE STRING "Android native API level")
     endif()
 
     set(ANDROID_TOOLCHAIN clang)
@@ -80,18 +82,20 @@ endif()
 add_subdirectory(3rdparty/libusb)
 target_link_libraries(laserdocklib PRIVATE libusb)
 
-if(NOT WIN32)
-    include(GNUInstallDirs)
-    set_property(TARGET laserdocklib PROPERTY PUBLIC_HEADER
-        ${INCDIR}/Laserdocklib.h
-        ${INCDIR}/LaserdockDevice.h
-        ${INCDIR}/LaserdockDeviceManager.h
-        ${INCDIR}/LaserdockSample.h
-        )
+if(LASERDOCKLIB_INSTALL)
+    if(NOT WIN32)
+        include(GNUInstallDirs)
+        set_property(TARGET laserdocklib PROPERTY PUBLIC_HEADER
+            ${INCDIR}/Laserdocklib.h
+            ${INCDIR}/LaserdockDevice.h
+            ${INCDIR}/LaserdockDeviceManager.h
+            ${INCDIR}/LaserdockSample.h
+            )
 
-    install(TARGETS laserdocklib
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/laserdocklib)
+        install(TARGETS laserdocklib
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/laserdocklib)
+    endif()
 endif()
 
 if(NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)

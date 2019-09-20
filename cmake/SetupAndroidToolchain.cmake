@@ -4,7 +4,7 @@ if(LD_ANDROID_BUILD)
         set(ANDROID_NDK $ENV{ANDROID_NDK_ROOT})
     endif()
 
-    set(ANDROID_NATIVE_API_LEVEL 21)
+    set(ANDROID_NATIVE_API_LEVEL 24) # 7.0
     set(ANDROID_TOOLCHAIN clang)
     set(ANDROID_STL c++_shared)
 

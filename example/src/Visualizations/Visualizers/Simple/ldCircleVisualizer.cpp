@@ -46,20 +46,11 @@ void ldCircleVisualizer::circle(ldRendererOpenlase* m_renderer, int points, floa
 ldCircleVisualizer::ldCircleVisualizer()
     : ldVisualizer()
 {
-    init();
+    setPosition(ccp(1, 1));
 }
 
 ldCircleVisualizer::~ldCircleVisualizer() {}
 
-bool ldCircleVisualizer::init()
-{
-    if (ldVisualizer::init())
-    {
-        setPosition(ccp(1, 1));
-        return true;
-    }
-    return false;
-}
 
 void ldCircleVisualizer::draw()
 {

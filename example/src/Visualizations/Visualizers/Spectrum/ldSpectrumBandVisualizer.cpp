@@ -12,7 +12,7 @@ ldSpectrumBandVisualizer::ldSpectrumBandVisualizer()
     countCols = 4;
     countRows = 6;
     cellPadCoef = 0.2f;
-    init();
+    setPosition(ccp(1, 1));
     initData();
 }
 
@@ -25,7 +25,7 @@ ldSpectrumBandVisualizer::ldSpectrumBandVisualizer(int p_countCols, int p_countR
 	useLog = p_useLog;
 	useMax = p_useMax;
 	useBackground = p_useBackground;
-    init();
+    setPosition(ccp(1, 1));
     initData();
 }
 
@@ -37,18 +37,6 @@ ldSpectrumBandVisualizer::~ldSpectrumBandVisualizer() {
     grid.clear();
 }
 
-bool ldSpectrumBandVisualizer::init()
-{
-    if (ldVisualizer::init())
-    {
-        setPosition(ccp(1, 1));
-        setContentSize(CCSizeMake(2, 2));
-        setAnchorPoint(ccp(0.5, 0.5));
-        //clearBuffer();
-        return true;
-    }
-    return false;
-}
 
 void ldSpectrumBandVisualizer::onShouldStart() {
 

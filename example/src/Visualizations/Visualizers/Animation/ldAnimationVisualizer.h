@@ -21,7 +21,6 @@ public:
 public:
     virtual QString visualizerName() const override { return "Ldva2 Visualizer"; }
     virtual float targetFPS() const override { return m_fps; }
-    bool init();
 
     virtual void onShouldStart() override;
 

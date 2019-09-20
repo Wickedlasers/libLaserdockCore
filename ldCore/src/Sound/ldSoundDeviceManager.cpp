@@ -23,8 +23,6 @@
 
 #include <QtCore/QtDebug>
 #include <QtCore/QCoreApplication>
-#include <QtWidgets/QMessageBox>
-
 
 #include "Sound/ldQAudioInputDevice.h"
 // loopback

@@ -82,6 +82,14 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ldCore)
 add_subdirectory(SpiralFighter)
 target_link_libraries(${PROJECT_NAME} PRIVATE ldSpiralFighter)
 
+if(ANDROID)
+    set(LD_EXAMPLE_PACKAGE_NAME "com.wickedlasers.example")
+    set(LD_EXAMPLE_RESOURCES_VERSION_CODE 2)
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_EXAMPLE_PACKAGE_NAME=\"${LD_EXAMPLE_PACKAGE_NAME}\")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_EXAMPLE_RESOURCES_VERSION_CODE=${LD_EXAMPLE_RESOURCES_VERSION_CODE})
+endif()
+
 # ---------------------------- DEPLOY  ----------------------
 
 # resources dir

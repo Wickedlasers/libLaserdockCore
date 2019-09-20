@@ -29,10 +29,7 @@ public:
     explicit ldSpiralFighterVisualizer();
     virtual ~ldSpiralFighterVisualizer();
 
-    bool init();
-
     // ldVisualizer
-    
     virtual QString visualizerName() const override { return "Spiral Fighter"; }
     virtual void onShouldStart() override;
     virtual void onShouldStop() override;

@@ -38,8 +38,6 @@ public:
     explicit ldSquareVisualizer();
     virtual ~ldSquareVisualizer();
 
-    bool init();
-
     // ldVisualizer
     virtual QString visualizerName() const override { return "Square"; }
 

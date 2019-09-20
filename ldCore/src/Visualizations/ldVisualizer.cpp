@@ -38,6 +38,9 @@ ldVisualizer::ldVisualizer(QObject *parent)
     : QObject(parent)
 {
     m_musicManager = ldCore::instance()->musicManager();
+
+    setContentSize(CCSize(2, 2));
+    setAnchorPoint(CCPoint(0.5, 0.5));
 }
 
 /*!
@@ -57,19 +60,6 @@ ldVisualizer::~ldVisualizer()
 QString ldVisualizer::visualizerName() const
 {
     return "";
-}
-
-/*!
- * \fn bool ldVisualizer::init()
- * \brief The intializer of visualizer.
- * This funcs returns the \c true value if initalization is successed, otherwise \c false value.
- */
-bool ldVisualizer::init()
-{
-    setContentSize(CCSize(2, 2));
-    setAnchorPoint(CCPoint(0.5, 0.5));
-
-    return true;
 }
 
 void ldVisualizer::start() {

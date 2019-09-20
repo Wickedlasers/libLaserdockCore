@@ -26,11 +26,6 @@
 
 // ---------------------- Logo ---------------------
 
-bool ldLogo::init()
-{
-    return ldVisualizer::init();
-}
-
 void ldLogo::onShouldStart()
 {
     QMutexLocker lock(&m_mutex);
@@ -57,7 +52,6 @@ void ldLogo::draw()
 {
     QMutexLocker lock(&m_mutex);
 
-    setPixelShader(&m_filter);
 
     m_renderer->loadIdentity();
     m_renderer->loadIdentity3();
@@ -140,6 +134,8 @@ ldLogoLaserdock::ldLogoLaserdock() {
          lines.append(l);
          }*/
     {
+        setPixelShader(&m_filter);
+
         ldLogoLine l;
         l.points.append(ldVec2(1402,532));
         l.points.append(ldVec2(1068,1120));

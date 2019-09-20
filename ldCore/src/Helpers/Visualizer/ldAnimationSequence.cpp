@@ -24,6 +24,7 @@
 #include <QtCore/QFile>
 
 #include "ldCore/ldCore.h"
+#include "ldCore/Filter/ldFilter.h"
 #include <ldCore/Helpers/Color/ldColorUtil.h>
 #include <ldCore/Render/ldRendererOpenlase.h>
 #include "ldCore/Visualizations/ldVisualizer.h"

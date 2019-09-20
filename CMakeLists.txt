@@ -14,19 +14,10 @@ option(LD_CORE_BUILD_TESTS "Build Tests" OFF)
 option(LD_CORE_ENABLE_LIBLZR "Enable liblzr" OFF)
 # Android resources extraction
 option(LD_CORE_RESOURCES_EXTRACTOR "Support of resources extraction (android)" OFF)
-# options for LD_CORE_RESOURCES_EXTRACTOR
-if(LD_CORE_RESOURCES_EXTRACTOR)
-    set(LD_CORE_PACKAGE_NAME "com.wickedlasers.example" CACHE STRING "Android package name")
-    set(LD_CORE_RESOURCES_VERSION_CODE "1" CACHE STRING "Android resources version code")
-endif()
 
 include(CMakeDependentOption)
 CMAKE_DEPENDENT_OPTION(LD_CORE_RESOURCES_EXTRACTOR "Enable resource extractor" OFF
     "NOT LD_ANDROID_BUILD" ON)
-
-if(NOT LD_CORE_RESOURCES_EXTRACTOR)
-    mark_as_advanced(LD_CORE_PACKAGE_NAME LD_CORE_RESOURCES_VERSION_CODE)
-endif()
 
 if(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.12")

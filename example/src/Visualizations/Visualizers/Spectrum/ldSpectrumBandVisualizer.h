@@ -32,7 +32,6 @@ public:
 
     virtual QString visualizerName() const override { return "Appak. Spect Band v2"; }
     virtual float targetFPS() const override { return 60; }
-    bool init();
     virtual void onShouldStart() override;
 
 protected:

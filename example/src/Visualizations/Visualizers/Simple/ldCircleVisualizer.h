@@ -32,8 +32,6 @@ public:
     explicit ldCircleVisualizer();
     virtual ~ldCircleVisualizer();
 
-    bool init();
-
     // ldVisualizer
     virtual QString visualizerName() const override { return "Circle"; }
 

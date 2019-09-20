@@ -42,7 +42,6 @@ class ldLogo : public ldVisualizer
 
 public:
     virtual QString visualizerName() const override { return "Laserdock Logo"; }
-    bool init();
 
     bool isFinished() const { return m_finished; }
     virtual void onShouldStart() override;

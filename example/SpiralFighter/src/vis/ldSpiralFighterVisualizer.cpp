@@ -35,6 +35,7 @@ const float DISTANCE_TO_ROTATE = 0.4f;
 // ldSpiralFighterVisualizer
 ldSpiralFighterVisualizer::ldSpiralFighterVisualizer() : ldAbstractGameVisualizer()
 {
+    setPosition(ccp(1, 1));
     // Register sounds.
     m_soundEffects.insert(SFX::EXPLOSION, ldCore::instance()->resourceDir() + "/sound/shexplosion.wav");
     m_soundEffects.insert(SFX::FIRE, ldCore::instance()->resourceDir() + "/sound/shoot.wav");
@@ -52,8 +53,6 @@ ldSpiralFighterVisualizer::ldSpiralFighterVisualizer() : ldAbstractGameVisualize
     // Set the timer for the initial countdown.
     m_countdownTimer.setInterval(1000);
     connect(&m_countdownTimer, &QTimer::timeout, this, &ldSpiralFighterVisualizer::onTimerTimeout);
-
-    init();
 
     connect(this, &ldSpiralFighterVisualizer::scoreChanged, this, &ldSpiralFighterVisualizer::updateScoreLabel);
 }
@@ -577,14 +576,6 @@ void ldSpiralFighterVisualizer::updateScoreLabel() {
 /*
  * Other functions.
  */
-
-bool ldSpiralFighterVisualizer::init() {
-    if (ldVisualizer::init()) {
-        setPosition(ccp(1, 1));
-        return true;
-    }
-    return false;
-}
 
 void ldSpiralFighterVisualizer::onShouldStart() {
     QMutexLocker lock(&m_mutex);

@@ -20,6 +20,7 @@ project(ldCore)
 add_library(${PROJECT_NAME} SHARED)
 
 include(SetupCppFlags)
+setup_cpp_flags(${PROJECT_NAME})
 
 set_target_properties(ldCore PROPERTIES RESOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/resExt")
 
@@ -103,12 +104,6 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${SRCDIR}/Simulator/ldSimulatorRenderer.cpp
         ${INCDIR}/Simulator/ldSimulatorRenderer.h
         #Shape
-        ${SRCDIR}/Shape/ldAffineTransform.cpp
-        ${INCDIR}/Shape/ldAffineTransform.h
-        ${SRCDIR}/Shape/ldEffect.cpp
-        ${INCDIR}/Shape/ldEffect.h
-        ${SRCDIR}/Shape/ldEffectManager.cpp
-        ${INCDIR}/Shape/ldEffectManager.h
         ${SRCDIR}/Shape/ldList.cpp
         ${INCDIR}/Shape/ldList.h
         ${SRCDIR}/Shape/ldParticleGeometry.cpp
@@ -339,7 +334,7 @@ if(WIN32)
 endif()
 
 if(LD_BUILD_RELEASE_VERSION)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_BUILD_RELEASE_VERSION)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC LD_BUILD_RELEASE_VERSION)
 endif()
 
 if(LD_CORE_GAMES_ALWAYS_PLAY_STATE)
@@ -461,8 +456,6 @@ if(LD_CORE_RESOURCES_EXTRACTOR)
         )
 
     target_compile_definitions(${PROJECT_NAME} PUBLIC LD_CORE_RESOURCES_EXTRACTOR)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_PACKAGE_NAME=\"${LD_CORE_PACKAGE_NAME}\")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_RESOURCES_VERSION_CODE=\"${LD_CORE_RESOURCES_VERSION_CODE}\")
 
     target_link_libraries(${PROJECT_NAME} PRIVATE 3rdparty::quazip)
 endif()

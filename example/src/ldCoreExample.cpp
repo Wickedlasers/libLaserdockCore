@@ -29,9 +29,19 @@
 #include <ldCore/Sound/ldSoundDeviceManager.h>
 #include <ldCore/Visualizations/ldVisualizationTask.h>
 
-#ifdef Q_OS_ANDROID
+
+#ifdef LD_CORE_RESOURCES_EXTRACTOR
 #include <ldCore/Android/ldResourcesExtractor.h>
+
+#ifndef LD_EXAMPLE_PACKAGE_NAME
+#error LD_EXAMPLE_PACKAGE_NAME should be defined
 #endif
+
+#ifndef LD_EXAMPLE_RESOURCES_VERSION_CODE
+#error LD_EXAMPLE_RESOURCES_VERSION_CODE should be defined
+#endif
+
+#endif // LD_CORE_RESOURCES_EXTRACTOR
 
 #include "ldSpiralFighterGame.h"
 
@@ -59,6 +69,7 @@ ldCoreExample::ldCoreExample(QQmlApplicationEngine *engine, QObject *parent)
     m_ldCore->soundDeviceManager()->setDeviceInfo(m_ldCore->soundDeviceManager()->getDefaultDevice(ldSoundDeviceInfo::Type::QAudioInput));
 
 #ifdef Q_OS_ANDROID
+    m_resExtractor->init(LD_EXAMPLE_PACKAGE_NAME, LD_EXAMPLE_RESOURCES_VERSION_CODE);
     connect(m_resExtractor, &ldResourcesExtractor::finished, this, &ldCoreExample::startApp);
     if(m_resExtractor->get_needExtraction())
         m_resExtractor->startExtraction();

@@ -28,21 +28,11 @@ ldAnalogClockVisualizer::ldAnalogClockVisualizer(QObject *parent)
 {
     m_isMusicAware = false;
 
-    init();
+    setPosition(ccp(1, 1));
 }
 
 ldAnalogClockVisualizer::~ldAnalogClockVisualizer()
 {
-}
-
-bool ldAnalogClockVisualizer::init()
-{
-    if (ldVisualizer::init())
-    {
-        setPosition(ccp(1, 1));
-        return true;
-    }
-    return false;
 }
 
 void ldAnalogClockVisualizer::onShouldStart()

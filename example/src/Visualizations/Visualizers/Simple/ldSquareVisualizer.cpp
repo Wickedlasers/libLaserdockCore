@@ -32,22 +32,10 @@ ldSquareVisualizer::ldSquareVisualizer()
     : ldVisualizer()
 {
     m_rate = 20000;
-    init();
+    setPosition(ccp(1, 1));
 }
 
 ldSquareVisualizer::~ldSquareVisualizer() {}
-
-bool ldSquareVisualizer::init()
-{
-    if (ldVisualizer::init())
-    {
-        setPosition(ccp(1, 1));
-        return true;
-    }
-    return false;
-}
-
-
 
 void ldSquareVisualizer::draw()
 {

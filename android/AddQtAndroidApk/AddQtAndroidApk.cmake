@@ -6,7 +6,9 @@ set(QT_ANDROID_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 # check the JAVA_HOME environment variable
 # (I couldn't find a way to set it from this script, it has to be defined outside)
 set(JAVA_HOME $ENV{JAVA_HOME})
-if(NOT JAVA_HOME)
+if(JAVA_HOME)
+    message(STATUS "JAVA_HOME ${JAVA_HOME}")
+else()
     message(FATAL_ERROR "The JAVA_HOME environment variable is not set. Please set it to the root directory of the JDK.")
 endif()
 
@@ -68,7 +70,7 @@ include(CMakeParseArguments)
 macro(add_qt_android_apk TARGET SOURCE_TARGET)
 
     # parse the macro arguments
-    cmake_parse_arguments(ARG "INSTALL" "NAME;ICON;SPLASH_SCREEN;ANDROID_RESOURCES_PATH;QML_ROOT_PATH;VERSION_CODE;ACTIVITY_NAME;PACKAGE_NAME;PACKAGE_SOURCES;KEYSTORE_PASSWORD;KEY_PASSWORD;ANDROID_MIN_API;ANDROID_TARGET_API" "DEPENDS;KEYSTORE;JAVA_SOURCES" ${ARGN})
+    cmake_parse_arguments(ARG "INSTALL" "NAME;ICON;SPLASH_SCREEN;QML_ROOT_PATH;VERSION_CODE;ACTIVITY_NAME;PACKAGE_NAME;PACKAGE_SOURCES;KEYSTORE_PASSWORD;KEY_PASSWORD;ANDROID_MIN_API;ANDROID_TARGET_API" "ANDROID_RESOURCES_PATH;DEPENDS;KEYSTORE;JAVA_SOURCES" ${ARGN})
 
     # extract the full path of the source target binary
     set(QT_ANDROID_APP_PATH "$<TARGET_FILE:${SOURCE_TARGET}>")

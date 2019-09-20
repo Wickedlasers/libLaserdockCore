@@ -39,7 +39,7 @@ class ldShape;
 /**
  * Shader Manager
  */
-class ldShaderManager
+class LDCORESHARED_EXPORT ldShaderManager
 {
 public:
     /// singlton method
@@ -70,127 +70,5 @@ protected:
     ldList m_PxStack;
 };
 
-
-enum EffectDirection {
-    ToTop = 0,
-    ToRight,
-    ToBottom,
-    ToLeft,
-    
-    FromMiddleToTopAndBottom,
-    FromMiddleToLeftAndRight,
-    FromTopAndBottomToMiddle,
-    FromLeftAndRightToMiddle,
-    
-    OutBox,
-    InBox,
-    
-    FromBottom = 0,
-    FromLeft,
-    FromTop,
-    FromRight
-};
-
-/**
- * Wipe Shader
- */
-class ldWipeShader : public ldShader
-{
-public:
-
-    ldWipeShader();
-    
-    static ldWipeShader* create();
-    
-    // direction setter
-    EffectDirection getDirection();
-    
-    // direction getter
-    void setDirection (EffectDirection direction);
-    
-//    // boundary point getter
-//    const CCPoint& getPoint();
-//    
-//    // boundary point setter
-//    void setPoint (const CCPoint& point);
-    
-    // progress getter, progress is between 0 and 1
-    float getProgress();
-    
-    // progress setter, progress is between 0 and 1
-    void setProgress(float progress);
-    
-    // target shape getter;
-    ldShape* getTarget();
-    
-    // target shape setter;
-    void setTarget(ldShape* pTarget);
-    
-    // shader function
-    virtual void ShaderFunc(float *x, float *y, uint32_t *color);
-    
-protected:
-    
-    EffectDirection m_nDirection;
-
-    float m_fProgress;
-    
-    CCPoint m_tPoint;
-    CCSize m_tSize;
-    
-    ldShape* m_pTarget;
-};
-
-/**
- * Wave Shader
- */
-class ldWaveShader : public ldShader
-{
-public:
-    
-    ldWaveShader();
-    
-    static ldWaveShader* create(float amplitude, float wavelength);
-    
-    bool init(float amplitude, float wavelength);
-    
-    // amplitude getter
-    float getAmplitude();
-    
-    // amplitude setter
-    void setAmplitude(float amplitude);
-    
-    // wavelength getter
-    float getWavelength();
-    
-    // wavelength setter
-    void setWavelength(float wavelength);
-    
-    // startcycle getter, cycle is between 0 and 1
-    float getStartCycle();
-    
-    // startcycle setter, cycle is between 0 and 1
-    void setStartCycle(float startCycle);
-    
-    // target shape getter;
-    ldShape* getTarget();
-    
-    // target shape setter;
-    void setTarget(ldShape* pTarget);
-    
-    // shader function
-    virtual void ShaderFunc(float *x, float *y, uint32_t *color);
-    
-protected:
-    
-    float m_fStartCycle;
-    
-    float m_fAmplitude, m_fWaveLength;
-    
-//    CCPoint m_tPoint;
-//    CCSize m_tSize;
-    
-    ldShape* m_pTarget;
-};
 
 #endif /* defined(__LaserdockEngine__ldShader__) */

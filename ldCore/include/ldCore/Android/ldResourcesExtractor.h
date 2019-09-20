@@ -10,6 +10,7 @@
 
 class ldResourcesExtractorPrivate;
 
+// class to extract resources from obb file on android
 class LDCORESHARED_EXPORT ldResourcesExtractor : public QObject
 {
     Q_OBJECT
@@ -17,17 +18,22 @@ class LDCORESHARED_EXPORT ldResourcesExtractor : public QObject
     QML_READONLY_PROPERTY(int, progress)
 
 public:
-    explicit ldResourcesExtractor(QObject *parent = 0);
+    explicit ldResourcesExtractor(QObject *parent = nullptr);
     ~ldResourcesExtractor();
 
+    // init state of current resource package. needExtraction flag is updated
+    void init(const QString &packageName, int resourcesVersionCode);
+
 public slots:
+    // start extraction. signal finished(bool) is emitted in the end, property progress is updated
+    // see log message for error description
     void startExtraction();
 
 signals:
-    void finished();
+    void finished(bool isOk);
 
 private:
-    QScopedPointer<ldResourcesExtractorPrivate> d_ptr;
+    QScopedPointer<ldResourcesExtractorPrivate> m_private;
     QThread m_workerThread;
 };
 

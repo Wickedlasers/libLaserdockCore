@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.11)
 add_library(kiss_fft130)
 
 set_property(TARGET kiss_fft130 PROPERTY AUTOMOC OFF)
+set_property(TARGET kiss_fft130 PROPERTY AUTORCC OFF)
+set_property(TARGET kiss_fft130 PROPERTY AUTOUIC OFF)
 
 target_include_directories(kiss_fft130 PUBLIC .)
 

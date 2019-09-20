@@ -73,9 +73,9 @@ public:
     bool equals(const CCPoint& target) const;
 };
 
-#define CCPointMake(x, y) CCPoint((float)(x), (float)(y))
+#define CCPointMake(x, y) CCPoint(static_cast<float>(x), static_cast<float>(y))
 
-#define ccp(__X__,__Y__) CCPointMake((float)(__X__), (float)(__Y__))
+#define ccp(__X__,__Y__) CCPointMake(static_cast<float>(__X__), static_cast<float>(__Y__))
 
 
 const CCPoint CCPointZero = CCPointMake(0,0);
@@ -100,7 +100,7 @@ public:
 };
 
 
-#define CCSizeMake(width, height) CCSize((float)(width), (float)(height))
+#define CCSizeMake(width, height) CCSize(static_cast<float>(width), static_cast<float>(height))
 
 /** RGB color composed of bytes 3 bytes
  @since v0.8

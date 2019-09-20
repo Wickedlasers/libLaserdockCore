@@ -23,7 +23,9 @@
 
 #include <iostream>
 
-class ldList
+#include <ldCore/ldCore_global.h>
+
+class LDCORESHARED_EXPORT ldList
 {
     struct _list_node {
         _list_node* prev;

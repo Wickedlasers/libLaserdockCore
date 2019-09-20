@@ -33,8 +33,6 @@ public:
     explicit ldAnalogClockVisualizer(QObject *parent = nullptr);
     virtual ~ldAnalogClockVisualizer();
 
-    bool init();
-
     // ldVisualizer
     
     virtual QString visualizerName() const override { return "Analog"; }

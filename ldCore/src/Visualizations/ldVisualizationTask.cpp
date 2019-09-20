@@ -297,7 +297,6 @@ void ldVisualizationTask::startVisualizer(ldVisualizer *v)
         return;
 
     // init visualizer
-    v->init();
     m_renderstate.renderOpenlase = true;
     v->start();
     // call updateWith at least once, to make sure visualizer gets m_sounddata pointer before any draw happens

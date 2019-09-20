@@ -8,30 +8,18 @@
 #include <QtCore/QFile>
 #include <QtCore/QStandardPaths>
 #include <QtCore/QTimer>
-#include <QtWidgets/QMessageBox>
 
 #include <quazip/JlCompress.h>
 
 #include <ldCore/ldCore.h>
-
-#ifndef LD_CORE_PACKAGE_NAME
-#error LD_CORE_PACKAGE_NAME should be defined
-#endif
-
-#ifndef LD_CORE_RESOURCES_VERSION_CODE
-#error LD_CORE_RESOURCES_VERSION_CODE should be defined
-#endif
-
-namespace {
-    const QString LD_PACKAGE_NAME_STR = QString(LD_CORE_PACKAGE_NAME);
-    const int LD_RESOURCES_VERSION_CODE_INT = QString(LD_CORE_RESOURCES_VERSION_CODE).toInt();
-}
 
 class ldResourcesExtractorPrivate : public QObject
 {
     Q_OBJECT
 public:
     explicit ldResourcesExtractorPrivate(QObject *parent = nullptr);
+
+    void init(const QString &packageName, int resourcesVersionCode);
 
     void extractDir();
 
@@ -47,12 +35,16 @@ private:
 ldResourcesExtractorPrivate::ldResourcesExtractorPrivate(QObject *parent)
     : QObject(parent)
 {
-    QString resourcesFileName = "main." + QString::number(LD_RESOURCES_VERSION_CODE_INT) + "." + LD_PACKAGE_NAME_STR + ".obb";
+}
+
+void ldResourcesExtractorPrivate::init(const QString &packageName, int resourcesVersionCode)
+{
+    QString resourcesFileName = "main." + QString::number(resourcesVersionCode) + "." + packageName + ".obb";
 
     // 1st try
     // get path to resources file
     QString genericDataLocation = QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation).first();
-    genericDataLocation += "/Android/obb/" + LD_PACKAGE_NAME_STR + "/";
+    genericDataLocation += "/Android/obb/" + packageName + "/";
     m_resourcesFile = genericDataLocation + resourcesFileName;
     qDebug() << m_resourcesFile;
 
@@ -62,8 +54,8 @@ ldResourcesExtractorPrivate::ldResourcesExtractorPrivate(QObject *parent)
         // 2nd try
         qWarning() << "expected file path doesn't exist, checking other path..." << m_resourcesFile;
         QStringList dataLocations = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
-        for(const QString dataLocation : dataLocations) {
-            QString resourcesPath = dataLocation + "/../../../obb/" + LD_PACKAGE_NAME_STR + "/" + resourcesFileName;
+        for(const QString &dataLocation : dataLocations) {
+            QString resourcesPath = dataLocation + "/../../../obb/" + packageName + "/" + resourcesFileName;
             exists = QFile::exists(resourcesPath);
             qDebug() << "check " << resourcesPath << QFile::exists(resourcesPath);
             if(exists) {
@@ -128,7 +120,7 @@ void ldResourcesExtractorPrivate::extractDir()
         QString absFilePath = directory.absoluteFilePath(name);
         if (!JlCompress::extractFile(&zip, "", absFilePath)) {
             JlCompress::removeFile(extracted);
-            qWarning() << "Zip file can't be removed" << name << absFilePath << extracted;;
+            qWarning() << "Zip file can't be removed" << name << absFilePath << extracted;
             emit finished(false);
             return;
         }
@@ -136,7 +128,7 @@ void ldResourcesExtractorPrivate::extractDir()
 
         i++;
 
-        emit progress(i * 100.0 / fileList.size());
+        emit progress(static_cast<int>(i * 100.0 / fileList.size()));
     } while (zip.goToNextFile());
 
     zip.close();
@@ -155,20 +147,24 @@ ldResourcesExtractor::ldResourcesExtractor(QObject *parent)
     : QObject(parent)
     , m_needExtraction(false)
     , m_progress(0)
-    , d_ptr(new ldResourcesExtractorPrivate())
+    , m_private(new ldResourcesExtractorPrivate())
 {
-    d_ptr->moveToThread(&m_workerThread);
+    m_private->moveToThread(&m_workerThread);
     m_workerThread.start();
+}
 
-    connect(d_ptr.data(), &ldResourcesExtractorPrivate::progress, this, &ldResourcesExtractor::update_progress);
-    connect(d_ptr.data(), &ldResourcesExtractorPrivate::finished, this, [&](bool ok) {
-        if(!ok) {
-            QMessageBox::warning(nullptr, tr("Error extracting resources"), tr("Resources can't be extracted, please contact support"));
-        }
+ldResourcesExtractor::~ldResourcesExtractor()
+{
+    m_workerThread.quit();
+    m_workerThread.wait();
+}
 
-        update_needExtraction(false);
-        emit finished();
-    });
+void ldResourcesExtractor::init(const QString &packageName, int resourcesVersionCode)
+{
+    m_private->init(packageName, resourcesVersionCode);
+
+    connect(m_private.data(), &ldResourcesExtractorPrivate::progress, this, &ldResourcesExtractor::update_progress);
+    connect(m_private.data(), &ldResourcesExtractorPrivate::finished, this, &ldResourcesExtractor::finished);
 
     // check if we need to extract new resources
     int resVersionCode = -1;
@@ -184,22 +180,16 @@ ldResourcesExtractor::ldResourcesExtractor(QObject *parent)
         }
     }
     if(resVersionCode == -1
-            || resVersionCode < LD_RESOURCES_VERSION_CODE_INT) {
+            || resVersionCode < resourcesVersionCode) {
         update_needExtraction(true);
     }
-}
-
-ldResourcesExtractor::~ldResourcesExtractor()
-{
-    m_workerThread.quit();
-    m_workerThread.wait();
 }
 
 void ldResourcesExtractor::startExtraction()
 {
     qDebug() << __FUNCTION__;
 
-    QTimer::singleShot(0, d_ptr.data(), &ldResourcesExtractorPrivate::extractDir);
+    QTimer::singleShot(0, m_private.data(), &ldResourcesExtractorPrivate::extractDir);
 }
 
 
