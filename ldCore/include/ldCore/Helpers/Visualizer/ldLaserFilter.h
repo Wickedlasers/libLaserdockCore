@@ -48,8 +48,8 @@
 
   */
 
-#ifndef __ldCore__ldLaserFilter__
-#define __ldCore__ldLaserFilter__
+#ifndef ldCore__ldLaserFilter__
+#define ldCore__ldLaserFilter__
 
 #include <iostream>
 

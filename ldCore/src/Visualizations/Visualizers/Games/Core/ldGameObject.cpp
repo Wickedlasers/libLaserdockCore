@@ -247,8 +247,8 @@ void ldGameObject::drawVertexRainbow(ldRendererOpenlase* p_renderer, QList<ldVec
 
             int startColorIndex = fmin(floorf(colorStep * colors.length()), colors.length() - 2);
 
-            int startColor = colors[startColorIndex];
-            int finalColor = colors[startColorIndex + 1];
+            int startColor = colors[std::max(startColorIndex, 0)];
+            int finalColor = colors[std::min(startColorIndex + 1, colors.length() - 1)];
 
             float x = origin.x * (1 - step) + target.x * (step);
             float y = origin.y * (1 - step) + target.y * (step);

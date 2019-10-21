@@ -33,8 +33,8 @@
 
 #include <ldCore/ldCore.h>
 #include <ldCore/Helpers/ldEnumHelper.h>
-
 #include "ldCore/Helpers/SVG/ldSvgReader.h"
+#include <ldCore/Helpers/Text/ldSvgFontManager.h>
 
 ldTextSvgHelper *ldTextSvgHelper::instance()
 {
@@ -65,10 +65,10 @@ QChar ldTextSvgHelper::replaceAccentAndSome(const QChar& p_str)
 }
 
 // svgForChar
-QString ldTextSvgHelper::svgPathForChar(const QChar& p_str, const ldFont::Family &font)
+QString ldTextSvgHelper::svgPathForChar(const QChar& p_str, int font)
 {
 
-    QString res(ldCore::instance()->resourceDir() + "/svg/fonts/" + ldFont(font).prefix() + "/") ;
+    QString res(ldCore::instance()->resourceDir() + "/svg/fonts/" + ldCore::instance()->svgFontManager()->font(font).prefix() + "/") ;
 
     res += "/";
 
@@ -96,7 +96,7 @@ QString ldTextSvgHelper::svgPathForChar(const QChar& p_str, const ldFont::Family
 }
 
 // resizeSvg
-std::vector<ldSvgLetter> ldTextSvgHelper::resizedSvgLetters(float p_scale, const ldFont::Family &font)
+std::vector<ldSvgLetter> ldTextSvgHelper::resizedSvgLetters(float p_scale, int font)
 {
     // make a copy for res
     std::vector<ldSvgLetter> res = m_laserdockSvgLetters[font];
@@ -327,7 +327,7 @@ void ldTextSvgHelper::initSvgLetters()
     // important: here same order than allValidChars, we will rely on that later to find the letter vector
     // add undefined char svg at the end
     // !!!should be inited after m_svgValidChars!!!
-    for(const auto &font : ldEnumHelper::Enum<ldFont::Family>()) {
+    for(uint font = 0; font < ldCore::instance()->svgFontManager()->fonts().size(); font++) {
         QList<QChar> allValidChars = m_svgValidChars;
         for (const QChar &validChar : allValidChars) {
             // load svg file

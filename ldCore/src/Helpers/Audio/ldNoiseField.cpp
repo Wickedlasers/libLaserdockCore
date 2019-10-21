@@ -158,8 +158,8 @@ ldPlasmaField::ldPlasmaField() {
 }
 
 void ldPlasmaField::set (int txsize, int tysize, float tdensity, float tcount) {
-    xsize = MIN(xsize, ldPlasmaField::maxsquare);
-    ysize = MIN(ysize, ldPlasmaField::maxsquare);
+//    xsize = MIN(xsize, ldPlasmaField::maxsquare);
+//    ysize = MIN(ysize, ldPlasmaField::maxsquare);
     xsize = txsize;
     ysize = tysize;
     density = tdensity;

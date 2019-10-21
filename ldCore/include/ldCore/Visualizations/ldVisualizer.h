@@ -87,7 +87,7 @@ public:
     void start();
     void stop();
 
-    virtual void updateWith(ldSoundData *pSoundData, float delta);
+    void updateWith(ldSoundData *pSoundData, float delta);
 
     virtual bool isValid() const { return true; }
 

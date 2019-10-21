@@ -239,17 +239,17 @@ void ldSoundInterface::processAudioBuffer(float *convertedBuffer, int frames)
     // for improved performance
 
     //    bool useQueuedCall = false; // disable for speed
-    bool useQueuedCall = true; // enable for safety
+//    bool useQueuedCall = true; // enable for safety
 
-    if (useQueuedCall) {
+//    if (useQueuedCall) {
         //        qDebug() << m_pAudioBuffer->getSize();
         // queued call
         if (m_pAudioBuffer->getSize() >= AUDIO_SUB_BLOCK_SIZE) // only if necessary
             QTimer::singleShot(0, this, &ldSoundInterface::sendBlocks);
-    } else {
+//    } else {
         // direct call.
-        sendBlocks();
-    }
+//        sendBlocks();
+//    }
 }
 
 void ldSoundInterface::sendBlocks() {

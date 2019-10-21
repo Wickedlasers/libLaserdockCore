@@ -31,6 +31,7 @@
 #define FRAMEBUFFER_CAPACITY 4000
 
 class ldFilter;
+class ldFilterManager;
 
 class LDCORESHARED_EXPORT ldFrameBuffer : public QObject
 {
@@ -59,6 +60,7 @@ signals:
 private:
     QMutex m_mutex;
 
+    ldFilterManager *m_filterManager = nullptr;
     qint32 m_exhuasted_index = 0;
     qint32 m_fill = 0;
     bool m_isFilled = false;
@@ -67,6 +69,7 @@ private:
     std::vector<CompressedSample> m_compressed_buffer;
 
     int m_frameModes = 0;
+
 };
 
 #endif // LDFRAMEBUFFER_H

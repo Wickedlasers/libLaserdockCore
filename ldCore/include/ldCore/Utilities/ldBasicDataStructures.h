@@ -178,6 +178,9 @@ public:
 
     void operator = (const ldBuffer& other)
     {
+        if(this == &other)
+            return;
+
         if (m_data != NULL)
         {
             delete[] m_data;

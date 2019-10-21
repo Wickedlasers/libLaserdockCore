@@ -122,9 +122,5 @@ while(false)
 __array__->begin(); \
 while(__array__->isNext() && (__object__ = __array__->moveNext()) != NULL)
 
-#define LDLIST_FOREACH_REVERSE(__array__, __object__) \
-__array__->end(); \
-while(__array__->isNext() && (__object__ = __array__->moveNext()) != NULL)
-
 
 #endif // LDLIST_H

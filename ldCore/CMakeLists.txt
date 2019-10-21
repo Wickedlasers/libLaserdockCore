@@ -273,8 +273,10 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/Text/ldAbstractText.h
         ${SRCDIR}/Helpers/Text/ld3dTextLabelOne.cpp
         ${INCDIR}/Helpers/Text/ld3dTextLabelOne.h
-        ${SRCDIR}/Helpers/Text/ldFont.cpp
-        ${INCDIR}/Helpers/Text/ldFont.h
+        ${SRCDIR}/Helpers/Text/ldSvgFont.cpp
+        ${INCDIR}/Helpers/Text/ldSvgFont.h
+        ${SRCDIR}/Helpers/Text/ldSvgFontManager.cpp
+        ${INCDIR}/Helpers/Text/ldSvgFontManager.h
         ${SRCDIR}/Helpers/Text/ldSvgLetter.cpp
         ${INCDIR}/Helpers/Text/ldSvgLetter.h
         ${SRCDIR}/Helpers/Text/ldTextCounterOne.cpp
@@ -444,7 +446,7 @@ if(LD_CORE_ENABLE_QT_QUICK)
     target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_ENABLE_QT_QUICK)
 
     find_package(Qt5 ${QT5_MIN_VERSION} COMPONENTS Quick REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Quick)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Quick)
 endif()
 
 # ------------  LD_CORE_RESOURCES_EXTRACTOR -----------

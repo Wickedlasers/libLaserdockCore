@@ -26,8 +26,8 @@
 //  Copyright (c) 2015 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __ldCore__ldPitchDetector__
-#define __ldCore__ldPitchDetector__
+#ifndef ldCore__ldPitchDetector__
+#define ldCore__ldPitchDetector__
 
 #include <ldCore/Sound/ldSoundData.h>
 

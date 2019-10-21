@@ -33,7 +33,7 @@
 #include <QtCore/QObject>
 
 #include "ldCore/Helpers/BezierCurve/ldBezierCurveFrame.h"
-#include "ldFont.h"
+#include "ldSvgFont.h"
 #include "ldSvgLetter.h"
 
 // ldAbstractText
@@ -51,8 +51,8 @@ public:
     void setFontSize(float fontSize);
     float getFontSize() const;
 
-    void setFont(const ldFont::Family &family);
-    ldFont::Family font() const;
+    void setFont(int font);
+    int font() const;
 
     double letterSpace() const;
     void setLetterSpace(double letterSpace);
@@ -84,7 +84,7 @@ private:
 
     QString m_text;
     float m_fontSize = 1.0f/16.f;
-    ldFont::Family m_fontFamily = ldFont::Family::Roboto;
+    int m_fontFamily = 0;
     double m_letterSpaceScale = 1.;
 
     ldVec2 m_position;

@@ -48,8 +48,7 @@ ldRendererOpenlase::ldRendererOpenlase(QObject *parent) :
     // Increased to 30000 to avoid RenderedFrame buffer overflow error.
     if(olInit(0, 30000) != 0) {
         qFatal("Error initializing openlase!!!");
-        qApp->quit();
-        return;
+        exit(1);
     }
 }
 

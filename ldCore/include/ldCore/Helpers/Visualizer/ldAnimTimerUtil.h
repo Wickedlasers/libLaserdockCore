@@ -1,4 +1,4 @@
-﻿/**
+/**
     libLaserdockCore
     Copyright(c) 2018 Wicked Lasers
 

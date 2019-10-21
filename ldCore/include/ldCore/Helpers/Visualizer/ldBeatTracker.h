@@ -26,8 +26,8 @@
 //  Copyright (c) 2014 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __ldCore__ldBeatTracker__
-#define __ldCore__ldBeatTracker__
+#ifndef ldCore__ldBeatTracker__
+#define ldCore__ldBeatTracker__
 
 #include <vector>
 

@@ -26,8 +26,10 @@
 //
 #include "ldCore/Helpers/Text/ldAbstractText.h"
 
-#include "ldCore/Helpers/Text/ldTextSvgHelper.h"
+#include "ldCore/ldCore.h"
 #include "ldCore/Helpers/SVG/ldSvgReader.h"
+#include "ldCore/Helpers/Text/ldTextSvgHelper.h"
+#include "ldCore/Helpers/Text/ldSvgFontManager.h"
 
 // ldAbstractText()
 ldAbstractText::ldAbstractText(const QString &text, float fontSize, const ldVec2 &p_position)
@@ -71,14 +73,14 @@ float ldAbstractText::getFontSize() const
 }
 
 // setFont
-void ldAbstractText::setFont(const ldFont::Family &family)
+void ldAbstractText::setFont(int font)
 {
-    m_fontFamily = family;
+    m_fontFamily = font;
     reloadAllSvgLetters();
 }
 
 // font
-ldFont::Family ldAbstractText::font() const
+int ldAbstractText::font() const
 {
     return m_fontFamily;
 }
@@ -183,11 +185,8 @@ float ldAbstractText::getLetterAWidth()
 // getInterLetterWidth
 float ldAbstractText::getInterLetterWidth()
 {
-    float interLetter = 0.36f*getLetterAWidth();
-
-    // special inter letter case for font Elixia
-    if(m_fontFamily == ldFont::Family::Elixia)
-        interLetter = getLetterAWidth();
+    float interLetterSuffix = ldCore::instance()->svgFontManager()->font(m_fontFamily).interLetterSuffix();
+    float interLetter = interLetterSuffix*getLetterAWidth();
 
     return interLetter * m_letterSpaceScale;
 }

@@ -138,11 +138,11 @@ void ldSimulatorEngine::bigger_dots(Vertex* inData, Vertex* outData, unsigned in
         ison |= inData[i].color[1] != 0;
         ison |= inData[i].color[2] != 0;
 
-        // remember color of last nonblack point
-        if (ison) m_lastOn = inData[i];
-
-        // distance calcs
         if (ison) {
+            // remember color of last nonblack point
+            m_lastOn = inData[i];
+
+            // distance calcs
             float dx = (outData[i].x() - m_last.x());
             float dy = (outData[i].y() - m_last.y());
             float delta2 = dx*dx + dy*dy;

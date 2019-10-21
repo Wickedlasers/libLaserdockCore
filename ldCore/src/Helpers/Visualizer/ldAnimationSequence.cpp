@@ -330,9 +330,7 @@ void ldAnimationSequenceBezier::load(const QString &filePath) {
             }
         }
     }
-    line = in.readLine(); //out << "End" << endl;
-
-
+//    line = in.readLine(); //out << "End" << endl;
 }
 
 void ldAnimationSequenceBezier::save(const QString &filePath) {

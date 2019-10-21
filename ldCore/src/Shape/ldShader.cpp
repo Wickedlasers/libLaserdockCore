@@ -88,31 +88,26 @@ void ldShaderManager::pushPixelShader(ldShader* shader)
 
 ldShader* ldShaderManager::popVertextPreShader()
 {
-    return (ldShader*)m_VtxPreStack.pop();
+    return m_VtxPreStack.pop();
 }
 
 ldShader* ldShaderManager::popVertextShader()
 {
-    return (ldShader*)m_VtxStack.pop();
+    return m_VtxStack.pop();
 }
 
 ldShader* ldShaderManager::popPixelShader()
 {
-    return (ldShader*)m_PxStack.pop();
+    return m_PxStack.pop();
 }
 
 void ldShaderManager::apply_vertex_pre_shader(float *x, float *y, uint32_t *color)
 {
     if (m_VtxPreStack.length() == 0) return;
     
-    void* object;
-    LDLIST_FOREACH_REVERSE((&m_VtxPreStack), object)
-    {
-        if (object)
-        {
-            ldShader* shader = (ldShader*)object;
-            shader->ShaderFunc(x, y, color);
-        }
+    for (auto it = m_VtxPreStack.rbegin(); it != m_VtxPreStack.rend(); ++it ) {
+        ldShader* shader = *it;
+        shader->ShaderFunc(x, y, color);
     }
 }
 
@@ -120,14 +115,9 @@ void ldShaderManager::apply_vertex_shader(float *x, float *y, uint32_t *color)
 {
     if (m_VtxStack.length() == 0) return;
 
-    void* object;
-    LDLIST_FOREACH_REVERSE((&m_VtxStack), object)
-    {
-        if (object)
-        {
-            ldShader* shader = (ldShader*)object;
-            shader->ShaderFunc(x, y, color);
-        }
+    for (auto it = m_VtxStack.rbegin(); it != m_VtxStack.rend(); ++it ) {
+        ldShader* shader = *it;
+        shader->ShaderFunc(x, y, color);
     }
 }
 
@@ -135,14 +125,9 @@ void ldShaderManager::apply_pixel_shader(float *x, float *y, uint32_t *color)
 {
     if (m_PxStack.length() == 0) return;
 
-    void* object;
-    LDLIST_FOREACH_REVERSE((&m_PxStack), object)
-    {
-        if (object)
-        {
-            ldShader* shader = (ldShader*)object;
-            shader->ShaderFunc(x, y, color);
-        }
+    for (auto it = m_PxStack.rbegin(); it != m_PxStack.rend(); ++it ) {
+        ldShader* shader = *it;
+        shader->ShaderFunc(x, y, color);
     }
 }
 

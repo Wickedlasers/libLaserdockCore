@@ -30,8 +30,9 @@
 
 #define LDFRAMEBUFFER_WARNING_FILL 300
 
-ldFrameBuffer::ldFrameBuffer(QObject *parent) :
-    QObject(parent)
+ldFrameBuffer::ldFrameBuffer(QObject *parent)
+    : QObject(parent)
+    , m_filterManager(ldCore::instance()->filterManager())
 {
     m_buffer.resize(FRAMEBUFFER_CAPACITY);
     m_compressed_buffer.resize(FRAMEBUFFER_CAPACITY);
@@ -53,10 +54,8 @@ void ldFrameBuffer::push(Vertex& val, bool skip_filters, bool alter_val)
         Vertex simVal;
 
         // apply data filter
-        ldFilterManager *fm = ldCore::instance()->filterManager();
-
-        fm->setFrameModes(m_frameModes);
-        fm->process(tval, simVal);
+        m_filterManager->setFrameModes(m_frameModes);
+        m_filterManager->process(tval, simVal);
 
         // compress and add to buffer
         m_buffer[m_fill] = simVal;
@@ -65,8 +64,7 @@ void ldFrameBuffer::push(Vertex& val, bool skip_filters, bool alter_val)
     } else {
         m_buffer[m_fill] = val;
 
-        ldFilterManager *fm = ldCore::instance()->filterManager();
-        fm->deadzoneFilter()->processFilter(val);
+        m_filterManager->deadzoneFilter()->processFilter(val);
         m_compressed_buffer[m_fill] = CompressedSample(val);
     }
 
@@ -137,8 +135,7 @@ void ldFrameBuffer::requestMore()
 void ldFrameBuffer::setFrameModes(int flags) {
     m_frameModes = flags;
 
-    ldFilterManager *fm = ldCore::instance()->filterManager();
-    fm->resetFilters();
+    m_filterManager->resetFilters();
 }
 
 qint32 ldFrameBuffer::getAvailable() const

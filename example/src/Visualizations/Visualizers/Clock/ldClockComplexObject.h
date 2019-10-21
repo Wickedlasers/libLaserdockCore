@@ -6,8 +6,8 @@
 //  Copyright (c) 2016 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __LaserdockVisualizer__ldClockComplexObject__
-#define __LaserdockVisualizer__ldClockComplexObject__
+#ifndef LaserdockVisualizer__ldClockComplexObject__
+#define LaserdockVisualizer__ldClockComplexObject__
 
 #include <QtCore/QObject>
 #include <QtCore/QTime>

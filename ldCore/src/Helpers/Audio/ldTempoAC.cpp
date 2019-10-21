@@ -149,25 +149,25 @@ float ldTempoAC::envelope(float t, float delta)
     // fastest
     return 1;//
 
-    // normal
-    float midt = (60.0/m_targetTempoBpm) / delta;
-    float widt = midt/2;//0.5 / AUDIO_UPDATE_DELTA_S;
-    float e = (t-midt)/widt;
-    e = powf(e, 8);
-    e = 1 - e;
-    e = fmin(fmax(0, e), 1);
+//    // normal
+//    float midt = (60.0/m_targetTempoBpm) / delta;
+//    float widt = midt/2;//0.5 / AUDIO_UPDATE_DELTA_S;
+//    float e = (t-midt)/widt;
+//    e = powf(e, 8);
+//    e = 1 - e;
+//    e = fmin(fmax(0, e), 1);
 
-    e = t/midt;
-    if (e < 1) e = 1/e;
-    e = log(e)/log(2);
+//    e = t/midt;
+//    if (e < 1) e = 1/e;
+//    e = log(e)/log(2);
 
-    if (e >= 1) return 0;
-    if (e <= 0) return 1;
+//    if (e >= 1) return 0;
+//    if (e <= 0) return 1;
 
-    e = (1+cos(e*3.141592653589793238462643383251))/2;
+//    e = (1+cos(e*3.141592653589793238462643383251))/2;
 
-    e = fmin(fmax(0, e), 1);
-    return e;
+//    e = fmin(fmax(0, e), 1);
+//    return e;
 }
 
 void ldTempoAC::preCalcValues()

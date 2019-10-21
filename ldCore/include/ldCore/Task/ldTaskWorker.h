@@ -66,8 +66,8 @@ private:
     void taskUnload();
 
 
-    ldAbstractTask * m_taskToSet;
-    ldAbstractTask * m_task;
+    ldAbstractTask *m_taskToSet = nullptr;
+    ldAbstractTask *m_task = nullptr;
 
     QElapsedTimer m_timer;
     quint64 m_last_update_time = 0;

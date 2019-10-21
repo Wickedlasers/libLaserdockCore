@@ -48,11 +48,11 @@
 
 */
 
-ldVisualizationTask::ldVisualizationTask(QObject *parent)
+ldVisualizationTask::ldVisualizationTask(ldMusicManager *musicManager, ldAudioDecoder *audioDecoder, QObject *parent)
     : ldAbstractTask(parent)
     , m_mutex(QMutex::Recursive)
-    , m_currentVisualizer(NULL)
-    , m_tempVisualizer(NULL)
+    , m_musicManager(musicManager)
+    , m_audioDecoder(audioDecoder)
 {
     qDebug() << __FUNCTION__;
 
@@ -117,26 +117,6 @@ void ldVisualizationTask::update(quint64 delta, ldFrameBuffer * buffer)
 	//qDebug() << buffer->getFill() << " - " << buffer->getCapacity();
 }
 
-void ldVisualizationTask::setTempVisualizer(ldVisualizer *visualizer)
-{
-    QMutexLocker lock(&m_mutex);
-    QString visName = visualizer ? visualizer->visualizerName() : "null";
-    qDebug().nospace() << __FUNCTION__ << " \"" << visName << "\"";
-
-    if(m_tempVisualizer) {
-        m_tempVisualizer->stop();
-    }
-
-    m_tempVisualizer = visualizer;
-
-    if(visualizer) {
-        startVisualizer(visualizer);
-    } else {
-        lock.unlock();
-        setCurrentVisualizer(m_currentVisualizer);
-    }
-}
-
 void ldVisualizationTask::setSoundLevelGate(int value)
 {
     m_soundLevelGate = value;
@@ -152,22 +132,35 @@ void ldVisualizationTask::setIsShowLogo(bool showLogo)
     m_isShowLogo = showLogo;
 }
 
-void ldVisualizationTask::setCurrentVisualizer(ldVisualizer *visualizer)
+void ldVisualizationTask::setCurrentVisualizer(ldVisualizer *visualizer, int priority)
 {
     QMutexLocker lock(&m_mutex);
-    QString visName = visualizer ? visualizer->visualizerName() : "null";
-    qDebug().nospace() << __FUNCTION__ << " " << visName;
 
-    if(m_currentVisualizer) {
-        m_currentVisualizer->stop();
+    // debug info
+    QString visName = visualizer ? visualizer->visualizerName() : "null";
+    qDebug().nospace() << __FUNCTION__ << " " << visName << priority;
+
+    // stop last visualizer if it should be replaced
+    if(!m_visualizers.isEmpty() && priority >= m_visualizers.lastKey()) {
+        m_visualizers.last()->stop();
     }
 
-    if(visualizer) {
+    // start new visualizer if it should be replaced
+    if((m_visualizers.isEmpty() || priority >= m_visualizers.lastKey())
+            && visualizer) {
         startVisualizer(visualizer);
     }
 
     // remember current visualizer
-    m_currentVisualizer = visualizer;
+    if(visualizer)
+        m_visualizers[priority] = visualizer;
+    else
+        m_visualizers.remove(priority);
+
+    // if priority visualizer was disabled, activate the previous one
+    if(!visualizer && priority > 0 && !m_visualizers.isEmpty()) {
+        setCurrentVisualizer(m_visualizers.last(), m_visualizers.lastKey());
+    }
 
     emit currentVisualizerChanged(visualizer);
 }
@@ -191,17 +184,17 @@ void ldVisualizationTask::onUpdateAudio(const AudioBlock &block)
     // process block into raw sounddata struct
     m_sounddata->Update(block);
 
-    ldCore::instance()->musicManager()->setRealSoundLevel(m_sounddata->GetSoundLevel());
+    m_musicManager->setRealSoundLevel(m_sounddata->GetSoundLevel());
 
     if(m_sounddata->GetSoundLevel() < m_soundLevelGate) {
         m_sounddata->Update(AudioBlock::EMPTY_AUDIO_BLOCK);
     }
 
     // update music manager
-    ldCore::instance()->musicManager()->updateWith(m_sounddata, AUDIO_UPDATE_DELTA_S);
+    m_musicManager->updateWith(m_sounddata, AUDIO_UPDATE_DELTA_S);
 
     // update visualizer
-    if (m_currentVisualizer && !ldCore::instance()->audioDecoder()->get_isActive()) m_currentVisualizer->updateWith(m_sounddata.get(), AUDIO_UPDATE_DELTA_S);
+    if (getActiveVis() && !m_audioDecoder->get_isActive()) getActiveVis()->updateWith(m_sounddata.get(), AUDIO_UPDATE_DELTA_S);
 }
 
 void ldVisualizationTask::onUpdateDecoderAudio(const AudioBlock &block)
@@ -216,14 +209,14 @@ void ldVisualizationTask::onUpdateDecoderAudio(const AudioBlock &block)
     m_decoderSoundData->Update(block);
 
     if(!ldCore::instance()->soundDeviceManager()->getDeviceInfo().isValid()) {
-        ldCore::instance()->musicManager()->setRealSoundLevel(m_decoderSoundData->GetSoundLevel());
+        m_musicManager->setRealSoundLevel(m_decoderSoundData->GetSoundLevel());
 
         // update music manager
-        ldCore::instance()->musicManager()->updateWith(m_decoderSoundData, AUDIO_UPDATE_DELTA_S);
+        m_musicManager->updateWith(m_decoderSoundData, AUDIO_UPDATE_DELTA_S);
     }
 
     // update visualizer
-    if (m_currentVisualizer) m_currentVisualizer->updateWith(m_decoderSoundData.get(), AUDIO_UPDATE_DELTA_S);
+    if (getActiveVis()) getActiveVis()->updateWith(m_decoderSoundData.get(), AUDIO_UPDATE_DELTA_S);
 }
 
 /*!
@@ -240,7 +233,7 @@ void ldVisualizationTask::start()
     QMutexLocker lock(&m_mutex);
 
     ldSoundInterface * soundDeviceInterface = ldCore::instance()->soundDeviceManager();
-    ldSoundInterface * audioDecoderInterface = ldCore::instance()->audioDecoder();
+    ldSoundInterface * audioDecoderInterface = m_audioDecoder;
 
     m_sounddata.reset(new ldSoundData(soundDeviceInterface->getAudioFormat()));
     m_decoderSoundData.reset(new ldSoundData(audioDecoderInterface->getAudioFormat()));
@@ -279,13 +272,12 @@ ldVisualizationTask::RenderState *ldVisualizationTask::renderState()
 ldVisualizer *ldVisualizationTask::getCurrentVisualizer() const
 {
     QMutexLocker lock(&m_mutex);
-    return m_currentVisualizer;
+    return m_visualizers.contains(0) ? m_visualizers.first() : nullptr;
 }
 
 ldVisualizer * ldVisualizationTask::getActiveVis() const
 {
-    ldVisualizer* vis = m_currentVisualizer;
-    if (m_tempVisualizer != nullptr) vis = m_tempVisualizer;
+    ldVisualizer* vis = m_visualizers.isEmpty() ? nullptr : m_visualizers.last();
 
     if(m_isShowLogo && !m_logo->isFinished()) vis = m_logo.get();
     return vis;

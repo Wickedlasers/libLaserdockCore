@@ -25,6 +25,8 @@
 #include "ldCore/Helpers/Maths/ldMathStat.h"
 #include "ldCore/Helpers/Maths/ldMaths.h"
 
+//#define LD_DEBUG_BPM_SELECTOR
+
 // ldAppakBpmSelector
 ldAppakBpmSelector::ldAppakBpmSelector()
 {
@@ -87,7 +89,9 @@ void ldAppakBpmSelector::doStats()
     float devAppaBeat = ldMathStat::getFloatDeviation(m_bpmAppakBeat, BUFFER_SIZE, aveAppaBeat);
 
     //
+#ifdef LD_DEBUG_BPM_SELECTOR
     float maxAppaPeak = ldMathStat::getMaxFloatValue(m_bpmAppakPeak, BUFFER_SIZE);
+#endif
     float minAppaPeak = ldMathStat::getMinFloatValue(m_bpmAppakPeak, BUFFER_SIZE);
     float aveAppaPeak = ldMathStat::getFloatNotNullAverage(m_bpmAppakPeak, BUFFER_SIZE);
     float devAppaPeak = ldMathStat::getFloatDeviation(m_bpmAppakPeak, BUFFER_SIZE, aveAppaPeak);
@@ -100,7 +104,6 @@ void ldAppakBpmSelector::doStats()
     bool isTrustable = false;
     bool veryTrustableCase = false;
     bool aubioCheckedCase = false;
-    bool debugIt = false;
 
     // aubio and appak beat are close - ie easiest case
     if (ldMaths::isValueNearFrom(aveAubio, aveAppaBeat, percentTrust)) {
@@ -123,7 +126,9 @@ void ldAppakBpmSelector::doStats()
             //qDebug() << "lastTrustableBPM 1" << lastTrustableBPM;
         }
         isTrustable = true;
-        if (debugIt) qDebug() << "A1] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#ifdef LD_DEBUG_BPM_SELECTOR
+        qDebug() << "A1] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#endif
     }
 
     // appak is not far double aveAppaPeak && aubio is 2/3 aveAppaBeat
@@ -132,7 +137,9 @@ void ldAppakBpmSelector::doStats()
         m_lastSomehowTrustableBPM = aveAppaBeat;
         m_lastTrustableBPM = m_lastSomehowTrustableBPM;
         isTrustable = true;
-        if (debugIt) qDebug() << "A2] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#ifdef LD_DEBUG_BPM_SELECTOR
+        qDebug() << "A2] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#endif
     }
 
     // before autohrize special thing, we check that aubio is not close to lastVeryTrustableBPM
@@ -141,7 +148,9 @@ void ldAppakBpmSelector::doStats()
         m_lastTrustableBPM = m_lastVeryTrustableBPM;
         isTrustable = true;
         aubioCheckedCase = true;
-        if (debugIt) qDebug() << "B1] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#ifdef LD_DEBUG_BPM_SELECTOR
+        qDebug() << "B1] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#endif
     }
 
     // before autohrize special thing, we check that aubio is not close to minAppaPeak with big peak deviation
@@ -150,7 +159,9 @@ void ldAppakBpmSelector::doStats()
         m_lastTrustableBPM = m_lastVeryTrustableBPM;
         isTrustable = true;
         aubioCheckedCase = true;
-        if (debugIt) qDebug() << "B2] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#ifdef LD_DEBUG_BPM_SELECTOR
+        qDebug() << "B2] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#endif
     }
 
     // appak is double aubio
@@ -158,7 +169,9 @@ void ldAppakBpmSelector::doStats()
         m_lastSomehowTrustableBPM = aveAppaBeat;
         m_lastTrustableBPM = m_lastSomehowTrustableBPM;
         isTrustable = true;
-        if (debugIt) qDebug() << "C1] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#ifdef LD_DEBUG_BPM_SELECTOR
+        qDebug() << "C1] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#endif
     }
 
     // 3 appak is one Peak and 2 aubio is hal one peak -> half a peak
@@ -169,7 +182,9 @@ void ldAppakBpmSelector::doStats()
         m_lastSomehowTrustableBPM = aveAubio*2;
         m_lastTrustableBPM = m_lastSomehowTrustableBPM;
         isTrustable = true;
-        if (debugIt) qDebug() << "C2] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#ifdef LD_DEBUG_BPM_SELECTOR
+        qDebug() << "C2] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#endif
     }
 
     // appak is not far from lastVeryTrustableBPM
@@ -177,14 +192,18 @@ void ldAppakBpmSelector::doStats()
         m_lastSomehowTrustableBPM = aveAppaBeat;
         m_lastTrustableBPM = m_lastSomehowTrustableBPM;
         isTrustable = true;
-        if (debugIt) qDebug() << "C3] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#ifdef LD_DEBUG_BPM_SELECTOR
+        qDebug() << "C3] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#endif
     }
 
     // lastSomehowTrustableBPM and aveAppaPeak/2 are close
     if (!isTrustable && ldMaths::isValueNearFrom(m_lastSomehowTrustableBPM, aveAppaPeak/2, percentTrust) && devAppaPeak < 2.0*smallDeviation) {
         m_lastTrustableBPM = m_lastSomehowTrustableBPM;
         isTrustable = true;
-        if (debugIt) qDebug() << "C4] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#ifdef LD_DEBUG_BPM_SELECTOR
+        qDebug() << "C4] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#endif
     }
 
     // aubio and appak are far but appak deviation is low and not far aveAppaPeak or half aveAppaPeak
@@ -194,7 +213,9 @@ void ldAppakBpmSelector::doStats()
         m_lastSomehowTrustableBPM = aveAppaBeat;
         m_lastTrustableBPM = m_lastSomehowTrustableBPM;
         isTrustable = true;
-        if (debugIt) qDebug() << "C5] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#ifdef LD_DEBUG_BPM_SELECTOR
+        qDebug() << "C5] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#endif
     }
 
     // not trustable but 3 time aveAppaBeat is near aveAppaPeak and 2 time aveAubio is near aveAppaPeak
@@ -206,15 +227,20 @@ void ldAppakBpmSelector::doStats()
         m_lastSomehowTrustableBPM = minAppaPeak/2;
         m_lastTrustableBPM = m_lastSomehowTrustableBPM;
         isTrustable = true;
-        if (debugIt) qDebug() << "C6] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#ifdef LD_DEBUG_BPM_SELECTOR
+        qDebug() << "C6] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+#endif
     }
 
     // end: peaks are giving smthg very close to the double of the lastTrustableBPM
     if (isTrustable && m_lastTrustableBPM < 100 && !veryTrustableCase && ldMaths::isValueNearFrom(m_lastTrustableBPM, 0.5*aveAppaPeak, percentTrust) && devAppaPeak < smallDeviation) {
         m_lastTrustableBPM*=2.0;
-        if (veryTrustableCase) m_lastVeryTrustableBPM*=2.0;
-        else m_lastSomehowTrustableBPM*=2.0;
-        if (debugIt) qDebug() << "x2 D1] lastTrustableBPM x 2" << m_lastTrustableBPM;
+//        if (veryTrustableCase) m_lastVeryTrustableBPM*=2.0;
+//        else
+        m_lastSomehowTrustableBPM*=2.0;
+#ifdef LD_DEBUG_BPM_SELECTOR
+        qDebug() << "x2 D1] lastTrustableBPM x 2" << m_lastTrustableBPM;
+#endif
     }
 
     // some correction
@@ -223,17 +249,21 @@ void ldAppakBpmSelector::doStats()
             m_lastTrustableBPM*=2.0;
             m_lastVeryTrustableBPM*=2.0;
         }
-        if (debugIt) qDebug() << "x2 D2] lastTrustableBPM x 2" << m_lastTrustableBPM;
+#ifdef LD_DEBUG_BPM_SELECTOR
+        qDebug() << "x2 D2] lastTrustableBPM x 2" << m_lastTrustableBPM;
+#endif
     }
 
     // check
+#ifdef LD_DEBUG_BPM_SELECTOR
     if (isTrustable) {
-        if (debugIt) qDebug() << "+++ END:OK] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
-        if (debugIt) qDebug() << "           > aveAubio " << aveAubio << " aveAppaBeat " << aveAppaBeat << " devAppaBeat " << devAppaBeat << " minAppaPeak " << minAppaPeak << " maxAppaPeak " << maxAppaPeak << " aveAppaPeak " << aveAppaPeak  << " devAppaPeak " << devAppaPeak;
+        qDebug() << "+++ END:OK] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+        qDebug() << "           > aveAubio " << aveAubio << " aveAppaBeat " << aveAppaBeat << " devAppaBeat " << devAppaBeat << " minAppaPeak " << minAppaPeak << " maxAppaPeak " << maxAppaPeak << " aveAppaPeak " << aveAppaPeak  << " devAppaPeak " << devAppaPeak;
     } else {
-        if (debugIt) qDebug() << "--- END:KO] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
-        if (debugIt) qDebug() << "               > aveAubio " << aveAubio << " aveAppaBeat " << aveAppaBeat << " devAppaBeat " << devAppaBeat << " minAppaPeak " << minAppaPeak << " maxAppaPeak " << maxAppaPeak << " aveAppaPeak " << aveAppaPeak  << " devAppaPeak " << devAppaPeak;
+        qDebug() << "--- END:KO] lastTrustableBPM:" << m_lastTrustableBPM << " lastVeryTrustableBPM:" << m_lastVeryTrustableBPM << " lastSomehowTrustableBPM:" << m_lastSomehowTrustableBPM;
+        qDebug() << "               > aveAubio " << aveAubio << " aveAppaBeat " << aveAppaBeat << " devAppaBeat " << devAppaBeat << " minAppaPeak " << minAppaPeak << " maxAppaPeak " << maxAppaPeak << " aveAppaPeak " << aveAppaPeak  << " devAppaPeak " << devAppaPeak;
     }
+#endif
 
 }
 

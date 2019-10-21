@@ -26,12 +26,13 @@
 //  Copyright (c) 2014 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __LaserdockEngine__ldShader__
-#define __LaserdockEngine__ldShader__
+#ifndef LaserdockEngine__ldShader__
+#define LaserdockEngine__ldShader__
+
+#include <QtCore/QStack>
 
 #include "ldCore/Filter/ldFilter.h"
 #include "ldCore/Shape/ldParticleGeometry.h"
-#include "ldCore/Shape/ldList.h"
 
 class ldShape;
 
@@ -65,9 +66,9 @@ public:
     void apply_pixel_shader(float *x, float *y, uint32_t *color);
 
 protected:
-    ldList m_VtxPreStack;
-    ldList m_VtxStack;
-    ldList m_PxStack;
+    QStack<ldShader*> m_VtxPreStack;
+    QStack<ldShader*> m_VtxStack;
+    QStack<ldShader*> m_PxStack;
 };
 
 

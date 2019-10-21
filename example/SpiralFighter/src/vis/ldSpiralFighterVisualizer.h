@@ -6,8 +6,8 @@
 //  Copyright (c) 2017 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __LaserdockVisualizer__ldSpiralFighterVisualizer__
-#define __LaserdockVisualizer__ldSpiralFighterVisualizer__
+#ifndef LaserdockVisualizer__ldSpiralFighterVisualizer__
+#define LaserdockVisualizer__ldSpiralFighterVisualizer__
 
 #include <QtCore/QTimer>
 

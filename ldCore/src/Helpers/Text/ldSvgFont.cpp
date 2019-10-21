@@ -18,32 +18,38 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-//
-//  ldSquareVisualizer.h
-//  ldCore
-//
-//  Created by Sergey Gavrushkin on 25/10/17.
-//  Copyright (c) 2017 Wicked Lasers. All rights reserved.
-//
+// ldSvgFont.cpp
+// Created by Eric Brugère on 4/sep/17
+// Copyright (c) 2017 Wicked Lasers. All rights reserved.
 
-#ifndef ldCore__ldSquareVisualizer__
-#define ldCore__ldSquareVisualizer__
+#include <ldCore/Helpers/Text/ldSvgFont.h>
 
-#include "ldCore/Visualizations/ldVisualizer.h"
-
-class ldSquareVisualizer : public ldVisualizer
+ldSvgFont::ldSvgFont(const QString &title, const QString &prefix, bool isCounterOnly, float interLetterSuffix)
+    : m_title(title)
+    , m_prefix(prefix)
+    , m_isCounterOnly(isCounterOnly)
+    , m_interLetterSuffix(interLetterSuffix)
 {
-    Q_OBJECT
-public:
-    explicit ldSquareVisualizer();
-    virtual ~ldSquareVisualizer();
 
-    // ldVisualizer
-    virtual QString visualizerName() const override { return "Square"; }
+}
 
-protected:
-    // ldVisualizer
-    virtual void draw() override;
-};
+QString ldSvgFont::title() const
+{
+    return m_title;
+}
 
-#endif /*__ldCore__ldSquareVisualizer__*/
+QString ldSvgFont::prefix() const
+{
+    return m_prefix;
+}
+
+bool ldSvgFont::isCounterOnly() const
+{
+    return m_isCounterOnly;
+}
+
+float ldSvgFont::interLetterSuffix() const
+{
+    return m_interLetterSuffix;
+}
+

@@ -26,8 +26,9 @@
 #include <ldCore/Task/ldAbstractTask.h>
 #include <ldCore/Sound/ldSoundData.h>
 
+class ldAudioDecoder;
 class ldLogoLaserdock;
-
+class ldMusicManager;
 class ldRendererOpenlase;
 class ldVisualizer;
 
@@ -40,11 +41,13 @@ class LDCORESHARED_EXPORT ldVisualizationTask : public ldAbstractTask
 public:
     typedef struct {
         bool renderOpenlase = true;
-        ldFrameBuffer * buffer;
-        quint64 delta;
+        ldFrameBuffer * buffer = nullptr;
+        quint64 delta = 0;
     } RenderState;
 
-    explicit ldVisualizationTask(QObject *parent = 0);
+    explicit ldVisualizationTask(ldMusicManager *musicManager,
+                                 ldAudioDecoder *audioDecoder,
+                                 QObject *parent = 0);
     ~ldVisualizationTask();
 
     // ldAbstractTask
@@ -56,8 +59,7 @@ public:
     ldVisualizer *getCurrentVisualizer() const;
 
 public slots:
-    void setCurrentVisualizer(ldVisualizer *visualizer = nullptr);
-    void setTempVisualizer(ldVisualizer *visualizer = nullptr);
+    void setCurrentVisualizer(ldVisualizer *visualizer = nullptr, int priority = 0);
 
     void setSoundLevelGate(int value);
     int soundLevelGate() const;
@@ -77,8 +79,10 @@ private:
 
     mutable QMutex m_mutex;
 
-    ldVisualizer* m_currentVisualizer;
-    ldVisualizer* m_tempVisualizer;
+    ldMusicManager *m_musicManager;
+    ldAudioDecoder *m_audioDecoder;
+
+    QMap<int, ldVisualizer*> m_visualizers;
     std::shared_ptr<ldSoundData> m_sounddata;
     std::shared_ptr<ldSoundData> m_decoderSoundData;
     RenderState m_renderstate;

@@ -26,8 +26,8 @@
 //  Copyright (c) 2015 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __ldCore__ldOnsetDetector__
-#define __ldCore__ldOnsetDetector__
+#ifndef ldCore__ldOnsetDetector__
+#define ldCore__ldOnsetDetector__
 
 #pragma warning(push, 0)
 #include <aubio.h>

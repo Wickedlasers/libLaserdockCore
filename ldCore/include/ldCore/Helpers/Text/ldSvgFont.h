@@ -18,32 +18,39 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-//
-//  ldSquareVisualizer.h
-//  ldCore
-//
-//  Created by Sergey Gavrushkin on 25/10/17.
-//  Copyright (c) 2017 Wicked Lasers. All rights reserved.
-//
+// ldSvgFont.h
+// Created by Eric Brugère on 4/sep/17
+// Copyright (c) 2017 Wicked Lasers. All rights reserved.
 
-#ifndef ldCore__ldSquareVisualizer__
-#define ldCore__ldSquareVisualizer__
+#ifndef LDSVGFONT_H
+#define LDSVGFONT_H
 
-#include "ldCore/Visualizations/ldVisualizer.h"
+#include "ldCore/Helpers/Maths/ldMaths.h"
 
-class ldSquareVisualizer : public ldVisualizer
-{
-    Q_OBJECT
+class LDCORESHARED_EXPORT ldSvgFont {
+
 public:
-    explicit ldSquareVisualizer();
-    virtual ~ldSquareVisualizer();
+    explicit ldSvgFont(const QString &title,
+                    const QString &prefix,
+                    bool isCounterOnly = false,
+                    float interLetterSuffix = 0.36f
+            );
 
-    // ldVisualizer
-    virtual QString visualizerName() const override { return "Square"; }
+    QString title() const;
+    QString prefix() const;
 
-protected:
-    // ldVisualizer
-    virtual void draw() override;
+    bool isCounterOnly() const;
+    float interLetterSuffix() const;
+
+private:
+    QString m_title;
+    QString m_prefix;
+
+    bool m_isCounterOnly = false;
+    float m_interLetterSuffix = 0.36f;
 };
 
-#endif /*__ldCore__ldSquareVisualizer__*/
+
+#endif // LDSVGFONT_H
+
+

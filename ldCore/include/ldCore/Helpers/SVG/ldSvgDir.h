@@ -18,8 +18,8 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#ifndef __ldCore__ldSvgDir__
-#define __ldCore__ldSvgDir__
+#ifndef ldCore__ldSvgDir__
+#define ldCore__ldSvgDir__
 
 #include <QtCore/QObject>
 #include <QtCore/QTimer>

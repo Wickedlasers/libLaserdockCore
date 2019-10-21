@@ -147,17 +147,20 @@ public:
         qDebug() << "Setting ILDA rate worked:" << params.ilda_rate << "pps";
         
 
-        uint32_t enable = 1;
-        rc = enable ? params.device->enable_output() : params.device->disable_output();
+//        bool enableOutput = true;
+//        rc = enableOutput ? params.device->enable_output() : params.device->disable_output();
+        rc = params.device->enable_output();
+
         if (!rc)
         {
             qWarning() << "Setting output failed";
             return;
-        }
-        
-        if (enable) {
-            qDebug() << "Setting output output worked:" << enable;
-        }
+        }       
+
+        qDebug() << "Setting output output worked";
+//        if (enableOutput) {
+//            qDebug() << "Setting output output worked:" << enableOutput;
+//        }
         
         q->setStatus(ldHardware::Status::INITIALIZED);
     }

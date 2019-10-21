@@ -70,6 +70,11 @@ QStringList ldAbstractGame::get_levelList() const
     return m_levelList;
 }
 
+QString ldAbstractGame::get_levelListName() const
+{
+    return m_levelListName;
+}
+
 QStringList ldAbstractGame::get_keyDescriptions() const
 {
     return m_keyDescriptions;
@@ -82,6 +87,7 @@ bool ldAbstractGame::eventFilter(QObject *obj, QEvent *ev) {
 
     if(ev->type() == QEvent::KeyPress || ev->type() == QEvent::KeyRelease) {
         QKeyEvent *keyEvent = dynamic_cast<QKeyEvent*>(ev);
+        Q_ASSERT(keyEvent);
         if(keyEvent->modifiers() == Qt::NoModifier
                 || keyEvent->modifiers() == Qt::KeypadModifier ) {
             if(handleKeyEvent(keyEvent)) {

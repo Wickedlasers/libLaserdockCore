@@ -29,6 +29,7 @@
 #include "ldCore/Filter/ldFilterManager.h"
 #include "ldCore/Hardware/ldHardwareManager.h"
 #include "ldCore/Helpers/Maths/ldVec2.h"
+#include "ldCore/Helpers/Text/ldSvgFontManager.h"
 #include "ldCore/Helpers/ldLaserController.h"
 #include "ldCore/Simulator/ldSimulatorEngine.h"
 #include "ldCore/Sound/ldAudioDecoder.h"
@@ -130,8 +131,8 @@ void ldCore::initResources()
 
 ldCore::~ldCore()
 {
-    m_instance = nullptr;
     delete m_filterManager;
+    m_instance = nullptr;
 }
 
 /*!
@@ -146,6 +147,9 @@ void ldCore::initialize()
 
     // create managers
     m_audioDecoder = new ldAudioDecoder(this);
+
+    m_svgFontManager = new ldSvgFontManager(this);
+    m_svgFontManager->addFont(ldSvgFont("Roboto", "roboto"));
 
     m_hardwareManager = new ldHardwareManager(this);
 
@@ -166,7 +170,7 @@ void ldCore::initialize()
     m_soundDeviceManager = new ldSoundDeviceManager(this);
 
     // load task
-    m_task = new ldVisualizationTask;
+    m_task = new ldVisualizationTask(m_musicManager, m_audioDecoder);
     m_task->moveToThread(m_taskManager->taskWorker()->thread());
     m_taskManager->taskWorker()->loadTask(m_task);
     m_taskManager->taskWorker()->startTask();
@@ -253,6 +257,11 @@ ldRendererManager *ldCore::rendererManager() const
 ldSoundDeviceManager *ldCore::soundDeviceManager() const
 {
     return m_soundDeviceManager;
+}
+
+ldSvgFontManager *ldCore::svgFontManager() const
+{
+    return m_svgFontManager;
 }
 
 ldVisualizationTask *ldCore::task() const

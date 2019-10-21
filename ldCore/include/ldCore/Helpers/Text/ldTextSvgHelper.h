@@ -27,7 +27,7 @@
 
 #include "ldCore/Helpers/Maths/ldMaths.h"
 
-#include "ldFont.h"
+#include "ldSvgFont.h"
 #include "ldSvgLetter.h"
 
 class LDCORESHARED_EXPORT ldTextSvgHelper
@@ -37,9 +37,9 @@ public:
 
     int indexForSvgValidChars(const QChar& p_str);
     QChar replaceAccentAndSome(const QChar& p_str);
-    QString svgPathForChar(const QChar &p_str, const ldFont::Family &font);
+    QString svgPathForChar(const QChar &p_str, int font);
 
-    std::vector<ldSvgLetter> resizedSvgLetters(float p_scale, const ldFont::Family &font = ldFont::Family::Roboto);
+    std::vector<ldSvgLetter> resizedSvgLetters(float p_scale, int font);
 
 private:
     explicit ldTextSvgHelper();
@@ -50,7 +50,7 @@ private:
 
     bool isSvgChar(const QChar& p_str);
 
-    QMap<ldFont::Family, std::vector<ldSvgLetter>> m_laserdockSvgLetters;
+    QMap<int, std::vector<ldSvgLetter>> m_laserdockSvgLetters;
 
     QList<QChar> m_svgValidChars;
 

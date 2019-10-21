@@ -45,9 +45,6 @@ ldShape::ldShape(void)
 , m_fRotationY(0.0f)
 , m_fScaleX(1.0f)
 , m_fScaleY(1.0f)
-, m_obPosition(CCPointZero)
-, m_obAnchorPointInPoints(CCPointZero)
-, m_obAnchorPoint(CCPointZero)
 , m_obContentSize(CCSizeMake(1, 1))
 {
     setAnchorPoint(ccp(0.5f, 0.5f));
@@ -431,7 +428,7 @@ void ldShape::updateMatrix()
     // optimization:
     // inline anchor point calculation if skew is not needed
     // Adjusted transform calculation for rotational skew
-    if (!m_obAnchorPointInPoints.equals(CCPointZero))
+    if (!m_obAnchorPointInPoints.equals(CCPoint::ZERO))
     {
         x += cy * -m_obAnchorPointInPoints.x * m_fScaleX + -sx * -m_obAnchorPointInPoints.y * m_fScaleY;
         y += sy * -m_obAnchorPointInPoints.x * m_fScaleX +  cx * -m_obAnchorPointInPoints.y * m_fScaleY;

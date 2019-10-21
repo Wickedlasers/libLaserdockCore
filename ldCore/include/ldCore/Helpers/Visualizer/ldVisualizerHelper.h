@@ -26,8 +26,8 @@
 //  Copyright (c) 2014 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __ldCore__ldVisualizerHelper__
-#define __ldCore__ldVisualizerHelper__
+#ifndef ldCore__ldVisualizerHelper__
+#define ldCore__ldVisualizerHelper__
 
 #include <memory>
 
@@ -203,7 +203,7 @@ public:
     float spinOutput4;
 
     float walkerOutput;
-    float walkerClickOutput;
+//    float walkerClickOutput;
 
     float spinSpeedMult, spinThreshold, spinAngleThreshold;
 

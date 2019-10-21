@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __LaserdockVisualizer__ldAnimationVisualizer__
-#define __LaserdockVisualizer__ldAnimationVisualizer__
+#ifndef LaserdockVisualizer__ldAnimationVisualizer__
+#define LaserdockVisualizer__ldAnimationVisualizer__
 
 #include "ldCore/Visualizations/ldVisualizer.h"
 #include "ldCore/Helpers/Visualizer/ldAnimationSequence.h"

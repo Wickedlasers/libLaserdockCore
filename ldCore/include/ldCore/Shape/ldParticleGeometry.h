@@ -26,8 +26,8 @@
 //  Copyright (c) 2013 Jake Huang. All rights reserved.
 //
 
-#ifndef __Laserdock__ldParticleGeometry__
-#define __Laserdock__ldParticleGeometry__
+#ifndef Laserdock__ldParticleGeometry__
+#define Laserdock__ldParticleGeometry__
 
 #include <ldCore/ldCore_global.h>
 
@@ -65,6 +65,8 @@ public:
     float y;
     
 public:
+    static const CCPoint ZERO;
+
     CCPoint();
     CCPoint(float x, float y);
     CCPoint(const CCPoint& other);
@@ -78,7 +80,6 @@ public:
 #define ccp(__X__,__Y__) CCPointMake(static_cast<float>(__X__), static_cast<float>(__Y__))
 
 
-const CCPoint CCPointZero = CCPointMake(0,0);
 
 
 
@@ -303,10 +304,6 @@ CC_SAFE_RELEASE(varName); \
 varName = var; \
 } \
 }
-
-#define CC_SAFE_FREE(p)                do { if(p) { free(p); (p) = 0; } } while(0)
-
-
 
 
 

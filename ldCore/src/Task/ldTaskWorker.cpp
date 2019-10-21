@@ -46,7 +46,6 @@
 
 ldTaskWorker::ldTaskWorker(ldBufferManager *bufferManager, QObject *parent) :
     QObject(parent)
-    , m_task(NULL)
 {
     connect(bufferManager, &ldBufferManager::bufferNeedsContent, this, &ldTaskWorker::update, Qt::ConnectionType::BlockingQueuedConnection);
 }

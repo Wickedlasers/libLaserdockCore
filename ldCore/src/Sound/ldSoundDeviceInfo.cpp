@@ -95,7 +95,7 @@ QDataStream &operator>>(QDataStream &in, ldSoundDeviceInfo &myObj) {
     myObj.m_name = name;
     myObj.m_type = ldSoundDeviceInfo::Type(type);
     myObj.m_id = id;
-    myObj.m_id = data;
+    myObj.m_data = data;
     return in;
 }
 

@@ -26,8 +26,8 @@
 //  Copyright (c) 2015 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __ldCore__ldGeometryUtil__
-#define __ldCore__ldGeometryUtil__
+#ifndef ldCore__ldGeometryUtil__
+#define ldCore__ldGeometryUtil__
 
 #include "ldCore/ldCore_global.h"
 

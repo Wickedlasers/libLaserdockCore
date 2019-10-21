@@ -290,8 +290,8 @@ void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float delta) {
                 clampfp(lockout, 0.5f, 4.0f);
                 m_dropDetectorLockout = lockout;
                 qDebug() << "drop detected, value " << int(dropDetectValue*100) << " cooldown is " << m_dropDetectorLockout;
+                emit dropDetected();
             }
-            if (change) emit dropDetected();
         }
     }
 

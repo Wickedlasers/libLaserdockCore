@@ -26,8 +26,8 @@
 //  Copyright (c) 2015 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __ldCore__ldNoiseField__
-#define __ldCore__ldNoiseField__
+#ifndef ldCore__ldNoiseField__
+#define ldCore__ldNoiseField__
 
 #include <QtCore/QVector>
 #include "ldCore/Helpers/Maths/ldGeometryUtil.h"

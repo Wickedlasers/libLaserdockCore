@@ -26,8 +26,8 @@
 //  Copyright (c) 2017 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __ldCore__ldAbstractGameVisualizer__
-#define __ldCore__ldAbstractGameVisualizer__
+#ifndef ldCore__ldAbstractGameVisualizer__
+#define ldCore__ldAbstractGameVisualizer__
 
 #include <memory>
 

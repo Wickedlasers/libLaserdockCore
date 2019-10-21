@@ -18,8 +18,8 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#ifndef __ldCore__ldCircleVisualizer__
-#define __ldCore__ldCircleVisualizer__
+#ifndef ldCore__ldCircleVisualizer__
+#define ldCore__ldCircleVisualizer__
 
 #include "ldCore/Visualizations/ldVisualizer.h"
 

@@ -29,6 +29,8 @@
 #include "ldCore/Shape/ldParticleGeometry.h"
 #include "math.h"
 
+const CCPoint CCPoint::ZERO = CCPoint();
+
 CCPoint::CCPoint(void)
 {
     setPoint(0.0f, 0.0f);
@@ -213,7 +215,7 @@ CCPoint ccpIntersectPoint(const CCPoint& A, const CCPoint& B, const CCPoint& C, 
         return P;
     }
     
-    return CCPointZero;
+    return CCPoint::ZERO;
 }
 
 bool ccpLineIntersect(const CCPoint& A, const CCPoint& B,

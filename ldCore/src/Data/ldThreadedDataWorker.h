@@ -67,7 +67,7 @@ private:
 
     int m_simulatedBufferFullCount = 0;
     QElapsedTimer m_simTimer;
-    qint64 m_lastMs;
+    qint64 m_lastMs = 0;
 
     ldBufferManager* m_bufferManager;
     ldSimulatorEngine* m_simulatorEngine;

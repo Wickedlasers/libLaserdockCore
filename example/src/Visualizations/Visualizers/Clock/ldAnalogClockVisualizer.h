@@ -18,8 +18,8 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#ifndef __ldCore__ldAnalogClockVisualizer__
-#define __ldCore__ldAnalogClockVisualizer__
+#ifndef ldCore__ldAnalogClockVisualizer__
+#define ldCore__ldAnalogClockVisualizer__
 
 #include "ldCore/Visualizations/ldVisualizer.h"
 #include "ldCore/Helpers/Maths/ldMaths.h"

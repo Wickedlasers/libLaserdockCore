@@ -18,44 +18,32 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-// ldFont.h
-// Created by Eric Brugère on 4/sep/17
-// Copyright (c) 2017 Wicked Lasers. All rights reserved.
+#ifndef LDSVGFONTMANAGER_H
+#define LDSVGFONTMANAGER_H
 
-#ifndef LDFONT_H
-#define LDFONT_H
+#include <ldCore/Helpers/Maths/ldMaths.h>
+#include <ldCore/Helpers/Text/ldSvgFont.h>
 
-#include "ldCore/Helpers/Maths/ldMaths.h"
-
-class LDCORESHARED_EXPORT ldFont {
-
+class LDCORESHARED_EXPORT ldSvgFontManager : public QObject
+{
+    Q_OBJECT
 public:
-    enum class Family {
-        Roboto,
-        Ubuntu,
-        Pacifico,
-        Doris,
-        Elixia,
-        Reeniebeanie,
-        Brave,
-        Myriad,
-        First = Roboto,
-        Last = Myriad
-    };
+    explicit ldSvgFontManager(QObject *parent = nullptr);
+    ~ldSvgFontManager();
 
-    static QStringList titles(bool excludeCounter = true);
+    void addFont(const ldSvgFont &font);
+    const std::vector<ldSvgFont> &fonts() const;
+    const ldSvgFont &font(int index) const;
 
-    explicit ldFont(const Family &family = Family::Roboto);
+    QStringList titles(bool excludeCounter = true);
 
-    Family family() const;
-    QString title() const;
-    QString prefix() const;
+    int counterFontIndex() const;
 
 private:
-    Family m_family;
+    std::vector<ldSvgFont> m_fonts;
 };
 
 
-#endif // LDFONT_H
+#endif // LDSVGFONTMANAGER_H
 
 

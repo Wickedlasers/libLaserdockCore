@@ -34,6 +34,7 @@ class ldHardwareManager;
 class ldMusicManager;
 class ldRendererManager;
 class ldSoundDeviceManager;
+class ldSvgFontManager;
 class ldTaskManager;
 class ldVisualizationTask;
 
@@ -78,6 +79,7 @@ public:
     ldMusicManager *musicManager() const;
     ldRendererManager *rendererManager() const;
     ldSoundDeviceManager *soundDeviceManager() const;
+    ldSvgFontManager *svgFontManager() const;
     ldVisualizationTask *task() const;
     ldTaskManager *taskManager() const;
 
@@ -96,9 +98,9 @@ protected:
     ldMusicManager *m_musicManager = nullptr;
     ldRendererManager *m_renderermanager = nullptr;
     ldSoundDeviceManager *m_soundDeviceManager = nullptr;
+    ldSvgFontManager *m_svgFontManager = nullptr;
     ldVisualizationTask *m_task = nullptr;
     ldTaskManager *m_taskManager = nullptr;
-
 #ifdef LD_CORE_RESOURCES_EXTRACTOR
     ldResourcesExtractor* m_resourcesExtractor = nullptr;
 #endif

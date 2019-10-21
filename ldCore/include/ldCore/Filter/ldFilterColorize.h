@@ -47,10 +47,10 @@ public:
 class LDCORESHARED_EXPORT ldFilterColorLift : public ldFilter {  // rising bands effect adapted from appak svg visualizer code
 public:
     ldFilterColorLift();
-    float cde;
-    float cde2;
-    float cde3;
-    float nde;
+//    float cde = 0.f;
+//    float cde2;
+//    float cde3;
+//    float nde;
     virtual void process(Vertex &input) override;
     virtual QString name() override { return QObject::tr("Color Lift"); }
     virtual bool isMusicAware() const override { return true; }

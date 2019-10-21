@@ -6,8 +6,8 @@
 //  Copyright (c) 2016 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __ldCore__ldLoopbackAudioDevice__
-#define __ldCore__ldLoopbackAudioDevice__
+#ifndef ldCore__ldLoopbackAudioDevice__
+#define ldCore__ldLoopbackAudioDevice__
 
 #include <QtCore/QThread>
 

@@ -26,8 +26,8 @@
 //  Copyright (c) 2015 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __ldCore__ldSmoothUtil__
-#define __ldCore__ldSmoothUtil__
+#ifndef ldCore__ldSmoothUtil__
+#define ldCore__ldSmoothUtil__
 
 #include "ldCore/ldCore_global.h"
 

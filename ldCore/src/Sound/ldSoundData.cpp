@@ -109,10 +109,8 @@ ldSoundData::ldSoundData(const QAudioFormat &format, QObject* parent) :
             m_maxAmplitude = 0xffffffff;
             break;
         case QAudioFormat::SignedInt:
+        case QAudioFormat::Float: // Kind of
             m_maxAmplitude = 0x7fffffff;
-            break;
-        case QAudioFormat::Float:
-            m_maxAmplitude = 0x7fffffff; // Kind of
             break;
         default:
             break;
@@ -156,8 +154,15 @@ void ldSoundData::Update(const AudioBlock &block) {
         m_waveformOriginal.GetRight()[i] = tRight;
 
         // Accumulate peak & average power
-        tAbs = fabs(tLeft); if(tAbs > tMaxL) tMaxL = tAbs; tSumL += tAbs;
-        tAbs = fabs(tRight); if(tAbs > tMaxR) tMaxR = tAbs; tSumR += tAbs;
+        tAbs = fabs(tLeft);
+        tSumL += tAbs;
+        if(tAbs > tMaxL)
+            tMaxL = tAbs;
+
+        tAbs = fabs(tRight);
+        tSumR += tAbs;
+        if(tAbs > tMaxR)
+            tMaxR = tAbs;
 
     }
 

@@ -137,19 +137,14 @@ ldLogoLaserdock::ldLogoLaserdock() {
         setPixelShader(&m_filter);
 
         ldLogoLine l;
-        l.points.append(ldVec2(1402,532));
-        l.points.append(ldVec2(1068,1120));
-        l.points.append(ldVec2(1369,1120));
-        l.points.append(ldVec2(1414,1046));
-        l.points.append(ldVec2(1201,1046));
-        l.points.append(ldVec2(1446,616));
-
-        l.points.append(ldVec2(1402,532));
-        l.points.append(ldVec2(1068,1120));
-        l.points.append(ldVec2(1369,1120));
-        l.points.append(ldVec2(1414,1046));
-        l.points.append(ldVec2(1201,1046));
-        l.points.append(ldVec2(1446,616));
+        for(int i = 0; i < 2; i++) {
+            l.points.append(ldVec2(1402,532));
+            l.points.append(ldVec2(1068,1120));
+            l.points.append(ldVec2(1369,1120));
+            l.points.append(ldVec2(1414,1046));
+            l.points.append(ldVec2(1201,1046));
+            l.points.append(ldVec2(1446,616));
+        }
 
         l.points.append(ldVec2(1402,532));
 
@@ -167,19 +162,14 @@ ldLogoLaserdock::ldLogoLaserdock() {
     }
     {
         ldLogoLine l;
-        l.points.append(ldVec2(1460,643));
-        l.points.append(ldVec2(1417,716));
-        l.points.append(ldVec2(1608,1046));
-        l.points.append(ldVec2(1442,1046));
-        l.points.append(ldVec2(1402,1120));
-        l.points.append(ldVec2(1736,1120));
-
-        l.points.append(ldVec2(1460,643));
-        l.points.append(ldVec2(1417,716));
-        l.points.append(ldVec2(1608,1046));
-        l.points.append(ldVec2(1442,1046));
-        l.points.append(ldVec2(1402,1120));
-        l.points.append(ldVec2(1736,1120));
+        for(int i = 0; i < 2; i++) {
+            l.points.append(ldVec2(1460,643));
+            l.points.append(ldVec2(1417,716));
+            l.points.append(ldVec2(1608,1046));
+            l.points.append(ldVec2(1442,1046));
+            l.points.append(ldVec2(1402,1120));
+            l.points.append(ldVec2(1736,1120));
+        }
 
         l.points.append(ldVec2(1460,643));
 

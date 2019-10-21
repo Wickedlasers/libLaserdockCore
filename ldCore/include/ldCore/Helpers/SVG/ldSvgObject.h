@@ -26,8 +26,8 @@
 //  Copyright (c) 2016 Wicked Lasers. All rights reserved.
 //
 
-#ifndef __ldCore__ldSvgObject__
-#define __ldCore__ldSvgObject__
+#ifndef ldCore__ldSvgObject__
+#define ldCore__ldSvgObject__
 
 #include <QtCore/QObject>
 #include <QtCore/QTimer>

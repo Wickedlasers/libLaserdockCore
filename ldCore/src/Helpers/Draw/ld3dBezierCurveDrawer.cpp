@@ -36,9 +36,11 @@
 #include <ldCore/Helpers/Color/ldColorUtil.h>
 #include <ldCore/Render/ldRendererOpenlase.h>
 
-#define TIME_FOR_INTRO_3DTO 0.8f
-#define TIME_FOR_SHOW_3DTO 1.0f
-#define TIME_FOR_REMOVE_3DTO 0.8f
+namespace {
+static const float TIME_FOR_INTRO_3DTO = 0.8f;
+static const float TIME_FOR_SHOW_3DTO = 1.0f;
+static const float TIME_FOR_REMOVE_3DTO = 0.8f;
+}
 
 
 ld3dBezierCurveDrawer::ld3dBezierCurveDrawer()
@@ -113,8 +115,8 @@ bool ld3dBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer)
             for (const ld3dBezierCurve &b : bezier3dTab) {
                 // detect max points
                 int maxPoints = 8;//(int) (100*b.length());
-                if(maxPoints < 3) maxPoints = 3;
-                if(maxPoints > 30) maxPoints = 30;
+//                if(maxPoints < 3) maxPoints = 3;
+//                if(maxPoints > 30) maxPoints = 30;
 
                 // united to laser coord for 2d only
                 ldVec3 piv = b.pivot;

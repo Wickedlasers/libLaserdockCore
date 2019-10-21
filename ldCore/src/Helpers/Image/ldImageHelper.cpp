@@ -111,7 +111,7 @@ QImage ldImageHelper::drawLaserImageFromVerts(const std::vector<Vertex> &verts, 
         float r = 255*verts[i].color[0];
         float g = 255*verts[i].color[1];
         float b = 255*verts[i].color[2];
-        p.color = C_WHITE;//ColorRGB(r, g, b);
+//        p.color = C_WHITE;//ColorRGB(r, g, b);
         p.color = qRgb (r, g, b); // todo-- fix?
         points.push_back(p);
     }

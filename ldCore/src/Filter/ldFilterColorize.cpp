@@ -103,13 +103,13 @@ void ldFilterColorLift::process(Vertex &input) {
     clampfp(v, 0, 1);
     ldMusicManager* mm = ldCore::instance()->musicManager();
 
-    if (true) { // nyi
-        cde = mm->musicFeature1->statMoodFunky * 250;//m_musicManager->mrSlowTreb->spinOutput4 * 180;
-        cde2 = mm->hybridAnima->outputTrackPosition;
-        cde3 = 1 - mm->tempoACFast->phaseSmooth;
+//    if (true) { // nyi
+        float cde = mm->musicFeature1->statMoodFunky * 250;//m_musicManager->mrSlowTreb->spinOutput4 * 180;
+        float cde2 = mm->hybridAnima->outputTrackPosition;
+        float cde3 = 1 - mm->tempoACFast->phaseSmooth;
         //colorFilter3.nde = m_musicManager->musicFeature1->statMoodMelodic * 250;// m_musicManager->mrSlowTreb->spinOutput4*250;
-        nde = mm->mrSlowTreb->spinOutput4 * 250;
-    }
+        float nde = mm->mrSlowTreb->spinOutput4 * 250;
+//    }
 
     float decColor1 = cde;
     int color = ldColorUtil::colorHSV(decColor1, 1.0, 1.0);
@@ -180,7 +180,6 @@ void FilterColorBlobs::process(Vertex &input) {
     float f = sqrtf(t.x*t.x + t.y*t.y);
     float a = atan2f(t.y, t.x)/6.28f;
 
-    ldMusicManager* mm = ldCore::instance()->musicManager();
 
     const int nblobs = 48;
     const float scale = 6;
@@ -261,7 +260,10 @@ void FilterColorBlobs::process(Vertex &input) {
     t.g = tb*vv;
     t.b = tc*vv;
 
-    if (m_type == 2) mm->hybridColorPalette->colorize(t.r, t.g, t.b);
+    if (m_type == 2) {
+        ldMusicManager* mm = ldCore::instance()->musicManager();
+        mm->hybridColorPalette->colorize(t.r, t.g, t.b);
+    }
 
     input = t.toVertex();
 
@@ -347,17 +349,14 @@ void FilterColorFreq::process(Vertex &input) {
 
     input = t.toVertex();
 
-    float hm = 0;
-    if (m_type == 1) hm = rcost(mm->mrSlowBass->spinOutput4) * 0.33f;
-    //if (m_type == 2) mm->mrSlowBass->spinOutput4 + 0.25f*mm->mrSlowTreb->spinOutput4;
     if (m_type == 1) {
+        float hm = rcost(mm->mrSlowBass->spinOutput4) * 0.33f;
         float hh, ss;
         ldColorUtil::colorRGBtoHSVfloat(input.color[0], input.color[1], input.color[2], hh, ss, vv);
         hh += hm;
         hh -= (int) hh;
         ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, input.color[0], input.color[1], input.color[2]);
     }
-
 }
 
 // ---------- ldShimmerFilter ----------

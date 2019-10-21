@@ -49,6 +49,9 @@ class LDCORESHARED_EXPORT ldAbstractGame : public QObject
     /** activate game */
     QML_WRITABLE_PROPERTY(bool, isActive)
 
+    /** level list name */
+    Q_PROPERTY(QString levelListName READ get_levelListName CONSTANT)
+
     /** number of levels - initialize in a child constructor */
     Q_PROPERTY(QStringList levelList READ get_levelList CONSTANT)
 
@@ -76,6 +79,7 @@ public:
 
     /** Properties READ functions */
     QStringList get_levelList() const;
+    QString get_levelListName() const;
     QStringList get_keyDescriptions() const;
 
     /** QObject */
@@ -115,6 +119,7 @@ protected:
     virtual void deactivate();
 
     QStringList m_levelList;
+    QString m_levelListName;
     QStringList m_keyDescriptions;
 
 private:
