@@ -52,6 +52,11 @@
 #include "src/Visualizations/Visualizers/Simple/ldSquareVisualizer.h"
 #include "src/Visualizations/Visualizers/Spectrum/ldSpectrumBandVisualizer.h"
 
+void ldCoreExample::registerMetaTypes()
+{
+    ldSpiralFighterGame::registerMetaTypes();
+}
+
 ldCoreExample::ldCoreExample(QQmlApplicationEngine *engine, QObject *parent)
     : QObject(parent)
     , m_ldCore(ldCore::create(parent))

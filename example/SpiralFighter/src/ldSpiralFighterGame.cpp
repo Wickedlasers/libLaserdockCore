@@ -20,8 +20,7 @@ ldSpiralFighterGame::ldSpiralFighterGame(QObject *parent)
     get_gamepadCtrl()->init(keyMap, m_keyDescriptions);
 
     connect(m_visualizer.data(), &ldSpiralFighterVisualizer::finished, this, [&]() {
-       set_isPaused(false);
-       set_isPlaying(false);
+        set_state(Ready);
     });
 }
 

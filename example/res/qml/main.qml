@@ -66,7 +66,7 @@ Item {
 
                     text: checked ? qsTr("Stop") : qsTr("Start")
 
-                    checked: game.isPlaying
+                    checked: game.state === LdGameState.Playing
 
                     onClicked: game.toggle()
                 }

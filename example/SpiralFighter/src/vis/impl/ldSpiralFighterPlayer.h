@@ -55,16 +55,16 @@ protected:
     virtual void drawGameObject(ldRendererOpenlase* p_renderer) override;
 
 private:
-    float m_targetRotation;
-    bool m_hasUsedPowerup;
+    float m_targetRotation = 0.f;
+    bool m_hasUsedPowerup = false;
 
     // Timers.
-    float m_cooldownTimer;
+    float m_cooldownTimer = 0.f;
 
     // Input.
-    double m_rotationChange;
-    bool m_pressingShoot;
-    bool m_pressingPowerup;
+    double m_rotationChange = 0.;
+    bool m_pressingShoot = false;
+    bool m_pressingPowerup = false;
 };
 
 #endif // ldSpiralFighterPlayer_H

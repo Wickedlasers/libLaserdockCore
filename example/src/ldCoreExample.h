@@ -43,6 +43,8 @@ class ldCoreExample : public QObject
     QML_CONSTANT_PROPERTY(ldSpiralFighterGame*, game)
 
 public:
+    static void registerMetaTypes();
+
     ldCoreExample(QQmlApplicationEngine *engine, QObject *parent = nullptr);
     ~ldCoreExample();
 

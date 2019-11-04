@@ -30,6 +30,7 @@ public:
     virtual ~ldSpiralFighterVisualizer();
 
     // ldVisualizer
+    
     virtual QString visualizerName() const override { return "Spiral Fighter"; }
     virtual void onShouldStart() override;
     virtual void onShouldStop() override;
@@ -101,10 +102,9 @@ private:
      * Main game fields.
      */
 
-    bool m_isGameOver = false;
     bool m_hasWon = false;
     int m_score = 0;
-    float m_gameTimer = 0.f;
+    float m_gameTimer2 = 0.f;
 
     // Label.
     QScopedPointer<ldTextLabel> m_scoreLabel;

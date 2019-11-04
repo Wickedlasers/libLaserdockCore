@@ -124,7 +124,7 @@ void ldSpiralFighterPlayer::onPressedPowerup(bool pressed) {
 }
 
 void ldSpiralFighterPlayer::releaseKeys() {
-    m_rotationChange = false;
+    m_rotationChange = 0.;
     m_pressingShoot = false;
     m_pressingPowerup = false;
 }

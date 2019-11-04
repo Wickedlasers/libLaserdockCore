@@ -20,7 +20,7 @@ public:
 
 public:
     virtual QString visualizerName() const override { return "Ldva2 Visualizer"; }
-    virtual int targetFPS() const override { return 42; }
+    virtual int targetFPS() const override { return m_fps; }
 
     virtual void onShouldStart() override;
 
@@ -34,8 +34,10 @@ protected:
 protected:
     void doEcho(float zoom2);
 
+    // params
+    int m_fps = 42;
+        
     // animation settings and styles
-    bool m_useOldAlg = false; // use old algorithm (loops an animation between key frames) this disregards previous settings
     bool m_doReverse = false; // allow animation to reverse on some types of beats
     bool m_doSynchSpeed = false; // match speed of dancer
     bool m_speedAllowSlow = false; // allow slow motion when using speed matching
@@ -45,9 +47,6 @@ protected:
     bool m_usePeakBpm = false; // adjust start frame to match next beat with middle frame
     int m_jumpBeatCount = 1; // 2 = only jump at every 2nd beat
     
-    bool m_doColorCircle = false;
-    bool m_doColorRise = false;
-          
     bool m_doZoom = false; // beat zoom effects
     bool m_doEcho = false;// beat echo effects
 

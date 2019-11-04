@@ -35,7 +35,6 @@ const float DISTANCE_TO_ROTATE = 0.4f;
 // ldSpiralFighterVisualizer
 ldSpiralFighterVisualizer::ldSpiralFighterVisualizer() : ldAbstractGameVisualizer()
 {
-    setPosition(ccp(1, 1));
     // Register sounds.
     m_soundEffects.insert(SFX::EXPLOSION, ldCore::instance()->resourceDir() + "/sound/shexplosion.wav");
     m_soundEffects.insert(SFX::FIRE, ldCore::instance()->resourceDir() + "/sound/shoot.wav");
@@ -54,6 +53,8 @@ ldSpiralFighterVisualizer::ldSpiralFighterVisualizer() : ldAbstractGameVisualize
     m_countdownTimer.setInterval(1000);
     connect(&m_countdownTimer, &QTimer::timeout, this, &ldSpiralFighterVisualizer::onTimerTimeout);
 
+    setPosition(ccp(1, 1));
+
     connect(this, &ldSpiralFighterVisualizer::scoreChanged, this, &ldSpiralFighterVisualizer::updateScoreLabel);
 }
 
@@ -66,16 +67,15 @@ ldSpiralFighterVisualizer::~ldSpiralFighterVisualizer() {
 
 // Start a new game.
 void ldSpiralFighterVisualizer::resetMatch() {
-    m_isReset = true;
-    m_isPaused = false;
+    m_state = ldGameState::Reset;
+    m_playingState = ldPlayingState::InGame;
 
     setStateText("");
 
     startCountdownTimer();
 
     // Reset variables.
-    m_isGameOver = false;
-    m_gameTimer = 0;
+    m_gameTimer2 = 0;
     m_score = 0;
     emit scoreChanged(0);
 
@@ -195,12 +195,12 @@ void ldSpiralFighterVisualizer::draw() {
     ldAbstractGameVisualizer::draw();
 
     // Draw score label (only after game is over).
-    if (m_isGameOver) {
+    if (m_playingState == ldPlayingState::GameOver) {
         m_scoreLabel->innerDraw(m_renderer);
     }
 
     // Process game timer.
-    if(m_isPlaying || (!m_isPlaying && !m_isReset) || m_isGameOver || m_isPaused) {
+    if(m_playingState == ldPlayingState::GameOver || m_state != ldGameState::Reset) {
         m_stateLabel->innerDraw(m_renderer);
     }
 
@@ -211,14 +211,14 @@ void ldSpiralFighterVisualizer::draw() {
 
 // Update game elements.
 void ldSpiralFighterVisualizer::updateGame(float deltaTime) {
-    if (m_isGameOver || m_countdownTimer.isActive() || m_isPaused) return;
+    if (m_playingState == ldPlayingState::GameOver || m_countdownTimer.isActive() || m_state == ldGameState::Paused) return;
 
     /*
      * Timers.
      */
 
     // Update timers.
-    m_gameTimer += deltaTime;
+    m_gameTimer2 += deltaTime;
     m_bonusTimer -= deltaTime;
 
     /*
@@ -430,7 +430,7 @@ void ldSpiralFighterVisualizer::drawGame(ldRendererOpenlase *p_renderer) {
     }
 
     // Draw level.
-    float baseColorStep = m_bonusTimer > 0 ? m_gameTimer * 3.0f : m_gameTimer / 2.0f;
+    float baseColorStep = m_bonusTimer > 0 ? m_gameTimer2 * 3.0f : m_gameTimer2 / 2.0f;
     float colorStep = 0.1f;
 
     p_renderer->begin(OL_LINESTRIP);
@@ -467,7 +467,8 @@ void ldSpiralFighterVisualizer::addScore(int value) {
 
 // Ends the game and sets the correct state text.
 void ldSpiralFighterVisualizer::endGame(bool won) {
-    m_isGameOver = true;
+    m_playingState = ldPlayingState::GameOver;
+
     if (won) {
         setStateText("You win!");
     } else {
@@ -484,31 +485,37 @@ void ldSpiralFighterVisualizer::endGame(bool won) {
 
 void ldSpiralFighterVisualizer::moveX(double value)
 {
-    if (m_isGameOver || m_countdownTimer.isActive()) return;
+    QMutexLocker lock(&m_mutex);
+
+    if (m_playingState == ldPlayingState::GameOver || m_countdownTimer.isActive()) return;
 
     m_player.rotate(value * -1.0);
 }
 
 void ldSpiralFighterVisualizer::onPressedLeft(bool pressed) {
-    if (m_isGameOver || m_countdownTimer.isActive()) return;
+    QMutexLocker lock(&m_mutex);
+    if (m_playingState == ldPlayingState::GameOver || m_countdownTimer.isActive()) return;
 
     m_player.rotate(pressed ? 1.0 : 0);
 }
 
 void ldSpiralFighterVisualizer::onPressedRight(bool pressed) {
-    if (m_isGameOver || m_countdownTimer.isActive()) return;
+    QMutexLocker lock(&m_mutex);
+    if (m_playingState == ldPlayingState::GameOver || m_countdownTimer.isActive()) return;
 
     m_player.rotate(pressed ? -1.0 : 0);
 }
 
 void ldSpiralFighterVisualizer::onPressedShoot(bool pressed) {
-    if (m_isGameOver || m_countdownTimer.isActive()) return;
+    QMutexLocker lock(&m_mutex);
+    if (m_playingState == ldPlayingState::GameOver || m_countdownTimer.isActive()) return;
 
     m_player.onPressedShoot(pressed);
 }
 
 void ldSpiralFighterVisualizer::onPressedPowerup(bool pressed) {
-    if (m_isGameOver || m_countdownTimer.isActive()) return;
+    QMutexLocker lock(&m_mutex);
+    if (m_playingState == ldPlayingState::GameOver || m_countdownTimer.isActive()) return;
 
     m_player.onPressedPowerup(pressed);
 }
@@ -528,7 +535,7 @@ void ldSpiralFighterVisualizer::startCountdownTimer() {
 
 // Logic for initial game countdown.
 void ldSpiralFighterVisualizer::onTimerTimeout() {
-    if (m_isPlaying) {
+    if (m_state == ldGameState::Playing) {
         m_countdownTimerValue--;
 
         updateStateLabel();
@@ -546,7 +553,7 @@ void ldSpiralFighterVisualizer::onTimerTimeout() {
 
 // Updates the countdown label.
 void ldSpiralFighterVisualizer::updateStateLabel() {
-    if (!m_isGameOver) {
+    if (m_playingState != ldPlayingState::GameOver) {
         QString timerString;
         if(m_countdownTimerValue > 0) {
             timerString = QString::number(m_countdownTimerValue);
@@ -577,19 +584,19 @@ void ldSpiralFighterVisualizer::updateScoreLabel() {
  * Other functions.
  */
 
+
 void ldSpiralFighterVisualizer::onShouldStart() {
     QMutexLocker lock(&m_mutex);
     m_renderer->setRenderParamsQuality();
 
-    if(!m_isPaused) {
+    if(m_state != ldGameState::Paused)
         resetMatch();
-    }
 }
 
 void ldSpiralFighterVisualizer::onShouldStop()
 {
     QMutexLocker lock(&m_mutex);
-    if(m_isPlaying)
+    if(m_state == ldGameState::Playing && m_playingState != ldPlayingState::GameOver)
         togglePlay();
 }
 
@@ -602,20 +609,17 @@ void ldSpiralFighterVisualizer::reset() {
 void ldSpiralFighterVisualizer::togglePlay() {
     QMutexLocker lock(&m_mutex);
 
-    if(m_isGameOver) m_isPlaying = false;
+    m_state = (m_state == ldGameState::Playing && m_playingState == ldPlayingState::InGame)
+            ? ldGameState::Paused
+            : ldGameState::Playing;
 
-    m_isPlaying = !m_isPlaying;
-
-    if(m_isPlaying) {
-        if(m_isPaused) {
-            startCountdownTimer();
-        } else {
+    if(m_state == ldGameState::Playing) {
+        if(m_playingState == ldPlayingState::GameOver) {
             resetMatch();
+            m_state = ldGameState::Playing;
         }
-
-        m_isPaused = false;
+        startCountdownTimer();
     } else {
-        m_isPaused = true;
         m_countdownTimer.stop();
         setStateText("PAUSE");
     }
