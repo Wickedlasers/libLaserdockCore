@@ -152,7 +152,7 @@ public:
     float a[msize][msize];
     int size = msize;
     GridNoise();
-    void init(int s, float z = 0);
+    void init(int s);
     void clear(float z = 0);
     void noise(float f = 1);
     void stripe(float z = 1, bool h = true, bool v = true);
@@ -163,7 +163,7 @@ public:
 
 class ColorMap {
 public:
-    virtual void getRGB(float f, float& r, float& g, float& b);
+    virtual void getRGB(float f, float& r, float& g, float& b) = 0;
     void getRGBClamp(float f, float& r, float& g, float& b);
     void getRGBCycle(float f, float& r, float& g, float& b);
     void getRGBMirror(float f, float& r, float& g, float& b);
@@ -191,7 +191,7 @@ public:
                                                     return QObject::tr("Colorize Scroll A");}
     virtual bool isMusicAware() const override { return (m_type != 0); }
 private:
-    bool m_alt;
+//    bool m_alt;
     int m_type;
     FramePulse pulse1;
     FramePulse pulse2;
@@ -288,7 +288,7 @@ private:
     GridNoise sbg2;
     GridNoise sbg3;
     GridNoise sbg4;
-    int huecount = 0;
+//    int huecount = 0;
 };
 
 

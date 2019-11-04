@@ -390,7 +390,7 @@ void ldShimmerFilter::process(Vertex &input) {
 
 // util
 static float cycle01(float f) {return f - floorf(f);}
-static float mirror01(float f) {if (int(floorf(f)) % 2) f = -f; return cycle01(f);}
+//static float mirror01(float f) {if (int(floorf(f)) % 2) f = -f; return cycle01(f);}
 static float clamp01(float f) {return clampf(f, 0, 1);}
 static void clamp01p(float &f) {f = clampf(f, 0, 1);}
 static float rand01() {return (float(rand()))/RAND_MAX;}
@@ -446,7 +446,7 @@ void FilterColorScroll::process(Vertex &input) {
         huespd = (1.0f / 24)*clampf(mm->mrSlowTreb->output*mm->mrSlowTreb->output*0.875f+0.125f,0,1);
     } else if (m_type == 1) {
         spd = mm->mrSlowBass->output*mm->mrSlowBass->output*0.875f+0.125f;
-        float spd2 = 1;//mm->mrSlowBass->output;
+//        float spd2 = 1;//mm->mrSlowBass->output;
         horz = 0;
         flat = 0;
         reflex = 0;
@@ -623,11 +623,11 @@ float ColorPanelCanvas::getfSmooth(float x, float y) {
         float b2 = array[ix2][iy1]/steps; b2 += 0.5f; b2 -= floorf(b2);
         float b3 = array[ix2][iy2]/steps; b3 += 0.5f; b3 -= floorf(b3);
         float b4 = array[ix1][iy2]/steps; b4 += 0.5f; b4 -= floorf(b4);
-        float f1 = cfx*cfy;
-        float f2 =  fx*cfy;
-        float f3 =  fx* fy;
-        float f4 = cfx* fy;
-        float ff = f1+f2+f3+f4+0.0001f;
+//        float f1 = cfx*cfy;
+//        float f2 =  fx*cfy;
+//        float f3 =  fx* fy;
+//        float f4 = cfx* fy;
+//        float ff = f1+f2+f3+f4+0.0001f;
         float ft = (b1*f1 + b2*f2 + b3*f3 + b4*f4) / ff;
         float fdist = 0;
         fdist += f1 * fabsf(a1-f);
@@ -821,7 +821,7 @@ GridNoise::GridNoise() {
         }
     }
 }
-void GridNoise::init(int s, float z) {
+void GridNoise::init(int s) {
     if (s > msize) s = msize;
     if (s < 2) s = 2;
     size = s;
@@ -924,7 +924,6 @@ float GridNoise::get(float x, float y) {
     return f;
 }
 
-void ColorMap::getRGB(float f, float& r, float& g, float& b) {}
 void ColorMap::getRGBClamp(float f, float& r, float& g, float& b) {
     clampfp(f, 0, 1);
     getRGB(f, r, g, b);
@@ -1206,7 +1205,7 @@ void FilterColorLava::process(Vertex &input) {
 
     float mag = 0;
 
-    float xx = (t.x+1)/2;
+//    float xx = (t.x+1)/2;
     float yy = (t.y+1)/2;
 
     float cf1 = fc1.value;
