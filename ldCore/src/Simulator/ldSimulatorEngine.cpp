@@ -53,7 +53,7 @@ void ldSimulatorEngine::removeListener()
     m_listenerCount--;
 }
 
-bool ldSimulatorEngine::isActive() const
+bool ldSimulatorEngine::hasListeners() const
 {
     return m_listenerCount > 0;
 }

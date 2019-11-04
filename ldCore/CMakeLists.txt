@@ -6,7 +6,6 @@ option(LD_CORE_ENABLE_OPENCV "Enable opencv support" OFF)
 option(LD_CORE_ENABLE_QT_QUICK "Enable Qt Quick module" OFF) # required for example
 # some helpful flags
 option(LD_CORE_GAMES_ALWAYS_PLAY_STATE "Games play after pause automatically" OFF)
-option(LD_CORE_REDUCE_ANALYZER_SUPPORT "Reduce music analyzer support for performance on slow devices" OFF)
 
 include(CMakeDependentOption)
 CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_QT_QUICK "Enable Qt Quick module" OFF
@@ -94,8 +93,6 @@ target_sources(${PROJECT_NAME} PRIVATE
         #Render
         ${SRCDIR}/Render/ldAbstractRenderer.cpp
         ${INCDIR}/Render/ldAbstractRenderer.h
-        ${SRCDIR}/Render/ldRendererManager.cpp
-        ${INCDIR}/Render/ldRendererManager.h
         ${SRCDIR}/Render/ldRendererOpenlase.cpp
         ${INCDIR}/Render/ldRendererOpenlase.h
         #Simulator
@@ -173,6 +170,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/Audio/ldAudioBasic.h
         ${SRCDIR}/Helpers/Audio/ldBpmBeatDetector.cpp
         ${INCDIR}/Helpers/Audio/ldBpmBeatDetector.h
+        ${SRCDIR}/Helpers/Audio/ldDropDetector.cpp
+        ${INCDIR}/Helpers/Audio/ldDropDetector.h
         ${SRCDIR}/Helpers/Audio/ldDurationalStatEstimator.cpp
         ${INCDIR}/Helpers/Audio/ldDurationalStatEstimator.h
         ${SRCDIR}/Helpers/Audio/ldHybridReactor.cpp
@@ -264,8 +263,6 @@ target_sources(${PROJECT_NAME} PRIVATE
         #Helpers/SVG
         ${SRCDIR}/Helpers/SVG/ldSvgDir.cpp
         ${INCDIR}/Helpers/SVG/ldSvgDir.h
-        ${SRCDIR}/Helpers/SVG/ldSvgObject.cpp
-        ${INCDIR}/Helpers/SVG/ldSvgObject.h
         ${SRCDIR}/Helpers/SVG/ldSvgReader.cpp
         ${INCDIR}/Helpers/SVG/ldSvgReader.h
         #Helpers/Text
@@ -325,13 +322,9 @@ if(WIN32)
 endif()
 
 
-if(LD_CORE_REDUCE_ANALYZER_SUPPORT)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC LD_CORE_REDUCE_ANALYZER_SUPPORT)
-endif()
-
-target_compile_definitions(${PROJECT_NAME} PRIVATE LDCORE_LIBRARY)
-
 if(WIN32)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE LDCORE_LIBRARY)
+
     target_compile_definitions(${PROJECT_NAME} PUBLIC _USE_MATH_DEFINES)
 endif()
 

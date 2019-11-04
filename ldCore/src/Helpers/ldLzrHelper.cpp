@@ -16,8 +16,8 @@ lzr::FrameList ldLzrHelper::convertOpenlaseToLzr(const std::vector<std::vector<O
         // add empty points on line start
         lzr::Point emptyPoint(0.0, 0,0, 0, 0, 0);
         if(!pointVec.empty()) {
-            emptyPoint.x = pointVec[0].x;
-            emptyPoint.y = pointVec[0].y;
+            emptyPoint.x = static_cast<double>(pointVec[0].x);
+            emptyPoint.y = static_cast<double>(pointVec[0].y);
         }
         for(int i = 0; i < EMPTY_POINT_COUNT; i++) {
             frame.push_back(emptyPoint);
@@ -26,12 +26,12 @@ lzr::FrameList ldLzrHelper::convertOpenlaseToLzr(const std::vector<std::vector<O
         // add data
         for(const OLPoint &p : pointVec) {
             lzr::Point lzrPoint;
-            lzrPoint.x = p.x;
-            lzrPoint.y = p.y;
+            lzrPoint.x = static_cast<double>(p.x);
+            lzrPoint.y = static_cast<double>(p.y);
             QColor color = QColor::fromRgb(p.color);
-            lzrPoint.r = color.red();
-            lzrPoint.g = color.green();
-            lzrPoint.b = color.blue();
+            lzrPoint.r = static_cast<uint8_t>(color.red());
+            lzrPoint.g = static_cast<uint8_t>(color.green());
+            lzrPoint.b = static_cast<uint8_t>(color.blue());
             lzrPoint.i = (p.color == 0) ? 0 : 1;
 
             frame.push_back(lzrPoint);
@@ -39,8 +39,8 @@ lzr::FrameList ldLzrHelper::convertOpenlaseToLzr(const std::vector<std::vector<O
 
         // add empty points on line end
         if(!pointVec.empty()) {
-            emptyPoint.x = pointVec[pointVec.size() - 1].x;
-            emptyPoint.y = pointVec[pointVec.size() - 1].y;
+            emptyPoint.x = static_cast<double>(pointVec[pointVec.size() - 1].x);
+            emptyPoint.y = static_cast<double>(pointVec[pointVec.size() - 1].y);
         }
         for(int i = 0; i < EMPTY_POINT_COUNT; i++) {
             frame.push_back(emptyPoint);
@@ -61,15 +61,16 @@ std::vector<std::vector<OLPoint> > ldLzrHelper::convertLzrToOpenlase(const lzr::
         for(const lzr::Point &lzrPoint : lzrFrame) {
             // convert lzr point to libol
             OLPoint libolPoint;
-            libolPoint.x = (float) lzrPoint.x;
-			libolPoint.y = (float) lzrPoint.y;
-			libolPoint.z = 0.f;
-			libolPoint.color = lzrPoint.is_blanked() ? 0 : QColor(lzrPoint.r, lzrPoint.g, lzrPoint.b).rgb();
+            libolPoint.x = static_cast<float>(lzrPoint.x);
+            libolPoint.y = static_cast<float>(lzrPoint.y);
+            libolPoint.z = 0.f;
+            libolPoint.color = lzrPoint.is_blanked() ? 0 : QColor(lzrPoint.r, lzrPoint.g, lzrPoint.b).rgb();
 
             // ilda can have multiple same points in a raw - skip them
-            if(!libolFrame.empty() && libolPoint == libolFrame.back()) {
-                continue;
-            }
+            // on some files this adjustment cause blank output, disable it
+//            if(!libolFrame.empty() && libolPoint == libolFrame.back()) {
+//                continue;
+//            }
 
             // add
             libolFrame.push_back(libolPoint);

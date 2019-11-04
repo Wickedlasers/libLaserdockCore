@@ -52,8 +52,6 @@ public:
     explicit ldAbstractGameVisualizer();
     virtual ~ldAbstractGameVisualizer();
 
-    float complexity() const;
-
     virtual int levelIndex() const;
     virtual QStringList levelList() const;
 
@@ -69,9 +67,6 @@ public slots:
 
     /** Sound level */
     virtual void setSoundLevel(int soundLevel);
-
-    /** optional */
-    virtual void setComplexity(float complexity);
 
     virtual void setLevelIndex(int index);
 
@@ -92,18 +87,20 @@ protected:
     static const int GAME_DEFAULT_RESET_TIME;
 
     // State machine.
-    enum class State {
+    enum class ldGameState {
         Reset,
         Playing,
+        Paused
+    };
+
+    enum class ldPlayingState {
+        InGame,
         GameOver
     };
 
     // Variables used in all games.
-    State m_state = State::Reset;
-    bool m_isPlaying = false;
-    bool m_isPaused = false;
-    bool m_isReset = false;
-    float m_complexity = 1.0f;
+    ldGameState m_state = ldGameState::Reset;
+    ldPlayingState m_playingState = ldPlayingState::InGame;
     float m_gameTimer = 0.0f;
 
     virtual void draw() override;

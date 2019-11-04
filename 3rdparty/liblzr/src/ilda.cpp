@@ -3,13 +3,6 @@
 #include <liblzr.hpp>
 #include "ilda.hpp"
 
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#endif
-
-#pragma warning(push, 0)
-
 namespace lzr {
 
 

@@ -56,7 +56,7 @@ void OptimizerInternals::fill_angle()
 
 
 
-void OptimizerInternals::path_split(double split_angle)
+void OptimizerInternals::path_split(float split_angle)
 {
     paths.clear(); //dump whatever we had before
 
@@ -84,7 +84,7 @@ void OptimizerInternals::path_split(double split_angle)
             if(in_path)
             {
                 //test the angle this point makes with previous/next points
-                if( (i+1 < paths.size()) && points[i+1].is_lit() ) //is the next point valid to check against
+                if( (i+1 < points.size()) && points[i+1].is_lit() ) //is the next point valid to check against
                 {
                     Optimizer_Point next = points[i + 1];
 
@@ -118,7 +118,7 @@ void OptimizerInternals::path_split(double split_angle)
 
 
 
-void OptimizerInternals::fill_cycle(double split_angle)
+void OptimizerInternals::fill_cycle(float split_angle)
 {
     for(Optimizer_Path& path : paths)
     {
@@ -144,7 +144,7 @@ void OptimizerInternals::fill_cycle(double split_angle)
 */
 void OptimizerInternals::find_paths(Optimizer* settings)
 {
-    double split_angle = DEG_TO_RAD(settings->path_split_angle);
+    float split_angle = DEG_TO_RAD(settings->path_split_angle);
 
     fill_angle();
     path_split(split_angle);

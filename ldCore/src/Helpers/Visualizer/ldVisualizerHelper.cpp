@@ -416,7 +416,6 @@ ldMusicReactor::ldMusicReactor()
     walkCounter = 0;
     owc = 0;
     walkerOutput = 0;
-//    walkerClickOutput = 0;
 }
 
 ldMusicReactor::~ldMusicReactor()
@@ -572,10 +571,10 @@ void ldMusicReactor::processWalk()
     walkCounter += tdelta;
     //walkcounter += tracker1.bestbpm/4;
 
-//    walkerClickOutput = 0;
+    walkerClickOutput = false;
     float t = 0;//1.0/32.0;
     if (/*owc > (1.0-t) &&*/ walkCounter > (1.0+t)) {
-//        walkerClickOutput = true;
+        walkerClickOutput = true;
         walkCounter -= (int)walkCounter;
     }
     owc = walkCounter;

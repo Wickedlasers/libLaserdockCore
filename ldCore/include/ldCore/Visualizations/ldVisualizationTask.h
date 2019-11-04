@@ -47,8 +47,8 @@ public:
 
     explicit ldVisualizationTask(ldMusicManager *musicManager,
                                  ldAudioDecoder *audioDecoder,
-                                 QObject *parent = 0);
-    ~ldVisualizationTask();
+                                 QObject *parent = nullptr);
+    ~ldVisualizationTask() override;
 
     // ldAbstractTask
     void start() override;

@@ -40,6 +40,7 @@ public:
 
     void play(int sfx);
     void stop(int sfx);
+    void stopAll();
     void setLoops(int sfx, int loops);
 
     bool isSoundEnabled() const;

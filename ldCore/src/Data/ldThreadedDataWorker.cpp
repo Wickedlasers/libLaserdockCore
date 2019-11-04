@@ -90,7 +90,7 @@ void ldThreadedDataWorker::run()
 
         // check remote buffer status and take appropriate action
         // (eg fill local buffer, send to device, or sleep)
-        const bool isSimulatorActive = m_simulatorEngine->isActive() && m_isSimulatorEnabled;
+        const bool isSimulatorActive = m_simulatorEngine->hasListeners() && m_isSimulatorEnabled;
         int remoteBuffer = m_isActive ? m_usbDeviceManager->getBufferFullCount() : -1;
         bool isRemoteBufferAvailable = (remoteBuffer != -1);
 

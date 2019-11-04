@@ -200,11 +200,6 @@ void ldAbstractGameVisualizer::setSoundLevel(int soundLevel)
     m_soundEffects.setSoundLevel(soundLevel);
 }
 
-float ldAbstractGameVisualizer::complexity() const
-{
-    return m_complexity;
-}
-
 int ldAbstractGameVisualizer::levelIndex() const
 {
     return 0;
@@ -219,14 +214,6 @@ bool ldAbstractGameVisualizer::isSoundEnabled() const
 {
     return m_soundEffects.isSoundEnabled();
 }
-
-void ldAbstractGameVisualizer::setComplexity(float complexity)
-{
-    QMutexLocker locker(&m_mutex);
-
-    m_complexity = complexity;
-}
-
 
 void ldAbstractGameVisualizer::setLevelIndex(int /*index*/)
 {
@@ -264,7 +251,7 @@ void ldAbstractGameVisualizer::draw() {
     float deltaTime = m_renderer->getLastFrameDeltaSeconds();
 
     // Update game timer.
-    if (m_state == State::Playing) {
+    if (m_state == ldGameState::Playing) {
         m_gameTimer += deltaTime;
     }
 

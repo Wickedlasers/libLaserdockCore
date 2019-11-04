@@ -100,6 +100,12 @@ static void CALLBACK midi_callback(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance,
     ldMidiCCMessage message;
     // extract values for cc message
 
+    //what is the first bit of byte 1
+    if ((b1 & 0x80) == 0x80)//the first bit is a 1.  it's a status message
+    {
+        e.channel = (b1 & 0x0F);
+    }
+
     // check for onset or offset
     if (b1a == 9) {
         isValidNote = true;
@@ -110,7 +116,7 @@ static void CALLBACK midi_callback(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance,
     else if (b1a == 8) {
         isValidNote = true;
         e.note = b2;
-    } else if(b1a = 11) {
+    } else if(b1a == 11) {
         message.faderNumber = b2;
         message.value = b3;
         isValidCCMessage = true;

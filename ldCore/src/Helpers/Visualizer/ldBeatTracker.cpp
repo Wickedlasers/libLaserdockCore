@@ -49,12 +49,7 @@
 #include <ldCore/Sound/ldSoundData.h>
 
 namespace {
-// reduce considered history on android by performance reasons
-#ifdef LD_CORE_REDUCE_ANALYZER_SUPPORT
-static const int HISTORY_COUNT = 60;
-#else
-static const int HISTORY_COUNT = 120;
-#endif
+    static const int HISTORY_COUNT = 120;
 
     static const int beat_overdrive = AUDIO_OVERDRIVE_FACTOR;
     static const int maxbeathistory = 4*HISTORY_COUNT*beat_overdrive;

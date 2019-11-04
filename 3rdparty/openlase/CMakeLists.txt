@@ -19,6 +19,8 @@ target_include_directories(openlase PRIVATE src)
 
 if(WIN32)
     target_compile_definitions(openlase PRIVATE _USE_MATH_DEFINES)
+
+    target_compile_options(openlase PRIVATE /wd4244) # conversion from double to int
 endif()
 
 if(NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)

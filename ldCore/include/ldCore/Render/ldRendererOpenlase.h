@@ -54,6 +54,7 @@ undesired behavior.
 #include <openlase/libol.h>
 
 #include "ldCore/ldCore_global.h"
+#include "ldCore/Helpers/Maths/ldGlobals.h"
 #include "ldCore/Render/ldAbstractRenderer.h"
 #include "ldCore/Utilities/ldBasicDataStructures.h"
 
@@ -69,10 +70,10 @@ undesired behavior.
 
 inline bool operator==(const OLPoint &e1, const OLPoint &e2)
 {
-    return e1.x == e2.x
-            && e1.y == e2.y
-            && e1.z == e2.z
-            && e1.color == e2.color;
+    return cmpf(e1.x, e2.x)
+            && cmpf(e1.y, e2.y)
+            && cmpf(e1.z, e2.z)
+            && cmpf(e1.color, e2.color);
 }
 
 // ------------------------ ldRendererOpenlase -----------
@@ -84,7 +85,7 @@ class LDCORESHARED_EXPORT ldRendererOpenlase : public ldAbstractRenderer
 {
     Q_OBJECT
 public:
-    explicit ldRendererOpenlase(QObject *parent = 0);
+    explicit ldRendererOpenlase(QObject *parent = nullptr);
 
     /////////////////////////////////////////////////////////////////////////
     //                         Libol Module Functions
@@ -162,7 +163,7 @@ public:
     // drawPoints draws a point multiple times, useful for beam and particle visualizers.
     // nPoints - number of samples to spend
     // jitter - places points in a random spread of radius=jitter
-    void drawPoints(float x, float y, uint32_t color = C_WHITE, int nPoints = 16, float jitter = 0.01);
+    void drawPoints(float x, float y, uint32_t color = C_WHITE, int nPoints = 16, float jitter = 0.01f);
 
     // drawCircle draws a circle using points
     // seamAngle - the angle (in radians) where the circle begins/ends, which results in a visible seam.

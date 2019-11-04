@@ -120,10 +120,10 @@ public:
         return m_roles;
     }
     typedef typename QList<ItemType *>::iterator iterator;
-    iterator begin (void) const {
+    iterator begin (void)  {
         return m_items.begin ();
     }
-    iterator end (void) const {
+    iterator end (void) {
         return m_items.end ();
     }
     typedef typename QList<ItemType *>::const_iterator const_iterator;

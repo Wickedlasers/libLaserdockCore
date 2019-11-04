@@ -18,21 +18,20 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-// ;
-// ldBestBpmBeatDetector.h
-//  Created by Eric Brugère on 4/13/16.
-//  Copyright (c) 2015 Wicked Lasers. All rights reserved.
-
 #include "ldCore/Helpers/Audio/ldBpmBeatDetector.h"
 
 #include <QtCore/QDebug>
 
-#include "ldCore/Helpers/Maths/ldMaths.h"
-#include "ldCore/Helpers/Maths/ldMathStat.h"
+#include <ldCore/Helpers/Maths/ldMaths.h>
+#include <ldCore/Helpers/Maths/ldMathStat.h>
+
+#include <ldCore/Helpers/Audio/ldDropDetector.h>
 
 ldBpmBeatDetector::ldBpmBeatDetector(QObject *parent)
     : QObject(parent)
+    , m_dropDetector(new ldDropDetector())
 {
+    connect(m_dropDetector.get(), &ldDropDetector::dropDetected, this, &ldBpmBeatDetector::beatDetected);
 }
 
 ldBpmBeatDetector::~ldBpmBeatDetector()
@@ -71,6 +70,8 @@ void ldBpmBeatDetector::process(float bpm, float output, float delta)
         m_msBpmCounter = 0;
 //        m_isRunningBPMCounter = false;
     }
+
+    m_dropDetector->process(delta);
 }
 
 int ldBpmBeatDetector::bpm() const
@@ -91,5 +92,10 @@ void ldBpmBeatDetector::reset()
     m_msBpmCounter = 0;
     m_beatCount = 0;
     m_bpm = 0;
+}
+
+ldDropDetector *ldBpmBeatDetector::dropDetector() const
+{
+    return m_dropDetector.get();
 }
 

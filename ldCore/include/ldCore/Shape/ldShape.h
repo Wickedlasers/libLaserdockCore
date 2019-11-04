@@ -39,7 +39,6 @@ public:
 
 public:
     static void setGlobalRenderer(ldRendererOpenlase* renderer);
-    static ldRendererOpenlase* getGlobalRenderer();
 
     virtual void setRenderer(ldRendererOpenlase* renderer);
     ldRendererOpenlase* getRenderer();

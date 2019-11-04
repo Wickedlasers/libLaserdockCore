@@ -203,7 +203,7 @@ public:
     float spinOutput4;
 
     float walkerOutput;
-//    float walkerClickOutput;
+    bool walkerClickOutput = false;
 
     float spinSpeedMult, spinThreshold, spinAngleThreshold;
 

@@ -42,7 +42,7 @@ public:
     void removeListener();
 
     /** If engine is active*/
-    bool isActive() const;
+    bool hasListeners() const;
 
     /** OpenGL initialization */
     void init();

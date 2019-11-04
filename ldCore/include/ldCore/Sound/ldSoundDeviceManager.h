@@ -51,7 +51,7 @@ class LDCORESHARED_EXPORT ldSoundDeviceManager: public ldSoundInterface
 public:
     static void registerMetaType();
 
-    explicit ldSoundDeviceManager(QObject *parent);
+    explicit ldSoundDeviceManager(QObject *parent = nullptr);
     ~ldSoundDeviceManager();
     
     // ldSoundInterface

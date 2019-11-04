@@ -46,6 +46,12 @@ void ldSoundEffects::stop(int sfx)
     m_soundMap[sfx]->stop();
 }
 
+void ldSoundEffects::stopAll()
+{
+    for(auto &item : m_soundMap)
+        item.second->stop();
+}
+
 void ldSoundEffects::setLoops(int sfx, int loops)
 {
     m_soundMap[sfx]->setLoops(loops);
@@ -60,9 +66,7 @@ void ldSoundEffects::setSoundEnabled(bool enabled)
 {
     m_enabled = enabled;
     if(!m_enabled) {
-        for(auto &item : m_soundMap) {
-            item.second->stop();
-        }
+        stopAll();
     }
 }
 

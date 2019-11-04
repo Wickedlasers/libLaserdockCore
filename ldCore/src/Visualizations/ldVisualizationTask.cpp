@@ -60,7 +60,7 @@ ldVisualizationTask::ldVisualizationTask(ldMusicManager *musicManager, ldAudioDe
     qmlRegisterType<ldVisualizer>();
 #endif
     
-    m_openlase = (ldRendererOpenlase *)ldCore::instance()->rendererManager()->getRenderer(OPENLASE);
+    m_openlase = new ldRendererOpenlase(this);
     ldShape::setGlobalRenderer(m_openlase);
 
     qRegisterMetaType<AudioBlock>("AudioBlock");
@@ -96,7 +96,7 @@ void ldVisualizationTask::update(quint64 delta, ldFrameBuffer * buffer)
     m_renderstate.buffer = buffer;
     m_renderstate.delta = delta;
 
-    float fps = 30; // default value
+    int fps = 30; // default value
 
     ldVisualizer* vis = getActiveVis();
     // get fps and draw visualizer
@@ -258,7 +258,7 @@ void ldVisualizationTask::stop()
 {
     QMutexLocker lock(&m_mutex);
     ldSoundInterface * soundinterface = ldCore::instance()->soundDeviceManager();
-    disconnect(soundinterface, 0, this, 0);
+    disconnect(soundinterface, nullptr, this, nullptr);
     
     m_sounddata.reset();
     m_decoderSoundData.reset();

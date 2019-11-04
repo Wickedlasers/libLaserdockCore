@@ -82,7 +82,7 @@ public:
 
 public:
     virtual QString visualizerName() const;
-    virtual float targetFPS() const { return 30; }
+    virtual int targetFPS() const { return 30; }
 
     void start();
     void stop();

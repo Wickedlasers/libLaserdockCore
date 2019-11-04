@@ -21,7 +21,11 @@
 #ifndef LDBPMBEATDETECTOR_H
 #define LDBPMBEATDETECTOR_H
 
+#include <memory>
+
 #include <ldCore/Sound/ldSoundData.h>
+
+class ldDropDetector;
 
 class LDCORESHARED_EXPORT ldBpmBeatDetector : public QObject
 {
@@ -38,10 +42,14 @@ public:
     void setDuration(float duration);
     void reset();
 
+    ldDropDetector *dropDetector() const;
+
 signals:
     void beatDetected();
 
 private:
+    std::unique_ptr<ldDropDetector> m_dropDetector;
+
     float m_duration = 1.f;
 
     float m_msCounter = 0;

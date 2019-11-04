@@ -127,6 +127,7 @@ class ldAppakBpmSelector;
 class ldAppakPeaks;
 class ldAppakSpectrum;
 class ldBpmBeatDetector;
+class ldDropDetector;
 class ldHybridAnima;
 class ldHybridFlash;
 class ldHybridAutoColor2;
@@ -142,7 +143,7 @@ class LDCORESHARED_EXPORT ldMusicManager : public QObject
 
 public:
     // class stuff
-    ldMusicManager(QObject* parent);
+    ldMusicManager(QObject* parent = nullptr);
     ~ldMusicManager();
 
     // update function
@@ -216,13 +217,8 @@ public:
     std::unique_ptr<ldHybridColorPalette> hybridColorPalette;
     std::unique_ptr<ldHybridFlash> hybridFlash;
 
-    // drop detect settings
-    void setDropDetectEnabledValue(bool value);
-    void setDropDetectSensValue(int value);
-
 signals:
     void updated();
-    void dropDetected();
 
 private:
     std::shared_ptr<ldSoundData> m_psd;
@@ -251,11 +247,6 @@ private:
     int m_realSoundLevel = 0;
 
     std::unique_ptr<ldBpmBeatDetector> m_bpmBeatDetector;
-
-    float m_dropDetectorLockout = 0;
-    bool m_dropDetectorEnabled = false;
-    float m_dropDetectorSens = 0.5f;
-
 };
 
 #endif // LDMUSICMANAGER_H

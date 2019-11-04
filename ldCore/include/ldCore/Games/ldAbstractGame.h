@@ -61,16 +61,17 @@ class LDCORESHARED_EXPORT ldAbstractGame : public QObject
     /** current level index */
     QML_WRITABLE_PROPERTY(int, levelIndex)
 
-    /**
-       Game can have several states:
-        isPlaying && !isPaused = playing
-        isPlaying && isPaused = paused
-        !isPlaying = finished
-        */
-    QML_WRITABLE_PROPERTY(bool, isPlaying)
-    QML_WRITABLE_PROPERTY(bool, isPaused)
+    /** enum GameState, current game state */
+    QML_WRITABLE_PROPERTY(int, state)
 
 public:
+    enum GameState {
+        Ready,
+        Playing,
+        Paused
+    };
+    Q_ENUM(GameState)
+
     static void registerMetaTypes();
 
     /** Constructor/destructor */
@@ -103,9 +104,6 @@ public slots:
 
     /** Toggle play/pause */
     void toggle();
-
-    /** Game complexity level */
-    void setComplexity(float speed);
 
     /** Enable/disable sound if supported */
     bool isSoundEnabled() const;

@@ -41,14 +41,14 @@ void logCallbackFunc(const char *msg)
 
 */
 ldRendererOpenlase::ldRendererOpenlase(QObject *parent) :
-    ldAbstractRenderer(OPENLASE, parent)
+    ldAbstractRenderer(parent)
 {
     olSetLogCallback(&logCallbackFunc);
 
     // Increased to 30000 to avoid RenderedFrame buffer overflow error.
     if(olInit(0, 30000) != 0) {
         qFatal("Error initializing openlase!!!");
-        exit(1);
+//        exit(1);
     }
 }
 
@@ -84,10 +84,10 @@ float ldRendererOpenlase::renderFrame(ldFrameBuffer * buffer, int max_fps){
 //    {static int s; s=(s+1)%100; int z=olGetRenderedFrames()->pnext; if (!s || z > 30001) qDebug() << "frames point count:" << z;}
 
     Vertex v = {{0, 0, 0}, {0, 0, 0, 0}};
-    if (save_ss) m_cachedFrame.resize(rendered_frame->pnext);
+    if (save_ss) m_cachedFrame.resize(static_cast<uint>(rendered_frame->pnext));
 
     buffer->setFrameModes(m_frameModes);
-    for(int i = 0; i < rendered_frame->pnext; i++ ){
+    for(uint i = 0; i < static_cast<uint>(rendered_frame->pnext); i++ ){
         OLPoint *p = rendered_frame->points+i;
         v.x() = p->x;
         v.y() = p->y;
@@ -308,7 +308,7 @@ void ldRendererOpenlase::setRenderParamsStandard()
     params.start_dwell = 2;
     params.curve_dwell = 1;
     params.corner_dwell = 3;
-    params.curve_angle = cosf(30.0f*((float) M_PI/180.0f)); // 30 deg
+    params.curve_angle = cosf(30.0f*(M_PIf/180.0f)); // 30 deg
     params.end_dwell = 2;
     params.end_wait = 1;
     params.snap = 1/1000.0f;
@@ -331,7 +331,7 @@ void ldRendererOpenlase::setRenderParamsBezier()
     params.start_dwell = 2;
     params.curve_dwell = 1;
     params.corner_dwell = 3;
-    params.curve_angle = cosf(30.0f*((float) M_PI/180.0f)); // 30 deg
+    params.curve_angle = cosf(30.0f*(M_PIf/180.0f)); // 30 deg
     params.end_dwell = 2;
     params.end_wait = 1;
     params.snap = 1/1000.0f;
@@ -358,7 +358,7 @@ void ldRendererOpenlase::setRenderParamsLower()
     params.start_dwell = 2;
     params.curve_dwell = 1;
     params.corner_dwell = 3;
-    params.curve_angle = cosf(30.0f*((float) M_PI/180.0f)); // 30 deg
+    params.curve_angle = cosf(30.0f*(M_PIf/180.0f)); // 30 deg
     params.end_dwell = 2;
     params.end_wait = 1;
     params.snap = 1/500.0f;
@@ -401,13 +401,13 @@ void ldRendererOpenlase::drawPoints(float x, float y, uint32_t color, int nPoint
 }
 
 void ldRendererOpenlase::drawCircle(float x, float y, float radius, uint32_t color, float seamAngle, int nPointsMin, int nPointsMax, int overlap) {
-    int nPoints = nPointsMax * radius;
+    int nPoints = static_cast<int>(nPointsMax * radius);
     if (nPoints < nPointsMin) nPoints = nPointsMin;
     //nPoints = MIN(MAX(nPointsMin, nPoints), nPointsMax);
     begin(OL_POINTS);
     for (int i = 0-overlap; i <= nPoints+overlap; i++) {
-        float f = ((float)i)/nPoints;
-        float a = seamAngle + f*3.14*2;
+        float f = static_cast<float>(i) / nPoints;
+        float a = seamAngle + f*M_PIf*2;
         float jx = cos(a);
         float jy = sin(a);
         uint32_t tc = 0;
@@ -418,6 +418,6 @@ void ldRendererOpenlase::drawCircle(float x, float y, float radius, uint32_t col
 }
 
 float ldRendererOpenlase::getLastFrameDeltaSeconds() {
-    return m_lastFramePointCount / (float) rate();
+    return static_cast<float>(m_lastFramePointCount) / rate();
 }
 

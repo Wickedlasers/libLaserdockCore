@@ -30,6 +30,7 @@ public:
     uint8_t note = 0;
     uint8_t velocity = 0;
     bool onset = false;
+    int channel = -1;
 
     static QString noteToString(uint8_t note);
     static uint8_t noteFromString(const QString &noteStr, bool &ok);

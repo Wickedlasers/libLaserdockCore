@@ -67,7 +67,7 @@ void ldGamepadCtrl::pressButton(ldGamepad::Button button, bool isPressed)
         }
 
         // any button activate game if it is in paused or game over state
-        if(!m_game->get_isPlaying() || m_game->get_isPaused()) {
+        if(m_game->get_state() != ldAbstractGame::Playing) {
             m_game->toggle();
             return;
         }

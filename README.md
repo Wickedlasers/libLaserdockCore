@@ -7,7 +7,7 @@ Windows (msvc2017 x86)
 <br>
 macOS (clang)
 <br>
-android (ndk r19 + the latest sdk, arm64/armv7 supported)
+android (ndk r20 + the latest sdk, arm64/armv7 supported)
 
 # Prepare to development
 

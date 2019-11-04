@@ -84,12 +84,6 @@
     \li  \l ldCore::taskManager()
     \li  Executes and manages task for the application.
 
-    \row
-    \li  \l ldRendererManager
-    \li  \l ldCore::rendererManager()
-    \li  Maintains a list of renderers that can be used to render graphics. Right only only openlase is supported.
-
-
     \endtable
 
   Laserdock project has done away from singleton classes in preference of a singular global variable, due to
@@ -133,6 +127,8 @@ ldCore::~ldCore()
 {
     delete m_filterManager;
     m_instance = nullptr;
+
+    qDebug() << "ldCore destroyed";
 }
 
 /*!
@@ -157,7 +153,6 @@ void ldCore::initialize()
     m_bufferManager = new ldBufferManager(this);
 
     m_dataDispatcher = new ldDataDispatcher(m_bufferManager, m_hardwareManager, this);
-    m_renderermanager = new ldRendererManager(this);
 
     // create and load task
     m_taskManager = new ldTaskManager(m_bufferManager, this);
@@ -186,37 +181,22 @@ void ldCore::initialize()
 
 QString ldCore::storageDir() const
 {
-    QString storageLocation;
+    return m_storageDir;
+}
 
-    QStringList appDataLocations = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
-    if(!appDataLocations.isEmpty()) {
-#ifdef Q_OS_ANDROID
-        // store in external storage on Android, simple last() works
-        storageLocation = appDataLocations.last();
-#else
-        // default on other systems
-        storageLocation = appDataLocations.first();
-#endif
-    } else {
-        // probably won't work, but at least we tried
-        storageLocation = qApp->applicationDirPath();
-        qWarning() << "Can't locate QStandardPaths::AppDataLocation. Use app dir";
-    }
-
-    return storageLocation;
+void ldCore::setStorageDir(const QString &storageDir)
+{
+    m_storageDir = storageDir;
 }
 
 QString ldCore::resourceDir() const
 {
-#if defined(Q_OS_MAC)
-    return qApp->applicationDirPath() + "/../Resources";
-#elif defined(Q_OS_WIN32)
-    return qApp->applicationDirPath() + "/Resources";
-#elif defined(Q_OS_ANDROID)
-    return storageDir() + "/resources";
-#else
-    return qApp->applicationDirPath();
-#endif
+    return m_resourceDir;
+}
+
+void ldCore::setResourceDir(const QString &resourceDir)
+{
+    m_resourceDir = resourceDir;
 }
 
 ldAudioDecoder *ldCore::audioDecoder() const
@@ -249,11 +229,6 @@ ldMusicManager *ldCore::musicManager() const
     return m_musicManager;
 }
 
-ldRendererManager *ldCore::rendererManager() const
-{
-    return m_renderermanager;
-}
-
 ldSoundDeviceManager *ldCore::soundDeviceManager() const
 {
     return m_soundDeviceManager;
@@ -283,6 +258,45 @@ ldCore::ldCore(QObject *parent)
 #endif
 
     m_instance = this;
+
+    initStorageDir();
+    // depends on storage dir on android, initialize second!
+    initResourceDir();
+}
+
+void ldCore::initStorageDir()
+{
+    QString storageLocation;
+
+    QStringList appDataLocations = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
+    if(!appDataLocations.isEmpty()) {
+#ifdef Q_OS_ANDROID
+        // store in external storage on Android, simple last() works
+        storageLocation = appDataLocations.last();
+#else
+        // default on other systems
+        storageLocation = appDataLocations.first();
+#endif
+    } else {
+        // probably won't work, but at least we tried
+        storageLocation = qApp->applicationDirPath();
+        qWarning() << "Can't locate QStandardPaths::AppDataLocation. Use app dir";
+    }
+
+    m_storageDir = storageLocation;
+}
+
+void ldCore::initResourceDir()
+{
+#if defined(Q_OS_MAC)
+        m_resourceDir = qApp->applicationDirPath() + "/../Resources";
+#elif defined(Q_OS_WIN32)
+        m_resourceDir = qApp->applicationDirPath() + "/Resources";
+#elif defined(Q_OS_ANDROID)
+        m_resourceDir = storageDir() + "/resources";
+#else
+        m_resourceDir = qApp->applicationDirPath();
+#endif
 }
 
 

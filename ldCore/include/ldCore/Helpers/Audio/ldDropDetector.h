@@ -18,32 +18,39 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#ifndef ldCore__ldAnalogClockVisualizer__
-#define ldCore__ldAnalogClockVisualizer__
+#ifndef LDDROPDETECTOR_H
+#define LDDROPDETECTOR_H
 
-#include "ldCore/Visualizations/ldVisualizer.h"
-#include "ldCore/Helpers/Maths/ldMaths.h"
+#include <QtCore/QObject>
 
-class ldClockComplexObject;
+#include <ldCore/ldCore_global.h>
 
-class ldAnalogClockVisualizer : public ldVisualizer
+/** advanced drop detector,  probably not finished */
+class LDCORESHARED_EXPORT ldDropDetector : public QObject
 {
     Q_OBJECT
+
 public:
-    explicit ldAnalogClockVisualizer(QObject *parent = nullptr);
-    virtual ~ldAnalogClockVisualizer();
+    ldDropDetector(QObject *parent = nullptr);
+    ~ldDropDetector();
 
-    // ldVisualizer
-    
-    virtual QString visualizerName() const override { return "Analog"; }
-    virtual int targetFPS() const override { return 42; }
-    virtual void onShouldStart() override;
+    void process(float delta);
 
-protected:
-    virtual void draw() override;
+    // drop detect settings
+    void setDropDetectEnabledValue(bool value);
+    void setDropDetectSensValue(int value);
+
+signals:
+    void dropDetected();
 
 private:
-    QScopedPointer<ldClockComplexObject> m_clockObj;
+
+    float m_dropDetectorLockout = 0;
+    bool m_dropDetectorEnabled = false;
+    float m_dropDetectorSens = 0.5f;
 };
 
-#endif /*__ldCore__ldAnalogClockVisualizer__*/
+
+#endif // LDDROPDETECTOR_H
+
+

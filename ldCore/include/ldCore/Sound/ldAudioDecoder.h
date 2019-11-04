@@ -51,11 +51,12 @@ class LDCORESHARED_EXPORT ldAudioDecoder : public ldSoundInterface
     QML_READONLY_PROPERTY(bool, isActive)
 
 public:
-    explicit ldAudioDecoder(QObject *parent);
+    explicit ldAudioDecoder(QObject *parent = nullptr);
     ~ldAudioDecoder();
 
 public slots:
     void start(const QString &filePath, qint64 elapsedTime = 0);
+    void pause();
     void stop();
 
     void setElapsedTime(qint64 time);
@@ -74,6 +75,8 @@ private:
     const int STUBFPS = 30*2;
 
     QMutex mutex;
+
+    QString m_filePath;
 
     QTimer m_timer;
     qint64 m_elapsedTime = 0;

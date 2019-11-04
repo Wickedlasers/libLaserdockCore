@@ -20,7 +20,7 @@ public:
 
 public:
     virtual QString visualizerName() const override { return "Ldva2 Visualizer"; }
-    virtual float targetFPS() const override { return m_fps; }
+    virtual int targetFPS() const override { return 42; }
 
     virtual void onShouldStart() override;
 
@@ -34,9 +34,6 @@ protected:
 protected:
     void doEcho(float zoom2);
 
-    // params
-    float m_fps = 42;
-        
     // animation settings and styles
     bool m_useOldAlg = false; // use old algorithm (loops an animation between key frames) this disregards previous settings
     bool m_doReverse = false; // allow animation to reverse on some types of beats

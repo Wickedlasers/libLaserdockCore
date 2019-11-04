@@ -3,9 +3,6 @@
 #include <algorithm> //sort()
 #include <liblzr.hpp>
 
-
-#pragma warning(push, 0)
-
 namespace lzr {
 
 

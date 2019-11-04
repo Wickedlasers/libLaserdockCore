@@ -50,7 +50,7 @@ ldShape::ldShape(void)
     setAnchorPoint(ccp(0.5f, 0.5f));
 
     m_pShaderManager = ldShaderManager::getSharedManager();
-    m_renderer = getGlobalRenderer();
+    m_renderer = s_globalRender;
 
     updateMatrix();
     Q_ASSERT_X(m_renderer != NULL,"ldShape", "You must set a global renderer of ldShape class before build of ldShape");
@@ -66,11 +66,6 @@ ldShape::~ldShape()
 void ldShape::setGlobalRenderer(ldRendererOpenlase *renderer)
 {
     s_globalRender = renderer;
-}
-
-ldRendererOpenlase* ldShape::getGlobalRenderer()
-{
-    return s_globalRender;
 }
 
 void ldShape::setRenderer(ldRendererOpenlase *renderer)

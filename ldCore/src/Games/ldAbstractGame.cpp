@@ -31,6 +31,9 @@
 
 void ldAbstractGame::registerMetaTypes()
 {
+#ifdef LD_CORE_ENABLE_QT_QUICK
+    qmlRegisterUncreatableType<ldAbstractGame>("WickedLasers", 1, 0, "LdGameState", "LdGameState enum can't be created");
+#endif
     ldGamepad::registerMetaTypes();
 }
 
@@ -41,8 +44,7 @@ ldAbstractGame::ldAbstractGame(const QString &id, const QString &title, QObject 
     , m_gamepadCtrl(new ldGamepadCtrl(this, this))
     , m_isActive(false)
     , m_levelIndex(0)
-    , m_isPlaying(false)
-    , m_isPaused(false)
+    , m_state(Ready)
 {
 #ifdef LD_CORE_ENABLE_QT_QUICK
     qmlRegisterType<ldGamepadCtrl>();
@@ -52,8 +54,8 @@ ldAbstractGame::ldAbstractGame(const QString &id, const QString &title, QObject 
     connect(this, &ldAbstractGame::isActiveChanged, this, &ldAbstractGame::onActiveChanged);
 
 #ifdef LD_CORE_GAMES_ALWAYS_PLAY_STATE
-    connect(this, &ldAbstractGame::isPlayingChanged, this, [&](bool /*isPlaying*/) {
-       if(!m_isPaused)
+    connect(this, &ldAbstractGame::stateChanged, this, [&](int state) {
+       if(state == Ready)
            play();
     });
 #endif
@@ -81,7 +83,7 @@ QStringList ldAbstractGame::get_keyDescriptions() const
 }
 
 bool ldAbstractGame::eventFilter(QObject *obj, QEvent *ev) {
-    if(!get_isPlaying()) {
+    if(m_state != ldAbstractGame::Playing) {
         return QObject::eventFilter(obj, ev);
     }
 
@@ -127,39 +129,35 @@ void ldAbstractGame::moveRightY(double y)
 
 void ldAbstractGame::play()
 {
-    if(!m_isPlaying)
+    if(m_state != Playing)
         toggle();
 }
 
 void ldAbstractGame::pause()
 {
-    if(m_isPlaying && !m_isPaused)
+    if(m_state == Playing)
         toggle();
 }
 
 void ldAbstractGame::reset() {
-    if(get_isPlaying()) {
+    if(m_state != ldAbstractGame::Ready) {
         toggle();
     }
 
     getGameVisualizer()->reset();
 
-    set_isPaused(false);
+    set_state(Ready);
 }
 
 void ldAbstractGame::toggle() {
-    qDebug() << "Game:" << get_title() << "isPlaying changed to" << !m_isPlaying;
+    qDebug() << "Game:" << get_title() << "isPlaying changed to" << m_state;
 
     getGameVisualizer()->togglePlay();
 
-    bool isPlaying = !m_isPlaying;
-    set_isPaused(!isPlaying);
-    set_isPlaying(isPlaying);
-}
-
-void ldAbstractGame::setComplexity(float speed)
-{
-    getGameVisualizer()->setComplexity(speed);
+    if(get_state() == Playing)
+        set_state(Paused);
+    else
+        set_state(Playing);
 }
 
 bool ldAbstractGame::isSoundEnabled() const

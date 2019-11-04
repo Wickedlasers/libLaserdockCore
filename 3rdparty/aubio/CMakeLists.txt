@@ -120,6 +120,11 @@ target_include_directories(aubio PUBLIC src)
 
 if(WIN32)
     target_compile_definitions(aubio PRIVATE _USE_MATH_DEFINES)
+
+    # disable various conversion warnings
+    target_compile_options(aubio PRIVATE /wd4244) # conversion from double to int
+    target_compile_options(aubio PRIVATE /wd4305) # conversion from double to float
+    target_compile_options(aubio PRIVATE /wd4996)
 endif()
 
 

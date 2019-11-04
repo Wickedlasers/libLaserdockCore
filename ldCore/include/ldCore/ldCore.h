@@ -32,7 +32,6 @@ class ldFilterManager;
 class ldLaserController;
 class ldHardwareManager;
 class ldMusicManager;
-class ldRendererManager;
 class ldSoundDeviceManager;
 class ldSvgFontManager;
 class ldTaskManager;
@@ -63,12 +62,15 @@ public:
     virtual ~ldCore();
 
     /** Initialize ldCore managers. Must be called in order to use it*/
-    virtual void initialize();
+    void initialize();
 
     /** Path to storage location */
-    virtual QString storageDir() const;
+    QString storageDir() const;
+    void setStorageDir(const QString &storageDir);
+
     /** Path to external resources, like fonts, svgs, etc */
-    virtual QString resourceDir() const;
+    QString resourceDir() const;
+    void setResourceDir(const QString &resourceDir);
 
     /** Managers/accessors*/
     ldAudioDecoder *audioDecoder() const;
@@ -77,7 +79,6 @@ public:
     ldFilterManager *filterManager() const;
     ldHardwareManager *hardwareManager() const;
     ldMusicManager *musicManager() const;
-    ldRendererManager *rendererManager() const;
     ldSoundDeviceManager *soundDeviceManager() const;
     ldSvgFontManager *svgFontManager() const;
     ldVisualizationTask *task() const;
@@ -87,8 +88,16 @@ public:
     ldResourcesExtractor* resourcesExtractor() const { return  m_resourcesExtractor; }
 #endif
 
-protected:
-    explicit ldCore(QObject *parent = 0);
+private:
+    static ldCore *m_instance;
+
+    explicit ldCore(QObject *parent = nullptr);
+
+    void initStorageDir();
+    void initResourceDir();
+
+    QString m_storageDir;
+    QString m_resourceDir;
 
     ldAudioDecoder *m_audioDecoder = nullptr;
     ldBufferManager *m_bufferManager = nullptr;
@@ -96,7 +105,6 @@ protected:
     ldFilterManager *m_filterManager = nullptr;
     ldHardwareManager *m_hardwareManager = nullptr;
     ldMusicManager *m_musicManager = nullptr;
-    ldRendererManager *m_renderermanager = nullptr;
     ldSoundDeviceManager *m_soundDeviceManager = nullptr;
     ldSvgFontManager *m_svgFontManager = nullptr;
     ldVisualizationTask *m_task = nullptr;
@@ -104,10 +112,6 @@ protected:
 #ifdef LD_CORE_RESOURCES_EXTRACTOR
     ldResourcesExtractor* m_resourcesExtractor = nullptr;
 #endif
-
-
-private:
-    static ldCore *m_instance;
 };
 
 #endif // LDCORE_H

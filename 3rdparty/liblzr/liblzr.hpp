@@ -10,8 +10,6 @@
 
 #pragma once
 
-#pragma warning(push, 0)
-
 #define LZR_VERSION "0.0.1"
 
 // Windows dll export symbols
@@ -25,6 +23,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <vector>
+#include <set>
 #include <string>
 
 namespace lzr {
@@ -46,11 +45,6 @@ namespace lzr {
 /*  LZR Points                                                                */
 /******************************************************************************/
 
-//point limits
-#define LZR_POSITION_MIN -1.0
-#define LZR_POSITION_MAX 1.0
-#define LZR_COLOR_MIN    0
-#define LZR_COLOR_MAX    255
 
 /*
  * Coordinate system:
@@ -72,16 +66,22 @@ namespace lzr {
 class LIBLZR_EXPORT Point
 {
 public:
-    double x;  //Position X   [-1.0, 1.0]
-    double y;  //Position Y   [-1.0, 1.0]
+    //limits
+    static constexpr float POSITION_MIN = -1.0;
+    static constexpr float POSITION_MAX = 1.0;
+    static constexpr uint8_t COLOR_MIN  = 0;
+    static constexpr uint8_t COLOR_MAX  = 255;
+
+    float x;   //Position X   [-1.0, 1.0]
+    float y;   //Position Y   [-1.0, 1.0]
     uint8_t r; //Red          [0, 255]
     uint8_t g; //Green        [0, 255]
     uint8_t b; //Blue         [0, 255]
     uint8_t i; //Blanking     [0, 255]
 
     Point();
-    Point(double x, double y);
-    Point(double x, double y, uint8_t r, uint8_t g, uint8_t b, uint8_t i);
+    Point(float x, float y);
+    Point(float x, float y, uint8_t r, uint8_t g, uint8_t b, uint8_t i);
 
     void blank();
     void unblank();
@@ -89,8 +89,8 @@ public:
     void set_color(const Point& other);
     bool is_blanked() const;
     bool is_lit() const;
-    Point lerp_to(const Point& other, double t) const;
-    double sq_distance_to(const Point& other) const;
+    Point lerp_to(const Point& other, float t) const;
+    float sq_distance_to(const Point& other) const;
     bool same_position_as(const Point& other) const;
     bool same_color_as(const Point& other) const;
     bool operator==(const Point& other) const;
@@ -108,8 +108,8 @@ public:
 class LIBLZR_EXPORT Frame : public std::vector<Point>
 {
 public:
-    Frame();
-    Frame(size_t n);
+    Frame() : std::vector<Point>() {};
+    Frame(size_t n) : std::vector<Point>(n) {};
 
     Frame& add(const Point& p);
     Frame& add(const Frame& other);
@@ -122,29 +122,31 @@ public:
 
 private:
     Frame& add_blank_jump_to(const Point& p);
-    Frame& add_blank_jump_to(const Frame& other);
 };
 
 
 /******************************************************************************/
-/*  LZR Animations                                                            */
+/*  LZR Animations & Partial Frames                                           */
 /******************************************************************************/
 
 typedef std::vector<Frame> FrameList;
 
+//splits a single frame into lit paths.
+FrameList split_frame(const Frame& frame);
+Frame combine_frames(const FrameList& frames);
 
 
 /******************************************************************************/
 /*  LZR Frame Transforms                                                      */
 /******************************************************************************/
 
-LIBLZR_EXPORT int translate(Frame& frame, double x, double y);
-LIBLZR_EXPORT int rotate(Frame& frame, Point center, double theta);
-LIBLZR_EXPORT int scale(Frame& frame, Point center, double x, double y);
+LIBLZR_EXPORT int translate(Frame& frame, float x, float y);
+LIBLZR_EXPORT int rotate(Frame& frame, Point center, float theta);
+LIBLZR_EXPORT int scale(Frame& frame, Point center, float x, float y);
 LIBLZR_EXPORT int mirror(Frame& frame, Point center, bool x, bool y);
 LIBLZR_EXPORT int dup_mirror(Frame& frame, Point center, bool x, bool y, bool blank=true);
 LIBLZR_EXPORT int dup_linear(Frame& frame, Point offset, size_t n_dups, bool blank=true);
-LIBLZR_EXPORT int dup_radial(Frame& frame, Point center, size_t n_dups, double angle, bool blank=true);
+LIBLZR_EXPORT int dup_radial(Frame& frame, Point center, size_t n_dups, float angle, bool blank=true);
 
 
 //clips a frame using the given mask. Points in the mask should define a closed
@@ -165,14 +167,14 @@ LIBLZR_EXPORT int mask(Frame& frame, Frame mask, bool inverse=false);
 /******************************************************************************/
 
 //interpolation point density (points from one side of the frame to the other)
-#define INTERP_DEFAULT ((LZR_POSITION_MAX - LZR_POSITION_MIN) / 100.0)
-#define BLANK_INTERP_DEFAULT ((LZR_POSITION_MAX - LZR_POSITION_MIN) / 5.0)
+static constexpr float INTERP_DEFAULT = ((Point::POSITION_MAX - Point::POSITION_MIN) / 100.0);
+static constexpr float BLANK_INTERP_DEFAULT = ((Point::POSITION_MAX - Point::POSITION_MIN) / 5.0);
 
 //interpolation functions
-typedef double (*interpolation_func)(double t);
-LIBLZR_EXPORT double linear(double t); /*----*----*----*----*----*----*----*----*/
-LIBLZR_EXPORT double quad(double t);   /*---*---*-----*-----*-----*-----*---*---*/
-LIBLZR_EXPORT double quart(double t);  /*-*---*-----*-------*-------*-----*---*-*/
+typedef float (*interpolation_func)(float t);
+LIBLZR_EXPORT float linear(float t); /*----*----*----*----*----*----*----*----*/
+LIBLZR_EXPORT float quad(float t);   /*---*---*-----*-----*-----*-----*---*---*/
+LIBLZR_EXPORT float quart(float t);  /*-*---*-----*-------*-------*-----*---*-*/
 
 //fwrd decl
 class OptimizerInternals;
@@ -189,20 +191,20 @@ public:
 
     // ----- settings -----
 
-    double path_split_angle = 45; //minimum angle (degrees) at which to consider lines to be seperate paths
-    bool   reorder_paths = true;  //allow the optimizer to the change the order in which points are scanned
+    float path_split_angle = 45; //minimum angle (degrees) at which to consider lines to be seperate paths
+    bool  reorder_paths = true;  //allow the optimizer to the change the order in which points are scanned
 
     //anchor points
     size_t anchor_points_lit = 1;      //minimum number of lit points to place at the start & end of line segments
     size_t anchor_points_blanked  = 2; //minimum number of blanked points to place at the start & end of a line segment
 
     //interpolation
-    double interp_distance = INTERP_DEFAULT; //max distance for interpolation of lit lines
+    float interp_distance = INTERP_DEFAULT;  //max distance for interpolation of lit lines
     interpolation_func interp_func = linear; //interpolation function to use for lit lines
 
     //blanking interpolation
-    double blank_interp_distance = BLANK_INTERP_DEFAULT; //max distance for interpolation of blanking jumps
-    interpolation_func blank_interp_func = linear;       //interpolation function to use for blanking jumps
+    float blank_interp_distance = BLANK_INTERP_DEFAULT; //max distance for interpolation of blanking jumps
+    interpolation_func blank_interp_func = linear;      //interpolation function to use for blanking jumps
 
 private:
     OptimizerInternals* internal;
@@ -241,17 +243,15 @@ LIBLZR_EXPORT ILDA* ilda_open(const char* filename, const char* mode);
 //closes the ILDA file, and releases the parsing context
 LIBLZR_EXPORT int ilda_close(ILDA* f);
 
-//Reads all frames for the the given projector, and returns them
+//Reads all frames for the the given projector descriptor, and returns them
 //The array you pass to "name" or "company" must be at least 9 chars in length
 LIBLZR_EXPORT int ilda_read(ILDA* f, size_t pd, FrameList& frame_list);
 LIBLZR_EXPORT int ilda_read(ILDA* f, size_t pd, FrameList& frame_list, char* name, char* company);
 
-//write frame(s) for the given projector to the ILDA file (file must be opened with lzr_ilda_write() )
-//if no name/company strings are given, the 
-LIBLZR_EXPORT int ilda_write(ILDA* f, size_t pd, Frame& frame);
-LIBLZR_EXPORT int ilda_write(ILDA* f, size_t pd, Frame& frame, const char* name, const char* company);
-LIBLZR_EXPORT int ilda_write(ILDA* f, size_t pd, FrameList& frame_list);
-LIBLZR_EXPORT int ilda_write(ILDA* f, size_t pd, FrameList& frame_list, const char* name, const char* company);
+//write frame(s) for the given projector descriptor to the ILDA file (file must be opened with ilda_open(<filename>, "w") )
+//if no name/company strings are given, they will be null strings.
+LIBLZR_EXPORT int ilda_write(ILDA* f, size_t pd, Frame& frame, const char* name=nullptr, const char* company=nullptr);
+LIBLZR_EXPORT int ilda_write(ILDA* f, size_t pd, FrameList& frame_list, const char* name=nullptr, const char* company=nullptr);
 
 //returns the number of projectors that the ILDA specifies graphics for
 LIBLZR_EXPORT size_t ilda_projector_count(ILDA* f);
@@ -277,7 +277,7 @@ class DAC_Internals;
 class DAC
 {
 public:
-    DAC(std::string name);
+    DAC(const std::string& name);
     virtual ~DAC();
 
     //standard DAC interface
@@ -299,11 +299,10 @@ protected:
 void init_dacs();
 
 //get list of connected DACs
-std::vector<std::string> list_dacs();
+typedef std::set<std::string> DACNames;
+DACNames list_dacs();
 
 //connect to a DAC
-DAC* dac_connect(std::string name);
+DAC* dac_connect(const std::string& name);
 
 } // namespace lzr
-
-#pragma warning(pop)

@@ -31,7 +31,7 @@
 
 class ldLogoLine {
 public:
-    QList<ldVec2> points;
+    std::vector<ldVec2> points;
 };
 
 // ---------------------- Logo ---------------------
@@ -47,7 +47,7 @@ public:
     virtual void onShouldStart() override;
 
 protected:
-    virtual float targetFPS() const override { return 60; }
+    virtual int targetFPS() const override { return 60; }
     virtual void draw() override;
 
     ldShimmerFilter m_filter;

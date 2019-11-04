@@ -4,13 +4,6 @@
 #include <liblzr.hpp>
 #include "ilda.hpp"
 
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#endif
-
-#pragma warning(push, 0)
-
 // not in C++11, so stub this out for now
 template<class T>
 constexpr const T& clamp( const T& v, const T& lo, const T& hi )
@@ -34,8 +27,8 @@ static int write_point(ILDA* ilda, Point& p, bool is_last)
     ilda_point_2d_true ilda_p;
     memset(&ilda_p, 0, sizeof(ilda_point_2d_true));
 
-    ilda_p.x = (int16_t) INT16_MAX * clamp<double>(p.x, LZR_POSITION_MIN, LZR_POSITION_MAX);
-    ilda_p.y = (int16_t) INT16_MAX * clamp<double>(p.y, LZR_POSITION_MIN, LZR_POSITION_MAX);
+    ilda_p.x = (int16_t) INT16_MAX * clamp<float>(p.x, Point::POSITION_MIN, Point::POSITION_MAX);
+    ilda_p.y = (int16_t) INT16_MAX * clamp<float>(p.y, Point::POSITION_MIN, Point::POSITION_MAX);
     ilda_p.r = p.r;
     ilda_p.g = p.g;
     ilda_p.b = p.b;
@@ -57,7 +50,7 @@ static int write_frame(ILDA* ilda, Frame& frame, size_t pd, const char* name, co
     frame_bounds.add(Point(1.0, 1.0));
     frame_bounds.add(Point(-1.0, 1.0));
     frame_bounds.add(Point(-1.0, -1.0));
-//    mask(frame, frame_bounds, true);
+    mask(frame, frame_bounds, true);
 
     //skip empty frames, since they signify the end of a file
     if(frame.size() == 0)
@@ -69,8 +62,16 @@ static int write_frame(ILDA* ilda, Frame& frame, size_t pd, const char* name, co
     memcpy(h.ilda, ILDA_MAGIC, sizeof(h.ilda));
 
     //set header details
-    strncpy(h.name, name, strnlen(name, sizeof(h.name)));
-    strncpy(h.company, company, strnlen(company, sizeof(h.company)));
+    if (name != nullptr)
+    {
+        strncpy(h.name, name, strnlen(name, sizeof(h.name)));
+    }
+
+    if (company != nullptr)
+    {
+        strncpy(h.company, company, strnlen(company, sizeof(h.company)));
+    }
+
     h.format            = FORMAT_5_2D_TRUE;
     h.number_of_records = (uint16_t) frame.size();
     h.projector_id      = (uint8_t)  pd;
@@ -151,11 +152,6 @@ int ilda_write(ILDA* ilda, size_t pd, Frame& frame, const char* name, const char
     return ERROR_TO_LZR(write_frame(ilda, frame, pd, name, company));
 }
 
-int ilda_write(ILDA* ilda, size_t pd, Frame& frame)
-{
-    return ilda_write(ilda, pd, frame, "", "");
-}
-
 int ilda_write(ILDA* ilda, size_t pd, FrameList& frame_list, const char* name, const char* company)
 {
     if(ilda == NULL)
@@ -180,11 +176,6 @@ int ilda_write(ILDA* ilda, size_t pd, FrameList& frame_list, const char* name, c
     }
 
     return ERROR_TO_LZR(status);
-}
-
-int ilda_write(ILDA* ilda, size_t pd, FrameList& frame_list)
-{
-    return ilda_write(ilda, pd, frame_list, "", "");
 }
 
 

@@ -78,6 +78,10 @@ if(ANDROID)
     target_link_libraries(laserdocklib PRIVATE Qt5::AndroidExtras log)
 endif()
 
+if(WIN32)
+    target_compile_options(laserdocklib PRIVATE /wd4251)
+endif()
+
 # libusb
 add_subdirectory(3rdparty/libusb)
 target_link_libraries(laserdocklib PRIVATE libusb)

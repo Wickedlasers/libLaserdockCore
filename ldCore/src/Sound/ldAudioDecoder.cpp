@@ -61,38 +61,52 @@ void ldAudioDecoder::start(const QString &filePath, qint64 elapsedTime)
         return;
     }
 
-    reset();
-
 #ifdef AUIDIO_DECODER_SUPPORTED
-    m_audioDecoder.reset(new AudioDecoder(filePath.toStdString()));
-#ifdef Q_OS_ANDROID
-    QAndroidJniEnvironment qjniEnv;
-    m_audioDecoder->initAndroidEnv(&(*qjniEnv));
-#endif
-    int error = m_audioDecoder->open();
-    if(error != AUDIODECODER_OK) {
-        qDebug() << "Error open" << filePath;
-        return;
+    if(m_filePath != filePath) {
+        reset();
+
+        m_filePath = filePath;
+
+        m_audioDecoder.reset(new AudioDecoder(filePath.toStdString()));
+    #ifdef Q_OS_ANDROID
+        QAndroidJniEnvironment qjniEnv;
+        m_audioDecoder->initAndroidEnv(&(*qjniEnv));
+    #endif
+        int error = m_audioDecoder->open();
+        if(error != AUDIODECODER_OK) {
+            qDebug() << "Error open" << filePath;
+            return;
+        }
+
+        m_duration = m_audioDecoder->duration() * 1000.f;
+
+        if(IS_PRELOAD_FILE) {
+            m_sampleData.resize(BLOCK_SIZE * MAX_PRELOADED_BLOCKS);
+            int readed = m_audioDecoder->read(m_sampleData.size(), &m_sampleData[0]);
+            m_fileSamplePos = readed;
+        } else {
+            m_sampleData.resize(SAMPLE_SIZE_TO_SEND);
+        }
     }
 
     m_elapsedTime = elapsedTime;
-    m_duration = m_audioDecoder->duration() * 1000.f;
 
     m_elapsedTimer.start();
     m_timer.start();
 
-    if(IS_PRELOAD_FILE) {
-        m_sampleData.resize(BLOCK_SIZE * MAX_PRELOADED_BLOCKS);
-        int readed = m_audioDecoder->read(m_sampleData.size(), &m_sampleData[0]);
-        m_fileSamplePos = readed;
-    } else {
-        m_sampleData.resize(SAMPLE_SIZE_TO_SEND);
-    }
 #else
     Q_UNUSED(elapsedTime)
 #endif
 
     update_isActive(true);
+}
+
+void ldAudioDecoder::pause()
+{
+    m_elapsedTimer.invalidate();
+    m_timer.stop();
+
+    update_isActive(false);
 }
 
 void ldAudioDecoder::stop()
@@ -175,6 +189,8 @@ void ldAudioDecoder::timerSlot()
 
 void ldAudioDecoder::reset()
 {
+    m_filePath.clear();
+
     m_timer.stop();
     m_elapsedTimer.invalidate();
     m_duration = -1;

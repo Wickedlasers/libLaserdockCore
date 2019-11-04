@@ -24,7 +24,6 @@
 #include <QtCore/QObject>
 
 #include "ldCore/ldCore_global.h"
-#include "ldCore/Render/ldRendererManager.h"
 
 class LDCORESHARED_EXPORT ldAbstractRenderer : public QObject
 {
@@ -32,17 +31,13 @@ class LDCORESHARED_EXPORT ldAbstractRenderer : public QObject
 public:
     static const int DEFAULT_RATE;
 
-    explicit ldAbstractRenderer(ldRendererType type = ldRendererType::UNINITIALIZED, QObject *parent = 0);
-
-    ldRendererType type();
+    explicit ldAbstractRenderer(QObject *parent = nullptr);
 
     // 30k or 20k currently
     void setRate(int rate);
     int rate() const;
 
 private:
-    ldRendererType m_type;
-
     int m_rate = DEFAULT_RATE;
 };
 

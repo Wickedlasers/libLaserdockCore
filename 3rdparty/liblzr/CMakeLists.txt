@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # library
@@ -38,6 +38,15 @@ target_sources(liblzr PRIVATE
 if(WIN32)
     find_library (WS2_32_LIB NAMES Ws2_32)
     target_link_libraries(liblzr ${WS2_32_LIB})
+
+    # disable various conversion warnings
+    target_compile_options(liblzr PRIVATE /wd4146)
+    target_compile_options(liblzr PRIVATE /wd4244) # conversion from double to int
+    target_compile_options(liblzr PRIVATE /wd4251) # conversion from double to int
+    target_compile_options(liblzr PRIVATE /wd4267)
+    target_compile_options(liblzr PRIVATE /wd4273)
+    target_compile_options(liblzr PRIVATE /wd4305) # conversion from double to float
+    target_compile_options(liblzr PRIVATE /wd4996)
 endif()
 
 if(ANDROID)

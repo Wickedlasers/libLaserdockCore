@@ -23,19 +23,9 @@
 #include <QtDebug>
 
 /*!
-    \enum ldRendererType
-    \brief the list of supported renderer types.
-
-*/
-
-/*!
   \class ldAbstractRenderer
   \brief Abstract class for a renderer.
   \inmodule rendering
-
-  The abstsract class for renderer defines a very simple interface. It contains the type of renderer specified by using enum \l ldRendererType.
-  Also prvides method to setting \l ldFrameBuffer that is used by its subclasses.
-
 */
 
 const int ldAbstractRenderer::DEFAULT_RATE = 30000;
@@ -43,14 +33,9 @@ const int ldAbstractRenderer::DEFAULT_RATE = 30000;
 /*!
     \brief overloaded constructor, with additional parameter specifying the type.
 */
-ldAbstractRenderer::ldAbstractRenderer(ldRendererType type, QObject *parent) :
-    QObject(parent),
-    m_type(type)
+ldAbstractRenderer::ldAbstractRenderer(QObject *parent) :
+    QObject(parent)
 {
-}
-
-ldRendererType ldAbstractRenderer::type() {
-    return m_type;
 }
 
 void ldAbstractRenderer::setRate(int rate)
@@ -68,13 +53,3 @@ int ldAbstractRenderer::rate() const
     return m_rate;
 }
 
-/*!
-  \fn ldRendererType ldAbstractRenderer::type()
-  \brief returns the type of the renderer this class is.
-*/
-
-
-/*!
-  \fn void ldAbstractRenderer::setBuffer(ldFrameBuffer * buffer)
-  \brief sets the buffer needed by renderer.
-*/

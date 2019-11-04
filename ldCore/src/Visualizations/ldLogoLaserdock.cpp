@@ -91,7 +91,7 @@ void ldLogo::draw()
 
     for(const ldLogoLine &line : lines) {
         //LogoPoint p;
-        int points = line.points.count();
+        int points = line.points.size();
         int istart = fstart*(points-1);
         int iend = fend*(points-1);
 
@@ -127,10 +127,10 @@ void ldLogo::draw()
 ldLogoLaserdock::ldLogoLaserdock() {
     /*{
          LogoLine l;
-         l.points.append(LogoPoint( 0.00,  0.00));
-         l.points.append(LogoPoint( 0.76,  0.55));
-         l.points.append(LogoPoint(-0.76,  0.45));
-         l.points.append(LogoPoint(-0.46, -0.35));
+         l.points.push_back(LogoPoint( 0.00,  0.00));
+         l.points.push_back(LogoPoint( 0.76,  0.55));
+         l.points.push_back(LogoPoint(-0.76,  0.45));
+         l.points.push_back(LogoPoint(-0.46, -0.35));
          lines.append(l);
          }*/
     {
@@ -138,24 +138,24 @@ ldLogoLaserdock::ldLogoLaserdock() {
 
         ldLogoLine l;
         for(int i = 0; i < 2; i++) {
-            l.points.append(ldVec2(1402,532));
-            l.points.append(ldVec2(1068,1120));
-            l.points.append(ldVec2(1369,1120));
-            l.points.append(ldVec2(1414,1046));
-            l.points.append(ldVec2(1201,1046));
-            l.points.append(ldVec2(1446,616));
+            l.points.push_back(ldVec2(1402,532));
+            l.points.push_back(ldVec2(1068,1120));
+            l.points.push_back(ldVec2(1369,1120));
+            l.points.push_back(ldVec2(1414,1046));
+            l.points.push_back(ldVec2(1201,1046));
+            l.points.push_back(ldVec2(1446,616));
         }
 
-        l.points.append(ldVec2(1402,532));
+        l.points.push_back(ldVec2(1402,532));
 
         float s = 1.0f/800.0f;
         float cx = 1400;
         float cy = 930;
-        for (int i = 0; i < l.points.count(); i++) {
-            l.points[i].x -= cx;
-            l.points[i].y -= cy;
-            l.points[i].x *= s;
-            l.points[i].y *= -s;
+        for (ldVec2 &p : l.points) {
+            p.x -= cx;
+            p.y -= cy;
+            p.x *= s;
+            p.y *= -s;
         }
 
         lines.append(l);
@@ -163,24 +163,24 @@ ldLogoLaserdock::ldLogoLaserdock() {
     {
         ldLogoLine l;
         for(int i = 0; i < 2; i++) {
-            l.points.append(ldVec2(1460,643));
-            l.points.append(ldVec2(1417,716));
-            l.points.append(ldVec2(1608,1046));
-            l.points.append(ldVec2(1442,1046));
-            l.points.append(ldVec2(1402,1120));
-            l.points.append(ldVec2(1736,1120));
+            l.points.push_back(ldVec2(1460,643));
+            l.points.push_back(ldVec2(1417,716));
+            l.points.push_back(ldVec2(1608,1046));
+            l.points.push_back(ldVec2(1442,1046));
+            l.points.push_back(ldVec2(1402,1120));
+            l.points.push_back(ldVec2(1736,1120));
         }
 
-        l.points.append(ldVec2(1460,643));
+        l.points.push_back(ldVec2(1460,643));
 
         float s = 1.0f/800.0f;
         float cx = 1400;
         float cy = 930;
-        for (int i = 0; i < l.points.count(); i++) {
-            l.points[i].x -= cx;
-            l.points[i].y -= cy;
-            l.points[i].x *= s;
-            l.points[i].y *= -s;
+        for (ldVec2 &p : l.points) {
+            p.x -= cx;
+            p.y -= cy;
+            p.x *= s;
+            p.y *= -s;
         }
 
         lines.append(l);
