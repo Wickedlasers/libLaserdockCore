@@ -344,7 +344,7 @@ endif()
 
 set(CMAKE_PREFIX_PATH "${QTDIR}/lib/cmake")
 
-set(QT5_MIN_VERSION 5.13)
+set(QT5_MIN_VERSION 5.12)
 find_package(Qt5 ${QT5_MIN_VERSION} COMPONENTS Core Gui Multimedia Gamepad REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Multimedia Qt5::Gamepad)
 
