@@ -1,0 +1,24 @@
+build: false
+
+platform: x64
+
+#install:
+#  - set PATH=%PATH%;%PYTHON%/Scripts/
+#  - pip.exe install conan
+#  - conan profile new --detect default
+#  - conan profile update settings.compiler.libcxx=libstdc++11 default
+
+build_script:
+  - mkdir build && cd build
+#  - conan remote add bincrafters "https://api.bintray.com/conan/bincrafters/public-conan"
+#  - conan install .. --build
+  - cmake .. -G "%CMAKE_GENERATOR%" -A Win32 -DQTDIR="C:\Qt\5.13.2\msvc2017"
+  - cmake --build . --config Release
+
+#test_script:
+#  - cd bin && test_hello.exe
+
+environment:
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      CMAKE_GENERATOR: Visual Studio 15 2017

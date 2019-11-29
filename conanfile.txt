@@ -1,0 +1,11 @@
+[requires]
+qt/5.13.2@bincrafters/stable
+
+[generators]
+cmake
+
+[options]
+qt:qtgamepad=True
+qt:qtmultimedia=True
+qt:qtquickcontrols2=True
+qt:qtsvg=True
