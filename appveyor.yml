@@ -1,13 +1,41 @@
 build: false
 
+image:
+  - Visual Studio 2017
+  - macOS
+  - Ubuntu1804
+
 platform: x64
 
-build_script:
-  - mkdir build && cd build
-  - cmake .. -G "%CMAKE_GENERATOR%" -A Win32 -DQTDIR="C:\Qt\5.13.2\msvc2017"
-  - cmake --build . --config Release
-
-environment:
+for:
+-
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      CMAKE_GENERATOR: Visual Studio 15 2017
+    only:
+      - image: Visual Studio 2017
+  build_script:
+  - set CL=/MP # parallel build
+  - mkdir build && cd build
+  - cmake .. -G "Visual Studio 15 2017" -A Win32 -DQTDIR="C:\Qt\5.13.2\msvc2017"
+  - cmake --build . --config Release
+-
+  matrix:
+    only:
+      - image: macOS
+  install:
+  - brew install qt5
+  build_script:
+  - mkdir build && cd build
+  - cmake .. -DQTDIR="/usr/local/Cellar/qt/5.13.2"
+  - cmake --build . -- -j4
+-
+  matrix:
+    only:
+      - image: Ubuntu1804
+  install:
+  - sudo add-apt-repository -y ppa:beineri/opt-qt-5.12.6-bionic # 5.12 here because there is no ppa for 5.13 for 18.04
+  - sudo apt-get update
+  - sudo apt-get install -y qt512-meta-full libgl-dev
+  build_script:
+  - mkdir build && cd build
+  - cmake .. -DQTDIR="/opt/qt512"
+  - cmake --build . -- -j4
