@@ -12,6 +12,8 @@ Windows (msvc2017 x86)
 macOS (clang)
 <br>
 android (ndk r20 + the latest sdk, arm64/armv7 supported)
+<br>
+Linux (tested on Ubuntu 18.04)
 
 # Prepare to development
 
