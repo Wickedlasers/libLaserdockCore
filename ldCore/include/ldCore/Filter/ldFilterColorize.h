@@ -163,6 +163,8 @@ public:
 
 class ColorMap {
 public:
+    virtual ~ColorMap() = default;
+
     virtual void getRGB(float f, float& r, float& g, float& b) = 0;
     void getRGBClamp(float f, float& r, float& g, float& b);
     void getRGBCycle(float f, float& r, float& g, float& b);
@@ -203,7 +205,7 @@ public:
     FilterColorPanels(bool alt = false);
     virtual void process(Vertex &input) override;
     virtual QString name() override { return QObject::tr(!m_alt?"Colorize Panel":"Colorize Crumble"); }
-    virtual bool isMusicAware() const override { return !m_alt ? true : false; }
+    virtual bool isMusicAware() const override { return !m_alt; }
 private:
     bool m_alt;
     ColorPanelCanvas panel;
@@ -216,7 +218,7 @@ public:
     FilterColorGlass(bool alt = false);
     virtual void process(Vertex &input) override;
     virtual QString name() override { return QObject::tr(!m_alt?"Colorize Glass":"Colorize Mosaic"); }
-    virtual bool isMusicAware() const override { return !m_alt ? false : true; }
+    virtual bool isMusicAware() const override { return true; }
 private:
     bool m_alt;
     float ox = 0;
@@ -233,7 +235,7 @@ public:
     FilterColorAura(bool alt = false);
     virtual void process(Vertex &input) override;
     virtual QString name() override { return QObject::tr(!m_alt?"Colorize Aura A":"Colorize Aura B"); }
-    virtual bool isMusicAware() const override { return !m_alt ? false : true; }
+    virtual bool isMusicAware() const override { return m_alt; }
 private:
     bool m_alt;
     FramePulse fc1;
@@ -254,7 +256,7 @@ public:
     FilterColorAcid(bool alt = false);
     virtual void process(Vertex &input) override;
     virtual QString name() override { return QObject::tr(!m_alt?"Colorize Acid A":"Colorize Acid B"); }
-    virtual bool isMusicAware() const override { return !m_alt ? false : true; }
+    virtual bool isMusicAware() const override { return m_alt; }
 private:
     bool m_alt;
     FramePulse fc1;
@@ -275,15 +277,15 @@ public:
     FilterColorLava(bool alt = false);
     virtual void process(Vertex &input) override;
     virtual QString name() override { return QObject::tr(!m_alt?"Colorize Lava":"Colorize Slime"); }
-    virtual bool isMusicAware() const override { return !m_alt ? false : false; }
+    virtual bool isMusicAware() const override { return false; }
 private:
     bool m_alt;
     FramePulse fc1;
     FramePulse fc2;
     FramePulse fc3;
     FramePulse fc4;
-    FramePulse fc5;
-    FramePulse fc6;
+//    FramePulse fc5;
+//    FramePulse fc6;
     GridNoise sbg1;
     GridNoise sbg2;
     GridNoise sbg3;
@@ -297,7 +299,7 @@ public:
     FilterColorVolt(bool alt = false);
     virtual void process(Vertex &input) override;
     virtual QString name() override { return QObject::tr(!m_alt?"Color Volt A":"Color Volt B"); }
-    virtual bool isMusicAware() const override { return !m_alt ? false : true; }
+    virtual bool isMusicAware() const override { return m_alt; }
 private:
     bool m_alt;
 };

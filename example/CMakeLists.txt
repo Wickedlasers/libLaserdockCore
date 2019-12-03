@@ -37,10 +37,10 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/ldCoreExample.cpp
     src/ldCoreExample.h
     #src/Visualizations/Visualizers
+    src/Visualizations/Ctrl/ldVisDirectionCtrl.cpp
+    src/Visualizations/Ctrl/ldVisDirectionCtrl.h
     src/Visualizations/Visualizers/Animation/ldAnimationVisualizer.cpp
     src/Visualizations/Visualizers/Animation/ldAnimationVisualizer.h
-    src/Visualizations/Visualizers/Animation/ldGoGoGirlAnimationVisualizer.cpp
-    src/Visualizations/Visualizers/Animation/ldGoGoGirlAnimationVisualizer.h
     src/Visualizations/Visualizers/Clock/ldClockComplexObject.cpp
     src/Visualizations/Visualizers/Clock/ldClockComplexObject.h
     src/Visualizations/Visualizers/Clock/ldAnalogClockVisualizer.cpp

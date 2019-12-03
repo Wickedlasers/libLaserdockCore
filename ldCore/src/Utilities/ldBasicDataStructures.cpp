@@ -83,6 +83,6 @@ CompressedSample::CompressedSample(const Vertex &v)
     uint8_t green   = GetUInt8(v.color[1]);
     rg = (0x00FF & red) | ((0x00FF & green) << 8);
     b = (uint16_t) GetUInt8(v.color[2]);
-    x = 4095 - GetUInt16(v.position[0]);
+    x = MAX_COORD - GetUInt16(v.position[0]);
     y = GetUInt16(v.position[1]);
 }

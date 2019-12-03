@@ -50,6 +50,7 @@ public:
 
     ldColorCurveFilter *baseColorCurveFilter() const;
     ldColorCurveFilter *colorCurveFilter() const;
+    ldColorFaderFilter *colorFaderFilter() const;
     ldDeadzoneFilter *deadzoneFilter() const;
     ldHueFilter *hueFilter() const;
     ldHueShiftFilter *hueShiftFilter() const;

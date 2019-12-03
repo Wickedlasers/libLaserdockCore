@@ -29,7 +29,6 @@
 
 int main(int argc, char *argv[]) {
     ldCore::initResources();
-    ldCoreExample::registerMetaTypes();
 
 #ifdef Q_OS_WIN
     QGuiApplication::setAttribute(Qt::AA_UseOpenGLES, true);

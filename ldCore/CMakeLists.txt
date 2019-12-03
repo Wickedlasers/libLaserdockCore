@@ -95,6 +95,9 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Render/ldAbstractRenderer.h
         ${SRCDIR}/Render/ldRendererOpenlase.cpp
         ${INCDIR}/Render/ldRendererOpenlase.h
+        #Settings
+        ${SRCDIR}/Settings/ldSettings.cpp
+        ${INCDIR}/Settings/ldSettings.h
         #Simulator
         ${SRCDIR}/Simulator/ldSimulatorEngine.cpp
         ${INCDIR}/Simulator/ldSimulatorEngine.h

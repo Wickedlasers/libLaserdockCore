@@ -53,7 +53,7 @@
                           which is incompatible with C
 
    It is OK to disable it because we only extend few plain structures with
-   C++ construrtors for simpler interoperability with C++ API of the library
+   C++ constructors for simpler interoperability with C++ API of the library
 */
 #    pragma warning(disable:4190)
 #  elif defined __clang__ && __clang_major__ >= 3
@@ -359,7 +359,7 @@ CVAPI(CvMat*) cvGetSubRect( const CvArr* arr, CvMat* submat, CvRect rect );
 
 /** @brief Returns array row or row span.
 
-The functions return the header, corresponding to a specified row/row span of the input array.
+The function returns the header, corresponding to a specified row/row span of the input array.
 cvGetRow(arr, submat, row) is a shortcut for cvGetRows(arr, submat, row, row+1).
 @param arr Input array
 @param submat Pointer to the resulting sub-array header
@@ -385,7 +385,7 @@ CV_INLINE  CvMat*  cvGetRow( const CvArr* arr, CvMat* submat, int row )
 
 /** @brief Returns one of more array columns.
 
-The functions return the header, corresponding to a specified column span of the input array. That
+The function returns the header, corresponding to a specified column span of the input array. That
 
 is, no data is copied. Therefore, any modifications of the submatrix will affect the original array.
 If you need to copy the columns, use cvCloneMat. cvGetCol(arr, submat, col) is a shortcut for
@@ -579,7 +579,7 @@ CvNArrayIterator;
 #define CV_NO_CN_CHECK        2
 #define CV_NO_SIZE_CHECK      4
 
-/** initializes iterator that traverses through several arrays simulteneously
+/** initializes iterator that traverses through several arrays simultaneously
    (the function together with cvNextArraySlice is used for
     N-ari element-wise operations) */
 CVAPI(int) cvInitNArrayIterator( int count, CvArr** arrs,
@@ -1788,7 +1788,7 @@ CVAPI(int)  cvGraphRemoveVtx( CvGraph* graph, int index );
 CVAPI(int)  cvGraphRemoveVtxByPtr( CvGraph* graph, CvGraphVtx* vtx );
 
 
-/** Link two vertices specifed by indices or pointers if they
+/** Link two vertices specified by indices or pointers if they
    are not connected or return pointer to already existing edge
    connecting the vertices.
    Functions return 1 if a new edge was created, 0 otherwise */
@@ -1978,11 +1978,7 @@ The function opens file storage for reading or writing data. In the latter case,
 created or an existing file is rewritten. The type of the read or written file is determined by the
 filename extension: .xml for XML, .yml or .yaml for YAML and .json for JSON.
 
-At the same time, it also supports adding parameters like "example.xml?base64". The three ways
-are the same:
-@snippet samples/cpp/filestorage_base64.cpp suffix_in_file_name
-@snippet samples/cpp/filestorage_base64.cpp flag_write_base64
-@snippet samples/cpp/filestorage_base64.cpp flag_write_and_flag_base64
+At the same time, it also supports adding parameters like "example.xml?base64".
 
 The function returns a pointer to the CvFileStorage structure.
 If the file cannot be opened then the function returns NULL.
@@ -2205,11 +2201,6 @@ difference is that it outputs a sequence in Base64 encoding rather than
 in plain text.
 
 This function can only be used to write a sequence with a type "binary".
-
-Consider the following two examples where their output is the same:
-@snippet samples/cpp/filestorage_base64.cpp without_base64_flag
-and
-@snippet samples/cpp/filestorage_base64.cpp with_write_base64_flag
 
 @param fs File storage
 @param src Pointer to the written array
@@ -2648,13 +2639,13 @@ CVAPI(void) cvSetErrStatus( int status );
 #define CV_ErrModeParent   1   /* Print error and continue */
 #define CV_ErrModeSilent   2   /* Don't print and continue */
 
-/** Retrives current error processing mode */
+/** Retrieves current error processing mode */
 CVAPI(int)  cvGetErrMode( void );
 
 /** Sets error processing mode, returns previously used mode */
 CVAPI(int) cvSetErrMode( int mode );
 
-/** Sets error status and performs some additonal actions (displaying message box,
+/** Sets error status and performs some additional actions (displaying message box,
  writing message to stderr, terminating application etc.)
  depending on the current error mode */
 CVAPI(void) cvError( int status, const char* func_name,
@@ -2663,7 +2654,7 @@ CVAPI(void) cvError( int status, const char* func_name,
 /** Retrieves textual description of the error given its code */
 CVAPI(const char*) cvErrorStr( int status );
 
-/** Retrieves detailed information about the last error occured */
+/** Retrieves detailed information about the last error occurred */
 CVAPI(int) cvGetErrInfo( const char** errcode_desc, const char** description,
                         const char** filename, int* line );
 
@@ -2738,7 +2729,7 @@ static char cvFuncName[] = Name
 /**
  CV_CALL macro calls CV (or IPL) function, checks error status and
  signals a error if the function failed. Useful in "parent node"
- error procesing mode
+ error processing mode
  */
 #define CV_CALL( Func )                                             \
 {                                                                   \
@@ -3073,7 +3064,7 @@ template<typename _Tp> inline void Seq<_Tp>::copyTo(std::vector<_Tp>& vec, const
     size_t len = !seq ? 0 : range == Range::all() ? seq->total : range.end - range.start;
     vec.resize(len);
     if( seq && len )
-        cvCvtSeqToArray(seq, &vec[0], range);
+        cvCvtSeqToArray(seq, &vec[0], cvSlice(range));
 }
 
 template<typename _Tp> inline Seq<_Tp>::operator std::vector<_Tp>() const

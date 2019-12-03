@@ -33,11 +33,21 @@ public:
 
     virtual uint deviceCount() const = 0;
 
+    bool isFlipX() const;
+    void setFlipX(bool isFlipX);
+
+    bool isFlipY() const;
+    void setFlipY(bool isFlipY);
+
 public slots:
     virtual void setConnectedDevicesActive(bool active) = 0;
 
 signals:
     void deviceCountChanged(uint deviceCount);
+
+protected:
+    bool m_isFlipX = false;
+    bool m_isFlipY = false;
 };
 
 

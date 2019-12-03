@@ -86,9 +86,12 @@ void ldUsbHardwareManager::sendData(CompressedSample *samples, unsigned int coun
         }
 
         // flip each next sample
-        for(uint i = 0; i < count; i++){
-            CompressedSample &sample = samples[i];
-            sample.x = CompressedSample::flipCoord(sample.x);
+        if(m_isFlipX || m_isFlipY) {
+            for(uint i = 0; i < count; i++){
+                CompressedSample &sample = samples[i];
+                if(m_isFlipX) sample.x = CompressedSample::flipCoord(sample.x);
+                if(m_isFlipY) sample.y = CompressedSample::flipCoord(sample.y);
+            }
         }
     }
 
@@ -107,7 +110,6 @@ uint ldUsbHardwareManager::deviceCount() const
 {
     return m_usbHardwares.size();
 }
-
 
 bool ldUsbHardwareManager::isDeviceActive(int index) const
 {

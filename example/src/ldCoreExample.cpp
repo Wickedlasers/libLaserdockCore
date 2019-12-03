@@ -45,17 +45,11 @@
 
 #include "ldSpiralFighterGame.h"
 
-#include "src/Visualizations/Visualizers/Animation/ldGoGoGirlAnimationVisualizer.h"
-#include "src/Visualizations/Visualizers/Animation/ldGoGoGirlAnimationVisualizer.h"
+#include "src/Visualizations/Visualizers/Animation/ldAnimationVisualizer.h"
 #include "src/Visualizations/Visualizers/Clock/ldAnalogClockVisualizer.h"
 #include "src/Visualizations/Visualizers/Simple/ldCircleVisualizer.h"
 #include "src/Visualizations/Visualizers/Simple/ldSquareVisualizer.h"
 #include "src/Visualizations/Visualizers/Spectrum/ldSpectrumBandVisualizer.h"
-
-void ldCoreExample::registerMetaTypes()
-{
-    ldSpiralFighterGame::registerMetaTypes();
-}
 
 ldCoreExample::ldCoreExample(QQmlApplicationEngine *engine, QObject *parent)
     : QObject(parent)
@@ -120,7 +114,7 @@ void ldCoreExample::startApp()
     m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldCircleVisualizer));
     m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldSquareVisualizer));
     m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldSpectrumBandVisualizer));
-    m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldGoGoGirlAnimationVisualizer));
+    m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldAnimationVisualizer(ldCore::instance()->resourceDir() + "/ldva2/Go-Go Girl.ldva2")));
     m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldAnalogClockVisualizer));
 
     m_game = new ldSpiralFighterGame(this);

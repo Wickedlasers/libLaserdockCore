@@ -7,6 +7,8 @@
 //
 #include "ldAnimationVisualizer.h"
 
+#include <QtCore/QFileInfo>
+
 #include "ldCore/ldCore.h"
 #include "ldCore/Filter/ldFilterColorize.h"
 #include <ldCore/Helpers/ldRandomGenerator.h>
@@ -21,62 +23,32 @@
 #include <ldCore/Sound/ldSoundData.h>
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
 
-namespace {
-static float getClosestBeat(float currentBpm, float sourceBpm, bool slow) {
+#include "Visualizations/Ctrl/ldVisDirectionCtrl.h"
 
-    for (int i = 0; i < 5; i++)
-        if (currentBpm < sourceBpm)
-            currentBpm = currentBpm * 2;
-
-    for (int i = 0; i < 5; i++)
-        if (currentBpm / 2 > sourceBpm)
-            currentBpm = currentBpm / 2;
-
-
-    if (!slow) {
-        //if (r * 0.667 > t) return r * 0.667;
-        if (currentBpm * 0.750 > sourceBpm)
-            return currentBpm * 0.750;
-        return currentBpm;
-    } else {
-        // slow
-        float bpm = currentBpm;
-        float bestDiff = fabsf(logf(bpm) - logf(sourceBpm));
-
-        {
-            float test = currentBpm / 2;
-            float diff = fabsf(logf(test) - logf(sourceBpm));
-            if (diff < bestDiff) {
-                bestDiff = diff;
-                bpm = test;
-            }
-        }
-        {
-            float test = currentBpm * 2 / 3;
-            float diff = fabsf(logf(test) - logf(sourceBpm));
-            if (diff < bestDiff) {
-                bestDiff = diff;
-                bpm = test;
-            }
-        }
-        return bpm;
-    }
-
-    return currentBpm;
-}
-}
-
-ldAnimationVisualizer::ldAnimationVisualizer()
+ldAnimationVisualizer::ldAnimationVisualizer(const QString &filePath)
+    : ldVisualizer()
+    , m_filePath(filePath)
 {
     setPosition(ccp(1, 1));
 }
 
 ldAnimationVisualizer::~ldAnimationVisualizer() {}
 
+void ldAnimationVisualizer::setDirectionCtrl(ldVisDirectionCtrl *directionCtrl)
+{
+    QMutexLocker locker(&m_mutex);
+    m_directionCtrl = directionCtrl;
+}
+
+QString ldAnimationVisualizer::visualizerName() const
+{
+    return QFileInfo(m_filePath).baseName();
+}
+
 void ldAnimationVisualizer::onShouldStart()
 {
     QMutexLocker lock(&m_mutex);
-    float frameRate = m_fps;
+    float frameRate = targetFPS();
     int frameLen = m_renderer->rate() / (frameRate*1.05f);
 
     OLRenderParams params;
@@ -103,7 +75,7 @@ void ldAnimationVisualizer::onUpdate(ldSoundData* /*pSoundData*/, float delta) {
     QMutexLocker lock(&m_mutex);
 
     if (!m_isLoaded) {
-        this->loadAnimation();
+        loadAnimation();
         m_isLoaded = true;
     }
 
@@ -112,80 +84,56 @@ void ldAnimationVisualizer::onUpdate(ldSoundData* /*pSoundData*/, float delta) {
     ldMusicManager* m = ldCore::instance()->musicManager();    
 
 
-    //        ldMusicManager* m = ldCore::instance()->musicManager();
-    // test reverse
-    bool isReverse = false;
-    if (m_doReverse) {
-        if (m->tempoACSlower->phaseSmooth < 0.50) isReverse = true;
-        if (m->tempoACSlower->phaseSmooth < 0.25) isReverse = false;
-        if (m->tempoACSlower->phaseReactive > 0.50) isReverse = false;
-    }
-
     // bpm
-    float bpm = 0;
-    if(m_usePeakBpm) {
-        //            bpm = m->peaks()->bpm();
-        //        bpm = m->appakaPeak->bpm;
-        //        bpm = m->appakaBeat->bpm;
-        bpm = m->bestBpm();
-        //        qDebug() << m->appakaPeak->lastBmpApproximation;
-        //        qDebug() << m->tempoACSlower->bpmSmooth << m->tempoTrackerSlow->bpm() << m->appakaBeat->bpm << m->bestBpm();
-        //        qDebug() << bpm << asb.sourceBPM;
-    } else {
-        bpm = m->slowBpm();
-        bpm = getClosestBeat(bpm, m_asb.sourceBPM, m_speedAllowSlow);
-    }
+    float bpm = m->bestBpm();
 
-    if(bpm == 0) {
+    if(cmpf(bpm, 0))
         bpm = m_asb.sourceBPM;
-    }
 
     // set speed
-    float speed = 1;
-    if(m_doSynchSpeed)
-        speed = bpm / m_asb.sourceBPM;
+    float speed = bpm / m_asb.sourceBPM;
 
     // advance
     m_totalFrameDelta += delta * m_asb.sourceFPS * speed;
     int frameDelta = 0;
     if (m_totalFrameDelta >= 1.0f) {
-        frameDelta = (int) m_totalFrameDelta;
+        frameDelta = static_cast<int>(m_totalFrameDelta);
         m_totalFrameDelta -= frameDelta;
     }
-    if (isReverse) frameDelta = -frameDelta;
-    m_currentFrame += frameDelta;
-    // wrap
-    if (m_doWrapOnKeyEnd) {
-        // loop under
-        if (m_currentFrame < m_asb.keyStart[m_ckey]) {
-            m_currentFrame = m_asb.keyEnd[m_ckey];
-        }
-        // loop over
-        if (m_currentFrame > m_asb.keyEnd[m_ckey]) {
-            m_ckey++;
-            m_ckey %= 8;
-            m_currentFrame = m_asb.keyStart[m_ckey];
-        }
-    }
-    // keep in size
-    m_currentFrame += m_asb.frames().size();
-    m_currentFrame %= m_asb.frames().size();
-    // check clip restart
-    if (m_doJumpToKeyStartOnBeat) {
-        if (m->tempoACSlower->phaseSmooth == 1 && m->tempoACSlow->phaseSmooth <= 1) {
-            m_jumpBeatCounter++;
-            if (m_jumpBeatCounter >= m_jumpBeatCount) m_jumpBeatCounter = 0;
-            if (m_jumpBeatCounter == 0) {
-                m_ckey = rand() % 8;
-                m_currentFrame = m_asb.keyStart[m_ckey];
-                if (m_jumpBeatMidpoint) {
-                    float oo = speed * m_asb.sourceFPS / (bpm / 60.0);
-                    m_currentFrame = (m_asb.keyStart[m_ckey] + m_asb.keyEnd[m_ckey]) / 2 - oo;
-                    m_currentFrame = MAX(m_currentFrame, m_asb.keyStart[m_ckey]);
-                }
-            }
+
+    int currentFrame = m_currentFrame;
+
+    ldVisDirectionCtrl::Direction direction = m_directionCtrl
+                                                  ? static_cast<ldVisDirectionCtrl::Direction>(m_directionCtrl->get_direction())
+                                                  : ldVisDirectionCtrl::Right;
+    if(direction == ldVisDirectionCtrl::Right
+        || (direction == ldVisDirectionCtrl::LeftRight && !m_isDirectionBack))
+        currentFrame += frameDelta;
+    else
+        currentFrame -= frameDelta;
+
+    const int lastFrameIndex = static_cast<int>(m_asb.frames().size() - 1);
+
+    if(currentFrame < 0) {
+        if(direction == ldVisDirectionCtrl::LeftRight) {
+            currentFrame = 0 - currentFrame;
+            m_isDirectionBack = false;
+        } else {
+            currentFrame = lastFrameIndex + currentFrame;
         }
     }
+
+    if(currentFrame > lastFrameIndex) {
+        if(direction == ldVisDirectionCtrl::LeftRight) {
+            currentFrame = lastFrameIndex - (currentFrame - lastFrameIndex);
+            m_isDirectionBack = true;
+        } else {
+            currentFrame = currentFrame - lastFrameIndex;
+        }
+    }
+
+    // just to make sure we are in borders
+    m_currentFrame = std::max(0, std::min(currentFrame, lastFrameIndex));
 }
 
 
@@ -200,47 +148,30 @@ void ldAnimationVisualizer::draw()
 //    qDebug() << m_currentFrame;
 
     // render settings
-
     m_renderer->loadIdentity();
     m_renderer->loadIdentity3();
 
-
-    this->prepareBeforeRender();
-
-    // get zoom values
-    float beat1 = m_musicManager->tempoTrackerSlow()->output();
-//    float beat2 = m->tempoTrackerFast->output;
-    float zoom1 = 1;
-    float zoom2 = 1;    
-    if (m_doZoom) {
-        zoom1 = zoom2 = 0.80 + 0.20 * beat1;
-        if (m_doEcho) zoom1 = 0.75;
-    }
-    
     // draw once
     m_renderer->loadIdentity3();
-    m_renderer->scale3(zoom1, zoom1, 1);
     // shimmer a/b, color sector, color squares, color plasma
     m_asb.color = m_asb._c1 = m_asb._c2 = C_RED;
     m_asb.drawFrame(m_renderer, m_currentFrame);
-
-    doEcho(zoom2);
 }
 
-void ldAnimationVisualizer::doEcho(float zoom2)
+void ldAnimationVisualizer::loadAnimation()
 {
-    // draw again
-    if (m_doEcho) {
-        if (m_echoFrame == -1) m_echoFrame = m_currentFrame;
-
-        m_renderer->loadIdentity3();
-        m_renderer->scale3(zoom2, zoom2, 1);
-
-        m_asb.color = m_asb._c1 = m_asb._c2 = C_RED_I(0.3*255);
-        m_asb.drawFrame(m_renderer, m_echoFrame);
-
-        m_echoFrame = m_currentFrame;
+    if(m_filePath.endsWith("ldva2", Qt::CaseInsensitive)
+        || m_filePath.endsWith("ldva2.lds", Qt::CaseInsensitive)) {
+        m_asb.load2(m_filePath);
+    }
+    else if(m_filePath.endsWith("ldva4", Qt::CaseInsensitive)
+             || m_filePath.endsWith("ldva4.lds", Qt::CaseInsensitive)) {
+        m_asb.load4(m_filePath);
     }
 }
 
+int ldAnimationVisualizer::currentFrame() const
+{
+    return m_currentFrame;
+}
 

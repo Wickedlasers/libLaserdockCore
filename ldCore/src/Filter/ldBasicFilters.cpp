@@ -46,6 +46,15 @@ void ldColorCurveFilter::process(Vertex &v)
     if (v.color[2] > 0 || blackUseTHold) v.color[2] = curveB.get(v.color[2]);
 }
 
+// ---------- ldColorFaderFilter ----------
+
+void ldColorFaderFilter::process(Vertex &v)
+{
+    v.r() *= r;
+    v.g() *= g;
+    v.b() *= b;
+}
+
 
 // ---------- ldHueFilter ----------
 

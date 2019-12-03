@@ -25,3 +25,25 @@ ldAbstractHardwareManager::ldAbstractHardwareManager(QObject *parent)
 {
 }
 
+
+bool ldAbstractHardwareManager::isFlipX() const
+{
+    return m_isFlipX;
+}
+
+void ldAbstractHardwareManager::setFlipX(bool isFlipX)
+{
+    m_isFlipX = isFlipX;
+}
+
+bool ldAbstractHardwareManager::isFlipY() const
+{
+    return m_isFlipY;
+}
+
+void ldAbstractHardwareManager::setFlipY(bool isFlipY)
+{
+    m_isFlipY = isFlipY;
+}
+
+

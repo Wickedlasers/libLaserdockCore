@@ -40,11 +40,28 @@ int ldHardwareManager::getDeviceCount() const
     return m_deviceCount;
 }
 
+std::vector<ldAbstractHardwareManager *> ldHardwareManager::hardwareManagers() const
+{
+    return m_hardwareManagers;
+}
+
 void ldHardwareManager::setConnectedDevicesActive(bool active)
 {
     for(ldAbstractHardwareManager *hardwareManager : m_hardwareManagers) {
         hardwareManager->setConnectedDevicesActive(active);
     }
+}
+
+void ldHardwareManager::setFlipX(bool isFlipX)
+{
+    for(ldAbstractHardwareManager *hardwareManager : m_hardwareManagers)
+        hardwareManager->setFlipX(isFlipX);
+}
+
+void ldHardwareManager::setFlipY(bool isFlipY)
+{
+    for(ldAbstractHardwareManager *hardwareManager : m_hardwareManagers)
+        hardwareManager->setFlipY(isFlipY);
 }
 
 void ldHardwareManager::addHardwareManager(ldAbstractHardwareManager *hardwareManager)

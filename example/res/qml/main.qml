@@ -64,7 +64,11 @@ Item {
                 Button {
                     focusPolicy: Qt.NoFocus
 
-                    text: checked ? qsTr("Stop") : qsTr("Start")
+                    text: game.state === LdGameState.Playing
+                          ? qsTr("Pause Game")
+                          : game.state === LdGameState.Paused
+                            ? qsTr("Resume Game")
+                            : qsTr("Start Game")
 
                     checked: game.state === LdGameState.Playing
 

@@ -43,6 +43,19 @@ public:
 };
 
 
+// ---------- ldColorFaderFilter ----------
+
+/** Smooth filters output colors to the only required one */
+class LDCORESHARED_EXPORT ldColorFaderFilter : public ldFilter {
+public:
+    virtual void process(Vertex &v) override;
+
+    float r = 1.f;
+    float g = 1.f;
+    float b = 1.f;
+};
+
+
 // ---------- ldHueFilter ----------
 
 /** Colorize output to one hue */

@@ -37,10 +37,15 @@ public:
 
     int getDeviceCount() const;
 
+    std::vector<ldAbstractHardwareManager*> hardwareManagers() const;
+
 public slots:
     void addHardwareManager(ldAbstractHardwareManager *hardwareManager);
 
     void setConnectedDevicesActive(bool active);
+
+    void setFlipX(bool isFlipX);
+    void setFlipY(bool isFlipY);
 
 signals:
     void deviceCountChanged(uint count);

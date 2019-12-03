@@ -70,20 +70,21 @@ struct LDCORESHARED_EXPORT CompressedSample
     uint16_t y = 0;
 
 private:
+    static const uint16_t MAX_COORD = 4095;
     uint16_t GetUInt16(float f) const;
     uint8_t GetUInt8(float f) const;
 };
 
 inline uint16_t CompressedSample::flipCoord(uint16_t value)
 {
-    return 4095 - value;
+    return MAX_COORD - value;
 }
 
 inline uint16_t CompressedSample::GetUInt16(float f) const
 {
     if (f > 1.0f) f = 1.0f;
     if (f < -1.0f) f = -1.0f;
-    return (uint16_t) ((f + 1.0f) * 2047.5f);
+    return static_cast<uint16_t>((f + 1.0f) / 2.f * MAX_COORD);
 }
 
 inline uint8_t CompressedSample::GetUInt8(float f) const

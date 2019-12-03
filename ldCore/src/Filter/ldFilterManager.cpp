@@ -81,7 +81,6 @@ void ldFilterManager::process(Vertex &tval, Vertex &simVal)
 void ldFilterManager::resetFilters()
 {
     m_basicGlobalFilter.resetFilter();
-   // apply global filter to simulator output
     if (m_globalFilter)
         m_globalFilter->resetFilter();
     m_dataFilter.resetFilter();
@@ -95,6 +94,11 @@ ldColorCurveFilter *ldFilterManager::baseColorCurveFilter() const
 ldColorCurveFilter *ldFilterManager::colorCurveFilter() const
 {
     return m_basicGlobalFilter.colorCurveFilter();
+}
+
+ldColorFaderFilter *ldFilterManager::colorFaderFilter() const
+{
+    return m_basicGlobalFilter.colorFaderFilter();
 }
 
 ldDeadzoneFilter *ldFilterManager::deadzoneFilter() const

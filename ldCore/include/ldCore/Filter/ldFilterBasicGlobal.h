@@ -48,6 +48,7 @@ public:
     /** Filters */
     ldTtlFilter *ttlFilter() const;
     ldColorCurveFilter *colorCurveFilter() const;
+    ldColorFaderFilter *colorFaderFilter() const;
     ldHueFilter *hueFilter() const;
     ldHueMatrixFilter *hueMatrixFilter() const;
     ldHueShiftFilter *hueShiftFilter() const;
@@ -57,6 +58,7 @@ public:
 private:
     std::unique_ptr<ldTtlFilter> m_ttlFilter;
     std::unique_ptr<ldColorCurveFilter> m_colorCurveFilter;
+    std::unique_ptr<ldColorFaderFilter> m_colorFaderFilter;
     std::unique_ptr<ldHueFilter> m_hueFilter;
     std::unique_ptr<ldHueMatrixFilter> m_hueMatrixFilter;
     std::unique_ptr<ldHueShiftFilter> m_hueShiftFilter;

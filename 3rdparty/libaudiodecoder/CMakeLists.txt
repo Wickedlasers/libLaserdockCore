@@ -28,6 +28,9 @@ if(WIN32)
         Mfreadwrite.lib
         Mfuuid.lib
         )
+
+    # disable various conversion warnings
+    target_compile_options(libaudiodecoder PRIVATE /wd4251)
 endif()
 
 if(APPLE)

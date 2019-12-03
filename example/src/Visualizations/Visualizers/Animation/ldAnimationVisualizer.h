@@ -12,56 +12,42 @@
 #include "ldCore/Visualizations/ldVisualizer.h"
 #include "ldCore/Helpers/Visualizer/ldAnimationSequence.h"
 
+class ldVisDirectionCtrl;
+
 class ldAnimationVisualizer : public ldVisualizer
 {
 public:
-    ldAnimationVisualizer();
+    ldAnimationVisualizer(const QString &filePath);
     ~ldAnimationVisualizer();
 
 public:
-    virtual QString visualizerName() const override { return "Ldva2 Visualizer"; }
-    virtual int targetFPS() const override { return m_fps; }
+    void setDirectionCtrl(ldVisDirectionCtrl *directionCtrl);
+
+    virtual QString visualizerName() const override;
+    virtual int targetFPS() const override { return 42; }
 
     virtual void onShouldStart() override;
-
 protected:
     virtual void onUpdate(ldSoundData* pSoundData, float delta) override;
     virtual void draw() override;
 
-    virtual void loadAnimation() = 0;
-    virtual void prepareBeforeRender() {}
+    void loadAnimation();
 
 protected:
-    void doEcho(float zoom2);
-
-    // params
-    int m_fps = 42;
-        
-    // animation settings and styles
-    bool m_doReverse = false; // allow animation to reverse on some types of beats
-    bool m_doSynchSpeed = false; // match speed of dancer
-    bool m_speedAllowSlow = false; // allow slow motion when using speed matching
-    bool m_doWrapOnKeyEnd = false; // when reaching a key end frame, jump to the beginning of that clip
-    bool m_doJumpToKeyStartOnBeat = false; // on a loud beat, jump to a random key start frame
-    bool m_jumpBeatMidpoint = false; // adjust start frame to match next beat with middle frame
-    bool m_usePeakBpm = false; // adjust start frame to match next beat with middle frame
-    int m_jumpBeatCount = 1; // 2 = only jump at every 2nd beat
-    
-    bool m_doZoom = false; // beat zoom effects
-    bool m_doEcho = false;// beat echo effects
+    int currentFrame() const;
 
     // internal
     ldAnimationSequenceBezier m_asb;
     bool m_isLoaded = false;
 
-    int m_currentFrame = 0;
-
 private:
-    float m_totalFrameDelta = 0;
+    QString m_filePath;
 
-    int m_echoFrame = 0;
-    int m_jumpBeatCounter = 0;
-    int m_ckey = 0;
+    ldVisDirectionCtrl *m_directionCtrl = nullptr;
+    bool m_isDirectionBack = false;
+
+    float m_totalFrameDelta = 0;
+    int m_currentFrame = 0;
 };
 
 #endif /* defined(__LaserdockVisualizer__ldAnimationVisualizer__) */

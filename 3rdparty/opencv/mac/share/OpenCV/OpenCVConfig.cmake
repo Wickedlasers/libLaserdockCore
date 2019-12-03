@@ -25,10 +25,10 @@
 #      - OpenCV_INCLUDE_DIRS             : The OpenCV include directories.
 #      - OpenCV_COMPUTE_CAPABILITIES     : The version of compute capability.
 #      - OpenCV_ANDROID_NATIVE_API_LEVEL : Minimum required level of Android API.
-#      - OpenCV_VERSION                  : The version of this OpenCV build: "3.2.0"
+#      - OpenCV_VERSION                  : The version of this OpenCV build: "3.4.8"
 #      - OpenCV_VERSION_MAJOR            : Major version part of OpenCV_VERSION: "3"
-#      - OpenCV_VERSION_MINOR            : Minor version part of OpenCV_VERSION: "2"
-#      - OpenCV_VERSION_PATCH            : Patch version part of OpenCV_VERSION: "0"
+#      - OpenCV_VERSION_MINOR            : Minor version part of OpenCV_VERSION: "4"
+#      - OpenCV_VERSION_PATCH            : Patch version part of OpenCV_VERSION: "8"
 #      - OpenCV_VERSION_STATUS           : Development status of this build: ""
 #
 #    Advanced variables:
@@ -45,10 +45,10 @@
 # ======================================================
 #  Version variables:
 # ======================================================
-SET(OpenCV_VERSION 3.2.0)
+SET(OpenCV_VERSION 3.4.8)
 SET(OpenCV_VERSION_MAJOR  3)
-SET(OpenCV_VERSION_MINOR  2)
-SET(OpenCV_VERSION_PATCH  0)
+SET(OpenCV_VERSION_MINOR  4)
+SET(OpenCV_VERSION_PATCH  8)
 SET(OpenCV_VERSION_TWEAK  0)
 SET(OpenCV_VERSION_STATUS "")
 
@@ -76,11 +76,11 @@ endif()
 
 # Extract the directory where *this* file has been installed (determined at cmake run-time)
 # Get the absolute path with no ../.. relative marks, to eliminate implicit linker warnings
-set(OpenCV_CONFIG_PATH "${CMAKE_CURRENT_LIST_DIR}")
+get_filename_component(OpenCV_CONFIG_PATH "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
 get_filename_component(OpenCV_INSTALL_PATH "${OpenCV_CONFIG_PATH}/../../" REALPATH)
 
 # Search packages for host system instead of packages for target system.
-# in case of cross compilation thess macro should be defined by toolchain file
+# in case of cross compilation this macro should be defined by toolchain file
 if(NOT COMMAND find_host_package)
     macro(find_host_package)
         find_package(${ARGN})
@@ -98,14 +98,29 @@ endif()
 
 
 
+
 # Some additional settings are required if OpenCV is built as static libs
 set(OpenCV_SHARED ON)
 
 # Enables mangled install paths, that help with side by side installs
 set(OpenCV_USE_MANGLED_PATHS FALSE)
 
-set(OpenCV_LIB_COMPONENTS opencv_calib3d;opencv_core;opencv_features2d;opencv_flann;opencv_highgui;opencv_imgcodecs;opencv_imgproc;opencv_ml;opencv_objdetect;opencv_photo;opencv_shape;opencv_stitching;opencv_superres;opencv_video;opencv_videoio;opencv_videostab)
-set(OpenCV_INCLUDE_DIRS "${OpenCV_INSTALL_PATH}/include" "${OpenCV_INSTALL_PATH}/include/opencv")
+set(OpenCV_LIB_COMPONENTS opencv_core;opencv_highgui;opencv_imgcodecs;opencv_imgproc;opencv_videoio)
+set(__OpenCV_INCLUDE_DIRS "${OpenCV_INSTALL_PATH}/include" "${OpenCV_INSTALL_PATH}/include/opencv")
+
+set(OpenCV_INCLUDE_DIRS "")
+foreach(d ${__OpenCV_INCLUDE_DIRS})
+  get_filename_component(__d "${d}" REALPATH)
+  if(NOT EXISTS "${__d}")
+    if(NOT OpenCV_FIND_QUIETLY)
+      message(WARNING "OpenCV: Include directory doesn't exist: '${d}'. OpenCV installation may be broken. Skip...")
+    endif()
+  else()
+    list(APPEND OpenCV_INCLUDE_DIRS "${__d}")
+  endif()
+endforeach()
+unset(__d)
+
 
 if(NOT TARGET opencv_core)
   include(${CMAKE_CURRENT_LIST_DIR}/OpenCVModules${OpenCV_MODULES_SUFFIX}.cmake)
@@ -124,6 +139,50 @@ if(NOT CMAKE_VERSION VERSION_LESS "2.8.11")
     endif()
   endforeach()
 endif()
+
+
+if(NOT DEFINED OPENCV_MAP_IMPORTED_CONFIG)
+  if(CMAKE_GENERATOR MATCHES "Visual Studio" OR MSVC)
+    # OpenCV supports Debug and Release builds only.
+    # But MSVS has 'RelWithDebInfo' 'MinSizeRel' configurations for applications.
+    # By default CMake maps these configuration on the first available (Debug) which is wrong.
+    # Non-Debug build of Application can't be used with OpenCV Debug build (ABI mismatch problem)
+    # Add mapping of RelWithDebInfo and MinSizeRel to Release here
+    set(OPENCV_MAP_IMPORTED_CONFIG "RELWITHDEBINFO=!Release;MINSIZEREL=!Release")
+  endif()
+endif()
+set(__remap_warnings "")
+macro(ocv_map_imported_config target)
+  if(DEFINED OPENCV_MAP_IMPORTED_CONFIG) # list, "RELWITHDEBINFO=Release;MINSIZEREL=Release"
+    get_target_property(__available_configurations ${target} IMPORTED_CONFIGURATIONS)
+    foreach(remap ${OPENCV_MAP_IMPORTED_CONFIG})
+      if(remap MATCHES "^(.+)=(!?)([^!]+)$")
+        set(__remap_config "${CMAKE_MATCH_1}")
+        set(__final_config "${CMAKE_MATCH_3}")
+        set(__force_flag "${CMAKE_MATCH_2}")
+        string(TOUPPER "${__final_config}" __final_config_upper)
+        string(TOUPPER "${__remap_config}" __remap_config_upper)
+        if(";${__available_configurations};" MATCHES ";${__remap_config_upper};" AND NOT "${__force_flag}" STREQUAL "!")
+          # configuration already exists, skip remap
+          set(__remap_warnings "${__remap_warnings}... Configuration already exists ${__remap_config} (skip mapping ${__remap_config} => ${__final_config}) (available configurations: ${__available_configurations})\n")
+          continue()
+        endif()
+        if(__available_configurations AND NOT ";${__available_configurations};" MATCHES ";${__final_config_upper};")
+          # skip, configuration is not available
+          if(NOT "${__force_flag}" STREQUAL "!")
+            set(__remap_warnings "${__remap_warnings}... Configuration is not available '${__final_config}' for ${target}, build may fail (available configurations: ${__available_configurations})\n")
+          endif()
+        endif()
+        set_target_properties(${target} PROPERTIES
+            MAP_IMPORTED_CONFIG_${__remap_config} "${__final_config}"
+        )
+      else()
+        message(WARNING "Invalid entry of OPENCV_MAP_IMPORTED_CONFIG: '${remap}' (${OPENCV_MAP_IMPORTED_CONFIG})")
+      endif()
+    endforeach()
+  endif()
+endmacro()
+
 
 # ==============================================================
 #  Form list of modules (components) to find
@@ -180,7 +239,9 @@ foreach(__cvcomponent ${OpenCV_FIND_COMPONENTS})
     get_target_property(__implib_release opencv_world  IMPORTED_IMPLIB_RELEASE)
     get_target_property(__location_dbg opencv_world IMPORTED_LOCATION_DEBUG)
     get_target_property(__location_release opencv_world  IMPORTED_LOCATION_RELEASE)
+    get_target_property(__include_dir opencv_world INTERFACE_INCLUDE_DIRECTORIES)
     add_library(${__cvcomponent} SHARED IMPORTED)
+    set_target_properties(${__cvcomponent} PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${__include_dir}")
     if(__location_dbg)
       set_property(TARGET ${__cvcomponent} APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
       set_target_properties(${__cvcomponent} PROPERTIES
@@ -198,7 +259,14 @@ foreach(__cvcomponent ${OpenCV_FIND_COMPONENTS})
       )
     endif()
   endif()
+  if(TARGET ${__cvcomponent})
+    ocv_map_imported_config(${__cvcomponent})
+  endif()
 endforeach()
+
+if(__remap_warnings AND NOT OpenCV_FIND_QUIETLY)
+  message("OpenCV: configurations remap warnings:\n${__remap_warnings}OpenCV: Check variable OPENCV_MAP_IMPORTED_CONFIG=${OPENCV_MAP_IMPORTED_CONFIG}")
+endif()
 
 # ==============================================================
 # Compatibility stuff
@@ -206,7 +274,7 @@ endforeach()
 set(OpenCV_LIBRARIES ${OpenCV_LIBS})
 
 #
-# Some macroses for samples
+# Some macros for samples
 #
 macro(ocv_check_dependencies)
   set(OCV_DEPENDENCIES_FOUND TRUE)

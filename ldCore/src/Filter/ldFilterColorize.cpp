@@ -744,7 +744,7 @@ void FilterColorGlass::process(Vertex &input) {
     bool useangle = true;
     bool usepos = false;
     bool reangle = true;
-    bool colorcycle = 0*true;
+    bool colorcycle = false; //0*true;
     bool halfspec = false;
 
     if (m_alt) {
@@ -1172,21 +1172,21 @@ static void lavaEffect(float xx, float yy, float c, float& x2, float& y2) {
 FilterColorLava::FilterColorLava(bool alt) {
     m_alt = alt;
     float fx = 0.5f*0.5f*(!m_alt?0.25f:0.66f);
-    float fy = 2*0.25f / 16.0f;
+//    float fy = 2*0.25f / 16.0f;
     fc1.start(fx/30000.0f, 0.0f);
     fc2.start(fx/30000.0f, 0.5f);
     fc3.start(fx/30000.0f, 0.25f);
     fc4.start(fx/30000.0f, 0.75f);
-    fc5.start(fy/30000.0f, 0.5f);
-    fc6.start(0.5f/30000.0f, 0.5f);
+//    fc5.start(fy/30000.0f, 0.5f);
+//    fc6.start(0.5f/30000.0f, 0.5f);
 }
 void FilterColorLava::process(Vertex &input) {
-    ldMusicManager* mm = ldCore::instance()->musicManager();
+//    ldMusicManager* mm = ldCore::instance()->musicManager();
 
-    fc6.gate = mm->mrFastBass->walkerClickOutput;
+//    fc6.gate = mm->mrFastBass->walkerClickOutput;
     fc1.update(1);    fc2.update(1);
     fc3.update(1);    fc4.update(1);
-    fc5.update(1);    fc6.update(1);
+//    fc5.update(1);    fc6.update(1);
 
     float p1 = 1.5f;
     float p2 = 0.1f;
