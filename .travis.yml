@@ -2,36 +2,21 @@ language: cpp
 
 matrix:
   include:
-#  - os: linux
-#    dist: bionic
-#    sudo: required
-#    install:
-#    - sudo add-apt-repository -y ppa:beineri/opt-qt-5.12.6-bionic
-#    - sudo apt-get update
-#    - sudo apt-get install qt512-meta-full libgl-dev
-#    script:
-#    - mkdir build && cd build
-#    - cmake .. -DQTDIR="/opt/qt512"
-#    - cmake --build .
-#  - os: osx
-#    osx_image: xcode11.2
-#    script:
-#    - mkdir build && cd build
-#    - cmake .. -DQTDIR="/usr/local/Cellar/qt/5.13.2"
-#    - cmake --build .
-  - os: windows
-    before_install:
-    - curl -vLO http://download.qt.io/official_releases/online_installers/qt-unified-windows-x86-online.exe
-    - "./qt-unified-windows-x86-online.exe --verbose --script qt-installer-windows.qs"
-    - ls -la C:/Qt/5.12.3/msvc2017/bin/qtenv2.bat
+  - os: linux
+    dist: bionic
+    sudo: required
+    install:
+    - sudo add-apt-repository -y ppa:beineri/opt-qt-5.12.6-bionic
+    - sudo apt-get update
+    - sudo apt-get install qt512-meta-full libgl-dev
     script:
-#    - cmd.exe /C 'cd && "C:\Qt\5.12.3\msvc2017\bin\qtenv2.bat" && cd && "C:\Program
-#        Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvarsall.bat"
-#        x86 && cd "C:\Users\travis\build\braindef\jamulus" && cd && qmake Jamulus.pro
-#        && nmake'
-    - cmd.exe /C '"C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvarsall.bat"
-         x86'
-    - md build && cd build
-    - cmake .. -DQTDIR="C:\Qt\5.12.3\msvc2017"
+    - mkdir build && cd build
+    - cmake .. -DQTDIR="/opt/qt512"
+    - cmake --build .
+  - os: osx
+    osx_image: xcode11.2
+    script:
+    - mkdir build && cd build
+    - cmake .. -DQTDIR="/usr/local/Cellar/qt/5.13.2"
     - cmake --build .
 

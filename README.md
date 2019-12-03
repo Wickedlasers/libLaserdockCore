@@ -1,9 +1,9 @@
 # libLaserdockCore
 cmake repository for laserdock library
 
-Mac & Linux: [![Build Status](https://travis-ci.org/Wickedlasers/libLaserdockCore.svg?branch=sergey%2Fci)](https://travis-ci.org/Wickedlasers/libLaserdockCore)
+Mac & Linux: [![Build Status](https://travis-ci.org/Wickedlasers/libLaserdockCore.svg?branch=master)](https://travis-ci.org/Wickedlasers/libLaserdockCore)
 
-Windows: [![Build status](https://ci.appveyor.com/api/projects/status/32it5b2kkvx9qita/branch/sergey%2Fci?svg=true)](https://ci.appveyor.com/project/gavrushkin/liblaserdockcore/branch/sergey/ci)
+Windows: [![Build status](https://ci.appveyor.com/api/projects/status/32it5b2kkvx9qita/branch/master?svg=true)](https://ci.appveyor.com/project/gavrushkin/liblaserdockcore/branch/master)
 
 # Supported platforms
 
