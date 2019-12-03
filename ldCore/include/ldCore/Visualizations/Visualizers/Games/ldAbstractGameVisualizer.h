@@ -45,6 +45,18 @@ class LDCORESHARED_EXPORT ldAbstractGameVisualizer : public ldVisualizer
 {
     Q_OBJECT
 public:
+    // State machine.
+    enum class ldGameState {
+        Reset,
+        Playing,
+        Paused
+    };
+
+    enum class ldPlayingState {
+        InGame,
+        GameOver
+    };
+
     static QList<QList<ldVec2> > lineListToVertexShapes(const QList<ldVec2> &lineListBricks, float precise = 0.005);
     static QList<QList<ldVec2> > optimizeShapesToLaser(const QList<QList<ldVec2> > &linePathParts, int repeat = 1);
 
@@ -57,9 +69,9 @@ public:
 
 public slots:
     /** Reset game to initial state */
-    virtual void reset() = 0;
+    void reset();
     /** Toggle play/pause */
-    virtual void togglePlay() = 0;
+    void togglePlay();
 
     /** Enable sound effects*/
     bool isSoundEnabled() const;
@@ -86,22 +98,10 @@ signals:
 protected:
     static const int GAME_DEFAULT_RESET_TIME;
 
-    // State machine.
-    enum class ldGameState {
-        Reset,
-        Playing,
-        Paused
-    };
+    ldGameState state() const;
 
-    enum class ldPlayingState {
-        InGame,
-        GameOver
-    };
-
-    // Variables used in all games.
-    ldGameState m_state = ldGameState::Reset;
-    ldPlayingState m_playingState = ldPlayingState::InGame;
-    float m_gameTimer = 0.0f;
+    ldPlayingState playingState() const;
+    void setGameOver();
 
     virtual void draw() override;
 
@@ -115,13 +115,35 @@ protected:
     void showMessage(const QString &text, float duration = 0.0f);
     void clearMessage();
 
+    // Variables used in all games.
+    float m_gameTimer = 0.0f;
     int m_startGameTimerValue = 0;
-
     ldSoundEffects m_soundEffects;
-
     QMutex m_mutex;
 
+
 private:
+    // ldAbstractVisualizer
+    virtual void onShouldStart() override final;
+    virtual void onShouldStop() override final;
+
+    // Game state handling
+    /** Full game reset to initial state. Called once on start always */
+    virtual void onGameReset() = 0;
+    /** Start playing game  */
+    virtual void onGamePlay() = 0;
+    /** Pause playing game. Called on visualizer change if game is playing */
+    virtual void onGamePause() = 0;
+    /** Called always when game visualizer is on. You can activate game music here, game timers, etc */
+    virtual void onGameShow() {}
+    /** Called always when game visualizer is off.
+     * You have to stop internal timers here if they were activated in onGameShow.
+     * All sounds will be stopped automaticaly */
+    virtual void onGameHide() {}
+
+    ldGameState m_state = ldGameState::Reset;
+    ldPlayingState m_playingState = ldPlayingState::InGame;
+
     /** Game helper labels */
     QScopedPointer<ldTextLabel> m_messageLabel;
     float m_messageLabelTimer = 0.0f;

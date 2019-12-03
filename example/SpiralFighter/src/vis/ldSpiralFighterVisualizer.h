@@ -30,16 +30,10 @@ public:
     virtual ~ldSpiralFighterVisualizer();
 
     // ldVisualizer
-    
     virtual QString visualizerName() const override { return "Spiral Fighter"; }
-    virtual void onShouldStart() override;
-    virtual void onShouldStop() override;
 
 public slots:
     // ldAbstractGameVisualizer
-    virtual void reset() override;
-    virtual void togglePlay()  override;
-
     void moveX(double value) override;
 
     // Input functions
@@ -65,6 +59,11 @@ private:
         NEWLEVEL,
         POWERUP
     };
+
+    // ldAbstractGameVisualizer
+    virtual void onGameReset() override final;
+    virtual void onGamePlay() override final;
+    virtual void onGamePause() override final;
 
     /*
      * Main game functions.

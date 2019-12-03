@@ -210,6 +210,38 @@ QStringList ldAbstractGameVisualizer::levelList() const
     return QStringList();
 }
 
+void ldAbstractGameVisualizer::reset()
+{
+    QMutexLocker lock(&m_mutex);
+
+    onGameReset();
+    m_state = ldGameState::Reset;
+    m_playingState = ldPlayingState::InGame;
+}
+
+void ldAbstractGameVisualizer::togglePlay()
+{
+    QMutexLocker lock(&m_mutex);
+
+    ldGameState state = (m_state == ldGameState::Playing && m_playingState == ldPlayingState::InGame)
+                  ? ldGameState::Paused
+                  : ldGameState::Playing;
+
+    //start the game or continue current level
+    if(state == ldGameState::Playing) {
+        if(m_playingState == ldPlayingState::GameOver) {
+            onGameReset();
+            m_state = ldGameState::Reset;
+            m_playingState = ldPlayingState::InGame;
+        }
+        onGamePlay();
+        m_state = ldGameState::Playing;
+    } else {
+        onGamePause();
+        m_state = ldGameState::Paused;
+    }
+}
+
 bool ldAbstractGameVisualizer::isSoundEnabled() const
 {
     return m_soundEffects.isSoundEnabled();
@@ -244,6 +276,48 @@ void ldAbstractGameVisualizer::previousLevel()
     setLevelIndex(nextLevelIndex);
 }
 
+
+void ldAbstractGameVisualizer::onShouldStart()
+{
+    QMutexLocker lock(&m_mutex);
+
+    onGameShow();
+
+    if (m_state != ldGameState::Paused) {
+        onGameReset();
+        m_state = ldGameState::Reset;
+        m_playingState = ldPlayingState::InGame;
+    }
+}
+
+void ldAbstractGameVisualizer::onShouldStop()
+{
+    QMutexLocker lock(&m_mutex);
+
+    if(m_state == ldGameState::Playing && m_playingState == ldPlayingState::InGame) {
+        onGamePause();
+        m_state = ldGameState::Paused;
+    }
+
+    onGameHide();
+
+    m_soundEffects.stopAll();
+}
+
+ldAbstractGameVisualizer::ldGameState ldAbstractGameVisualizer::state() const
+{
+    return m_state;
+}
+
+ldAbstractGameVisualizer::ldPlayingState ldAbstractGameVisualizer::playingState() const
+{
+    return m_playingState;
+}
+
+void ldAbstractGameVisualizer::setGameOver()
+{
+    m_playingState = ldPlayingState::GameOver;
+}
 
 void ldAbstractGameVisualizer::draw() {
     ldVisualizer::draw();
