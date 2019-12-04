@@ -1,8 +1,8 @@
 build: false
 
 image:
-  - macOS
   - Visual Studio 2017
+  - macOS
   - Ubuntu1804
 
 platform: x64
@@ -20,6 +20,16 @@ for:
 -
   matrix:
     only:
+      - image: macOS
+  install:
+  - brew install qt5
+  build_script:
+  - mkdir build && cd build
+  - cmake .. -DQTDIR="/usr/local/Cellar/qt/5.13.2"
+  - cmake --build . -- -j4
+-
+  matrix:
+    only:
       - image: Ubuntu1804
   install:
   - sudo add-apt-repository -y ppa:beineri/opt-qt-5.12.6-bionic # 5.12 here because there is no ppa for 5.13 for 18.04
@@ -28,14 +38,4 @@ for:
   build_script:
   - mkdir build && cd build
   - cmake .. -DQTDIR="/opt/qt512"
-  - cmake --build . -- -j4
--
-  matrix:
-    only:
-      - image: macOS
-  install:
-  - brew install qt5
-  build_script:
-  - mkdir build && cd build
-  - cmake .. -DQTDIR="/usr/local/Cellar/qt/5.13.2"
   - cmake --build . -- -j4
