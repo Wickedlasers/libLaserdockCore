@@ -1,7 +1,7 @@
 # libLaserdockCore
 cmake repository for laserdock library
 
-Windows/Mac/Linux: [![Build status](https://ci.appveyor.com/api/projects/status/32it5b2kkvx9qita/branch/master?svg=true)](https://ci.appveyor.com/project/gavrushkin/liblaserdockcore/branch/master)
+Windows/Mac/Linux: [![Build status](https://ci.appveyor.com/api/projects/status/mdaio12e06dyvjh9/branch/master?svg=true)](https://ci.appveyor.com/project/sergeywl/liblaserdockcore/branch/master)
 
 # Supported platforms
 
