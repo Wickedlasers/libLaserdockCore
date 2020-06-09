@@ -25,7 +25,9 @@
 #include <QtCore/QObject>
 #include <QtCore/QTimer>
 
-class ldSoundStubDevice : public QObject
+#include <ldCore/Sound/ldSoundInterface.h>
+
+class ldSoundStubDevice : public ldSoundInterface
 {
     Q_OBJECT
 public:
@@ -35,9 +37,6 @@ public:
     void start();
     virtual void stop();
     
-signals:
-    void soundUpdated(const char * data, qint64 len);
-
 protected slots:
     virtual void timerSlot();
 

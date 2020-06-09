@@ -24,13 +24,12 @@
 #include <QQmlHelpers>
 
 #include "ldCore/ldCore_global.h"
+#include <ldCore/Visualizations/Visualizers/Games/ldAbstractGameVisualizer.h>
 
 #include "ldGamepad.h"
 #include "ldGamepadCtrl.h"
 
 class QKeyEvent;
-
-class ldAbstractGameVisualizer;
 
 /**
  * The ldAbstractGame class - base class for each game class
@@ -62,7 +61,9 @@ class LDCORESHARED_EXPORT ldAbstractGame : public QObject
     QML_WRITABLE_PROPERTY(int, levelIndex)
 
     /** enum GameState, current game state */
-    QML_WRITABLE_PROPERTY(int, state)
+    Q_PROPERTY (int state READ get_state NOTIFY stateChanged) \
+    Q_PROPERTY (int playingState READ get_playingState NOTIFY playingStateChanged) \
+
 
 public:
     enum GameState {
@@ -71,6 +72,12 @@ public:
         Paused
     };
     Q_ENUM(GameState)
+
+    enum PlayState {
+        InGame,
+        GameOver
+    };
+    Q_ENUM(PlayState)
 
     static void registerMetaTypes();
 
@@ -94,6 +101,9 @@ public:
     void moveRightX(double x);
     void moveRightY(double y);
 
+    int get_state() const;
+    int get_playingState() const;
+
 public slots:
     void play();
 
@@ -112,6 +122,10 @@ public slots:
     /** Set sound level (if sound is enabled) */
     void setSoundLevel(int soundLevel);
 
+signals:
+    void stateChanged(int state);
+    void playingStateChanged(int playingState);
+
 protected:
     virtual void activate();
     virtual void deactivate();
@@ -123,6 +137,9 @@ protected:
 private:
     virtual bool handleKeyEvent(QKeyEvent *keyEvent) = 0;
     virtual ldAbstractGameVisualizer *getGameVisualizer() const = 0;
+
+    void onGameStateChanged(const ldAbstractGameVisualizer::ldGameState &state);
+    void onPlayingStateChanged(const ldAbstractGameVisualizer::ldPlayingState &state);
 
 private slots:
     void onActiveChanged(bool isActive);

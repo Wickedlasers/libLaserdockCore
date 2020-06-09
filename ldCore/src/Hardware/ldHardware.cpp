@@ -22,7 +22,14 @@
 
 #include <QtDebug>
 
-int ldHardware::REMOTE_MAX_BUFFER = 768;
+#include <ldCore/ldCore.h>
+#include <ldCore/Data/ldFrameBuffer.h>
+#include <ldCore/Filter/ldDeadzoneFilter.h>
+#include <ldCore/Filter/ldFilterManager.h>
+
+#include <ldCore/Filter/ldHardwareFilter.h>
+
+uint ldHardware::REMOTE_MAX_BUFFER = 768;
 
 ldHardware::~ldHardware()
 {
@@ -43,9 +50,38 @@ void ldHardware::setActive(bool active)
     m_isActive = active;
 }
 
+void ldHardware::setFrame(uint index, size_t count)
+{
+    for(uint i = 0; i < count; i++) {
+        Q_ASSERT(index + i < m_compressed_buffer.size());
+        m_compressed_buffer[index + i] = ldCompressedSample(m_filter->lastFrame()[i]);
+    }
+}
+
+void ldHardware::setSample(uint index, const ldVertex &sample)
+{
+//    if(!m_isActive)
+//        return;
+
+    Q_ASSERT(index < m_compressed_buffer.size());
+
+    m_compressed_buffer[index] = ldCompressedSample(sample);
+}
+
+void ldHardware::setFilter(ldHardwareFilter *filter)
+{
+    m_filter = filter;
+}
+
+ldHardwareFilter *ldHardware::filter() const
+{
+    return m_filter;
+}
+
 ldHardware::ldHardware(QObject *parent)
     : QObject(parent)
 {
+    m_compressed_buffer.resize(ldFrameBuffer::FRAMEBUFFER_CAPACITY);
 }
 
 void ldHardware::setStatus(ldHardware::Status status)

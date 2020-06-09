@@ -2,6 +2,7 @@
 #define QQMLHELPERS_H
 
 #include <QObject>
+#include <QtCore/QtDebug>
 
 #define QML_WRITABLE_PROPERTY(type, name) \
     protected: \
@@ -95,11 +96,62 @@
 
 // -------- ldCore modifications ----------
 
-#define LD_WRITABLE_MIN_MAX_PROPERTY(type, property) QML_WRITABLE_PROPERTY(type, property) \
+#define LD_MIN_MAX_WRITABLE_PROPERTY(type, name) \
+    protected: \
+        Q_PROPERTY (type name READ get_##name WRITE set_##name NOTIFY name##Changed) \
+    private: \
+        type m_##name; \
+    public: \
+        type get_##name () const { \
+            return m_##name ; \
+        } \
+    public Q_SLOTS: \
+        bool set_##name (type name) { \
+            if(name < m_min_##name || name > m_max_##name) { \
+                qWarning() << __FUNCTION__ << "min/max error" << name << m_min_##name << m_max_##name; \
+                return false; \
+            } \
+            bool ret = false; \
+            if ((ret = (m_##name != name))) { \
+                m_##name = name; \
+                emit name##Changed (m_##name); \
+            } \
+            return ret; \
+        } \
+    Q_SIGNALS: \
+        void name##Changed (type name); \
+    private:
+
+#define LD_MIN_MAX_READONLY_PROPERTY(type, name) \
+    protected: \
+        Q_PROPERTY (type name READ get_##name NOTIFY name##Changed) \
+    private: \
+        type m_##name; \
+    public: \
+        type get_##name () const { \
+            return m_##name ; \
+        } \
+        bool update_##name (type name) { \
+            if(name < m_min_##name || name > m_max_##name) { \
+                qWarning() << __FUNCTION__ << "min/max error" << name << m_min_##name << m_max_##name; \
+                return false; \
+            } \
+            bool ret = false; \
+            if ((ret = (m_##name != name))) { \
+                m_##name = name; \
+                emit name##Changed (m_##name); \
+            } \
+            return ret; \
+        } \
+    Q_SIGNALS: \
+        void name##Changed (type name); \
+    private:
+
+#define LD_WRITABLE_MIN_MAX_PROPERTY(type, property) LD_MIN_MAX_WRITABLE_PROPERTY(type, property) \
     QML_CONSTANT_PROPERTY(type, min_##property) \
     QML_CONSTANT_PROPERTY(type, max_##property)
 
-#define LD_READONLY_MIN_MAX_PROPERTY(type, property) QML_READONLY_PROPERTY(type, property) \
+#define LD_READONLY_MIN_MAX_PROPERTY(type, property) LD_MIN_MAX_READONLY_PROPERTY(type, property) \
     QML_CONSTANT_PROPERTY(type, min_##property) \
     QML_CONSTANT_PROPERTY(type, max_##property)
 

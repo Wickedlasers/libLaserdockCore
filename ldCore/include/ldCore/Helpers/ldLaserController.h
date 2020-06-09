@@ -32,7 +32,7 @@ class LDCORESHARED_EXPORT ldLaserController : public QObject
     QML_READONLY_PROPERTY(bool, isActive)
 
 public:
-    explicit ldLaserController(QObject *parent = 0);
+    explicit ldLaserController(QObject *parent = nullptr);
 
 public slots:
     void togglePlay();

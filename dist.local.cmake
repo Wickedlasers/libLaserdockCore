@@ -1,10 +1,10 @@
 # desktop
-set(QT_BASE_DIR "/Path/to/Qt/5.13.0")
+set(QT_BASE_DIR "/Path/to/Qt/5.14.0")
 
 if(LD_ANDROID_BUILD)
     # mandatory
     set(QT_ANDROID_SDK_ROOT /Path/to/sdk)
-    set(ANDROID_NDK /Path/to/ndk) # r19
+    set(ANDROID_NDK /Path/to/ndk) # r21
 
     if(NOT DEFINED ANDROID_ABI)
         # You should clear CMake configuration after changing this value

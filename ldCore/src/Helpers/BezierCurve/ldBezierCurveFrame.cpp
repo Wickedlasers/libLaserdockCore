@@ -34,11 +34,6 @@ ldBezierCurveFrame::ldBezierCurveFrame(const std::vector<ldBezierCurveObject> &c
 {
 }
 
-ldBezierCurveFrame::~ldBezierCurveFrame()
-{
-}
-
-
 void ldBezierCurveFrame::add(const ldBezierCurveObject &object)
 {
     m_curves.push_back(object);

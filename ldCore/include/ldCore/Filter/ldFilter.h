@@ -18,36 +18,28 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#ifndef LDFILTER
-#define LDFILTER
-
-#include "ldCore/ldCore_global.h"
-#include "ldCore/Utilities/ldBasicDataStructures.h"
+#ifndef LDFILTER_H
+#define LDFILTER_H
 
 #include <QQmlHelpers>
 
-/** Shader */
-class LDCORESHARED_EXPORT ldShader : public QObject
-{
-    Q_OBJECT
-public:
-    virtual void ShaderFunc(float *x, float *y, uint32_t *color) = 0;
-    virtual ~ldShader(){}
-};
+#include <ldCore/Shape/ldShader.h>
+#include <ldCore/Utilities/ldVertex.h>
+
+class ldFilterProcessor;
 
 /** Abstract filter interface. Filters are applied to Vertex data directly */
 class LDCORESHARED_EXPORT ldFilter : public ldShader
 {
     Q_OBJECT
-    LD_WRITABLE_MIN_MAX_PROPERTY(float, intensity)
 public:
-    /** Constructor */
-    ldFilter();
-    /** Destructor */
-    virtual ~ldFilter(){}
+    /** Apply this filter to Vertex data */
+    void processFilter(ldVertex &input);
 
-    virtual void processFilter(Vertex &input);
+    /** Set optional advanced filter processor  */
+    void setProcessorFilter(ldFilterProcessor *processorFilter);
 
+    /** In case if filter need to be restarted on different frame you can clean cache here */
     virtual void resetFilter() {}
 
     /** Optional filter name */
@@ -59,14 +51,17 @@ public:
 protected:
     /** Filters implement this function to filter points.
         Input is the source vertex, processing is done in-place with a ref param */
-    virtual void process(Vertex &input) = 0;
+    virtual void process(ldVertex &v) = 0;
 
 private:
-    void normalize(Vertex &input, const Vertex &source);
-
     // shader function adapter
     virtual void ShaderFunc(float *x, float *y, uint32_t *color) override;
+
+    ldFilterProcessor *m_processorFilter = nullptr;
+
+    // make it friend to call to ::process function directly
+    friend class ldFilterProcessor;
 };
 
-#endif // LDFILTER
+#endif // LDFILTER_H
 

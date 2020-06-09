@@ -24,7 +24,7 @@
 
 #include "ldCore/Helpers/Maths/ldMathStat.h"
 
-#include <math.h>
+#include <cmath>
 
 // copyArray
 void ldMathStat::copyArray(float tab[], float *result, int size)

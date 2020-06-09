@@ -9,57 +9,86 @@
 #include <QtCore/QStandardPaths>
 #include <QtCore/QTimer>
 
-#include <quazip/JlCompress.h>
-
 #include <ldCore/ldCore.h>
+#include <ldCore/Android/ldZipExtractor.h>
 
-class ldResourcesExtractorPrivate : public QObject
-{
-    Q_OBJECT
-public:
-    explicit ldResourcesExtractorPrivate(QObject *parent = nullptr);
-
-    void init(const QString &packageName, int resourcesVersionCode);
-
-    void extractDir();
-
-signals:
-    void progress(int progress); // 0..1
-    void finished(bool ok);
-
-private:
-    QString m_resourcesFile;
-
-};
-
-ldResourcesExtractorPrivate::ldResourcesExtractorPrivate(QObject *parent)
+ldResourcesExtractor::ldResourcesExtractor(QObject *parent)
     : QObject(parent)
+    , m_needExtraction(false)
+    , m_progress(0)
+    , m_zipExtractor(new ldZipExtractor(this))
+{
+    connect(m_zipExtractor, &ldZipExtractor::progressChanged, this, &ldResourcesExtractor::update_progress);
+    connect(m_zipExtractor, &ldZipExtractor::finished, this, &ldResourcesExtractor::finished);
+}
+
+ldResourcesExtractor::~ldResourcesExtractor()
 {
 }
 
-void ldResourcesExtractorPrivate::init(const QString &packageName, int resourcesVersionCode)
+void ldResourcesExtractor::init(const QString &packageName, int resourcesVersionCode)
 {
+    QString zipFilePath = findObbFilePath(packageName, resourcesVersionCode);
+    if(!zipFilePath.isEmpty())
+        m_zipExtractor->init(zipFilePath, ldCore::instance()->resourceDir());
+
+    // check if we need to extract new resources
+    checkNeedExtraction(resourcesVersionCode);
+}
+
+void ldResourcesExtractor::startExtraction()
+{
+    qDebug() << __FUNCTION__;
+
+    m_zipExtractor->startExtraction();
+}
+
+
+void ldResourcesExtractor::checkNeedExtraction(int resourcesVersionCode)
+{
+    int resVersionCode = -1;
+    QString resVersionPath = ldCore::instance()->resourceDir() + "/version";
+    if(QFile::exists(resVersionPath)) {
+        QFile resVersionFile(resVersionPath);
+        resVersionFile.open(QIODevice::ReadOnly);
+        QByteArray resVersionData = resVersionFile.readAll();
+        bool ok;
+        int resFileVersionCode = resVersionData.toInt(&ok);
+        if(ok) {
+            resVersionCode = resFileVersionCode;
+        }
+    }
+    if(resVersionCode == -1
+        || resVersionCode < resourcesVersionCode) {
+        update_needExtraction(true);
+    }
+}
+
+QString ldResourcesExtractor::findObbFilePath(const QString &packageName, int resourcesVersionCode)
+{
+    QString resourcesFilePath;
+
     QString resourcesFileName = "main." + QString::number(resourcesVersionCode) + "." + packageName + ".obb";
 
     // 1st try
     // get path to resources file
     QString genericDataLocation = QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation).first();
     genericDataLocation += "/Android/obb/" + packageName + "/";
-    m_resourcesFile = genericDataLocation + resourcesFileName;
-    qDebug() << m_resourcesFile;
+    resourcesFilePath = genericDataLocation + resourcesFileName;
+    qDebug() << resourcesFilePath;
 
-    bool exists = QFile::exists(m_resourcesFile);
+    bool exists = QFile::exists(resourcesFilePath);
 
     if(!exists) {
         // 2nd try
-        qWarning() << "expected file path doesn't exist, checking other path..." << m_resourcesFile;
+        qWarning() << "expected file path doesn't exist, checking other path..." << resourcesFilePath;
         QStringList dataLocations = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
         for(const QString &dataLocation : dataLocations) {
             QString resourcesPath = dataLocation + "/../../../obb/" + packageName + "/" + resourcesFileName;
             exists = QFile::exists(resourcesPath);
             qDebug() << "check " << resourcesPath << QFile::exists(resourcesPath);
             if(exists) {
-                m_resourcesFile = resourcesPath;
+                resourcesFilePath = resourcesPath;
                 break;
             }
         }
@@ -78,119 +107,13 @@ void ldResourcesExtractorPrivate::init(const QString &packageName, int resources
             qWarning() << "expected file pathes doesn't exist, checking the last one path..." << dataAbsPath << exists;
 
             if(exists) {
-                m_resourcesFile = dataAbsPath;
+                resourcesFilePath = dataAbsPath;
             }
         }
 #endif
     }
+
+    return resourcesFilePath;
 }
-
-void ldResourcesExtractorPrivate::extractDir()
-{
-    qDebug() << __FUNCTION__ << m_resourcesFile << ldCore::instance()->resourceDir();
-
-    if(m_resourcesFile.isEmpty() || !QFile::exists(m_resourcesFile)) {
-        qWarning() << "Zip file doesn't exist";
-        emit finished(false);
-        return;
-    }
-
-    QStringList fileList = JlCompress::getFileList(m_resourcesFile);
-
-    QDir(ldCore::instance()->resourceDir()).removeRecursively();
-    QDir().mkpath(ldCore::instance()->resourceDir());
-
-    QuaZip zip(m_resourcesFile);
-    if(!zip.open(QuaZip::mdUnzip)) {
-        qWarning() << "Zip file can't be opened";
-        emit finished(false);
-        return;
-    }
-
-    QDir directory(ldCore::instance()->resourceDir());
-    QStringList extracted;
-    if (!zip.goToFirstFile()) {
-        qWarning() << "Zip file is empty";
-        emit finished(false);
-        return;
-    }
-    int i = 0;
-    do {
-        QString name = zip.getCurrentFileName();
-        QString absFilePath = directory.absoluteFilePath(name);
-        if (!JlCompress::extractFile(&zip, "", absFilePath)) {
-            JlCompress::removeFile(extracted);
-            qWarning() << "Zip file can't be removed" << name << absFilePath << extracted;
-            emit finished(false);
-            return;
-        }
-        extracted.append(absFilePath);
-
-        i++;
-
-        emit progress(static_cast<int>(i * 100.0 / fileList.size()));
-    } while (zip.goToNextFile());
-
-    zip.close();
-
-    if(zip.getZipError()!=0) {
-        JlCompress::removeFile(extracted);
-        extracted =  QStringList();
-    }
-
-    qDebug() << "finished";
-    emit finished(true);
-}
-
-
-ldResourcesExtractor::ldResourcesExtractor(QObject *parent)
-    : QObject(parent)
-    , m_needExtraction(false)
-    , m_progress(0)
-    , m_private(new ldResourcesExtractorPrivate())
-{
-    m_private->moveToThread(&m_workerThread);
-    m_workerThread.start();
-}
-
-ldResourcesExtractor::~ldResourcesExtractor()
-{
-    m_workerThread.quit();
-    m_workerThread.wait();
-}
-
-void ldResourcesExtractor::init(const QString &packageName, int resourcesVersionCode)
-{
-    m_private->init(packageName, resourcesVersionCode);
-
-    connect(m_private.data(), &ldResourcesExtractorPrivate::progress, this, &ldResourcesExtractor::update_progress);
-    connect(m_private.data(), &ldResourcesExtractorPrivate::finished, this, &ldResourcesExtractor::finished);
-
-    // check if we need to extract new resources
-    int resVersionCode = -1;
-    QString resVersionPath = ldCore::instance()->resourceDir() + "/version";
-    if(QFile::exists(resVersionPath)) {
-        QFile resVersionFile(resVersionPath);
-        resVersionFile.open(QIODevice::ReadOnly);
-        QByteArray resVersionData = resVersionFile.readAll();
-        bool ok;
-        int resFileVersionCode = resVersionData.toInt(&ok);
-        if(ok) {
-            resVersionCode = resFileVersionCode;
-        }
-    }
-    if(resVersionCode == -1
-            || resVersionCode < resourcesVersionCode) {
-        update_needExtraction(true);
-    }
-}
-
-void ldResourcesExtractor::startExtraction()
-{
-    qDebug() << __FUNCTION__;
-
-    QTimer::singleShot(0, m_private.data(), &ldResourcesExtractorPrivate::extractDir);
-}
-
 
 #include "ldResourcesExtractor.moc"

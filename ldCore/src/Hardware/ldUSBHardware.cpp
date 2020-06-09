@@ -22,7 +22,9 @@
 
 #include <QtDebug>
 
+#ifdef LD_CORE_ENABLE_LASERDOCKLIB
 #include <laserdocklib/LaserdockDevice.h>
+#endif
 
 class ldUSBHardwarePrivate {
 public:
@@ -38,6 +40,7 @@ public:
     }
 
     void initialize(){
+#ifdef LD_CORE_ENABLE_LASERDOCKLIB
         Q_Q(ldUSBHardware);
 
         bool rc; uint32_t temp;
@@ -163,27 +166,45 @@ public:
 //        }
         
         q->setStatus(ldHardware::Status::INITIALIZED);
+#endif
     }
 
 
-    bool send(LaserdockSample *samples, unsigned int count){
+    bool send(ldCompressedSample *samples, unsigned int count){
 
 //        Q_Q(ldUsbHardware);
 
-        return params.device->send_samples(samples, count);
+#ifdef LD_CORE_ENABLE_LASERDOCKLIB
+        // dirty conversion from CompressedSample to LaserdockSample...
+        return params.device->send_samples((LaserdockSample * ) samples, count);
+#else
+        Q_UNUSED(samples)
+        Q_UNUSED(count)
+        return false;
+#endif
     }
 
     bool usb_send(QByteArray ba) {
+#ifdef LD_CORE_ENABLE_LASERDOCKLIB
         return params.device->usb_send((unsigned char*) ba.data(), ba.length());
+#else
+        Q_UNUSED(ba)
+        return false;
+#endif
     }
 
 
     bool usb_get(QByteArray &ba) {
+#ifdef LD_CORE_ENABLE_LASERDOCKLIB
         unsigned char *output = params.device->usb_get((unsigned char*) ba.data(), ba.length());
         if(output) {
             ba = QByteArray::fromRawData((char *)output, 64);
         }
         return output != NULL;
+#else
+        Q_UNUSED(ba)
+        return false;
+#endif
     }
 
 
@@ -194,15 +215,29 @@ ldUSBHardware::ldUSBHardware(LaserdockDevice *device, QObject *parent)
     ,  d_ptr(new ldUSBHardwarePrivate(this))
 {    
     Q_D(ldUSBHardware);
+#ifdef LD_CORE_ENABLE_LASERDOCKLIB
     d->params.device = device;
+#else
+    Q_UNUSED(device)
+#endif
     d->initialize();
 }
 
 ldUSBHardware::~ldUSBHardware(){
+#ifdef LD_CORE_ENABLE_LASERDOCKLIB
     Q_D(ldUSBHardware);
     if(d->params.device) {
         delete d->params.device;
     }
+#endif
+}
+
+QString ldUSBHardware::id() const
+{
+    Q_D(const ldUSBHardware);
+
+    // TODO serial_number is not unique, use Jake's proposal instead https://github.com/Wickedlasers/laserdock_apps_cmake/issues/523
+    return QString::fromStdString(d->params.serial_number);
 }
 
 
@@ -212,12 +247,13 @@ ldUSBHardware::device_params &ldUSBHardware::params(){
 }
 
 
-bool ldUSBHardware::send_samples(LaserdockSample *samples, unsigned int size){
+bool ldUSBHardware::send_samples(uint startIndex, uint count){
     Q_D(ldUSBHardware);
-    bool ok = d->send(samples, size);
+    Q_ASSERT(startIndex + count < m_compressed_buffer.size());
+    bool ok = d->send(&m_compressed_buffer[startIndex], count);
     if(!ok) {
+        qWarning() << __FUNCTION__ << "Can't send sample" << d->params.device->lastError();
         setStatus(Status::UNKNOWN);
-        emit deviceDisconnected();
     }
     return ok;
 }
@@ -235,16 +271,21 @@ void ldUSBHardware::get_security_response(QByteArray &response){
 }
 
 int ldUSBHardware::get_full_count() {
+#ifdef LD_CORE_ENABLE_LASERDOCKLIB
     Q_D(ldUSBHardware);
 
-    uint32_t count1 = REMOTE_MAX_BUFFER;
-	bool ret1 = d->params.device->ringbuffer_empty_sample_count(&count1);
+    uint32_t remoteEmptyBuffer;
+    bool isOk = d->params.device->ringbuffer_empty_sample_count(&remoteEmptyBuffer);
+//    qDebug() << isOk << remoteEmptyBuffer;
+    if (!isOk) {
+        qWarning() << __FUNCTION__ << "Can't get ringbuffer_empty_sample_count";
+        return -1;
+    }
 
-//    qDebug() << ret1 << count1;
-	if (!ret1) return -1;
+    Q_ASSERT(REMOTE_MAX_BUFFER >= remoteEmptyBuffer);
 
-    int rbuffer = REMOTE_MAX_BUFFER - count1;
-    rbuffer = std::max(rbuffer, -1);
-    rbuffer = std::min(rbuffer, REMOTE_MAX_BUFFER);
-    return rbuffer;
+    return static_cast<int> (REMOTE_MAX_BUFFER - remoteEmptyBuffer);
+#else
+    return -1;
+#endif
 }

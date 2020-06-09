@@ -186,7 +186,7 @@ int AudioDecoderCoreAudio::open() {
          m_headerFrames=primeInfo.leadingFrames;
       }
 	
-	m_iNumSamples = (totalFrameCount/*-m_headerFrames*/)*m_iChannels;
+	m_iNumSamples = static_cast<int>((totalFrameCount/*-m_headerFrames*/)*m_iChannels);
 	m_iSampleRate = inputFormat.mSampleRate;
 	m_fDuration = m_iNumSamples / static_cast<float>(m_iSampleRate * m_iChannels);
 	

@@ -25,7 +25,7 @@
 #ifndef LDMATHS_H
 #define LDMATHS_H
 
-#include <math.h>
+#include <cmath>
 
 #include "ldCore/Helpers/BezierCurve/ld3dBezierCurve.h"
 #include "ldCore/Helpers/BezierCurve/ldBezierCurve.h"

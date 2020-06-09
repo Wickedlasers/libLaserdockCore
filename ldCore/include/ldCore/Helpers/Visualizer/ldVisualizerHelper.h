@@ -26,8 +26,8 @@
 //  Copyright (c) 2014 Wicked Lasers. All rights reserved.
 //
 
-#ifndef ldCore__ldVisualizerHelper__
-#define ldCore__ldVisualizerHelper__
+#ifndef LDVISUALIZERHELPER_H
+#define LDVISUALIZERHELPER_H
 
 #include <memory>
 
@@ -39,7 +39,7 @@
 
 class ldBeatTracker;
 
-static const int overdrive = AUDIO_OVERDRIVE_FACTOR;
+static constexpr uint overdrive = AUDIO_OVERDRIVE_FACTOR;
 
 class LDCORESHARED_EXPORT ldBeatSignal {
 public:
@@ -64,9 +64,7 @@ public:
 // --------------------------------- StatValue ----------------------------
 
 
-#define STRIDE_SKIP overdrive
-//#define STRIDE_SKIP 1
-static const int maxstathistory = 2048*overdrive;
+static const uint maxstathistory = 2048*overdrive;
 class LDCORESHARED_EXPORT ldStatValue {
 public:
     float baseValue = 0.0f;
@@ -75,13 +73,13 @@ public:
     float probabilityValue = 0.0f;
     float combinedValue = 0.0f;
     float history[maxstathistory];
-    int historysize = 0;
-    int nfull = 0;
+    uint historysize = 0;
+    uint nfull = 0;
     ldStatValue() {
-                 for (int i = 0; i < maxstathistory; i++) history[i] = 0;
+                 for (uint i = 0; i < maxstathistory; i++) history[i] = 0;
                  }
     float add(float f);
-    void set(int historysize);
+    void set(uint historysize);
 };
 
 
@@ -245,4 +243,4 @@ private:
 
 
 
-#endif /* defined(__ldCore__ldVisualizerHelper__) */
+#endif // LDVISUALIZERHELPER_H

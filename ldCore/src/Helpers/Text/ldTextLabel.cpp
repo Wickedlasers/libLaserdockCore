@@ -56,21 +56,6 @@ void ldTextLabel::clear()
     setText("");
 }
 
-
-// setIncrementXPositionOrLoop
-bool ldTextLabel::setIncrementXPositionOrLoop(float delta)
-{
-    //qDebug() << _position.x << " this->getWidth()" << this->getWidth();
-
-    float x = (getPosition().x < -getWidth())
-            ? 1.f
-            : getPosition().x - delta;
-
-    setPosition(ldVec2(x, getPosition().y));
-
-    return getPosition().x != 1.f;
-}
-
 // getColor
 uint32_t ldTextLabel::getColor() const
 {

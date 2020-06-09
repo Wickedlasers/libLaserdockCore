@@ -29,8 +29,9 @@
 
 #include "ldAbstractHardwareManager.h"
 
+class ldFilterManager;
 class ldUSBHardware;
-struct CompressedSample;
+struct ldCompressedSample;
 
 typedef bool (*ldAuthenticateCallbackFunc)(ldUSBHardware *device);
 
@@ -39,7 +40,7 @@ class LDCORESHARED_EXPORT ldUsbHardwareManager : public ldAbstractHardwareManage
     Q_OBJECT
 
 public:
-    explicit ldUsbHardwareManager(QObject *parent = 0);
+    explicit ldUsbHardwareManager(ldFilterManager *filterManager, QObject *parent = 0);
     ~ldUsbHardwareManager();
 
     int getBufferFullCount();
@@ -49,11 +50,12 @@ public:
     bool isDeviceActive(int index) const;
     void setDeviceActive(int index, bool active);
 
-    void sendData(CompressedSample *samples, unsigned int count);
+    void sendData(uint startIndex, uint count);
 
     virtual void setConnectedDevicesActive(bool active) override;
 
     virtual uint deviceCount() const override;
+    virtual std::vector<ldHardware*> devices() const override;
 
 public slots:
     void setAuthenticateFunc(ldAuthenticateCallbackFunc authenticateFunc);
@@ -62,6 +64,7 @@ private slots:
     void usbDeviceCheck();
 
 private:
+    void updateHardwareFilters();
     void updateCheckTimerState();
 
     mutable QMutex m_mutex;
@@ -71,7 +74,7 @@ private:
     ldAuthenticateCallbackFunc m_authenticateCb = nullptr;
 
     std::vector<std::unique_ptr<ldUSBHardware> > m_usbHardwares;
-
+    ldFilterManager *m_filterManager;
 };
 
 #endif // LDUSBHARDWAREMANAGER_H

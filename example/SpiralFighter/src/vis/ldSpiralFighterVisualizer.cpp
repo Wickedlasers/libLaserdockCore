@@ -28,7 +28,7 @@ const float TIME_TO_SHRINK = 2.0f;
 const float SHRINK_AMOUNT = 0.05f;
 
 const float TIME_TO_SPAWN_STREAM = 2.0f;
-const float INTERVAL_BETWEEN_ENEMIES = 0.8f;
+const float INTERVAL_BETWEEN_ENEMIES = 0.5f;
 
 const float DISTANCE_TO_ROTATE = 0.4f;
 
@@ -82,6 +82,7 @@ void ldSpiralFighterVisualizer::resetMatch() {
     m_player.onFire = [this](ldSpiralFighterPlayer *player) { return onPlayerFire(player); };
     m_player.onPowerup = [this]() { return onPlayerPowerup(); };
     m_player.visible = true;
+	m_playerHitPoints = 5;
     m_levelIndex = -1;
     m_worldIndex = 0;
     m_shrinkTimer = TIME_TO_SHRINK;
@@ -118,7 +119,7 @@ void ldSpiralFighterVisualizer::loadNewLevel() {
 
     // Create the level.
     if (m_levelIndex == 0) {
-        m_enemiesToDestroy = 15;
+		m_enemiesToDestroy = 5;
         m_enemiesPerStream = 2;
 
         m_spawnPoints = QList<ldVec2>();
@@ -126,7 +127,7 @@ void ldSpiralFighterVisualizer::loadNewLevel() {
         m_spawnPoints.append(ldVec2(0.8f, 0.7f));
         m_spawnPoints.append(ldVec2(-0.2f, -0.8f));
     } else if (m_levelIndex == 1) {
-        m_enemiesToDestroy = 25;
+		m_enemiesToDestroy = 10;
         m_enemiesPerStream = 3;
 
         m_spawnPoints = QList<ldVec2>();
@@ -135,7 +136,7 @@ void ldSpiralFighterVisualizer::loadNewLevel() {
         m_spawnPoints.append(ldVec2(-0.8f, 0.0f));
         m_spawnPoints.append(ldVec2(0.0f, -0.8f));
     } else if (m_levelIndex == 2) {
-        m_enemiesToDestroy = 40;
+		m_enemiesToDestroy = 15;
         m_enemiesPerStream = 4;
 
         m_spawnPoints = QList<ldVec2>();
@@ -146,9 +147,12 @@ void ldSpiralFighterVisualizer::loadNewLevel() {
         m_spawnPoints.append(ldVec2(-0.2f, -0.7f));
     }
 
+
     // Difficulty increaser;
     m_enemiesToDestroy += (m_worldIndex * 10);
     m_enemiesPerStream += m_worldIndex;
+
+	m_enemiesToSpawn = m_enemiesToDestroy;
 
     // Save a copy of the current level so
     // we know where each point started.
@@ -284,8 +288,12 @@ void ldSpiralFighterVisualizer::updateGame(float deltaTime) {
             m_streamTimer = INTERVAL_BETWEEN_ENEMIES;
             m_remainingStreamEnemies--;
 
-            ldSpiralFighterEnemy enemy = ldSpiralFighterEnemy(m_spawnPoints[m_currentStreamSpawnPointIndex]);
-            m_enemies.append(enemy);
+			if (m_enemiesToSpawn > 0)
+			{
+				ldSpiralFighterEnemy enemy = ldSpiralFighterEnemy(m_spawnPoints[m_currentStreamSpawnPointIndex]);
+				m_enemies.append(enemy);
+				m_enemiesToSpawn--;
+			}
         }
     }
 
@@ -334,9 +342,15 @@ void ldSpiralFighterVisualizer::updateGame(float deltaTime) {
 
             m_soundEffects.play(SFX::EXPLOSION);
 
-            m_player.visible = false;
+			m_enemies.erase(m_enemies.begin() + i);
+			i--;
 
-            endGame(false);
+			m_playerHitPoints--;
+			if (m_playerHitPoints <= 0)
+			{
+				m_player.visible = false;
+				endGame(false);
+			}
         }
     }
 
@@ -400,7 +414,7 @@ void ldSpiralFighterVisualizer::updateGame(float deltaTime) {
     }
 
     // Check for new level.
-    if (m_enemiesToDestroy <= 0) {
+	if (m_enemiesToSpawn < 1 && m_enemies.count() < 1) {
         m_soundEffects.play(SFX::NEWLEVEL);
 
         loadNewLevel();
@@ -472,7 +486,7 @@ void ldSpiralFighterVisualizer::endGame(bool won) {
         setStateText("Game over!");
     }
 
-    emit finished();
+    
 }
 
 /*

@@ -56,7 +56,7 @@ undesired behavior.
 #include "ldCore/ldCore_global.h"
 #include "ldCore/Helpers/Maths/ldGlobals.h"
 #include "ldCore/Render/ldAbstractRenderer.h"
-#include "ldCore/Utilities/ldBasicDataStructures.h"
+#include "ldCore/Utilities/ldVertexFrame.h"
 
 
 // ----------------- libol helpers -------------------
@@ -67,6 +67,7 @@ undesired behavior.
 #define C_DARK_BLUE 0x000066
 #define C_LIGHT_BLUE 0x4444FF
 
+class ldFilterManager;
 
 inline bool operator==(const OLPoint &e1, const OLPoint &e2)
 {
@@ -94,7 +95,7 @@ public:
     void setRenderParams(OLRenderParams * params);
     void getRenderParams(OLRenderParams *params);
     void setFrameModes(int flags);
-    float renderFrame(ldFrameBuffer * buffer, int max_fps);
+    float renderFrame(ldFrameBuffer * buffer, int max_fps, bool is3d);
 
     /////////////////////////////////////////////////////////////////////////
     //                         Libol Graphic Operations
@@ -182,10 +183,12 @@ public:
     // frame modes
     int m_frameModes = 0;
 
-    // cached frames for screenshot feature
-    std::vector<Vertex> m_cachedFrame;
-    const std::vector<Vertex> &getCachedFrame() const;
+    // frame
+    ldVertexFrame m_frame;
+    const std::vector<ldVertex> &getCachedFrame() const;
 
+private:
+    ldFilterManager *m_filterManager = nullptr;
 };
 
 #endif // LDRENDEREROPENLASE_H

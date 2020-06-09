@@ -53,6 +53,7 @@ struct LDCORESHARED_EXPORT ldVec3
     ldVec3 toLaserCoord() const;
 
     void rotate(float p_x, float p_y, float p_z, ldVec3 p_pivot);
+    void rotate(const ldVec3 &k, float theta);
 
     ldVec3 operator+ (const ldVec3& other) const;
     ldVec3& operator+= (const ldVec3& other);

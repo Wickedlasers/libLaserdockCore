@@ -22,6 +22,10 @@
 
 #include <QtCore/QDebug>
 
+namespace {
+    static const uint MAX_MIDI_EVENTS = 64;
+}
+
 ldMidiManager::ldMidiManager()
 {
     qRegisterMetaType<ldMidiNote>();
@@ -65,19 +69,19 @@ void ldMidiManager::addEvent(ldMidiNote e) {
     if (e.onset) {
 
         // resize array
-        int newsize = notePlayedArray.size() + 1;
+        size_t newsize = notePlayedArray.size() + 1;
         if (newsize > MAX_MIDI_EVENTS) newsize = MAX_MIDI_EVENTS;
         notePlayedArray.resize(newsize);
 
         // shift array
-        for (int i = newsize-1; i >= 1; i--) {
+        for (size_t i = newsize-1; i >= 1; i--) {
             notePlayedArray[i] = notePlayedArray[i-1];
         }
 
         // create a noteplayed object
         ldMidiNotePlayed t;
         t.note = e.note; // midi note index
-        t.velocity = e.velocity / 128.0f; // convert to 0-1 range
+        t.velocity = e.velocity / 127.0f; // convert to 0-1 range
         t.isStillPressed = true;
         t.timeSincePressed = 0;
         t.timeSinceReleased = -1;

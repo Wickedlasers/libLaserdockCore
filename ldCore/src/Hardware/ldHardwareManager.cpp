@@ -24,8 +24,9 @@
 
 #include "ldCore/Hardware/ldAbstractHardwareManager.h"
 
-ldHardwareManager::ldHardwareManager(QObject *parent)
+ldHardwareManager::ldHardwareManager(ldFilterManager *filterManager, QObject *parent)
     : QObject(parent)
+    , m_filterManager(filterManager)
 {
     qDebug() << __FUNCTION__;
 }
@@ -40,9 +41,24 @@ int ldHardwareManager::getDeviceCount() const
     return m_deviceCount;
 }
 
+std::vector<ldHardware*> ldHardwareManager::devices() const
+{
+    std::vector<ldHardware*> devices;
+    for(ldAbstractHardwareManager *hardwareManager : m_hardwareManagers) {
+        std::vector<ldHardware*> hwDevices = hardwareManager->devices();
+        devices.insert(devices.end(), hwDevices.begin(), hwDevices.end());
+    }
+    return devices;
+}
+
 std::vector<ldAbstractHardwareManager *> ldHardwareManager::hardwareManagers() const
 {
     return m_hardwareManagers;
+}
+
+ldFilterManager *ldHardwareManager::filterManager() const
+{
+    return m_filterManager;
 }
 
 void ldHardwareManager::setConnectedDevicesActive(bool active)
@@ -52,16 +68,11 @@ void ldHardwareManager::setConnectedDevicesActive(bool active)
     }
 }
 
-void ldHardwareManager::setFlipX(bool isFlipX)
+void ldHardwareManager::setExplicitActiveDevice(int index)
 {
-    for(ldAbstractHardwareManager *hardwareManager : m_hardwareManagers)
-        hardwareManager->setFlipX(isFlipX);
-}
-
-void ldHardwareManager::setFlipY(bool isFlipY)
-{
-    for(ldAbstractHardwareManager *hardwareManager : m_hardwareManagers)
-        hardwareManager->setFlipY(isFlipY);
+    for(ldAbstractHardwareManager *hardwareManager : m_hardwareManagers) {
+        hardwareManager->setExplicitActiveDevice(index);
+    }
 }
 
 void ldHardwareManager::addHardwareManager(ldAbstractHardwareManager *hardwareManager)

@@ -18,10 +18,6 @@ ldSpiralFighterGame::ldSpiralFighterGame(QObject *parent)
     keyMap[ldGamepad::Button::A] = Qt::Key_Enter;
     keyMap[ldGamepad::Button::B] = Qt::Key_Space;
     get_gamepadCtrl()->init(keyMap, m_keyDescriptions);
-
-    connect(m_visualizer.data(), &ldSpiralFighterVisualizer::finished, this, [&]() {
-        set_state(Ready);
-    });
 }
 
 ldSpiralFighterGame::~ldSpiralFighterGame() {

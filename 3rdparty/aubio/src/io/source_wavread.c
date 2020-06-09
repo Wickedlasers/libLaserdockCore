@@ -319,7 +319,7 @@ void aubio_source_wavread_readframe(aubio_source_wavread_t *s, uint_t *wavread_r
     }
   }
 
-  *wavread_read = read;
+  *wavread_read = (uint_t) read;
 
   if (read == 0) s->eof = 1;
 }

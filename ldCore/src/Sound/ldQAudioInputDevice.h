@@ -23,8 +23,12 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>
+#include <QtMultimedia/QAudioDeviceInfo>
 
 #include <ldCore/Sound/ldSoundInterface.h>
+
+class QAudioInput;
+class QIODevice;
 
 //
 // ldQAudioInputDevice

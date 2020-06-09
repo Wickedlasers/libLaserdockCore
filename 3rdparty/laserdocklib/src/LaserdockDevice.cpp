@@ -217,6 +217,11 @@ void LaserdockDevice::print() const
     d->print();
 }
 
+int LaserdockDevice::lastError() const
+{
+    return d->last_error;
+}
+
 
 bool LaserdockDevice::get_output(bool *enabled) {
     uint8_t enabled8 = 0;
@@ -292,6 +297,7 @@ bool LaserdockDevice::send(unsigned char *data, uint32_t length) {
     } while ( rv == LIBUSB_ERROR_TIMEOUT && timeout_strikes != 0);
 
     if (rv < 0) {
+        d->last_error = rv;
         return false;
     }
 

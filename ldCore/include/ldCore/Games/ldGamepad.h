@@ -75,12 +75,10 @@ signals:
     void axisLeftYChanged(double axisX);
     void axisRightXChanged(double axisX);
     void axisRightYChanged(double axisX);
-    void buttonPressed(Button button, bool pressed);
+    void buttonPressed(ldGamepad::Button button, bool pressed);
 
 private:
     void updateGamepadState();
-
-    QSet<Button> m_pressedButtons;
 
     std::unique_ptr<QGamepad> m_gamepad;
 };

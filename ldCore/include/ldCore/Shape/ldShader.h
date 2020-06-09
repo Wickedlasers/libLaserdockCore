@@ -26,50 +26,18 @@
 //  Copyright (c) 2014 Wicked Lasers. All rights reserved.
 //
 
-#ifndef LaserdockEngine__ldShader__
-#define LaserdockEngine__ldShader__
+#ifndef LDSHADER_H
+#define LDSHADER_H
 
-#include <QtCore/QStack>
+#include "ldCore/ldCore_global.h"
 
-#include "ldCore/Filter/ldFilter.h"
-#include "ldCore/Shape/ldParticleGeometry.h"
-
-class ldShape;
-
-
-/**
- * Shader Manager
- */
-class LDCORESHARED_EXPORT ldShaderManager
+/** Shader */
+class LDCORESHARED_EXPORT ldShader : public QObject
 {
+    Q_OBJECT
 public:
-    /// singlton method
-    static ldShaderManager* getSharedManager();
-
-private:
-    ldShaderManager();
-    ~ldShaderManager();
-    
-public:
-    /// push/pop into shader stack functions.
-    /// see libol library for more infos.
-    void pushVertextPreShader(ldShader* shader);
-    void pushVertextShader(ldShader* shader);
-    void pushPixelShader(ldShader* shader);
-    
-    ldShader* popVertextPreShader();
-    ldShader* popVertextShader();
-    ldShader* popPixelShader();
-
-    void apply_vertex_pre_shader(float *x, float *y, uint32_t *color);
-    void apply_vertex_shader(float *x, float *y, uint32_t *color);
-    void apply_pixel_shader(float *x, float *y, uint32_t *color);
-
-protected:
-    QStack<ldShader*> m_VtxPreStack;
-    QStack<ldShader*> m_VtxStack;
-    QStack<ldShader*> m_PxStack;
+    virtual void ShaderFunc(float *x, float *y, uint32_t *color) = 0;
+    virtual ~ldShader(){}
 };
 
-
-#endif /* defined(__LaserdockEngine__ldShader__) */
+#endif // LDSHADER_H

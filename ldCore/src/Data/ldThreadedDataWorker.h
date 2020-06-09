@@ -59,11 +59,10 @@ signals:
     void activeChanged(bool active);
 
 private:
-    // add your variables here
-    QMutex m_runningMutex;
-    volatile bool m_isRunning = false;
-    volatile bool m_isActive = false;
-    volatile bool m_isSimulatorEnabled = true;
+    // thread safe
+    std::atomic<bool> m_isRunning = {false};
+    std::atomic<bool> m_isActive = {false};
+    std::atomic<bool> m_isSimulatorEnabled = {true};
 
     int m_simulatedBufferFullCount = 0;
     QElapsedTimer m_simTimer;

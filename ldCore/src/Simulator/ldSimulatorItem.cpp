@@ -21,7 +21,7 @@
 #include "ldCore/Simulator/ldSimulatorItem.h"
 
 
-#include <math.h>
+#include <cmath>
 #include <locale.h>
 
 #include <QtCore/QTimer>

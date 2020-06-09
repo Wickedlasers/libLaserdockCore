@@ -32,7 +32,7 @@ class LDCORESHARED_EXPORT ldBufferManager : public QObject
     Q_OBJECT
 
 public:
-    explicit ldBufferManager(QObject *parent = 0);
+    explicit ldBufferManager(QObject *parent = nullptr);
 
     void registerBuffer(ldFrameBuffer * buffer);
 

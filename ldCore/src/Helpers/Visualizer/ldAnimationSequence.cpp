@@ -24,9 +24,9 @@
 #include <QtCore/QFile>
 
 #include "ldCore/ldCore.h"
-#include "ldCore/Filter/ldFilter.h"
 #include <ldCore/Helpers/Color/ldColorUtil.h>
 #include <ldCore/Render/ldRendererOpenlase.h>
+#include "ldCore/Shape/ldShader.h"
 #include "ldCore/Visualizations/ldVisualizer.h"
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
 #include "ldCore/Helpers/Audio/ldTempoAC.h"
@@ -57,6 +57,11 @@ void ldAnimationSequenceBezier::setRenderAlg(ldAnimationSequenceBezier::RenderAl
     m_renderAlg = renderAlg;
 }
 
+ldAnimationSequenceBezier::RenderAlg ldAnimationSequenceBezier::renderAlg() const
+{
+    return m_renderAlg;
+}
+
 void ldAnimationSequenceBezier::drawFrame(ldRendererOpenlase* r, int index) {
     if (index < 0 || (uint) index >= m_frames.size()) return;
 
@@ -75,9 +80,8 @@ void ldAnimationSequenceBezier::drawFrame(ldRendererOpenlase* r, int index) {
 
 
 
-static void vert3(ldRendererOpenlase* r, ldShader* s, float xx, float yy, uint32_t cc) {
-    float x = xx; float y = yy; uint32_t c = cc;
-    if (s != NULL) s->ShaderFunc(&x, &y, &c);
+static void vert3(ldRendererOpenlase* r, ldShader* s, float x, float y, uint32_t c) {
+    if (s) s->ShaderFunc(&x, &y, &c);
     r->vertex3(x, y, 0, c);
 }
 
@@ -131,7 +135,7 @@ void ldAnimationSequenceBezier::drawFrameLine4(ldRendererOpenlase* r, int index)
         for (const ldBezierPath &bezierPath : dataVect)
         {
 //            float alt = 0.0;
-            ldGradient gradient = bezierPath.gradient();
+            const ldGradient &gradient = bezierPath.gradient();
             uint32_t c = color;
             ldShader* s = _shader1;
             float f = 0; float ff = 0;
@@ -263,137 +267,15 @@ void ldAnimationSequenceBezier::loadDir(const QString &dirPath, const QString &f
 }
 
 
-void ldAnimationSequenceBezier::load(const QString &filePath) {
-
-
-    QFile file(filePath);
-    if (!file.exists()) {
-        qDebug() << "error::ldSvgReader::loadSvg: file does not exist" << filePath;
-        return;
+void ldAnimationSequenceBezier::load(const QString &filePath)
+{
+    if(filePath.endsWith("ldva2", Qt::CaseInsensitive)
+        || filePath.endsWith("ldva2.lds", Qt::CaseInsensitive)) {
+        load2(filePath);
+    } else if(filePath.endsWith("ldva4", Qt::CaseInsensitive)
+             || filePath.endsWith("ldva4.lds", Qt::CaseInsensitive)) {
+        load4(filePath);
     }
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qDebug() << "error::ldSvgReader::loadSvg: Qt file issue";
-        return;
-    }
-
-    //QByteArray blob = file.readAll();
-    QTextStream in(&file);
-
-    QString line;
-
-    line = in.readLine(); //out << "LDV Animation File" << endl;
-    line = in.readLine(); //out << "Render Alg" << endl;
-    line = in.readLine(); //out << renderAlg << endl;
-    m_renderAlg = RenderAlg(line.toInt());
-    line = in.readLine(); //out << "Frame Count" << endl;
-    line = in.readLine(); //out << nframes << endl;
-    int nframes = line.toInt();
-    m_frames.resize(nframes);
-
-    line = in.readLine(); //out << "Key Frame Index start end" << endl;
-    for (int i = 0; i < 8; i++) {
-        line = in.readLine(); //out << keyStart[i] << endl;
-        keyStart[i] = line.toInt();
-        line = in.readLine(); //out << keyEnd[i] << endl;
-        keyEnd[i] = line.toInt();
-    }
-
-    line = in.readLine(); //out << "Frame Data" << endl;
-    for (int i = 0; i < nframes; i++) {
-        line = in.readLine(); //out << "Frame " << i << endl;
-        line = in.readLine(); //out << "Curve Count" << endl;
-        line = in.readLine(); //out << ncurves << endl;
-        int ncurves = line.toInt();
-        m_frames[i].resize(ncurves);
-        for (int j = 0; j < ncurves; j++) {
-            ldBezierPath &path = m_frames[i][j];
-            line = in.readLine(); //out << "Curve " << j << endl;
-            line = in.readLine(); //out << "Point Count" << endl;
-            line = in.readLine(); //out << npoints << endl;
-            int npoints = line.toInt();
-            for (int k = 0; k < npoints; k++) {
-                float sx = in.readLine().toFloat();
-                float sy = in.readLine().toFloat();
-                float ex = in.readLine().toFloat();
-                float ey = in.readLine().toFloat();
-                float c1x = in.readLine().toFloat();
-                float c1y = in.readLine().toFloat();
-                float c2x = in.readLine().toFloat();
-                float c2y = in.readLine().toFloat();
-
-                ldBezierCurve curve;
-                curve.setStart(ldVec2(sx, sy));
-                curve.setEnd(ldVec2(ex, ey));
-                curve.setControl1(ldVec2(c1x, c1y));
-                curve.setControl2(ldVec2(c2x, c2y));
-                path.add(curve);
-            }
-        }
-    }
-//    line = in.readLine(); //out << "End" << endl;
-}
-
-void ldAnimationSequenceBezier::save(const QString &filePath) {
-
-
-    QFile file(filePath);
-    //if (!file.exists()) {
-    //    qDebug() << "error::ldSvgReader::loadSvg: file does not exist" << str;
-    //    return;
-    //}
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qDebug() << "error::ldSvgReader::loadSvg: Qt file issue";
-        QFileDevice::FileError error = file.error();
-        qDebug() << error << file.errorString();
-
-        return;
-    }
-
-    //QByteArray blob = file.readAll();
-    //QTextStream in(&file);
-    QTextStream out(&file);
-
-    out << "LDV Animation File" << endl;
-
-    out << "Render Alg" << endl;
-    out << m_renderAlg << endl;
-
-    int nframes = m_frames.size();
-    out << "Frame Count" << endl;
-    out << nframes << endl;
-
-    out << "Key Frame Index start end" << endl;
-    for (int i = 0; i < 8; i++) {
-        out << keyStart[i] << endl;
-        out << keyEnd[i] << endl;
-    }
-
-    out << "Frame Data" << endl;
-    for (int i = 0; i < nframes; i++) {
-        out << "Frame " << i << endl;
-        int ncurves = m_frames[i].size();
-        out << "Curve Count " << endl;
-        out << ncurves << endl;
-        for (int j = 0; j < ncurves; j++) {
-            out << "Curve " << j << endl;
-            int npoints = m_frames[i][j].size();
-            out << "Point Count" << endl;
-            out << npoints << endl;
-            for (int k = 0; k < npoints; k++) {
-                out << m_frames[i][j].data()[k].start().x << endl;
-                out << m_frames[i][j].data()[k].start().y << endl;
-                out << m_frames[i][j].data()[k].end().x << endl;
-                out << m_frames[i][j].data()[k].end().y << endl;
-                out << m_frames[i][j].data()[k].control1().x << endl;
-                out << m_frames[i][j].data()[k].control1().y << endl;
-                out << m_frames[i][j].data()[k].control2().x << endl;
-                out << m_frames[i][j].data()[k].control2().y << endl;
-            }
-        }
-    }
-    out << "End" << endl;
-
-
 }
 
 bool ldAnimationSequenceBezier::save2(const QString &filePath) {
@@ -468,277 +350,6 @@ bool ldAnimationSequenceBezier::save2(const QString &filePath) {
     return true;
 }
 
-
-
-bool ldAnimationSequenceBezier::load2(const QString &filePath) {
-    QByteArray data = readFile(filePath);
-
-    //QByteArray blob = file.readAll();
-    //QTextStream in(&file);
-    //QB out(&file);
-    QDataStream in(data);
-
-    //out << "LDV Animation File" << endl;
-    //5 byte header
-//    char header[] = "LDVA2";
-    char res[5];
-//    char c;
-    //file.write(header, 5);
-    //in.readBytes(&res, 5);
-    in.readRawData(res, 5);
-    // todo: compare header[] with res[] to verify version
-
-    int renderAlgInt;
-    in >> renderAlgInt;
-    m_renderAlg = RenderAlg(renderAlgInt);
-
-    int nframes; in >> nframes;
-    m_frames.resize(nframes);
-
-    for (int i = 0; i < 8; i++) {
-        in >> keyStart[i];
-        in >> keyEnd[i];
-    }
-
-    in >> sourceFPS;
-    in >> sourceBPM;
-
-    for (int i = 0; i < nframes; i++) {
-        //line = in.readLine(); //out << "Frame " << i << endl;
-        //line = in.readLine(); //out << "Curve Count" << endl;
-        //line = in.readLine(); //out << ncurves << endl;
-        //int ncurves = line.toInt();
-        int ncurves; in >> ncurves;
-        m_frames[i].resize(ncurves);
-        for (int j = 0; j < ncurves; j++) {
-            ldBezierPath &path = m_frames[i][j];
-            //line = in.readLine(); //out << "Curve " << j << endl;
-            //line = in.readLine(); //out << "Point Count" << endl;
-            //line = in.readLine(); //out << npoints << endl;
-            //int npoints = line.toInt();
-            int npoints; in >> npoints;
-
-            std::vector<BezierCurve> b;
-            b.resize(npoints);
-            in.readRawData((char*)b.data(), sizeof(BezierCurve)*npoints);
-            for (int k = 0; k < npoints; k++) {
-                ldBezierCurve curve;
-                curve.setStart(b[k].start);
-                curve.setEnd(b[k].end);
-                curve.setControl1(b[k].control1);
-                curve.setControl2(b[k].control2);
-                path.add(curve);
-            }
-
-            //in.readRawData((char*)frames[i][j].data(), sizeof(BezierCurve2)*npoints);
-            if (0) for (int k = 0; k < npoints; k++) {
-                ldBezierCurve curve;
-                float sx, sy, ex, ey, c1x, c1y, c2x, c2y;
-                in >> sx;
-                in >> sy;
-                in >> ex;
-                in >> ey;
-                in >> c1x;
-                in >> c1y;
-                in >> c2x;
-                in >> c2y;
-
-                curve.setStart(ldVec2(sx, sy));
-                curve.setEnd(ldVec2(ex, ey));
-                curve.setControl1(ldVec2(c1x, c1y));
-                curve.setControl2(ldVec2(c2x, c2y));
-                path.add(curve);
-            }
-        }
-    }
-    //line = in.readLine(); //out << "End" << endl;
-
-    return true;
-}
-
-
-
-void ldAnimationSequenceBezier::load3(const QString &filePath) {
-
-
-    QFile file(filePath);
-    if (!file.exists()) {
-        qDebug() << "error::ldSvgReader::loadSvg: file does not exist" << filePath;
-        //        QFileDevice::FileError error = file.error();
-        qDebug() << file.errorString();
-        return;
-    }
-    if (!file.open(QIODevice::ReadOnly)) {
-        qDebug() << "error::ldSvgReader::loadSvg: Qt file issue";
-        //        QFileDevice::FileError error = file.error();
-        qDebug() << file.errorString();
-        return;
-    }
-
-    QDataStream in(&file);
-
-    //5 byte header
-    char res[5];
-    in.readRawData(res, 5);
-    // todo: compare header[] with res[] to verify version
-
-    int renderAlgInt;
-    in >> renderAlgInt;
-    m_renderAlg = RenderAlg(renderAlgInt);
-
-    int nframes; in >> nframes;
-    m_frames.resize(nframes);
-
-    for (int i = 0; i < 8; i++) {
-        in >> keyStart[i];
-        in >> keyEnd[i];
-    }
-
-    in >> sourceFPS;
-    in >> sourceBPM;
-
-    for (int i = 0; i < nframes; i++) {
-        int ncurves; in >> ncurves;
-        m_frames[i].resize(ncurves);
-        for (int j = 0; j < ncurves; j++) {
-            int npoints; in >> npoints;
-
-            std::vector<ldBezierCurve> curves;
-            curves.resize(npoints);
-            in.readRawData((char*)curves.data(), sizeof(ldBezierCurve)*npoints);
-            m_frames[i][j] = ldBezierPath(curves);
-        }
-    }
-
-}
-
-void ldAnimationSequenceBezier::save3(const QString &filePath) {
-
-
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly)) {
-        qDebug() << "error::ldSvgReader::loadSvg: Qt file issue";
-        //        QFileDevice::FileError error = file.error();
-        qDebug() << file.errorString();
-        return;
-    }
-
-    QDataStream out(&file);
-    //5 byte header
-    char header[] = "LDVA3";
-    out.writeRawData(header, 5);
-
-    out << m_renderAlg;
-
-    int nframes = m_frames.size();
-    out << nframes;
-
-    for (int i = 0; i < 8; i++) {
-        out << keyStart[i];
-        out << keyEnd[i];
-    }
-
-    out << sourceFPS;
-    out << sourceBPM;
-
-    for (int i = 0; i < nframes; i++) {
-        int ncurves = m_frames[i].size();
-        out << ncurves;// << endl;
-        for (int j = 0; j < ncurves; j++) {
-            int npoints = m_frames[i][j].size();
-            out.writeRawData((char*)m_frames[i][j].data().data(), sizeof(ldBezierCurve)*npoints);
-        }
-    }
-
-
-
-}
-
-bool ldAnimationSequenceBezier::load4(const QString &filePath)
-{
-    QByteArray data = readFile(filePath);
-
-    QDataStream in(data);
-
-    char res[5];
-    in.readRawData(res, 5);
-
-    int renderAlgInt;
-    in >> renderAlgInt;
-    m_renderAlg = RenderAlg(renderAlgInt);
-
-    int nframes; in >> nframes;
-    Q_ASSERT_X(nframes >= 0, "ldAnimationSequenceBezier", "nframes is negative!");
-
-    m_frames.resize(nframes);
-
-    for (int i = 0; i < 8; i++) {
-        in >> keyStart[i];
-        in >> keyEnd[i];
-    }
-
-    in >> sourceFPS;
-    in >> sourceBPM;
-
-    for (int i = 0; i < nframes; i++) {
-        int ncurves;
-        in >> ncurves;
-        m_frames[i].resize(ncurves);
-        for (int j = 0; j < ncurves; j++) {
-            ldBezierPath &path = m_frames[i][j];
-            // read color
-            uint32_t pathColor;
-            in >> pathColor;
-            path.setColor(pathColor);
-
-            // read gradient
-            Gradient gr;
-            in >> gr.x1;
-            in >> gr.y1;
-            in >> gr.x2;
-            in >> gr.y2;
-
-            int grCount;
-            in >> grCount;
-            for(int k = 0; k < grCount; k++) {
-                GradientStop stop;
-                in >> stop.offset;
-                in >> stop.color;
-                gr.stops.push_back(stop);
-            }
-
-            ldGradient bGr;
-            bGr.setX1(gr.x1);
-            bGr.setY1(gr.y1);
-            bGr.setX2(gr.x2);
-            bGr.setY2(gr.y2);
-            for(const GradientStop &stop : gr.stops) {
-                ldGradientStop bStop(stop.offset, stop.color);
-                bGr.addStop(bStop);
-                m_isGradient = true;
-            }
-            path.setGradient(bGr);
-
-
-            // read bezier curves
-            int npoints;
-            in >> npoints;
-            std::vector<BezierCurve> b;
-            b.resize(npoints);
-            in.readRawData((char*)b.data(), sizeof(BezierCurve)*npoints);
-            for (int k = 0; k < npoints; k++) {
-                ldBezierCurve curve;
-                curve.setStart(b[k].start);
-                curve.setEnd(b[k].end);
-                curve.setControl1(b[k].control1);
-                curve.setControl2(b[k].control2);
-                path.add(curve);
-            }
-        }
-    }
-
-    return true;
-}
 
 bool ldAnimationSequenceBezier::save4(const QString &filePath)
 {
@@ -823,7 +434,13 @@ bool ldAnimationSequenceBezier::isGradient() const
     return m_isGradient;
 }
 
-
+bool ldAnimationSequenceBezier::isValid(const QString &filePath) const
+{
+    return filePath.endsWith("ldva2", Qt::CaseInsensitive)
+           || filePath.endsWith("ldva2.lds", Qt::CaseInsensitive)
+           || filePath.endsWith("ldva4", Qt::CaseInsensitive)
+           || filePath.endsWith("ldva4.lds", Qt::CaseInsensitive);
+}
 
 void ldAnimationSequenceBezier::autoscale() {
 
@@ -1012,6 +629,180 @@ void ldAnimationSequenceBezier::drawFrameBezier3x(ldRendererOpenlase* r, int ind
 }
 
 
+
+bool ldAnimationSequenceBezier::load2(const QString &filePath) {
+    QByteArray data = readFile(filePath);
+
+    //QByteArray blob = file.readAll();
+    //QTextStream in(&file);
+    //QB out(&file);
+    QDataStream in(data);
+
+    //out << "LDV Animation File" << endl;
+    //5 byte header
+    //    char header[] = "LDVA2";
+    char res[5];
+    //    char c;
+    //file.write(header, 5);
+    //in.readBytes(&res, 5);
+    in.readRawData(res, 5);
+    // todo: compare header[] with res[] to verify version
+
+    int renderAlgInt;
+    in >> renderAlgInt;
+    m_renderAlg = RenderAlg(renderAlgInt);
+
+    int nframes; in >> nframes;
+    m_frames.resize(nframes);
+
+    for (int i = 0; i < 8; i++) {
+        in >> keyStart[i];
+        in >> keyEnd[i];
+    }
+
+    in >> sourceFPS;
+    in >> sourceBPM;
+
+    for (int i = 0; i < nframes; i++) {
+        //line = in.readLine(); //out << "Frame " << i << endl;
+        //line = in.readLine(); //out << "Curve Count" << endl;
+        //line = in.readLine(); //out << ncurves << endl;
+        //int ncurves = line.toInt();
+        int ncurves; in >> ncurves;
+        m_frames[i].resize(ncurves);
+        for (int j = 0; j < ncurves; j++) {
+            ldBezierPath &path = m_frames[i][j];
+            //line = in.readLine(); //out << "Curve " << j << endl;
+            //line = in.readLine(); //out << "Point Count" << endl;
+            //line = in.readLine(); //out << npoints << endl;
+            //int npoints = line.toInt();
+            int npoints; in >> npoints;
+
+            std::vector<BezierCurve> b;
+            b.resize(npoints);
+            in.readRawData((char*)b.data(), sizeof(BezierCurve)*npoints);
+            for (int k = 0; k < npoints; k++) {
+                ldBezierCurve curve;
+                curve.setStart(b[k].start);
+                curve.setEnd(b[k].end);
+                curve.setControl1(b[k].control1);
+                curve.setControl2(b[k].control2);
+                path.add(curve);
+            }
+
+            //in.readRawData((char*)frames[i][j].data(), sizeof(BezierCurve2)*npoints);
+            if (0) for (int k = 0; k < npoints; k++) {
+                    ldBezierCurve curve;
+                    float sx, sy, ex, ey, c1x, c1y, c2x, c2y;
+                    in >> sx;
+                    in >> sy;
+                    in >> ex;
+                    in >> ey;
+                    in >> c1x;
+                    in >> c1y;
+                    in >> c2x;
+                    in >> c2y;
+
+                    curve.setStart(ldVec2(sx, sy));
+                    curve.setEnd(ldVec2(ex, ey));
+                    curve.setControl1(ldVec2(c1x, c1y));
+                    curve.setControl2(ldVec2(c2x, c2y));
+                    path.add(curve);
+                }
+        }
+    }
+    //line = in.readLine(); //out << "End" << endl;
+
+    return true;
+}
+
+bool ldAnimationSequenceBezier::load4(const QString &filePath)
+{
+    QByteArray data = readFile(filePath);
+
+    QDataStream in(data);
+
+    char res[5];
+    in.readRawData(res, 5);
+
+    int renderAlgInt;
+    in >> renderAlgInt;
+    m_renderAlg = RenderAlg(renderAlgInt);
+
+    int nframes; in >> nframes;
+    Q_ASSERT_X(nframes >= 0, "ldAnimationSequenceBezier", "nframes is negative!");
+
+    m_frames.resize(nframes);
+
+    for (int i = 0; i < 8; i++) {
+        in >> keyStart[i];
+        in >> keyEnd[i];
+    }
+
+    in >> sourceFPS;
+    in >> sourceBPM;
+
+    for (int i = 0; i < nframes; i++) {
+        int ncurves;
+        in >> ncurves;
+        m_frames[i].resize(ncurves);
+        for (int j = 0; j < ncurves; j++) {
+            ldBezierPath &path = m_frames[i][j];
+            // read color
+            uint32_t pathColor;
+            in >> pathColor;
+            path.setColor(pathColor);
+
+            // read gradient
+            Gradient gr;
+            in >> gr.x1;
+            in >> gr.y1;
+            in >> gr.x2;
+            in >> gr.y2;
+
+            int grCount;
+            in >> grCount;
+            for(int k = 0; k < grCount; k++) {
+                GradientStop stop;
+                in >> stop.offset;
+                in >> stop.color;
+                gr.stops.push_back(stop);
+            }
+
+            ldGradient bGr;
+            bGr.setX1(gr.x1);
+            bGr.setY1(gr.y1);
+            bGr.setX2(gr.x2);
+            bGr.setY2(gr.y2);
+            for(const GradientStop &stop : gr.stops) {
+                ldGradientStop bStop(stop.offset, stop.color);
+                bGr.addStop(bStop);
+                m_isGradient = true;
+            }
+            path.setGradient(bGr);
+
+
+            // read bezier curves
+            int npoints;
+            in >> npoints;
+            std::vector<BezierCurve> b;
+            b.resize(npoints);
+            in.readRawData((char*)b.data(), sizeof(BezierCurve)*npoints);
+            for (int k = 0; k < npoints; k++) {
+                ldBezierCurve curve;
+                curve.setStart(b[k].start);
+                curve.setEnd(b[k].end);
+                curve.setControl1(b[k].control1);
+                curve.setControl2(b[k].control2);
+                path.add(curve);
+            }
+        }
+    }
+
+    return true;
+}
+
+
 QByteArray ldAnimationSequenceBezier::readFile(const QString &filePath)
 {
     QFile file(filePath);
@@ -1036,4 +827,5 @@ QByteArray ldAnimationSequenceBezier::readFile(const QString &filePath)
 
     return file.readAll();
 }
+
 

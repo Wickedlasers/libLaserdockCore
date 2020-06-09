@@ -20,7 +20,7 @@
 
 #include "ldCore/Visualizations/ldVisualizationTask.h"
 
-#include <math.h>
+#include <cmath>
 
 #include <QtCore/QDateTime>
 #include <QtCore/QDebug>
@@ -32,6 +32,7 @@
 #include "ldCore/Render/ldRendererOpenlase.h"
 #include "ldCore/Shape/ldShape.h"
 #include "ldCore/Sound/ldAudioDecoder.h"
+#include "ldCore/Sound/ldSoundAnalyzer.h"
 #include "ldCore/Sound/ldSoundDeviceManager.h"
 #include "ldCore/Task/ldTaskManager.h"
 #include "ldCore/Visualizations/ldLogoLaserdock.h"
@@ -48,6 +49,10 @@
 
 */
 
+namespace  {
+    static const float ROTATION_RANGE = M_PIf;
+}
+
 ldVisualizationTask::ldVisualizationTask(ldMusicManager *musicManager, ldAudioDecoder *audioDecoder, QObject *parent)
     : ldAbstractTask(parent)
     , m_mutex(QMutex::Recursive)
@@ -57,7 +62,7 @@ ldVisualizationTask::ldVisualizationTask(ldMusicManager *musicManager, ldAudioDe
     qDebug() << __FUNCTION__;
 
 #ifdef LD_CORE_ENABLE_QT_QUICK
-    qmlRegisterType<ldVisualizer>();
+    qmlRegisterAnonymousType<ldVisualizer>("WickedLasers", 1);
 #endif
     
     m_openlase = new ldRendererOpenlase(this);
@@ -105,14 +110,25 @@ void ldVisualizationTask::update(quint64 delta, ldFrameBuffer * buffer)
         fps = vis->targetFPS();
         m_openlase->loadIdentity();
         m_openlase->loadIdentity3();
+
+        if(vis->is3d()) {
+            m_openlase->rotate3X(m_rotY*ROTATION_RANGE);
+            m_openlase->rotate3Y(m_rotX*ROTATION_RANGE);
+            m_openlase->rotate3Z(m_rotZ*ROTATION_RANGE);
+            m_openlase->pushMatrix3();
+        }
+
         m_openlase->setFrameModes(0);
 
         vis->visit(); // draw vis with renderer
+
+        if(vis->is3d())
+            m_openlase->popMatrix3();
     }
 
     // perform openlase rendering on the frame
     if (this->renderState()->renderOpenlase)
-        m_openlase->renderFrame(buffer, fps);
+        m_openlase->renderFrame(buffer, fps, vis && vis->is3d());
 	
 	//qDebug() << buffer->getFill() << " - " << buffer->getCapacity();
 }
@@ -132,7 +148,13 @@ void ldVisualizationTask::setIsShowLogo(bool showLogo)
     m_isShowLogo = showLogo;
 }
 
-void ldVisualizationTask::setCurrentVisualizer(ldVisualizer *visualizer, int priority)
+void ldVisualizationTask::setSoundSource(const ldVisualizationTask::SoundSource &source)
+{
+    QMutexLocker lock(&m_mutex);
+    m_soundSource = source;
+}
+
+void ldVisualizationTask::setVisualizer(ldVisualizer *visualizer, int priority)
 {
     QMutexLocker lock(&m_mutex);
 
@@ -140,15 +162,18 @@ void ldVisualizationTask::setCurrentVisualizer(ldVisualizer *visualizer, int pri
     QString visName = visualizer ? visualizer->visualizerName() : "null";
     qDebug().nospace() << __FUNCTION__ << " " << visName << priority;
 
-    // stop last visualizer if it should be replaced
-    if(!m_visualizers.isEmpty() && priority >= m_visualizers.lastKey()) {
-        m_visualizers.last()->stop();
-    }
+    bool isReplaceCurrent = !m_visualizers.isEmpty() && (priority == m_visualizers.lastKey());
+    bool isOverride = visualizer && (m_visualizers.isEmpty() || priority > m_visualizers.lastKey());
+    bool isChange = isReplaceCurrent || isOverride;
 
-    // start new visualizer if it should be replaced
-    if((m_visualizers.isEmpty() || priority >= m_visualizers.lastKey())
-            && visualizer) {
-        startVisualizer(visualizer);
+    if(isChange) {
+        // stop previous visualizer
+        if(!m_visualizers.isEmpty())
+            m_visualizers.last()->stop();
+
+        // start new visualizer if it should be replaced
+        if(visualizer)
+            startVisualizer(visualizer);
     }
 
     // remember current visualizer
@@ -158,11 +183,11 @@ void ldVisualizationTask::setCurrentVisualizer(ldVisualizer *visualizer, int pri
         m_visualizers.remove(priority);
 
     // if priority visualizer was disabled, activate the previous one
-    if(!visualizer && priority > 0 && !m_visualizers.isEmpty()) {
-        setCurrentVisualizer(m_visualizers.last(), m_visualizers.lastKey());
-    }
+    if(isChange && !visualizer && priority > 0 && !m_visualizers.isEmpty())
+        setVisualizer(m_visualizers.last(), m_visualizers.lastKey());
 
-    emit currentVisualizerChanged(visualizer);
+    if(isChange && priority == 0)
+        emit baseVisualizerChanged(visualizer);
 }
 
 /*!
@@ -176,22 +201,24 @@ void ldVisualizationTask::setCurrentVisualizer(ldVisualizer *visualizer, int pri
 void ldVisualizationTask::onUpdateAudio(const AudioBlock &block)
 {
     QMutexLocker lock(&m_mutex);
-    // process a new block of data, send data to music manager, auto random manager, and current visualizer
 
     // check if running
-    if (!m_sounddata) {qDebug() << "TEST FIX CHECK 2";return;}
+    if (!m_sounddata)
+        return;
 
-    // process block into raw sounddata struct
-    m_sounddata->Update(block);
+    if(m_soundSource == SoundSource::SoundInput) {
+        // process block into raw sounddata struct
+        m_sounddata->Update(block);
 
-    m_musicManager->setRealSoundLevel(m_sounddata->GetSoundLevel());
+        m_musicManager->setRealSoundLevel(m_sounddata->GetSoundLevel());
 
-    if(m_sounddata->GetSoundLevel() < m_soundLevelGate) {
-        m_sounddata->Update(AudioBlock::EMPTY_AUDIO_BLOCK);
+        if(m_sounddata->GetSoundLevel() < m_soundLevelGate) {
+            m_sounddata->Update(AudioBlock::EMPTY_AUDIO_BLOCK);
+        }
+
+        // update music manager
+        m_musicManager->updateWith(m_sounddata, AUDIO_UPDATE_DELTA_S);
     }
-
-    // update music manager
-    m_musicManager->updateWith(m_sounddata, AUDIO_UPDATE_DELTA_S);
 
     // update visualizer
     if (getActiveVis() && !m_audioDecoder->get_isActive()) getActiveVis()->updateWith(m_sounddata.get(), AUDIO_UPDATE_DELTA_S);
@@ -200,15 +227,15 @@ void ldVisualizationTask::onUpdateAudio(const AudioBlock &block)
 void ldVisualizationTask::onUpdateDecoderAudio(const AudioBlock &block)
 {
     QMutexLocker lock(&m_mutex);
-    // process a new block of data, send data to music manager, auto random manager, and current visualizer
 
     // check if running
-    if (!m_decoderSoundData) {qDebug() << "TEST FIX CHECK 3";return;}
+    if (!m_decoderSoundData)
+        return;
 
     // process block into raw sounddata struct
     m_decoderSoundData->Update(block);
 
-    if(!ldCore::instance()->soundDeviceManager()->getDeviceInfo().isValid()) {
+    if(m_soundSource == SoundSource::AudioDecoder) {
         m_musicManager->setRealSoundLevel(m_decoderSoundData->GetSoundLevel());
 
         // update music manager
@@ -232,13 +259,13 @@ void ldVisualizationTask::start()
 {
     QMutexLocker lock(&m_mutex);
 
-    ldSoundInterface * soundDeviceInterface = ldCore::instance()->soundDeviceManager();
-    ldSoundInterface * audioDecoderInterface = m_audioDecoder;
+    m_sounddata.reset(new ldSoundData());
+    m_decoderSoundData.reset(new ldSoundData());
 
-    m_sounddata.reset(new ldSoundData(soundDeviceInterface->getAudioFormat()));
-    m_decoderSoundData.reset(new ldSoundData(audioDecoderInterface->getAudioFormat()));
-    connect(soundDeviceInterface, &ldSoundInterface::audioBlockUpdated, this, &ldVisualizationTask::onUpdateAudio);
-    connect(audioDecoderInterface, &ldSoundInterface::audioBlockUpdated, this, &ldVisualizationTask::onUpdateDecoderAudio);
+    ldSoundAnalyzer * soundAnalyzer = ldCore::instance()->soundDeviceManager()->analyzer();
+    ldSoundAnalyzer * audioDecoderAnalyzer = m_audioDecoder->analyzer();
+    connect(soundAnalyzer, &ldSoundAnalyzer::audioBlockUpdated, this, &ldVisualizationTask::onUpdateAudio);
+    connect(audioDecoderAnalyzer, &ldSoundAnalyzer::audioBlockUpdated, this, &ldVisualizationTask::onUpdateDecoderAudio);
 
     if(!m_logo) m_logo.reset(new ldLogoLaserdock);
     // call updateWith at least once, to make sure visualizer gets m_sounddata pointer before any draw happens
@@ -257,9 +284,11 @@ void ldVisualizationTask::start()
 void ldVisualizationTask::stop()
 {
     QMutexLocker lock(&m_mutex);
-    ldSoundInterface * soundinterface = ldCore::instance()->soundDeviceManager();
-    disconnect(soundinterface, nullptr, this, nullptr);
-    
+    ldSoundAnalyzer * soundAnalyzer = ldCore::instance()->soundDeviceManager()->analyzer();
+    ldSoundAnalyzer * audioDecoderAnalyzer = m_audioDecoder->analyzer();
+    disconnect(soundAnalyzer, nullptr, this, nullptr);
+    disconnect(audioDecoderAnalyzer, nullptr, this, nullptr);
+
     m_sounddata.reset();
     m_decoderSoundData.reset();
 }
@@ -269,10 +298,25 @@ ldVisualizationTask::RenderState *ldVisualizationTask::renderState()
     return &m_renderstate;
 }
 
-ldVisualizer *ldVisualizationTask::getCurrentVisualizer() const
+ldVisualizer *ldVisualizationTask::getBaseVisualizer() const
 {
     QMutexLocker lock(&m_mutex);
-    return m_visualizers.contains(0) ? m_visualizers.first() : nullptr;
+    return m_visualizers.contains(0) ? m_visualizers[0] : nullptr;
+}
+
+void ldVisualizationTask::setRotX(float x)
+{
+    m_rotX = x;
+}
+
+void ldVisualizationTask::setRotY(float y)
+{
+    m_rotY = y;
+}
+
+void ldVisualizationTask::setRotZ(float z)
+{
+    m_rotZ = z;
 }
 
 ldVisualizer * ldVisualizationTask::getActiveVis() const

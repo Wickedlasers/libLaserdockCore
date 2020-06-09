@@ -133,6 +133,15 @@ public:
     const_iterator constEnd (void) const {
         return m_items.constEnd ();
     }
+    iterator erase(iterator pos) {
+        beginRemoveRows (noParent (), pos - begin(), pos - begin());
+        dereferenceItem (*pos);
+        auto it = m_items.erase (pos);
+        endRemoveRows ();
+        updateCounter ();
+        return it;
+
+    }
 
 public: // C++ API
     ItemType * at (int idx) const {
@@ -245,10 +254,9 @@ public: // C++ API
     }
     void move (int idx, int pos) {
         if (idx != pos) {
-            const int lowest  = qMin (idx, pos);
-            const int highest = qMax (idx, pos);
-            beginMoveRows (noParent (), highest, highest, noParent (), lowest);
-            m_items.move (highest, lowest);
+            int posRow = pos > idx ? pos + 1 : pos;
+            beginMoveRows (noParent (), idx, idx, noParent (), posRow);
+            m_items.move (idx, pos);
             endMoveRows ();
         }
     }

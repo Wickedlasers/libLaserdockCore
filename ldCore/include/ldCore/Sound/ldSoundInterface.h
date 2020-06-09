@@ -20,17 +20,11 @@
 
 #ifndef LDSOUNDINTERFACE_H
 #define LDSOUNDINTERFACE_H
-#include "ldCore/ldCore_global.h"
-
-#include <memory>
 
 #include <QtCore/QObject>
-#include <QtMultimedia/qaudioinput.h>
+#include <QtMultimedia/QAudioFormat>
 
-#include <ldCore/Sound/ldSoundData.h>
-#include <ldCore/Utilities/ldBasicDataStructures.h>
-#include <ldCore/Utilities/ldThreadSafeQueue.h>
-
+#include <ldCore/ldCore_global.h>
 
 class LDCORESHARED_EXPORT ldSoundInterface : public QObject
 {
@@ -38,31 +32,15 @@ class LDCORESHARED_EXPORT ldSoundInterface : public QObject
 public:
     static QAudioFormat getDefaultAudioFormat();
 
-    explicit ldSoundInterface(QObject *parent = 0);
+    explicit ldSoundInterface(QObject *parent = nullptr);
     ~ldSoundInterface();
 
     virtual QAudioFormat getAudioFormat() const;
 
-    static int s_latencyms;
-    static int s_enableLatency;
-
 signals:
-    void audioBlockUpdated(const AudioBlock &block);
+    // 2 options to process buffer further. Device should send only one of them
+    void bufferUpdated(float *convertedBuffer, int framesm, int sampleRate);
     void soundUpdated(const char * data, qint64 len);
-
-protected slots:
-    void handleSoundUpdated(const char * data, qint64 len);
-    void processAudioBuffer(float *convertedBuffer, int frames);
-
-private:
-    void convertRawToStereoFloatFrame(const char *data, qint64 frames, const QAudioFormat& m_format, float interleavedFrame[]);
-
-    std::unique_ptr<ldThreadSafeQueue<float>> m_pAudioBuffer;
-    std::unique_ptr<AudioBlock> m_pCurrentBlock;
-
-private slots:
-    void sendBlocks();
-
 };
 
 #endif // LDSOUNDINTERFACE_H

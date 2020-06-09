@@ -44,24 +44,24 @@ public:
 
         std::string serial_number;
 
+#ifdef LD_CORE_ENABLE_LASERDOCKLIB
         LaserdockDevice *device = NULL;
+#endif
     };
     
     ldUSBHardware(LaserdockDevice *device, QObject *parent = 0);
     ~ldUSBHardware();
+
+    virtual QString id() const override;
 
     void send_security_requst(QByteArray request);
     void get_security_response(QByteArray &response);
     
     struct device_params & params();
     
-    bool send_samples(LaserdockSample *samples, unsigned int size);
+    bool send_samples(uint startIndex, uint count);
 	int get_full_count();
-    
-
-signals:
-    void deviceDisconnected();
-    
+        
 private:
     QScopedPointer<ldUSBHardwarePrivate> d_ptr;
     Q_DECLARE_PRIVATE(ldUSBHardware)

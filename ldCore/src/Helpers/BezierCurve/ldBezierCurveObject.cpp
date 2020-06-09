@@ -31,13 +31,8 @@
 
 const ldBezierCurveObject ldBezierCurveObject::stub = ldBezierCurveObject();
 
-ldBezierCurveObject::ldBezierCurveObject(const ldBezierPaths &curves, bool isUnitedCoordinates)
+ldBezierCurveObject::ldBezierCurveObject(const ldBezierPaths &curves)
     : m_paths(curves)
-    , m_isUnitedCoordinates(isUnitedCoordinates)
-{
-}
-
-ldBezierCurveObject::~ldBezierCurveObject()
 {
 }
 

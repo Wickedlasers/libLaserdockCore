@@ -20,7 +20,7 @@
 
 #include "ldCore/Helpers/Audio/ldDurationalStatEstimator.h"
 
-#include <math.h>
+#include <cmath>
 #include <ldCore/Sound/ldSoundData.h>
 #include <QtCore/QDebug>
 #include "ldCore/Helpers/Maths/ldGeometryUtil.h"

@@ -23,24 +23,7 @@
 
 //#include <QtCore/qglobal.h>
 
-#include "ldCore/ldCore_global.h"
-
-class LDCORESHARED_EXPORT vt3  {
-public:
-    vt3(float p_x = 0, float p_y = 0, float p_z = 0);
-
-    void rot(const vt3 &k, float theta);
-
-    float x = 0;
-    float y = 0;
-    float z = 0;
-
-private:
-    void sm(float f);
-    float dot(const vt3 &b) const;
-    void cross(const vt3 &b);
-    void add(const vt3 &b);
-};
+#include <ldCore/Helpers/Maths/ldVec3.h>
 
 class LDCORESHARED_EXPORT ldProjectionBasic
 {
@@ -57,6 +40,8 @@ public:
     void transform (float &x, float &y);
     float maxdim() const;
 
+    bool isNullTransform() const;
+
 private:
     void calcPitchYawCache();
     void calcMaxDim();
@@ -64,15 +49,15 @@ private:
 
     // params
     float beamAngleDeg = 21.04f;
-    float projectorYaw = 0;
-    float projectorPitch = 0;
+    float m_yaw = 0;
+    float m_pitch = 0;
 
     // cache
     // beamAngleDeg only
     float m_dist = 0;
     // pitch yaw
     float m_maxdim = 0;
-    vt3 m_v2;
+    ldVec3 m_v2;
 };
 
 

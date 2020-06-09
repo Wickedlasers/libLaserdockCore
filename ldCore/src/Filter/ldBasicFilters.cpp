@@ -20,11 +20,32 @@
 
 #include "ldCore/Filter/ldBasicFilters.h"
 
-#include <math.h>
+#include <cmath>
 
 #include "ldCore/Helpers/Color/ldColorUtil.h"
 
 // ---------- ldColorCurveFilter ----------
+
+float ldColorCurve::get(float f) {
+    // old
+    /* float a, b, z;
+         if      (f <= 0.25) {a =  0; b = x1; z = (f-0.00)*4;}
+         else if (f <= 0.50) {a = x1; b = x2; z = (f-0.25)*4;}
+         else if (f <= 0.75) {a = x2; b = x3; z = (f-0.50)*4;}
+         else                {a = x3; b =  1; z = (f-0.75)*4;}
+         return (1-z)*a + (z)*b;*/
+
+    float midx = (1-dflect)/2;
+    float midy = ((1+dflect)/2) * (gain-thold) + thold;
+
+    if (f < midx) {
+        float slope = (midy-thold)/(midx-0);
+        return  slope*(f-0) + thold;
+    } else {
+        float slope = (gain-midy)/(1-midx);
+        return  slope*(f-midx) + midy;
+    }
+}
 
 ldColorCurveFilter::ldColorCurveFilter()
 {
@@ -39,16 +60,21 @@ ldColorCurveFilter::ldColorCurveFilter()
     curveB.dflect = (int)(100 * 0) / 100.0f;
 }
 
-void ldColorCurveFilter::process(Vertex &v)
+void ldColorCurveFilter::process(ldVertex &v)
 {
-    if (v.color[0] > 0 || blackUseTHold) v.color[0] = curveR.get(v.color[0]);
-    if (v.color[1] > 0 || blackUseTHold) v.color[1] = curveG.get(v.color[1]);
-    if (v.color[2] > 0 || blackUseTHold) v.color[2] = curveB.get(v.color[2]);
+    if(!m_enabled)
+        return;
+
+    if (v.r() > 0 || blackUseTHold) v.r() = curveR.get(v.r());
+    if (v.g() > 0 || blackUseTHold) v.g() = curveG.get(v.g());
+    if (v.b() > 0 || blackUseTHold) v.b() = curveB.get(v.b());
+
+    for (int i = 0; i < ldVertex::COLOR_COUNT; i++) v.color[i] = fminf(fmaxf(v.color[i], 0), 1);
 }
 
 // ---------- ldColorFaderFilter ----------
 
-void ldColorFaderFilter::process(Vertex &v)
+void ldColorFaderFilter::process(ldVertex &v)
 {
     v.r() *= r;
     v.g() *= g;
@@ -58,10 +84,10 @@ void ldColorFaderFilter::process(Vertex &v)
 
 // ---------- ldHueFilter ----------
 
-void ldHueFilter::process(Vertex &input)
+void ldHueFilter::process(ldVertex &input)
 {
     float h, s, v;
-    ldColorUtil::colorRGBtoHSVfloat(input.color[0], input.color[1], input.color[2], h, s, v);
+    ldColorUtil::colorRGBtoHSVfloat(input.r(), input.g(), input.b(), h, s, v);
 
     h = m_value;
 
@@ -72,13 +98,13 @@ void ldHueFilter::process(Vertex &input)
     s += std::max(v - saturationCoeff, 0.f);
     s = std::min(s, 1.0f);
 
-    ldColorUtil::colorHSVtoRGBfloat(h, s, v, input.color[0], input.color[1], input.color[2]);
+    ldColorUtil::colorHSVtoRGBfloat(h, s, v, input.r(), input.g(), input.b());
 }
 
 
 // ---------- ldHueMatrixFilter ----------
 
-void ldHueMatrixFilter::process(Vertex &input)
+void ldHueMatrixFilter::process(ldVertex &input)
 {
     float hue = m_value;
     float hh, ss, vv;
@@ -94,33 +120,33 @@ void ldHueMatrixFilter::process(Vertex &input)
         hh = hue + spread + 1; hh -= (int)hh; ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, c3r, c3g, c3b);
     }
     float vr, vg, vb;
-    vr = c1r * input.color[0] + c2r * input.color[1] + c3r * input.color[2];
-    vg = c1g * input.color[0] + c2g * input.color[1] + c3g * input.color[2];
-    vb = c1b * input.color[0] + c2b * input.color[1] + c3b * input.color[2];
+    vr = c1r * input.r() + c2r * input.g() + c3r * input.b();
+    vg = c1g * input.r() + c2g * input.g() + c3g * input.b();
+    vb = c1b * input.r() + c2b * input.g() + c3b * input.b();
     if (vr < 0) vr = 0;
     if (vr > 1) vr = 1;
     if (vg < 0) vg = 0;
     if (vg > 1) vg = 1;
     if (vb < 0) vb = 0;
     if (vb > 1) vb = 1;
-    input.color[0] = vr; input.color[1] = vg; input.color[2] = vb;
+    input.r() = vr; input.g() = vg; input.b() = vb;
 }
 
 
 // ---------- ldHueShiftFilter ----------
 
-void ldHueShiftFilter::process(Vertex &input)
+void ldHueShiftFilter::process(ldVertex &input)
 {
     float hh, ss, vv;
-    ldColorUtil::colorRGBtoHSVfloat(input.color[0], input.color[1], input.color[2], hh, ss, vv);
+    ldColorUtil::colorRGBtoHSVfloat(input.r(), input.g(), input.b(), hh, ss, vv);
     hh += m_value;
     hh -= (int) hh;
-    ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, input.color[0], input.color[1], input.color[2]);
+    ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, input.r(), input.g(), input.b());
 }
 
 // ---------- ldFlipFilter ----------
 
-void ldFlipFilter::process(Vertex &v)
+void ldFlipFilter::process(ldVertex &v)
 {
     // flip xy
     if (flipX) v.x() *= -1;
@@ -128,9 +154,22 @@ void ldFlipFilter::process(Vertex &v)
 }
 
 
+// ---------- ldPowerFilter ----------
+
+void ldPowerFilter::process(ldVertex &v)
+{
+    // global brightness 1
+    v.r() *= m_brightness;
+    v.g() *= m_brightness;
+    v.b() *= m_brightness;
+
+    for (int i = 0; i < ldVertex::COLOR_COUNT; i++)
+        v.color[i] = fminf(fmaxf(v.color[i], 0), 1);
+}
+
 // ---------- ldRotateFilter ----------
 
-void ldRotateFilter::process(Vertex &v)
+void ldRotateFilter::process(ldVertex &v)
 {
     if(!m_enabled)
         return;
@@ -145,16 +184,39 @@ void ldRotateFilter::process(Vertex &v)
     v.x() = tx*cosangle - ty*sinangle;
 }
 
+// ---------- ld3dRotateFilter ----------
+
+void ld3dRotateFilter::setX(float x)
+{
+    m_x = x*ROT_RANGE;
+}
+
+void ld3dRotateFilter::setY(float y)
+{
+    m_y = y*ROT_RANGE;
+}
+
+void ld3dRotateFilter::process(ldVertex &input)
+{
+    if(cmpf(m_x, 0) && cmpf(m_y, 0))
+        return;
+
+    ldVec3 v3{input.x(), input.y(), 0};
+    v3.rotate(ldVec3::Y_VECTOR, m_x);
+    v3.rotate(ldVec3::X_VECTOR, m_y);
+    input.x() = v3.x;
+    input.y() = v3.y;
+}
 
 // ---------- ldTracerFilter ------------
 
-void ldTracerFilter::process(Vertex &input)
+void ldTracerFilter::process(ldVertex &input)
 {
     //for (int i = 0; i < 4; i++) v.color[i] = 1; // old implementation, just sets everything white
-    static bool dash = true; dash = !dash;
-    if (dash)
-        if (input.color[0] == 0 && input.color[1] == 0 && input.color[2] == 0)
-            for (int i = 0; i < 4; i++) input.color[i] = 1;
+    m_dash = !m_dash;
+    if (m_dash)
+        if (input.isBlank())
+            for (int i = 0; i < ldVertex::COLOR_COUNT; i++) input.color[i] = 1;
 }
 
 // ---------- ldScaleFilter ----------
@@ -167,90 +229,108 @@ ldScaleFilter::ldScaleFilter()
 
 }
 
-void ldScaleFilter::setRelativeScaleActive(bool active)
+void ldScaleFilter::process(ldVertex &v)
 {
-    m_relativeScaleActive = active;
-}
+    if(!m_enabled)
+        return;
 
-void ldScaleFilter::process(Vertex &v)
-{
     v.x() *= xScale();
     v.y() *= yScale();
 }
 
-void ldScaleFilter::setRelativeScale(float value)
+void ldScaleFilter::setXScale(float value)
 {
     if (value > SCALE_MAX_VALUE) value = SCALE_MAX_VALUE;
     if (value < SCALE_MIN_VALUE) value = SCALE_MIN_VALUE;
 
-    m_relative = value;
-}
-
-void ldScaleFilter::setMaxXScale(float value)
-{
-    if (value > SCALE_MAX_VALUE) value = SCALE_MAX_VALUE;
-    if (value < SCALE_MIN_VALUE) value = SCALE_MIN_VALUE;
-
-    m_maxX = value;
-}
-
-void ldScaleFilter::setMaxYScale(float value)
-{
-    if (value > SCALE_MAX_VALUE) value = SCALE_MAX_VALUE;
-    if (value < SCALE_MIN_VALUE) value = SCALE_MIN_VALUE;
-
-    m_maxY = value;
+    m_xScale = value;
 }
 
 float ldScaleFilter::xScale() const
 {
-    return m_relativeScaleActive ?
-                m_maxX * m_relative :
-                m_maxX;
+    return m_xScale;
+}
+
+void ldScaleFilter::setYScale(float value)
+{
+    if (value > SCALE_MAX_VALUE) value = SCALE_MAX_VALUE;
+    if (value < SCALE_MIN_VALUE) value = SCALE_MIN_VALUE;
+
+    m_yScale = value;
 }
 
 float ldScaleFilter::yScale() const
 {
-    return m_relativeScaleActive ?
-                m_maxY * m_relative :
-                m_maxY;
+    return m_yScale;
+}
+
+void ldScaleFilter::setEnabled(bool enabled)
+{
+    m_enabled = enabled;
+}
+
+bool ldScaleFilter::isEnabled() const
+{
+    return m_enabled;
 }
 
 // ---------- ldShiftFilter ----------
 
-ldShiftFilter::ldShiftFilter(ldScaleFilter *scaleFilter)
+ldShiftFilter::ldShiftFilter(std::vector<ldScaleFilter*> scaleFilters)
     : ldFilter()
-    , m_scaleFilter(scaleFilter)
+    , m_scaleFilters(scaleFilters)
 {
 
 }
 
-void ldShiftFilter::process(Vertex &v)
+void ldShiftFilter::process(ldVertex &v)
 {
     // shift
-    float fsx = x * (1.0f - m_scaleFilter->xScale());
-    float fsy = y * (1.0f - m_scaleFilter->yScale());
+    float xScale = 1;
+    float yScale = 1;
+    for(ldScaleFilter *scaleFilter : m_scaleFilters) {
+        if(!scaleFilter->isEnabled())
+            continue;
+
+        xScale *= scaleFilter->xScale();
+        yScale *= scaleFilter->yScale();
+    }
+    float fsx = x * (1.0f - xScale);
+    float fsy = y * (1.0f - yScale);
     v.x() += fsx;
     v.y() += fsy;
 }
 
 // ---------- ldTtlFilter ----------
 
-void ldTtlFilter::process(Vertex &v)
+void ldTtlFilter::process(ldVertex &v)
 {
+    if(!m_enabled)
+        return;
+
     // color hue preserving transformation
     float c1 = 0.25f; // cutoff for K/RGB
     float c2 = 0.50f; // cutoff for RGB/CMY
     float c3 = 0.66f; // cutiff for CMY/W
     int i1 = 0;
-    for (int i = 0; i < 3; i++) if (v.color[i] > v.color[i1]) i1 = i;
-    int i2 = (i1+1)%3;
-    for (int i = 0; i < 3; i++) if (i != i1) if (v.color[i] > v.color[i2]) i2 = i;
-    int i3 = 0; if ((i3 == i1) || (i3 == i2)) i3++; if ((i3 == i1) || (i3 == i2)) i3++;
+    for (int i = 0; i < ldVertex::COLOR_COUNT; i++)
+        if (v.color[i] > v.color[i1]) i1 = i;
+    int i2 = (i1+1)%ldVertex::COLOR_COUNT;
+
+    for (int i = 0; i < ldVertex::COLOR_COUNT; i++)
+        if (i != i1)
+            if (v.color[i] > v.color[i2])
+                i2 = i;
+
+    int i3 = 0;
+    if ((i3 == i1) || (i3 == i2))
+        i3++;
+    if ((i3 == i1) || (i3 == i2))
+        i3++;
     float v1 = v.color[i1];
     float v2 = v.color[i2];
     float v3 = v.color[i3];
-    v.color[0] = v.color[1] = v.color[2] = 0;
+    v.clearColor();
     if (v1 >= c1) {
         v.color[i1] = 1;
         if (v2 >= v1*c2) {

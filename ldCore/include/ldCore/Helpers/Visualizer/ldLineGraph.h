@@ -28,7 +28,7 @@
 #ifndef ldLineGraph_H
 #define ldLineGraph_H
 
-#include <math.h>
+#include <cmath>
 #include <QtCore/QString>
 #include <ldCore/Sound/ldSoundData.h>
 #include <ldCore/Render/ldRendererOpenlase.h>

@@ -26,14 +26,20 @@
 //  Copyright (c) 2015 Wicked Lasers. All rights reserved.
 //
 
-#ifndef ldCore__ldGeometryUtil__
-#define ldCore__ldGeometryUtil__
+#ifndef LDGEOMETRYUTIL_H
+#define LDGEOMETRYUTIL_H
 
 #include "ldCore/ldCore_global.h"
 
-#include <ldCore/Helpers/Maths/ldMaths.h>
+#include <cmath>
+#include <cmath>
 
-const float TAU = M_2PIf;
+#include <ldCore/Helpers/Maths/ldMaths.h>
+#include <ldCore/Shape/ldParticleGeometry.h>
+
+namespace {
+    constexpr float TAU = M_2PIf;
+}
 
 class LDCORESHARED_EXPORT ldControlValue {
 public:
@@ -60,13 +66,12 @@ public:
 inline void resetControls() {}
 inline void addControl(ldControlValue cv) {*(cv.pointer) = cv.value;}
 
-#include "ldCore/Shape/ldParticleGeometry.h"
 inline float fscale(float f, float min, float max) {
     return min+(max-min)*clampf(f,0,1);
 }
-inline float floorf2(float f) {return (int)f;}
-inline int iscale(float f, int min, int max) {
-    return floorf2(0.00f+(min+(max-min+1.0f)*clampf(f,0.001f,0.999f)));
+template <class T>
+inline T iscale(float f, T min, T max) {
+    return static_cast<T> (std::floor(0.00f+(min+(max-min+1.0f)*clampf(f,0.001f,0.999f))));
 }
 inline float clampfp(float &fp, float min, float max) {
     if (!(fp > min)) fp = min;
@@ -107,9 +112,8 @@ public:
 LDCORESHARED_EXPORT float angleIncrement(float& angle, float increment);
 LDCORESHARED_EXPORT float turnsIncrement(float& angle, float increment);
 
-#include <math.h>
 inline float rcost(float f) {return 0.5+0.5*cosf(TAU*f);}
 inline float rcostc(float f) {return 1-rcost(f);}
 inline float rsint(float f) {return 0.5+0.5*sinf(TAU*f);}
 
-#endif /* defined(__ldCore__ldGeometryUtil__) */
+#endif // LDGEOMETRYUTIL_H

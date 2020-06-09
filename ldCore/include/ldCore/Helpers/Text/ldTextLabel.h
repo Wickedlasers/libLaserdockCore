@@ -52,13 +52,6 @@ public:
     void clear();
 
     /**
-     * @brief setIncrementXPositionOrLoop - banner text feature. call it each time before drow
-     * @param delta - how fast text should move
-     * @return true if move was done or false if it was reset to initial pos
-     */
-    bool setIncrementXPositionOrLoop(float delta);
-
-    /**
      * @brief innerDraw -draw
      * @param p_renderer
      */

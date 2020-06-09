@@ -20,18 +20,23 @@
 
 #include "ldCore/Filter/ldFilterManager.h"
 
-#include <math.h>
+#include <cmath>
 
 #include <QtCore/QDebug>
 
+#include <ldCore/Filter/ldHardwareFilter.h>
+
 ldFilterManager::ldFilterManager(QObject *parent)
     : QObject(parent)
-    , m_flipFilter(new ldFlipFilter())
-    , m_rotateFilter(new ldRotateFilter())
+    , m_hardwareFilter(new ldHardwareFilter(m_dataFilter.scaleFilter()))
+    , m_hardwareFilter2(new ldHardwareFilter(m_dataFilter.scaleFilter()))
+    , m_3dRotateFilter(new ld3dRotateFilter())
 {
     qDebug() << __FUNCTION__;
-    m_dataFilter.addFilter(m_flipFilter.get());
-    m_dataFilter.addFilter(m_rotateFilter.get());
+}
+
+ldFilterManager::~ldFilterManager()
+{
 }
 
 ldFilter *ldFilterManager::preGlobalFilter() const
@@ -54,28 +59,38 @@ void ldFilterManager::setGlobalFilter(ldFilter *globalFilter)
     m_globalFilter = globalFilter;
 }
 
+ldFilterBasicData *ldFilterManager::dataFilter()
+{
+    return &m_dataFilter;
+}
+
+ldHardwareFilter *ldFilterManager::hardwareFilter()
+{
+    return m_hardwareFilter.get();
+}
+
+ldHardwareFilter *ldFilterManager::hardwareFilter2()
+{
+    return m_hardwareFilter2.get();
+}
+
 void ldFilterManager::setFrameModes(int frameModes)
 {
     m_dataFilter.frameModes = frameModes;
 }
 
-void ldFilterManager::process(Vertex &tval, Vertex &simVal)
+void ldFilterManager::processFrame(ldVertexFrame &frame)
 {
-    if(m_preGlobalFilter)
-        m_preGlobalFilter->processFilter(tval);
+    for(uint i = 0; i < frame.size(); i++) {
+        if(m_preGlobalFilter)
+            m_preGlobalFilter->processFilter(frame[i]);
 
-    m_basicGlobalFilter.processFilter(tval);
+        m_basicGlobalFilter.processFilter(frame[i]);
 
-    // apply global filter to simulator output
-    if (m_globalFilter)
-        m_globalFilter->processFilter(tval);
-
-    // store similator value
-    simVal = tval;
-
-    // apply data filter to data output
-    // give filter proper settings
-    m_dataFilter.processFilter(tval);
+        // apply global filter to simulator output
+        if (m_globalFilter)
+            m_globalFilter->processFilter(frame[i]);
+    }
 }
 
 void ldFilterManager::resetFilters()
@@ -84,11 +99,6 @@ void ldFilterManager::resetFilters()
     if (m_globalFilter)
         m_globalFilter->resetFilter();
     m_dataFilter.resetFilter();
-}
-
-ldColorCurveFilter *ldFilterManager::baseColorCurveFilter() const
-{
-    return m_dataFilter.colorCurveFilter();
 }
 
 ldColorCurveFilter *ldFilterManager::colorCurveFilter() const
@@ -101,11 +111,6 @@ ldColorFaderFilter *ldFilterManager::colorFaderFilter() const
     return m_basicGlobalFilter.colorFaderFilter();
 }
 
-ldDeadzoneFilter *ldFilterManager::deadzoneFilter() const
-{
-    return m_dataFilter.deadzone();
-}
-
 ldHueFilter *ldFilterManager::hueFilter() const
 {
     return m_basicGlobalFilter.hueFilter();
@@ -116,19 +121,14 @@ ldHueShiftFilter *ldFilterManager::hueShiftFilter() const
     return m_basicGlobalFilter.hueShiftFilter();
 }
 
-ldFlipFilter *ldFilterManager::flipFilter() const
+ld3dRotateFilter *ldFilterManager::rotate3dFilter() const
 {
-    return m_flipFilter.get();
+    return m_3dRotateFilter.get();
 }
 
-ldScaleFilter *ldFilterManager::scaleFilter() const
+ldScaleFilter *ldFilterManager::globalScaleFilter() const
 {
     return m_dataFilter.scaleFilter();
-}
-
-ldShiftFilter *ldFilterManager::shiftFilter() const
-{
-    return m_dataFilter.shiftFilter();
 }
 
 ldSoundLevelFilter *ldFilterManager::soundLevelFilter() const
@@ -138,7 +138,7 @@ ldSoundLevelFilter *ldFilterManager::soundLevelFilter() const
 
 ldRotateFilter *ldFilterManager::rotateFilter() const
 {
-    return m_rotateFilter.get();
+    return m_dataFilter.rotateFilter();
 }
 
 ldTracerFilter *ldFilterManager::tracerFilter() const
@@ -146,27 +146,7 @@ ldTracerFilter *ldFilterManager::tracerFilter() const
     return m_basicGlobalFilter.tracerFilter();
 }
 
-void ldFilterManager::setBrightness(float brightness)
+void ldFilterManager::setHueFiltersActive(bool active)
 {
-    m_dataFilter.m_brightness = brightness;
-}
-
-void ldFilterManager::setKeystoneX(float keystoneX)
-{
-    m_dataFilter.setKeystoneX(keystoneX);
-}
-
-void ldFilterManager::setKeystoneY(float keystoneY)
-{
-    m_dataFilter.setKeystoneY(keystoneY);
-}
-
-void ldFilterManager::setOffset(int offset)
-{
-    m_dataFilter.m_offset = offset;
-}
-
-void ldFilterManager::setTtl(bool isTtl)
-{
-    m_basicGlobalFilter.ttlFilter()->m_enabled = isTtl;
+    m_basicGlobalFilter.setHueFiltersActive(active);
 }

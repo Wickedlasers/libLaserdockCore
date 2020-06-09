@@ -72,6 +72,8 @@ public:
 
     virtual void print() const;
 
+    int lastError() const;
+
 private:
     std::unique_ptr<LaserdockDevicePrivate> d;
 };

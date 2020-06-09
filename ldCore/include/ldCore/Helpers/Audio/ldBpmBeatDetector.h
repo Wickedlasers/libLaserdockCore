@@ -25,37 +25,26 @@
 
 #include <ldCore/Sound/ldSoundData.h>
 
-class ldDropDetector;
+class ldBeatDetector;
 
 class LDCORESHARED_EXPORT ldBpmBeatDetector : public QObject
 {
     Q_OBJECT
 
 public:
-    ldBpmBeatDetector(QObject *parent = nullptr);
+    ldBpmBeatDetector(ldBeatDetector *beatDetector, QObject *parent = nullptr);
     ~ldBpmBeatDetector();
     
-    void process(float bpm, float output, float delta);
-
     int bpm() const;
 
-    void setDuration(float duration);
+public slots:
+    void process(float delta);
     void reset();
 
-    ldDropDetector *dropDetector() const;
-
-signals:
-    void beatDetected();
-
 private:
-    std::unique_ptr<ldDropDetector> m_dropDetector;
+    ldBeatDetector *m_beatDetector;
 
-    float m_duration = 1.f;
-
-    float m_msCounter = 0;
-    bool m_isRunningBpmCounter = false;
-    int m_minCurrentMillis = 500;
-
+    // bpm counter part
     float m_msBpmCounter = 0;
     int m_beatCount = 0;
     int m_bpm = 0;

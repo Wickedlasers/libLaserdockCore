@@ -20,7 +20,7 @@
 
 #include "ldCore/Helpers/Maths/ldRect3.h"
 
-#include <math.h>
+#include <cmath>
 
 bool ldRect3::isNull() const
 {

@@ -688,14 +688,15 @@ ldBezierPaths ldSvgReader::snapCurves(const ldBezierPaths &bezierPaths, float sn
                     //qDebug() << "b.end.x:" << b.end.x << " a.start.x" <<  a.start.x;
                 } else {
                     // push previous new one
-                    res.push_back(newOne);
+                    if(!newOne.empty())
+                        res.push_back(newOne);
                     newOne.clear();
                 }
             }
             newOne.add(a);
         }
         // last one
-        if (i==bezierPaths.size()-1) {
+        if (i==bezierPaths.size()-1 && !newOne.empty()) {
             res.push_back(newOne);
         }
     }

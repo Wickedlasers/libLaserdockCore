@@ -25,25 +25,8 @@ ldAbstractHardwareManager::ldAbstractHardwareManager(QObject *parent)
 {
 }
 
-
-bool ldAbstractHardwareManager::isFlipX() const
+void ldAbstractHardwareManager::setExplicitActiveDevice(int index)
 {
-    return m_isFlipX;
+    m_explicitHardwareIndex = index;
 }
-
-void ldAbstractHardwareManager::setFlipX(bool isFlipX)
-{
-    m_isFlipX = isFlipX;
-}
-
-bool ldAbstractHardwareManager::isFlipY() const
-{
-    return m_isFlipY;
-}
-
-void ldAbstractHardwareManager::setFlipY(bool isFlipY)
-{
-    m_isFlipY = isFlipY;
-}
-
 

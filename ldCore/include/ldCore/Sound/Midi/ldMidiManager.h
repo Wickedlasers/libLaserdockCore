@@ -29,8 +29,6 @@
 
 #include "ldCore/Sound/Midi/ldMidiTypes.h"
 
-#define MAX_MIDI_EVENTS 64
-
 struct LDCORESHARED_EXPORT ldMidiNotePlayed {
     int note;
     bool isStillPressed;

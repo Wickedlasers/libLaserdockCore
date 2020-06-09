@@ -66,7 +66,7 @@ else()
 endif()
 
 # Qt
-set(QT5_MIN_VERSION 5.11)
+set(QT5_MIN_VERSION 5.14)
 set(Qt5_DIR "${QTDIR}/lib/cmake/Qt5")
 set(Qt5Core_DIR "${QTDIR}/lib/cmake/Qt5Core")
 find_package(Qt5 ${QT5_MIN_VERSION} COMPONENTS Core REQUIRED)

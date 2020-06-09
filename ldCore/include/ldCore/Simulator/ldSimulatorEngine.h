@@ -21,13 +21,19 @@
 #ifndef LDSIMULATORENGINE_H
 #define LDSIMULATORENGINE_H
 
+#include <memory>
+
 #include <QtCore/QReadWriteLock>
 #include <QtGui/QOpenGLFunctions>
 
-#include "ldCore/ldCore_global.h"
-#include "ldCore/Utilities/ldBasicDataStructures.h"
+#include <ldCore/ldCore_global.h>
+#include <ldCore/Utilities/ldVertex.h>
+#include <ldCore/Utilities/ldCircularBuffer.h>
 
 class QOpenGLShaderProgram;
+
+class ldSimulatorGrid;
+class ldSimulatorProcessor;
 
 /** Simulator engine class */
 class LDCORESHARED_EXPORT ldSimulatorEngine : protected QOpenGLFunctions
@@ -54,26 +60,25 @@ public:
     void drawLaserGeometry(QOpenGLShaderProgram *program);
 
     /** Add simulator data */
-    void pushVertexData(Vertex * data, unsigned int size);
+    void pushVertexData(ldVertex * data, unsigned int size);
+
+    /** Simulator background grid */
+    ldSimulatorGrid *grid() const;
 
 private:
-    void bigger_dots(Vertex *inData, Vertex *outData, unsigned int size);
+    void drawBuffer(QOpenGLShaderProgram *program, const std::vector<ldVertex> &buffer);
 
     GLuint vboIds[2] = {};
 
     ldVertexCircularBuffer m_buffer;
     QReadWriteLock m_lock;
-    std::vector<Vertex> vbuffer;
+    std::vector<ldVertex> vbuffer;
 
     int m_listenerCount = 0;
 
-    // bigger dots
-    Vertex m_last;
-    Vertex m_lastOn;
-    float m_lastDeltaX = 1;
-    float m_lastDeltaY = 1;
-    bool m_wasOn = false;
-    float m_moveDist = 0;
+    std::unique_ptr<ldSimulatorProcessor> m_processor;
+
+    std::unique_ptr<ldSimulatorGrid> m_grid;
 };
 
 Q_DECLARE_METATYPE(ldSimulatorEngine*)

@@ -40,8 +40,7 @@ class LDCORESHARED_EXPORT ldBezierCurveObject
 public:
     static const ldBezierCurveObject stub;
 
-    explicit ldBezierCurveObject(const ldBezierPaths &curves = ldBezierPaths(), bool isUnitedCoordinates = false);
-    ~ldBezierCurveObject();
+    explicit ldBezierCurveObject(const ldBezierPaths &curves = ldBezierPaths());
 
     bool isEmpty() const;
 

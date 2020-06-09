@@ -30,7 +30,6 @@
 
 #include "ldCore/Render/ldRendererOpenlase.h"
 #include "ldCore/ldCore_global.h"
-#include "ldCore/Utilities/ldBasicDataStructures.h"
 #include "ldBasicFilters.h"
 
 class ldDeadzoneFilter;
@@ -46,8 +45,9 @@ class ldProjectionBasic;
 #define FRAME_MODE_UNSAFE_OVERSCAN 0x04
 // ignores app color and brightness settings.
 #define FRAME_MODE_DISABLE_COLOR_CORRECTION 0x08
-// do not use this frame for screenshots (used by burn preview vis to avoid screenshotting itself)
-#define FRAME_MODE_NO_SCREENSHOT 0x10
+
+// ignore 3d rotate
+#define FRAME_MODE_DISABLE_ROTATION 0x10
 
 #define LD_DEFAULT_OFFSET 4
 
@@ -59,49 +59,20 @@ public:
     explicit ldFilterBasicData();
     virtual ~ldFilterBasicData();
 
-    void addFilter(ldFilter *filter);
-
     /** ldFilter impl */
-    virtual void process(Vertex &v) override;
-    virtual void resetFilter() override;
-    
+    virtual void process(ldVertex &v) override;
+
     /** filter classes */
-    ldColorCurveFilter *colorCurveFilter() const;
-    ldDeadzoneFilter *deadzone() const;
+    ldRotateFilter *rotateFilter() const;
     ldScaleFilter *scaleFilter() const;
-    ldShiftFilter *shiftFilter() const;
 
-    // keystone
-    void setKeystoneX(float keystoneX);
-    void setKeystoneY(float keystoneY);
-
-    // alignment
-    int m_offset = LD_DEFAULT_OFFSET;
-
-    // color
-    float m_brightness = 1.f;
-
-    // scan protection
-    bool galvo_libre = false;
-    bool alternate_maxspeed = false;
-    float underscan_speed = 0.003f;
-    float overscan_speed = 0.120f;
 
     // frame mode flats
     int frameModes = 0;
 
 private:
-    static const int OFFSET_MAX = 10;
-    Vertex old[OFFSET_MAX];
-
-    std::unique_ptr<ldDeadzoneFilter> m_borderFilter;
-    std::unique_ptr<ldColorCurveFilter> m_colorCurveFilter;
-    std::unique_ptr<ldDeadzoneFilter> m_deadzoneFilter;
+    std::unique_ptr<ldRotateFilter> m_rotateFilter;
     std::unique_ptr<ldScaleFilter> m_scaleFilter;
-    std::unique_ptr<ldShiftFilter> m_shiftFilter;
-
-    std::unique_ptr<ldProjectionBasic> m_projectionBasic;
-    std::vector<ldFilter*> m_filters;
 };
 
 #endif // ldFilterBasicData_H

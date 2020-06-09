@@ -22,14 +22,18 @@
 
 #include <QtCore/QtDebug>
 
+#ifdef LD_CORE_ENABLE_LASERDOCKLIB
 #include <laserdocklib/LaserdockDevice.h>
 #include <laserdocklib/LaserdockDeviceManager.h>
 #include <laserdocklib/LaserdockSample.h>
+#endif
 
-#include "ldCore/Hardware/ldUSBHardware.h"
+#include <ldCore/Filter/ldFilterManager.h>
+#include <ldCore/Hardware/ldUSBHardware.h>
 
-ldUsbHardwareManager::ldUsbHardwareManager(QObject *parent)
+ldUsbHardwareManager::ldUsbHardwareManager(ldFilterManager *filterManager, QObject *parent)
     : ldAbstractHardwareManager(parent)
+    , m_filterManager(filterManager)
 {
     connect(this, &ldUsbHardwareManager::deviceCountChanged, this, &ldUsbHardwareManager::updateCheckTimerState);
     connect(&m_checkTimer, &QTimer::timeout, this, &ldUsbHardwareManager::usbDeviceCheck);
@@ -51,7 +55,9 @@ int ldUsbHardwareManager::getBufferFullCount()
     if(!m_usbHardwares.empty()) {
         fullCount = m_usbHardwares[0]->get_full_count(); // TODO Probably we should manager buffer size for each device separately
         if(fullCount == -1) {
+            qDebug() << "Remove disconnected device on get_full_count" << QString::fromStdString(m_usbHardwares[0]->params().serial_number);
             m_usbHardwares.erase(m_usbHardwares.begin());
+            updateHardwareFilters();
             emit deviceCountChanged(m_usbHardwares.size());
         }
     }
@@ -59,12 +65,29 @@ int ldUsbHardwareManager::getBufferFullCount()
     return fullCount;
 }
 
-void ldUsbHardwareManager::sendData(CompressedSample *samples, unsigned int count)
+void ldUsbHardwareManager::sendData(uint startIndex, uint count)
 {
     QMutexLocker locker(&m_mutex);
 
     if (m_usbHardwares.empty()) {
         return;
+    }
+
+    if(m_explicitHardwareIndex >= 0) {
+        uint hwIndex =  static_cast<uint>(m_explicitHardwareIndex);
+        if(hwIndex < m_usbHardwares.size()) {
+            ldUSBHardware *hardware = m_usbHardwares[hwIndex].get();
+            bool b = hardware->send_samples(startIndex, count);
+            if (!b) {
+                // erase disconnected device
+                qDebug() << "Remove disconnected device on send_samples" << QString::fromStdString(hardware->params().serial_number);
+                m_usbHardwares.erase(m_usbHardwares.begin() + hwIndex);
+                m_explicitHardwareIndex = -1;
+                updateHardwareFilters();
+                emit deviceCountChanged(m_usbHardwares.size());
+            }
+            return;
+        }
     }
 
     auto usbHardwareIt = m_usbHardwares.begin();
@@ -76,22 +99,15 @@ void ldUsbHardwareManager::sendData(CompressedSample *samples, unsigned int coun
             continue;
         }
 
-        bool b = usbHardware->send_samples((LaserdockSample * ) samples, count);
+        bool b = usbHardware->send_samples(startIndex, count);
         if (!b) {
             // erase disconnected device
+            qDebug() << "Remove disconnected device on send_samples" << QString::fromStdString(usbHardware->params().serial_number);
             usbHardwareIt = m_usbHardwares.erase(usbHardwareIt);
+            updateHardwareFilters();
             emit deviceCountChanged(m_usbHardwares.size());
         } else {
             usbHardwareIt++;
-        }
-
-        // flip each next sample
-        if(m_isFlipX || m_isFlipY) {
-            for(uint i = 0; i < count; i++){
-                CompressedSample &sample = samples[i];
-                if(m_isFlipX) sample.x = CompressedSample::flipCoord(sample.x);
-                if(m_isFlipY) sample.y = CompressedSample::flipCoord(sample.y);
-            }
         }
     }
 
@@ -109,6 +125,14 @@ void ldUsbHardwareManager::setConnectedDevicesActive(bool active)
 uint ldUsbHardwareManager::deviceCount() const
 {
     return m_usbHardwares.size();
+}
+
+std::vector<ldHardware*> ldUsbHardwareManager::devices() const
+{
+    std::vector<ldHardware*> devices;
+    for(const std::unique_ptr<ldUSBHardware> &usbHardware : m_usbHardwares)
+        devices.push_back(usbHardware.get());
+    return devices;
 }
 
 bool ldUsbHardwareManager::isDeviceActive(int index) const
@@ -153,6 +177,9 @@ void ldUsbHardwareManager::usbDeviceCheck()
 {
     QMutexLocker locker(&m_mutex);
 
+//    qDebug() << __FUNCTION__;
+
+#ifdef LD_CORE_ENABLE_LASERDOCKLIB
     uint oldDeviceCount = m_usbHardwares.size();
     // check for disconnected devices
     auto usbHardwareIt = m_usbHardwares.begin();
@@ -173,7 +200,9 @@ void ldUsbHardwareManager::usbDeviceCheck()
         }
         // device was disconnected
         if (!pinged) {
+            qDebug() << "Remove disconnected device on get_output" << QString::fromStdString(usbHardware->params().serial_number);
             usbHardwareIt = m_usbHardwares.erase(usbHardwareIt);
+            updateHardwareFilters();
         } else {
             usbHardwareIt++;
         }
@@ -190,6 +219,11 @@ void ldUsbHardwareManager::usbDeviceCheck()
         // initialize device
         std::unique_ptr<ldUSBHardware> usbHardware(new ldUSBHardware(newDevice.release()));
 
+        if(usbHardware->status() != ldHardware::Status::INITIALIZED) {
+            qWarning() << "Can't initialize LaserDock unit";
+            continue;
+        }
+
         // check authentication if available
         if(m_authenticateCb
                 && !m_authenticateCb(usbHardware.get())
@@ -200,10 +234,23 @@ void ldUsbHardwareManager::usbDeviceCheck()
 
         // add to list
         m_usbHardwares.push_back(std::move(usbHardware));
+        updateHardwareFilters();
     }
 
     if(oldDeviceCount != m_usbHardwares.size()) {
         emit deviceCountChanged(m_usbHardwares.size());
+    }
+#endif
+}
+
+void ldUsbHardwareManager::updateHardwareFilters()
+{
+    for(uint i = 0; i < m_usbHardwares.size(); i++) {
+        auto &usbHardware = m_usbHardwares[i];
+        if(i == 0)
+            usbHardware->setFilter(m_filterManager->hardwareFilter());
+        else
+            usbHardware->setFilter(m_filterManager->hardwareFilter2());
     }
 }
 
@@ -222,7 +269,7 @@ void ldUsbHardwareManager::updateCheckTimerState()
         QTimer::singleShot(0, &m_checkTimer, &QTimer::stop);
     } else {
         QTimer::singleShot(0, &m_checkTimer, static_cast<void (QTimer::*)()>(&QTimer::start));
-        QTimer::singleShot(0, this, &ldUsbHardwareManager::usbDeviceCheck);
+        QTimer::singleShot(100, this, &ldUsbHardwareManager::usbDeviceCheck);
     }
 }
 

@@ -28,7 +28,7 @@ ldSoundLevelFilter::ldSoundLevelFilter()
 {
 }
 
-void ldSoundLevelFilter::process(Vertex &input)
+void ldSoundLevelFilter::process(ldVertex &input)
 {
     if(!m_enabled)
         return;

@@ -74,6 +74,18 @@ macro(add_qt_android_apk TARGET SOURCE_TARGET)
 
     # extract the full path of the source target binary
     set(QT_ANDROID_APP_PATH "$<TARGET_FILE:${SOURCE_TARGET}>")
+    if(${Qt5Core_VERSION} VERSION_GREATER_EQUAL 5.14)
+        set(QT_ANDROID_SUPPORT_MULTI_ABI ON)
+        message(STATUS "QT_ANDROID_SUPPORT_MULTI_ABI ${QT_ANDROID_SUPPORT_MULTI_ABI}")
+    endif()
+
+    if(QT_ANDROID_SUPPORT_MULTI_ABI)
+        # qtandroideploy will append by itself the ANDROID_ABI to the target name
+        set(QT_ANDROID_APPLICATION_BINARY "${SOURCE_TARGET}")
+    else()
+        set(QT_ANDROID_APPLICATION_BINARY ${QT_ANDROID_APP_PATH})
+    endif()
+
 
     # define the application name
     if(ARG_NAME)
@@ -103,7 +115,17 @@ macro(add_qt_android_apk TARGET SOURCE_TARGET)
     # define the application source package directory
     if(ARG_PACKAGE_SOURCES)
         set(QT_ANDROID_APP_PACKAGE_SOURCE_ROOT ${ARG_PACKAGE_SOURCES})
+        if(EXISTS "${ARG_PACKAGE_SOURCES}/AndroidManifest.xml")
+            # custom manifest provided, use the provided source package directly
+            set(QT_ANDROID_APP_PACKAGE_SOURCE_ROOT ${ARG_PACKAGE_SOURCES})
+        elseif(EXISTS "${ARG_PACKAGE_SOURCES}/AndroidManifest.xml.in")
+            # custom manifest template provided
+            set(QT_ANDROID_MANIFEST_TEMPLATE "${ARG_PACKAGE_SOURCES}/AndroidManifest.xml.in")
+        endif()
     else()
+        # create our own configured package directory in build dir
+        set(QT_ANDROID_APP_PACKAGE_SOURCE_ROOT "${CMAKE_CURRENT_BINARY_DIR}/package")
+
         # get version code from arguments, or generate a fixed one if not provided
         set(QT_ANDROID_APP_ACTIVITY_NAME ${ARG_ACTIVITY_NAME})
         if(NOT QT_ANDROID_APP_ACTIVITY_NAME)
@@ -120,8 +142,6 @@ macro(add_qt_android_apk TARGET SOURCE_TARGET)
             set(QT_ANDROID_APP_VERSION ${QT_ANDROID_APP_VERSION_CODE})
         endif()
 
-        # create a subdirectory for the extra package sources
-        set(QT_ANDROID_APP_PACKAGE_SOURCE_ROOT "${CMAKE_CURRENT_BINARY_DIR}/package")
 
         set(QT_ANDROID_MIN_API ${ARG_ANDROID_MIN_API})
         set(QT_ANDROID_TARGET_API ${ARG_ANDROID_TARGET_API})
@@ -137,22 +157,73 @@ macro(add_qt_android_apk TARGET SOURCE_TARGET)
         endif()
 
 
-        # generate a manifest from the template
-        configure_file(${QT_ANDROID_SOURCE_DIR}/AndroidManifest.xml.in ${QT_ANDROID_APP_PACKAGE_SOURCE_ROOT}/AndroidManifest.xml @ONLY)
+        # create the manifest from the template file
+        if(NOT QT_ANDROID_MANIFEST_TEMPLATE)
+            set(QT_ANDROID_MANIFEST_TEMPLATE "${QT_ANDROID_SOURCE_DIR}/AndroidManifest.xml.in")
+        endif()
+        configure_file(${QT_ANDROID_MANIFEST_TEMPLATE} ${CMAKE_CURRENT_BINARY_DIR}/AndroidManifest.xml @ONLY)
+
+        # define commands that will be added before the APK target build commands, to refresh the source package directory
+        set(QT_ANDROID_PRE_COMMANDS ${QT_ANDROID_PRE_COMMANDS} COMMAND ${CMAKE_COMMAND} -E remove_directory ${QT_ANDROID_APP_PACKAGE_SOURCE_ROOT}) # clean the destination directory
+        set(QT_ANDROID_PRE_COMMANDS ${QT_ANDROID_PRE_COMMANDS} COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_ANDROID_APP_PACKAGE_SOURCE_ROOT}) # re-create it
+        if(ARG_PACKAGE_SOURCES)
+            set(QT_ANDROID_PRE_COMMANDS ${QT_ANDROID_PRE_COMMANDS} COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARG_PACKAGE_SOURCES} ${QT_ANDROID_APP_PACKAGE_SOURCE_ROOT}) # copy the user package
+        endif()
+        set(QT_ANDROID_PRE_COMMANDS ${QT_ANDROID_PRE_COMMANDS} COMMAND ${CMAKE_COMMAND} -E remove_directory ${QT_ANDROID_APP_PACKAGE_SOURCE_ROOT}/res)  # it seems that recompiled libraries are not copied if we don't remove them first
+        set(QT_ANDROID_PRE_COMMANDS ${QT_ANDROID_PRE_COMMANDS} COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARG_ANDROID_RESOURCES_PATH} ${QT_ANDROID_APP_PACKAGE_SOURCE_ROOT}/res/)  # it seems that recompiled libraries are not copied if we don't remove them first
+        set(QT_ANDROID_PRE_COMMANDS ${QT_ANDROID_PRE_COMMANDS} COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARG_JAVA_SOURCES} ${QT_ANDROID_APP_PACKAGE_SOURCE_ROOT}/src)  # it seems that recompiled libraries are not copied if we don't remove them first
+        set(QT_ANDROID_PRE_COMMANDS ${QT_ANDROID_PRE_COMMANDS} COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/AndroidManifest.xml ${QT_ANDROID_APP_PACKAGE_SOURCE_ROOT}/AndroidManifest.xml) # copy the generated manifest
+
+#        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/package/res # it seems that recompiled libraries are not copied if we don't remove them first
+#        COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARG_ANDROID_RESOURCES_PATH} ${CMAKE_CURRENT_BINARY_DIR}/package/res/
+#        COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARG_JAVA_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/package/src
+
+    endif()
+
+    # newer NDK toolchains don't define ANDROID_STL_PREFIX anymore,
+    # so this is a fallback to the only supported value in recent versions
+    if(NOT ANDROID_STL_PREFIX)
+        if(ANDROID_STL MATCHES "^c\\+\\+_")
+            set(ANDROID_STL_PREFIX llvm-libc++)
+        endif()
+    endif()
+    if(NOT ANDROID_STL_PREFIX)
+        message(WARNING "Failed to determine ANDROID_STL_PREFIX value for ANDROID_STL=${ANDROID_STL}")
     endif()
 
     # define the STL shared library path
-    message(STATUS "ANDROID_STL: " ${ANDROID_STL})
-   if(ANDROID_STL)
-        if(ANDROID_STL_PATH)
-            set(QT_ANDROID_STL_PATH "${ANDROID_STL_PATH}/libs/${ANDROID_ABI}/lib${ANDROID_STL}.so")
-        else()
-            set(QT_ANDROID_STL_PATH "${ANDROID_NDK}/sources/cxx-stl/llvm-libc++/libs/${ANDROID_ABI}/lib${ANDROID_STL}.so")
-        endif()
+    if(QT_ANDROID_SUPPORT_MULTI_ABI)
+        # from Qt 5.14 qtandroideploy will find the correct stl.
+        set(QT_ANDROID_STL_PATH "${QT_ANDROID_NDK_ROOT}/sources/cxx-stl/${ANDROID_STL_PREFIX}/libs")
     else()
-        set(QT_ANDROID_STL_PATH)
+        # define the STL shared library path
+        # up until NDK r18, ANDROID_STL_SHARED_LIBRARIES is populated by the NDK's toolchain file
+        # since NDK r19, the only option for a shared STL library is libc++_shared
+        if(ANDROID_STL_SHARED_LIBRARIES)
+            list(GET ANDROID_STL_SHARED_LIBRARIES 0 STL_LIBRARY_NAME) # we can only give one to androiddeployqt
+            if(ANDROID_STL_PATH)
+                set(QT_ANDROID_STL_PATH "${ANDROID_STL_PATH}/libs/${ANDROID_ABI}/lib${ANDROID_STL}.so")
+            else()
+                set(QT_ANDROID_STL_PATH "${QT_ANDROID_NDK_ROOT}/sources/cxx-stl/${ANDROID_STL_PREFIX}/libs/${ANDROID_ABI}/lib${ANDROID_STL}.so")
+            endif()
+        elseif(ANDROID_STL STREQUAL c++_shared)
+            set(QT_ANDROID_STL_PATH "${QT_ANDROID_NDK_ROOT}/sources/cxx-stl/${ANDROID_STL_PREFIX}/libs/${ANDROID_ABI}/libc++_shared.so")
+        else()
+            set(QT_ANDROID_STL_PATH "${QT_ANDROID_NDK_ROOT}/sources/cxx-stl/${ANDROID_STL_PREFIX}/libs/${ANDROID_ABI}/lib${ANDROID_STL}.so")
+            message(WARNING "ANDROID_STL (${ANDROID_STL}) isn't a known shared stl library."
+                "You should consider setting ANDROID_STL to c++_shared (like Qt).")
+            set(QT_ANDROID_STL_PATH "${QT_ANDROID_NDK_ROOT}/sources/cxx-stl/${ANDROID_STL_PREFIX}/libs/${ANDROID_ABI}/libc++_shared.so")
+        endif()
     endif()
-    message(STATUS "QT_ANDROID_STL_PATH: " ${QT_ANDROID_STL_PATH})
+    message(STATUS "QT_ANDROID_STL_PATH ${QT_ANDROID_STL_PATH}")
+
+    # From Qt 5.14 qtandroideploy "target-architecture" is no longer valid in input file
+    # It have been replaced by "architectures": { "${ANDROID_ABI}": "${ANDROID_ABI}" }
+    # This allow to package multiple ABI in a single apk
+    # For now we only support single ABI build with this script (to ensure it work with Qt5.14 & Qt5.15)
+    if(QT_ANDROID_SUPPORT_MULTI_ABI)
+        set(QT_ANDROID_ARCHITECTURES "\"${ANDROID_ABI}\":\"${ANDROID_ABI}\"")
+    endif()
 
     # set the list of dependant libraries
     if(ARG_DEPENDS)
@@ -168,7 +239,7 @@ macro(add_qt_android_apk TARGET SOURCE_TARGET)
             set(EXTRA_LIBS "${LIB}")
         endif()
         endforeach()
-        set(QT_ANDROID_APP_EXTRA_LIBS "${EXTRA_LIBS}")
+        set(QT_ANDROID_APP_EXTRA_LIBS "\"android-extra-libs\": \"${EXTRA_LIBS}\",")
     endif()
 
     # set some toolchain variables used by androiddeployqt;
@@ -190,9 +261,22 @@ macro(add_qt_android_apk TARGET SOURCE_TARGET)
         set(QML_ROOT_PATH ${ARG_QML_ROOT_PATH})
     endif()
 
+    # make sure that the output directory for the Android package exists
+    set(QT_ANDROID_APP_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${SOURCE_TARGET}-${ANDROID_ABI})
+    file(MAKE_DIRECTORY ${QT_ANDROID_APP_BINARY_DIR}/libs/${ANDROID_ABI})
+
     # create the configuration file that will feed androiddeployqt
+    # 1. replace placeholder variables at generation time
     configure_file(${QT_ANDROID_SOURCE_DIR}/qtdeploy.json.in ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json.configured @ONLY)
-    file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json INPUT ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json.configured)
+    # 2. evaluate generator expressions at build time
+    file(GENERATE
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json
+        INPUT ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json.configured
+        )
+
+    # 3. Configure build.gradle to properly work with Android Studio import
+    set(QT_ANDROID_NATIVE_API_LEVEL ${ANDROID_NATIVE_API_LEVEL})
+    configure_file(${QT_ANDROID_SOURCE_DIR}/build.gradle.in ${QT_ANDROID_APP_BINARY_DIR}/build.gradle @ONLY)
 
     # check if the apk must be signed
     if(ARG_KEYSTORE)
@@ -212,17 +296,19 @@ macro(add_qt_android_apk TARGET SOURCE_TARGET)
         set(TARGET_LEVEL_OPTIONS --android-platform android-${ARG_ANDROID_TARGET_API})
     endif()
 
+    message(STATUS "CMAKE_CURRENT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}")
+    message(STATUS "QT_ANDROID_APP_BINARY_DIR ${QT_ANDROID_APP_BINARY_DIR}")
+
     # create a custom command that will run the androiddeployqt utility to prepare the Android package
     add_custom_target(
         ${TARGET}
         ALL
         DEPENDS ${SOURCE_TARGET}
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARG_ANDROID_RESOURCES_PATH} ${CMAKE_CURRENT_BINARY_DIR}/package/res/
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARG_JAVA_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/package/src
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/libs/${ANDROID_ABI} # it seems that recompiled libraries are not copied if we don't remove them first
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/libs/${ANDROID_ABI}
-        COMMAND ${CMAKE_COMMAND} -E copy ${QT_ANDROID_APP_PATH} ${CMAKE_CURRENT_BINARY_DIR}/libs/${ANDROID_ABI}
-        COMMAND ${QT_ANDROID_QT_ROOT}/bin/androiddeployqt --verbose --output ${CMAKE_CURRENT_BINARY_DIR} --input ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json --gradle ${TARGET_LEVEL_OPTIONS} ${INSTALL_OPTIONS} ${SIGN_OPTIONS}
+        ${QT_ANDROID_PRE_COMMANDS}
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${QT_ANDROID_APP_BINARY_DIR}/libs/${ANDROID_ABI} # it seems that recompiled libraries are not copied if we don't remove them first
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${QT_ANDROID_APP_BINARY_DIR}/libs/${ANDROID_ABI}
+        COMMAND ${CMAKE_COMMAND} -E copy ${QT_ANDROID_APP_PATH} ${QT_ANDROID_APP_BINARY_DIR}/libs/${ANDROID_ABI}
+        COMMAND ${QT_ANDROID_QT_ROOT}/bin/androiddeployqt --verbose --output ${QT_ANDROID_APP_BINARY_DIR} --input ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json --gradle ${TARGET_LEVEL_OPTIONS} ${INSTALL_OPTIONS} ${SIGN_OPTIONS}
         )
 
 

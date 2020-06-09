@@ -116,6 +116,38 @@ void ldBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer, const ldBezier
     draw(renderer, dataVect, dimInUnited);
 }
 
+std::vector<std::vector<OLPoint> > ldBezierCurveDrawer::getBezierData(const ldBezierCurveObject &object, bool isSafe) const
+{
+    std::vector<std::vector<OLPoint> > data;
+
+    for (const ldBezierPath &bezierPath : object.data()) {
+        std::vector<OLPoint> curvePoints;
+
+        const std::vector<ldBezierCurve> &curves = bezierPath.data();
+        uint32_t color = bezierPath.color();
+        for (uint i = 0; i<curves.size(); i++)
+        {
+            const ldBezierCurve &b = curves[i];
+
+            curvePoints.push_back(OLPoint{b.start().x, b.start().y, 0, color});
+            curvePoints.push_back(OLPoint{b.control1().x, b.control1().y, 0, color});
+            curvePoints.push_back(OLPoint{b.control2().x, b.control2().y, 0, color});
+        }
+        if(!curves.empty()) {
+            const ldBezierCurve &b = curves[0];
+            curvePoints.push_back(OLPoint{b.start().x, b.start().y, 0, color});
+        }
+
+        if(!curvePoints.empty())
+            data.push_back(curvePoints);
+    }
+
+    if(isSafe)
+        data = makeSafeDrawing(data);
+
+    return data;
+}
+
 std::vector<std::vector<OLPoint> > ldBezierCurveDrawer::getDrawingData(const ldBezierCurveFrame &frame) const
 {
     std::vector<std::vector<OLPoint> > data;
@@ -162,7 +194,9 @@ std::vector<std::vector<OLPoint> > ldBezierCurveDrawer::getDrawingData(const ldB
             }
 
         }
-        data.push_back(curvePoints);
+
+        if(!curvePoints.empty())
+            data.push_back(curvePoints);
     }
 
     if(isSafe) {

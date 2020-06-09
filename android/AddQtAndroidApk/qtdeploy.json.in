@@ -1,5 +1,8 @@
 {
  "description": "This file is to be read by androiddeployqt",
+ "architectures": {
+     @QT_ANDROID_ARCHITECTURES@
+  },
  "qt": "@QT_ANDROID_QT_ROOT@",
  "sdk": "@QT_ANDROID_SDK_ROOT@",
  "sdkBuildToolsRevision": "@QT_ANDROID_SDK_BUILDTOOLS_REVISION@",
@@ -7,11 +10,10 @@
  "toolchain-prefix": "@QT_ANDROID_TOOLCHAIN_PREFIX@",
  "tool-prefix": "@QT_ANDROID_TOOLCHAIN_PREFIX@",
  "ndk-host": "@ANDROID_NDK_HOST_SYSTEM_NAME@",
- "target-architecture": "@ANDROID_ABI@",
  "android-package-source-directory": "@QT_ANDROID_APP_PACKAGE_SOURCE_ROOT@",
- "android-extra-libs": "@QT_ANDROID_APP_EXTRA_LIBS@",
  "qml-root-path": "@QML_ROOT_PATH@",
  "stdcpp-path": "@QT_ANDROID_STL_PATH@",
- "application-binary": "@QT_ANDROID_APP_PATH@",
+ "application-binary": "@QT_ANDROID_APPLICATION_BINARY@",
+ @QT_ANDROID_APP_EXTRA_LIBS@
  "useLLVM": true
 }

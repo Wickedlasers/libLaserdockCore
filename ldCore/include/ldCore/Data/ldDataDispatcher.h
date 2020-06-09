@@ -41,7 +41,7 @@ public:
     /** Constructor/destructor */
     explicit ldDataDispatcher(ldBufferManager *bufferManager,
                               ldHardwareManager *hardwareManager,
-                              QObject *parent = 0);
+                              QObject *parent = nullptr);
     ~ldDataDispatcher();
 
     /** If any worker is active */

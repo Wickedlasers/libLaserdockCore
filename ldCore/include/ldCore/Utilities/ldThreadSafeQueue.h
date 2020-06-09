@@ -29,6 +29,8 @@
 
 #include <ldCore/ldCore_global.h>
 
+#include <QtCore/QMutexLocker>
+
 template<class T> class LDCORESHARED_EXPORT ldThreadSafeQueue {
 public:
     int maxSize;

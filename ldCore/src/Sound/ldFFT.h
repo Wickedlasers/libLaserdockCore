@@ -24,7 +24,7 @@
 #include <kiss_fft.h>
 #include <tools/kiss_fftr.h>
 
-#include <ldCore/Utilities/ldBasicDataStructures.h>
+#include <ldCore/Utilities/ldAudioBuffer.h>
 
 /** Actual workhourse of the sound signal processing. Does discrete fourier transformation on sound data. */
 class LDFFT

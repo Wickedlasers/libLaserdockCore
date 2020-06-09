@@ -20,13 +20,14 @@
 
 #include "ldCore/Render/ldRendererOpenlase.h"
 
-#include <math.h>
+#include <cmath>
 
 #include <QtCore/QDebug>
 #include <QtCore/QCoreApplication>
 
-#include "ldCore/Data/ldFrameBuffer.h"
-#include "ldCore/Filter/ldFilterBasicData.h"
+#include <ldCore/ldCore.h>
+#include <ldCore/Data/ldFrameBuffer.h>
+#include <ldCore/Filter/ldFilterManager.h>
 
 void logCallbackFunc(const char *msg)
 {
@@ -42,6 +43,7 @@ void logCallbackFunc(const char *msg)
 */
 ldRendererOpenlase::ldRendererOpenlase(QObject *parent) :
     ldAbstractRenderer(parent)
+    , m_filterManager(ldCore::instance()->filterManager())
 {
     olSetLogCallback(&logCallbackFunc);
 
@@ -50,6 +52,10 @@ ldRendererOpenlase::ldRendererOpenlase(QObject *parent) :
         qFatal("Error initializing openlase!!!");
 //        exit(1);
     }
+
+    // reserve some space to avoid allocations
+//    m_frame.reserve(30000);
+//    m_cachedFrame.reserve(30000);
 }
 
 
@@ -69,36 +75,47 @@ void ldRendererOpenlase::setFrameModes(int flags) {
     m_frameModes = flags;
 }
 
-const std::vector<Vertex> &ldRendererOpenlase::getCachedFrame() const {
-    return m_cachedFrame;
+const std::vector<ldVertex> &ldRendererOpenlase::getCachedFrame() const {
+    return m_frame.frame();
 }
 
-float ldRendererOpenlase::renderFrame(ldFrameBuffer * buffer, int max_fps){
+float ldRendererOpenlase::renderFrame(ldFrameBuffer * buffer, int max_fps, bool is3d){
 
     const float result = olRenderFrame(max_fps);
     OLRenderedFrame * rendered_frame = olGetRenderedFrames();
     m_lastFramePointCount = rendered_frame->pnext;
 
-    bool save_ss = !(m_frameModes & FRAME_MODE_NO_SCREENSHOT);
-
 //    {static int s; s=(s+1)%100; int z=olGetRenderedFrames()->pnext; if (!s || z > 30001) qDebug() << "frames point count:" << z;}
 
-    Vertex v = {{0, 0, 0}, {0, 0, 0, 0}};
-    if (save_ss) m_cachedFrame.resize(static_cast<uint>(rendered_frame->pnext));
+    m_frame.reserve(static_cast<uint>(rendered_frame->pnext));
+    m_frame.clear();
 
-    buffer->setFrameModes(m_frameModes);
+    ldVertex v = {{0, 0}, {0, 0, 0}};
     for(uint i = 0; i < static_cast<uint>(rendered_frame->pnext); i++ ){
         OLPoint *p = rendered_frame->points+i;
         v.x() = p->x;
         v.y() = p->y;
-        v.z() = 0.0f;
-        v.color[0] =((p->color & 0xFF0000) >> 16) / 255.0f;
-        v.color[1] =((p->color & 0x00FF00) >> 8) / 255.0f;
-        v.color[2] =((p->color & 0x0000FF) >> 0) / 255.0f;
-        v.color[3] = 1.0f;
-        buffer->push(v, false, true); // also alters v with global filter
-        if (save_ss) m_cachedFrame[i] = v;
+        v.r() =((p->color & 0xFF0000) >> 16) / 255.0f;
+        v.g() =((p->color & 0x00FF00) >> 8) / 255.0f;
+        v.b() =((p->color & 0x0000FF) >> 0) / 255.0f;
+
+        m_frame.push_back(std::move(v));
     }
+
+    // filter openlase result
+    m_filterManager->resetFilters();
+    m_filterManager->setFrameModes(m_frameModes);
+
+    bool mode_disable_rotate = m_filterManager->dataFilter()->frameModes & FRAME_MODE_DISABLE_ROTATION;
+    if(!mode_disable_rotate && !is3d) {
+        for(ldVertex &frameV : m_frame.frame())
+            m_filterManager->rotate3dFilter()->processFilter(frameV);
+    }
+
+    m_filterManager->processFrame(m_frame);
+
+    // apply data filter
+    buffer->pushFrame(m_frame);
 
     return result;
 }

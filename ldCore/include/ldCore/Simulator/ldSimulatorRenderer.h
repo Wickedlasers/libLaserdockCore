@@ -29,7 +29,6 @@
 #include <QtGui/QQuaternion>
 
 #include "ldCore/ldCore_global.h"
-#include "ldCore/Utilities/ldBasicDataStructures.h"
 
 class QOpenGLShaderProgram;
 

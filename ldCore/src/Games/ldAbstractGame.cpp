@@ -25,9 +25,9 @@
 #include <QtGui/QtEvents>
 #include <QtQml/QQmlEngine>
 
-#include "ldCore/ldCore.h"
-#include "ldCore/Visualizations/ldVisualizationTask.h"
-#include "ldCore/Visualizations/Visualizers/Games/ldAbstractGameVisualizer.h"
+#include <ldCore/ldCore.h>
+#include <ldCore/Helpers/ldEnumHelper.h>
+#include <ldCore/Visualizations/ldVisualizationTask.h>
 
 void ldAbstractGame::registerMetaTypes()
 {
@@ -44,10 +44,9 @@ ldAbstractGame::ldAbstractGame(const QString &id, const QString &title, QObject 
     , m_gamepadCtrl(new ldGamepadCtrl(this, this))
     , m_isActive(false)
     , m_levelIndex(0)
-    , m_state(Ready)
 {
 #ifdef LD_CORE_ENABLE_QT_QUICK
-    qmlRegisterType<ldGamepadCtrl>();
+    qmlRegisterAnonymousType<ldGamepadCtrl>("WickedLasers", 1);
 #endif
 
     connect(this, &ldAbstractGame::levelIndexChanged, this, &ldAbstractGame::onLevelIndexChanged);
@@ -83,7 +82,7 @@ QStringList ldAbstractGame::get_keyDescriptions() const
 }
 
 bool ldAbstractGame::eventFilter(QObject *obj, QEvent *ev) {
-    if(m_state != ldAbstractGame::Playing) {
+    if(get_state() != ldAbstractGame::Playing) {
         return QObject::eventFilter(obj, ev);
     }
 
@@ -127,37 +126,36 @@ void ldAbstractGame::moveRightY(double y)
     getGameVisualizer()->moveRightY(y);
 }
 
+int ldAbstractGame::get_state() const
+{
+    return ldEnumHelper::as_integer(getGameVisualizer()->state());
+}
+
+int ldAbstractGame::get_playingState() const
+{
+    return ldEnumHelper::as_integer(getGameVisualizer()->playingState());
+}
+
 void ldAbstractGame::play()
 {
-    if(m_state != Playing)
+    if(get_state() != Playing)
         toggle();
 }
 
 void ldAbstractGame::pause()
 {
-    if(m_state == Playing)
+    if(get_state() == Playing)
         toggle();
 }
 
 void ldAbstractGame::reset() {
-    if(m_state != ldAbstractGame::Ready) {
-        toggle();
-    }
-
     getGameVisualizer()->reset();
-
-    set_state(Ready);
 }
 
 void ldAbstractGame::toggle() {
-    qDebug() << "Game:" << get_title() << "isPlaying changed to" << m_state;
+    qDebug() << "Game:" << get_title() << "isPlaying changed to" << get_state();
 
     getGameVisualizer()->togglePlay();
-
-    if(get_state() == Playing)
-        set_state(Paused);
-    else
-        set_state(Playing);
 }
 
 bool ldAbstractGame::isSoundEnabled() const
@@ -177,13 +175,28 @@ void ldAbstractGame::setSoundLevel(int soundLevel)
 
 void ldAbstractGame::activate()
 {
+    connect(getGameVisualizer(), &ldAbstractGameVisualizer::stateChanged, this, &ldAbstractGame::onGameStateChanged, Qt::UniqueConnection);
+    connect(getGameVisualizer(), &ldAbstractGameVisualizer::playingStateChanged, this, &ldAbstractGame::onPlayingStateChanged, Qt::UniqueConnection);
     //  visualizer
-    ldCore::instance()->task()->setCurrentVisualizer(getGameVisualizer());
+    ldCore::instance()->task()->setVisualizer(getGameVisualizer());
+#ifdef LD_CORE_GAMES_ALWAYS_PLAY_STATE
+//    play();
+#endif
 }
 
 void ldAbstractGame::deactivate()
 {
-    pause();
+    //    pause();
+}
+
+void ldAbstractGame::onGameStateChanged(const ldAbstractGameVisualizer::ldGameState &state)
+{
+    emit stateChanged(ldEnumHelper::as_integer(state));
+}
+
+void ldAbstractGame::onPlayingStateChanged(const ldAbstractGameVisualizer::ldPlayingState &state)
+{
+    emit playingStateChanged(ldEnumHelper::as_integer(state));
 }
 
 void ldAbstractGame::onActiveChanged(bool isActive)

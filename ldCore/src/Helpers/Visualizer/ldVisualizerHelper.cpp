@@ -55,7 +55,7 @@
 
 #include <ldCore/Sound/ldSoundInterface.h>
 
-#include <math.h>
+#include <cmath>
 #ifndef __MINGW32__
 #ifndef __APPLE__
 #ifndef ANDROID
@@ -138,7 +138,7 @@ float ldBeatSignal::process(float input, float delta) {
 */
 
 float ldStatValue::add(float f) {
-    for (int i = historysize-1; i >= 1; i--) {
+    for (uint i = historysize-1; i >= 1; i--) {
         history[i] = history[i-1];
     }
     history[0] = f;
@@ -147,25 +147,25 @@ float ldStatValue::add(float f) {
     float sum = 0;// prob
     float sum2 = 0;// average
     float total = 0;
-    int ths = historysize;
+    uint ths = historysize;
     if (ths > nfull) ths = nfull;
-    for (int i = 1; i < ths; i++) {
-        float str = 1-(i+0.5)/ths;
+    for (uint i = 1; i < ths; i++) {
+        float str = 1-(i+0.5f)/ths;
         if (f > history[i]) sum += str*1;
-        if (f == history[i]) sum += str*0.5;
+        if (cmpf(f, history[i])) sum += str*0.5f;
         if (f < history[i]) sum += str*0;
         sum2 += str*history[i];
         total += str;
     }
     baseValue = f;
-    if (total == 0) averageValue = 0; else averageValue = sum2 / total;
-    if (averageValue == 0) scaledValue = 0; else scaledValue = baseValue / averageValue;
-    if (total == 0) probabilityValue = 0.5; else probabilityValue = sum / total;
+    if (cmpf(total,0)) averageValue = 0; else averageValue = sum2 / total;
+    if (cmpf(averageValue, 0)) scaledValue = 0; else scaledValue = baseValue / averageValue;
+    if (cmpf(total, 0)) probabilityValue = 0.5; else probabilityValue = sum / total;
     combinedValue = scaledValue * probabilityValue;
     
     // dim start
     if (nfull < historysize/12) {
-        float mult = ((float)nfull) / (float)(historysize / 12);
+        float mult = static_cast<float>(nfull) / (historysize / 12.f);
         scaledValue *= mult;
         probabilityValue *= mult;
         combinedValue *= mult;
@@ -173,7 +173,7 @@ float ldStatValue::add(float f) {
     
     return scaledValue;
 }
-void ldStatValue::set(int _historysize) {
+void ldStatValue::set(uint _historysize) {
     if (_historysize > maxstathistory) _historysize = maxstathistory;
     historysize = _historysize;
 }
@@ -181,15 +181,15 @@ void ldStatValue::set(int _historysize) {
 
 void ldPresetSignal::init() {
 
-    float d = overdrive; // scale all time values by this
-    stat.set(d*iscale(statTime, 20, 600)); // 2048 max
+    uint d = overdrive; // scale all time values by this
+    stat.set(d*iscale(statTime, 20u, 600u)); // 2048 max
 
     signal.mult = fscale(signalMult, 0.f, 4.9f);
     signal.floor = fscale(signalFloor*signalFloor, 0.f, 0.9f);
     signal.fade = fscale(signalFade, 0.f, 0.9f);
 
-    int trackerRangeStartValue = iscale(trackerRangeStart, 6, 30); // 240/2 max
-    int trackerRangeEndValue = iscale(trackerRange, trackerRangeStartValue*2, 120); // 120 max
+    uint trackerRangeStartValue = iscale(trackerRangeStart, 6u, 30u); // 240/2 max
+    uint trackerRangeEndValue = iscale(trackerRange, trackerRangeStartValue*2, 120u); // 120 max
     tracker->set(d*trackerRangeStartValue,
                 d*trackerRangeEndValue);
 
@@ -218,8 +218,8 @@ float ldPresetSignal::processSignal(float f) {
     statOutput = stat.scaledValue;
 //    int statTypeValue = iscale(statType, 1, 3);
     int statTypeValue = 2;
-    if (statType < 1.0/3.0) statTypeValue = 1;
-    if (statType > 2.0/3.0) statTypeValue = 3;
+    if (statType < 1.0f/3.0f) statTypeValue = 1;
+    if (statType > 2.0f/3.0f) statTypeValue = 3;
     if (statTypeValue == 1)
         statOutput = stat.scaledValue/fscale(statParam, 1, 20);
     if (statTypeValue == 2)
@@ -238,7 +238,7 @@ float ldPresetSignal::processSignal(float f) {
 
     // calculate spin algorithms
     if (!spinning) {
-        if (signal.value > trackerSpinThreshold && tracker->bestphase() < (1.0/16.0)) {
+        if (signal.value > trackerSpinThreshold && tracker->bestphase() < (1.0f/16.0f)) {
             spinning = true;
             spinspeed = tracker->bestbpm()*trackerSpinSpeedMult;
             spindir = signal.flip;
@@ -262,12 +262,12 @@ float ldPresetSignal::processSignal(float f) {
 
     //walkcounter = tracker1.bestphase;
     walkCounter += tracker->bestbpm();
-    float target = (tracker->bestphase()+4.0/32.0);
-    target -= (int) target;
+    float target = (tracker->bestphase()+4.0f/32.0f);
+    target -=  std::floor(target);
     float tdelta = target - walkCounter;
-    if (tdelta < -0.5) tdelta++;
-    if (tdelta > 0.5) tdelta--;
-    float m = tracker->bestbpm() * 2.0 * walkWobbleFactor;
+    if (tdelta < -0.5f) tdelta++;
+    if (tdelta > 0.5f) tdelta--;
+    float m = tracker->bestbpm() * 2.0f * walkWobbleFactor;
     if (tdelta > m) tdelta = m;
     if (tdelta < -m) tdelta = -m;
     walkCounter += tdelta;
@@ -275,9 +275,9 @@ float ldPresetSignal::processSignal(float f) {
 
     didClick = false;
     float t = 0;//1.0/32.0;
-    if (/*owc > (1.0-t) &&*/ walkCounter > (1.0+t)) {
+    if (/*owc > (1.0-t) &&*/ walkCounter > (1.0f+t)) {
         didClick = true;
-        walkCounter -= (int)walkCounter;
+        walkCounter -= std::floor(walkCounter);
     }
     owc = walkCounter;
 
@@ -448,7 +448,7 @@ float ldMusicReactor::process(ldSoundData* p) {
     else if (outputType < 4.0f/5.0f) output = walkerOutput;
     else output = trackerOutput;
 
-    isSilent2 = (output <= 1.0/8.0);
+    isSilent2 = (output <= 1.0f/8.0f);
     isSilent2float = clampf((1 - output)*8-7, 0, 1);
 
     return output;
@@ -457,10 +457,10 @@ float ldMusicReactor::process(ldSoundData* p) {
 
 void ldMusicReactor::processStat(ldSoundData* p, float d)
 {
-    int nbins = iscale(frequencyRange, 2, 12);
+    uint nbins = iscale(frequencyRange, 2u, 12u);
     float fbin = expf(fscale(frequencyMid, 1, 5));
     fbin = (fbin - expf(1)) / (expf(5) - expf(1));
-    int ibin = clampf(fbin, 0.f, 0.99f) * nbins;
+    uint ibin = static_cast<uint>(clampf(fbin, 0.f, 0.99f) * nbins);
     //float f = p->GetMids();
     float f = p->GetFFTValueForBlock(ibin, nbins);
     //printf("%i / %i\n", ibin, nbins);
@@ -471,7 +471,7 @@ void ldMusicReactor::processStat(ldSoundData* p, float d)
     if (f < 0) f = 0;
     lastInput = currentInput;
 
-    stat.set(d*iscale(statTime, 20, 600)); // 2048 max
+    stat.set(static_cast<uint>(d*iscale(statTime, 20u, 600u))); // 2048 max
  //statLog.set(d*iscale(statTime, 20, 600)); // 2048 max
     stat.add(f);
 
@@ -488,8 +488,8 @@ void ldMusicReactor::processStat(ldSoundData* p, float d)
 
 //        int statTypeValue = iscale(statType, 1, 3);
     int statTypeValue = 2;
-    if (statType < 1.0/3.0) statTypeValue = 1;
-    if (statType > 2.0/3.0) statTypeValue = 3;
+    if (statType < 1.0f/3.0f) statTypeValue = 1;
+    if (statType > 2.0f/3.0f) statTypeValue = 3;
     if (statTypeValue == 1)
         statOutput = stat.scaledValue/fscale(statParam, 1, 20);
     if (statTypeValue == 2)
@@ -499,8 +499,8 @@ void ldMusicReactor::processStat(ldSoundData* p, float d)
     statOutput = clampf(statOutput, 0, 1);
     float ta = (1-logFactor);
     float tb = (logFactor);
-    float logOutput = (log(statOutput+.1)-log(0+.1))
-            /(log(1+.1)-log(0+.1));
+    float logOutput = (log(statOutput+.1f)-log(0+.1f))
+            /(log(1+.1f)-log(0+.1f));
     statOutput = ta*statOutput + tb*logOutput;
 }
 
@@ -513,16 +513,18 @@ void ldMusicReactor::processSignal(float delta)
     signal.process(statOutput, delta);
     signalOutput = signal.value;
     float floor = fscale(signalPostFloor, 0, 0.9f);
-    signalOutput = (signalOutput-floor)/(1.0-floor);
+    signalOutput = (signalOutput-floor)/(1.0f-floor);
     signalOutput = clampf(signalOutput, 0, 1);
 }
 
 void ldMusicReactor::processTracker(float d)
 {
-    int trackerRangeStartValue = iscale(trackerRangeStart, 6, 30); // 240/2 max
-    int trackerRangeEndValue = iscale(trackerRange, trackerRangeStartValue*2, 120); // 120 max
-    tracker->set(d*trackerRangeStartValue,
-                d*trackerRangeEndValue);
+    Q_ASSERT(d >= 0.f);
+
+    uint trackerRangeStartValue = iscale(trackerRangeStart, 6u, 30u); // 240/2 max
+    uint trackerRangeEndValue = iscale(trackerRange, trackerRangeStartValue*2, 120u); // 120 max
+    tracker->set(static_cast<uint>(d*trackerRangeStartValue),
+                 static_cast<uint>(d*trackerRangeEndValue));
 
 
     tracker->add(signalOutput);
@@ -537,7 +539,7 @@ void ldMusicReactor::processSpin()
         if (signal.value > spinThreshold && tracker->bestphase() < spinAngleThreshold) {
             spinning = true;
             spinspeed = tracker->bestbpm()*spinSpeedMult;
-            if (spinspeed == 0) spinning = false;
+            if (cmpf(spinspeed, 0)) spinning = false;
             spindir = signal.flip;
             if (spindir < 0) spinTurns = 1;
         }
@@ -561,10 +563,10 @@ void ldMusicReactor::processWalk()
     // walk type spin algorithm
     walkCounter += tracker->bestbpm();
     float target = tracker->bestphase() + fscale(walkerAdvance, 0, 2*4.0/32.0);
-    target -= (int) target;
+    target -= std::floor(target);
     float tdelta = target - walkCounter;
-    if (tdelta < -0.5) tdelta++;
-    if (tdelta > 0.5) tdelta--;
+    if (tdelta < -0.5f) tdelta++;
+    if (tdelta > 0.5f) tdelta--;
     float m = tracker->bestbpm() * fscale(walkerWobbleFactor, 0.065f, 2.0f);
     if (tdelta > m) tdelta = m;
     if (tdelta < -m) tdelta = -m;
@@ -573,9 +575,9 @@ void ldMusicReactor::processWalk()
 
     walkerClickOutput = false;
     float t = 0;//1.0/32.0;
-    if (/*owc > (1.0-t) &&*/ walkCounter > (1.0+t)) {
+    if (/*owc > (1.0-t) &&*/ walkCounter > (1.0f+t)) {
         walkerClickOutput = true;
-        walkCounter -= (int)walkCounter;
+        walkCounter -= std::floor(walkCounter);
     }
     owc = walkCounter;
 

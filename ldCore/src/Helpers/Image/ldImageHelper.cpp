@@ -3,10 +3,9 @@
 //  Copyright (c) 2017 Wicked Lasers. All rights reserved.
 
 #include "ldCore/Helpers/Image/ldImageHelper.h"
+
 #include <QtCore/QDebug>
 #include <QtGui/QImage>
-#include <QPixmap>
-#include <QPainter>
 
 // IplImage2QImage
 QImage ldImageHelper::IplImage2QImage(IplImage *iplImg)
@@ -99,63 +98,6 @@ cv::Mat ldImageHelper::resizeFitInSquare(const cv::Mat& _input, int size) {
     cv::resize(_input, ret, cv::Size(neww, newh), 0, 0, cv::InterpolationFlags::INTER_CUBIC);
 #endif
     return ret;
-}
-
-
-QImage ldImageHelper::drawLaserImageFromVerts(const std::vector<Vertex> &verts, int size, float scale) {
-    std::vector<OLPoint> points;
-    OLPoint p;
-    for (uint i = 0; i < verts.size(); i++) {
-        p.x = verts[i].position[0];
-        p.y = verts[i].position[1];
-        float r = 255*verts[i].color[0];
-        float g = 255*verts[i].color[1];
-        float b = 255*verts[i].color[2];
-//        p.color = C_WHITE;//ColorRGB(r, g, b);
-        p.color = qRgb (r, g, b); // todo-- fix?
-        points.push_back(p);
-    }
-    return drawLaserImageFromPoints(points, size, scale);
-}
-
-QImage ldImageHelper::drawLaserImageFromPoints(const std::vector<OLPoint> &frame, int size, float scale) {
-
-    // image properties
-    int w = size; int h = size;
-    int penwidth = 1;
-    QImage imgRaw(w, h, QImage::Format_ARGB32);
-    imgRaw.fill(Qt::black);
-    QPixmap px = QPixmap::fromImage(imgRaw);
-    QPainter p(&px);
-
-    // set blend mode, ideally want one like GL_ONE_ONE (res = src+dst)
-    // lighten is close.  color dodge doesn't seem to work
-    p.setCompositionMode(QPainter::CompositionMode_Lighten);
-    //p.setCompositionMode(QPainter::CompositionMode_ColorDodge);
-
-    // aa if desired
-    //p.setRenderHints(QPainter::HighQualityAntialiasing);
-    //p.setRenderHints(QPainter::Antialiasing);
-
-    // draw each line
-    for (uint i = 1; i < frame.size(); i++) {
-        QPen pen;
-        QColor color(frame[i].color);
-        pen.setColor(color);
-        pen.setWidth(penwidth);
-        p.setPen(pen);
-        float x1 = frame[i-1].x*scale;
-        float y1 = frame[i-1].y*scale;
-        float x2 = frame[  i].x*scale;
-        float y2 = frame[  i].y*scale;
-        x1 = (x1/2+0.5f)*w;
-        y1 = (-y1/2+0.5f)*h;
-        x2 = (x2/2+0.5f)*w;
-        y2 = (-y2/2+0.5f)*h;
-        p.drawLine(x1, y1, x2, y2);
-    }
-    p.end();
-    return px.toImage();
 }
 
 QImage ldImageHelper::resizeLaserImage(const QImage &src, int size) {

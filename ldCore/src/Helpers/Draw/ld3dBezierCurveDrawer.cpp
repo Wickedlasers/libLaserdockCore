@@ -64,13 +64,14 @@ bool ld3dBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer)
 {
     if(!_elapsedTimer.isValid()) {
         _elapsedTimer.start();
+        _elapsedCorrection = 0;
     }
 
     if(!checkCurrentStep()) {
         return false;
     }
 
-    float elapsedSec = 1.f * _elapsedTimer.elapsed() / 1000.f;
+    float elapsedSec = this->elapsedSec();
     float colorBaseCoeff = 0.f;
     float inputCoeff = 0.f;
     switch(_currentStep) {
@@ -185,13 +186,14 @@ bool ld3dBezierCurveDrawer::innerDrawTwo(ldRendererOpenlase *renderer, int rotat
 {
     if(!_elapsedTimer.isValid()) {
         _elapsedTimer.start();
+        _elapsedCorrection = 0;
     }
 
     if(!checkCurrentStep()) {
         return false;
     }
 
-    float elapsedSec = 1.f * _elapsedTimer.elapsed() / 1000.f;
+    float elapsedSec = this->elapsedSec();
     float colorBaseCoeff = 0.f;
     float inputCoeff = 0.f;
     switch(_currentStep) {
@@ -311,7 +313,8 @@ void ld3dBezierCurveDrawer::reset()
     _currentStep = Step::INTRO;
     _colorStep = 0;
     _colorNextStep = 170;
-    _elapsedTimer = QTime();
+    _elapsedTimer.invalidate();
+    _elapsedCorrection = 0;
 
     // generate random delta so animation order is different for each frame
     _randomDelta = ldRandomGenerator::instance()->generate(0, 8);
@@ -320,10 +323,12 @@ void ld3dBezierCurveDrawer::reset()
 void ld3dBezierCurveDrawer::setSpeedCoeff(float speed)
 {
     float coeffDiff = speed / m_speedCoeff;
-    int elapsed = _elapsedTimer.elapsed();
-    elapsed *= coeffDiff;
-    _elapsedTimer = ldMaths::timeFromMs(elapsed);
-//    qDebug() <<
+
+    // FIXME here it's supposed to jump to the current frame, but it was broken somehow
+    _elapsedCorrection += static_cast<qint64> (_elapsedCorrection * coeffDiff);
+    if(_elapsedTimer.isValid())
+        _elapsedCorrection += static_cast<qint64> (_elapsedTimer.elapsed() * coeffDiff);
+
     m_speedCoeff = speed;
 }
 
@@ -388,6 +393,7 @@ Steps3dTState ld3dBezierCurveDrawer::getStateByIndice(uint indice, float inputCo
 void ld3dBezierCurveDrawer::nextStep()
 {
     _elapsedTimer.start();
+    _elapsedCorrection = 0;
 
     if(_currentStep == Step::REMOVE) {
         // reset step
@@ -402,9 +408,10 @@ void ld3dBezierCurveDrawer::nextStep()
 }
 
 // stepChecker
+
 bool ld3dBezierCurveDrawer::checkCurrentStep()
 {
-    float sec_since_last_start = 1.0f * (_elapsedTimer.elapsed()) / 1000.0f;
+    float sec_since_last_start = elapsedSec();
 
     float stopTime = 0.f;
     switch (_currentStep) {
@@ -425,4 +432,13 @@ bool ld3dBezierCurveDrawer::checkCurrentStep()
     }
 
     return true;
+}
+
+float ld3dBezierCurveDrawer::elapsedSec() const
+{
+    qint64 elapsed = 0;
+    if(_elapsedTimer.isValid()) {
+        elapsed = _elapsedTimer.elapsed() + _elapsedCorrection;
+    }
+    return 1.0f * elapsed / 1000.0f;
 }

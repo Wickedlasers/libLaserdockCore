@@ -31,14 +31,14 @@
 
 #include "ldCore/ldCore_global.h"
 
-#include <math.h>
+#include <cmath>
 
 #include <QtCore/QObject>
 #include <QtMultimedia/QAudio>
 #include <QtMultimedia/QAudioDeviceInfo>
 #include <QtMultimedia/qaudioinput.h>
 
-#include <ldCore/Utilities/ldBasicDataStructures.h>
+#include <ldCore/Utilities/ldAudioBuffer.h>
 
 // sample size is size of an audio buffer object in frames
 const int SAMPLE_RATE = 44100;
@@ -96,7 +96,7 @@ class LDCORESHARED_EXPORT ldSoundData : public QObject
 
 public:
 
-    ldSoundData(const QAudioFormat &format, QObject* parent = nullptr);
+    ldSoundData(QObject* parent = nullptr);
     ~ldSoundData();
 
 
@@ -302,10 +302,6 @@ public:
     int GetSoundLevel() const; // 1..100
 
 protected:
-
-    const QAudioFormat m_format;
-
-    quint32 m_maxAmplitude;
 
     QScopedPointer<LDFFT>                   m_fft;
     ldAudioBuffer<float>    m_waveformOriginal; // waveform data buffer

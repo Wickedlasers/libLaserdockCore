@@ -30,12 +30,15 @@
 
 class ldFilter;
 
+class ldHardwareFilter;
+
 class LDCORESHARED_EXPORT ldFilterManager : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ldFilterManager(QObject *parent = 0);    
+    explicit ldFilterManager(QObject *parent = 0);
+    ~ldFilterManager();
 
     ldFilter *preGlobalFilter() const;
     void setPreGlobalFilter(ldFilter *globalFilter);
@@ -43,38 +46,38 @@ public:
     ldFilter *globalFilter() const;
     void setGlobalFilter(ldFilter *globalFilter);
 
+    ldFilterBasicData *dataFilter();
+    ldHardwareFilter *hardwareFilter();
+    ldHardwareFilter *hardwareFilter2();
+
     void setFrameModes(int frameModes);
 
-    void process(Vertex &tval, Vertex &simVal);
+    void processFrame(ldVertexFrame &frame);
+
     void resetFilters();
 
-    ldColorCurveFilter *baseColorCurveFilter() const;
     ldColorCurveFilter *colorCurveFilter() const;
     ldColorFaderFilter *colorFaderFilter() const;
-    ldDeadzoneFilter *deadzoneFilter() const;
     ldHueFilter *hueFilter() const;
     ldHueShiftFilter *hueShiftFilter() const;
-    ldFlipFilter *flipFilter() const;
-    ldScaleFilter *scaleFilter() const;
-    ldShiftFilter *shiftFilter() const;
+    ld3dRotateFilter *rotate3dFilter() const;
+    ldScaleFilter *globalScaleFilter() const;
     ldSoundLevelFilter *soundLevelFilter() const;
     ldRotateFilter *rotateFilter() const;
     ldTracerFilter *tracerFilter() const;
 
-    void setBrightness(float brightness);
-    void setKeystoneX(float keystoneX);
-    void setKeystoneY(float keystoneY);
-    void setOffset(int offset);
-    void setTtl(bool isTtl);
+    void setHueFiltersActive(bool active);
 
 private:
     ldFilterBasicGlobal m_basicGlobalFilter;
     ldFilterBasicData m_dataFilter;
     ldFilter* m_preGlobalFilter = nullptr;
     ldFilter* m_globalFilter = nullptr;
+    std::unique_ptr<ldHardwareFilter> m_hardwareFilter;
+    std::unique_ptr<ldHardwareFilter> m_hardwareFilter2;
 
-    std::unique_ptr<ldFlipFilter> m_flipFilter;
-    std::unique_ptr<ldRotateFilter> m_rotateFilter;
+    std::unique_ptr<ld3dRotateFilter> m_3dRotateFilter;
+
 };
 
 #endif // LDFILTERMANAGER_H

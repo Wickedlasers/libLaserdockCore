@@ -27,7 +27,7 @@
 //
 
 #include "ldCore/Helpers/Visualizer/ldLaserFilter.h"
-#include <math.h>
+#include <cmath>
 
 // laserpoint struct constructors and utility funcs
 
@@ -49,23 +49,21 @@ uint32_t LaserPoint::c32() const{
     }
 }
 
-LaserPoint::LaserPoint(const Vertex &v){
-    x = v.position[0];
-    y = v.position[1];
-    r = v.color[0];
-    g = v.color[1];
-    b = v.color[2];
+LaserPoint::LaserPoint(const ldVertex &v){
+    x = v.x();
+    y = v.y();
+    r = v.r();
+    g = v.g();
+    b = v.b();
 }
 
-Vertex LaserPoint::toVertex() const {
-    Vertex v;
-    v.position[0] = x;
-    v.position[1] = y;
-    v.position[2] = 0;
-    v.color[0] = r;
-    v.color[1] = g;
-    v.color[2] = b;
-    v.color[3] = 1;
+ldVertex LaserPoint::toVertex() const {
+    ldVertex v;
+    v.x() = x;
+    v.y() = y;
+    v.r() = r;
+    v.g() = g;
+    v.b() = b;
     return v;
 }
 
@@ -297,7 +295,7 @@ LaserPoint filter_gradientArray(LaserPoint t, float array[], int arraySize) {
     return t;
 }
 
-#include <math.h>
+#include <cmath>
 float max(float a, float b) {return (a>b)?a:b;}
 
 LaserPoint filter_circlefy(LaserPoint t, float strength) {

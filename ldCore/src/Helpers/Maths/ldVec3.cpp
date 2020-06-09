@@ -24,7 +24,7 @@
 
 #include "ldCore/Helpers/Maths/ldVec3.h"
 
-#include <math.h>
+#include <cmath>
 
 #include "ldCore/Helpers/Maths/ldMaths.h"
 
@@ -172,6 +172,29 @@ void ldVec3::rotate(float p_x, float p_y, float p_z, ldVec3 p_pivot)
     r = ldVec3::rotate3dAtPoint(r, p_y, ldVec3::Y_VECTOR, p_pivot);
     r = ldVec3::rotate3dAtPoint(r, p_z, ldVec3::Z_VECTOR, p_pivot);
     *this = r;
+}
+
+void ldVec3::rotate(const ldVec3& k, float theta) {
+    ldVec3 initialValue = *this;
+    ldVec3 k1 = k;
+    ldVec3 k2 = k;
+
+    float thetaCos = cosf(theta);
+
+    // a
+    *this *= thetaCos;
+
+    // b
+    k1 = k1.vectProduct(initialValue);
+
+    k1 *= sinf(theta);
+
+    *this += k1;
+
+    // c
+    float cF = k2.dotProduct(initialValue) * (1 - thetaCos);
+    k2 *= cF;
+    *this += k2;
 }
 
 ldVec3 ldVec3::operator+(const ldVec3 &other) const

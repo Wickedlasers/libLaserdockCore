@@ -1,8 +1,10 @@
 #include "ldCore/Helpers/ldLzrHelper.h"
 
-#include <QtGui/QColor>
 #include <QtCore/QtDebug>
+#include <QtCore/QFile>
+#include <QtGui/QColor>
 
+#include <ldCore/Helpers/SimpleCrypt/ldSimpleCrypt.h>
 #include <ldCore/Render/ldRendererOpenlase.h>
 
 lzr::FrameList ldLzrHelper::convertOpenlaseToLzr(const std::vector<std::vector<OLPoint> > &data)
@@ -55,10 +57,13 @@ std::vector<std::vector<OLPoint> > ldLzrHelper::convertLzrToOpenlase(const lzr::
 {
     std::vector<std::vector<OLPoint> > result;
 
-    for(const lzr::Frame &lzrFrame : lzrFrameList) {
+    result.resize(lzrFrameList.size());
+
+#pragma omp parallel for
+    for(int i = 0; i < static_cast<int>(lzrFrameList.size()); i++) {
         std::vector<OLPoint> libolFrame;
 
-        for(const lzr::Point &lzrPoint : lzrFrame) {
+        for(const lzr::Point &lzrPoint : lzrFrameList[i]) {
             // convert lzr point to libol
             OLPoint libolPoint;
             libolPoint.x = static_cast<float>(lzrPoint.x);
@@ -77,7 +82,7 @@ std::vector<std::vector<OLPoint> > ldLzrHelper::convertLzrToOpenlase(const lzr::
         }
 
         // add frame to frame list
-        result.push_back(libolFrame);
+        result[i] = libolFrame;
     }
     return result;
 }
@@ -86,7 +91,34 @@ lzr::FrameList ldLzrHelper::readIldaFile(const QString &fileName)
 {
     lzr::FrameList frameList;
 
-    lzr::ILDA* ilda = lzr::ilda_open(fileName.toLatin1().constData(), "r");
+    QString filePath = fileName;
+    if(!QFile::exists(filePath)) {
+        if(!filePath.endsWith(ldSimpleCrypt::LDS_EXTENSION, Qt::CaseInsensitive)) {
+            filePath += ldSimpleCrypt::LDS_EXTENSION;
+            if(!QFile::exists(filePath)) {
+                qWarning() << __FUNCTION__ << "doesn't exist" << fileName;
+                return frameList;
+            }
+        }
+    }
+
+//    qDebug() << filePath;
+    QByteArray data;
+    if(filePath.endsWith(ldSimpleCrypt::LDS_EXTENSION)) {
+        data = ldSimpleCrypt::instance()->decrypt(filePath);
+    } else {
+        QFile file(filePath);
+        bool isOpened = file.open(QIODevice::ReadOnly);
+        if(isOpened)
+            data = file.readAll();
+    }
+
+    if(data.isEmpty())
+        return frameList;
+
+    lzr::ILDA* ilda = lzr::ilda_open(data.constData(), data.size());
+
+//    lzr::ILDA* ilda = lzr::ilda_open(fileName.toLatin1().constData(), "r");
     if(ilda == nullptr) {
         qWarning() << "Can't open ILDA file" << fileName;
         return frameList;

@@ -25,7 +25,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "simplecrypt.h"
+
 #include <QByteArray>
+#include <QRandomGenerator>
 #include <QtDebug>
 #include <QtGlobal>
 #include <QDateTime>
@@ -38,7 +40,6 @@ SimpleCrypt::SimpleCrypt():
     m_protectionMode(ProtectionChecksum),
     m_lastError(ErrorNoError)
 {
-    qsrand(uint(QDateTime::currentMSecsSinceEpoch() & 0xFFFF));
 }
 
 SimpleCrypt::SimpleCrypt(quint64 key):
@@ -47,7 +48,6 @@ SimpleCrypt::SimpleCrypt(quint64 key):
     m_protectionMode(ProtectionChecksum),
     m_lastError(ErrorNoError)
 {
-    qsrand(uint(QDateTime::currentMSecsSinceEpoch() & 0xFFFF));
     splitKey();
 }
 
@@ -113,7 +113,7 @@ QByteArray SimpleCrypt::encryptToByteArray(QByteArray plaintext)
     }
 
     //prepend a random char to the string
-    char randomChar = char(qrand() & 0xFF);
+    char randomChar = char(QRandomGenerator::global()->bounded(0, RAND_MAX) & 0xFF);
     ba = randomChar + integrityProtection + ba;
 
     int pos(0);
@@ -202,15 +202,15 @@ QByteArray SimpleCrypt::decryptToByteArray(QByteArray cypher)
     CryptoFlags flags = CryptoFlags(ba.at(1));
 
     ba = ba.mid(2);
-    int pos(0);
     int cnt(ba.count());
-    char lastChar = 0;
 
-    while (pos < cnt) {
-        char currentChar = ba[pos];
+    // deep copy for parallel algo
+    QByteArray baCopy(ba.data(), ba.size());
+
+#pragma omp parallel for
+    for (int pos = 0; pos < cnt; pos++) {
+        char lastChar = (pos > 0) ? baCopy.at(pos-1) : 0;
         ba[pos] = ba.at(pos) ^ lastChar ^ m_keyParts.at(pos % 8);
-        lastChar = currentChar;
-        ++pos;
     }
 
     ba = ba.mid(1); //chop off the random number at the start

@@ -1,8 +1,8 @@
 # ============================= compile settings =============================
 
 CXX       = g++
-CXXFLAGS += -std=c++11 -Wall -Wextra -pedantic -fPIC -ggdb
-CXXFLAGS += -I.
+CXXFLAGS += -std=c++14 -Wall -Wextra -pedantic -fPIC -ggdb
+CXXFLAGS += -I./include
 LIBS      = -lm -lpthread
 ARFLAGS   = rs
 
@@ -52,6 +52,9 @@ tests/%: tests/%.cpp all
 tools/ilda-view: tools/ilda-view.cpp
 	$(CXX) $(CXXFLAGS) -I/usr/include/SDL2 -lSDL2 $< ./liblzr.a -o $@
 
+tools/%: tools/%.cpp
+	$(CXX) $(CXXFLAGS) $< ./liblzr.a $(DACS) $(LIBS) -o $@
+
 # DAC specific compilation
 src/dac/libetherdream/etherdream.a:
 	$(MAKE) -C $(dir $@)
@@ -60,7 +63,7 @@ src/dac/libetherdream/etherdream.a:
 install:
 	install -m 0755 liblzr.a   $(INSTALL_PREFIX)/lib
 	install -m 0755 liblzr.so  $(INSTALL_PREFIX)/lib
-	install -m 0755 liblzr.hpp $(INSTALL_PREFIX)/include
+	install -m 0755 include/*  $(INSTALL_PREFIX)/include/liblzr
 
 .PHONY: clean
 clean:

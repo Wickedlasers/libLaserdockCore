@@ -62,6 +62,10 @@ public:
     void innerDraw(ldRendererOpenlase* renderer, const ldBezierCurveFrame &dataVect);
     void innerDraw(ldRendererOpenlase* renderer, const ldBezierCurveObject &dataVect);
 
+    // get bezier data using start & controls points, ignoring end point. It's weird but it's necessary in some cases.
+    std::vector<std::vector<OLPoint>> getBezierData(const ldBezierCurveObject &object, bool isSafe = true) const;
+
+    // get point data from frame
     std::vector<std::vector<OLPoint>> getDrawingData(const ldBezierCurveFrame &frame) const;
     std::vector<std::vector<OLPoint>> getDrawingData(const ldBezierCurveObject &object, bool isSafe = true) const;
 

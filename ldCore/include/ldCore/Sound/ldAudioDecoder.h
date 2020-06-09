@@ -32,6 +32,7 @@
 
 #include <QQmlHelpers>
 
+
 #if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
 #define Q_OS_LINUX_DESKTOP
 #endif
@@ -44,6 +45,8 @@ class QMediaPlayer;
 
 class AudioDecoder;
 
+class ldSoundAnalyzer;
+
 class LDCORESHARED_EXPORT ldAudioDecoder : public ldSoundInterface
 {
     Q_OBJECT
@@ -53,6 +56,8 @@ class LDCORESHARED_EXPORT ldAudioDecoder : public ldSoundInterface
 public:
     explicit ldAudioDecoder(QObject *parent = nullptr);
     ~ldAudioDecoder();
+
+    ldSoundAnalyzer* analyzer() const;
 
 public slots:
     void start(const QString &filePath, qint64 elapsedTime = 0);
@@ -91,6 +96,8 @@ private:
 
     int m_fileSamplePos = 0;
     uint m_currentBlockPos = 0;
+
+    ldSoundAnalyzer *m_analyzer;
 };
 
 #endif //LDAUDIODECODER_H

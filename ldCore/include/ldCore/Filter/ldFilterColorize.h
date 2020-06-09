@@ -22,6 +22,8 @@
 #define LDFILTERCOLORIZE_H
 
 #include "ldFilter.h"
+#include "ldCore/Helpers/Maths/ldFilterMath.h"
+
 
 class LDCORESHARED_EXPORT ldFilterColorFade: public ldFilter { // rising fade effect
     Q_OBJECT
@@ -37,7 +39,7 @@ public:
     float freq = 0.5f;
     bool y = false;
 
-    virtual void process(Vertex &input) override;
+    virtual void process(ldVertex &input) override;
     virtual QString name() override { return QObject::tr("Color Fade"); }
     virtual bool isMusicAware() const override { return true; }
 
@@ -51,7 +53,7 @@ public:
 //    float cde2;
 //    float cde3;
 //    float nde;
-    virtual void process(Vertex &input) override;
+    virtual void process(ldVertex &input) override;
     virtual QString name() override { return QObject::tr("Color Lift"); }
     virtual bool isMusicAware() const override { return true; }
 };
@@ -59,28 +61,42 @@ public:
 class LDCORESHARED_EXPORT ldFilterColorDrop: public ldFilter { // color spreads from center outwards
 public:
 	//FilterCircleWipe();
-	virtual void process(Vertex &input) override;
+	virtual void process(ldVertex &input) override;
 	virtual QString name() override { return QObject::tr("Color Drop"); }
     virtual bool isMusicAware() const override { return true; }
+private:
+    bool was = false;
+    bool wait = false;
+    int old = 0;
+    int nw = 1;
 };
 
 
 class LDCORESHARED_EXPORT FilterColorBlobs: public ldFilter { // color spreads from center outwards as blobs
 public:
-    FilterColorBlobs(int type = 0) {m_type = type;} int m_type;
-    virtual void process(Vertex &input) override;
-    virtual QString name() override {
-        if (m_type == 0) return QObject::tr("Color Blobs A");
-        else if (m_type == 1) return QObject::tr("Color Blobs B");
-        else return QObject::tr("Color Blobs C");
-    }
-    virtual bool isMusicAware() const override { return (m_type == 2); }
+    FilterColorBlobs(int type = 0);
+
+    virtual void process(ldVertex &input) override;
+    virtual QString name() override;
+    virtual bool isMusicAware() const override;
+
+private:
+    int m_type;
+
+    static const int nblobs = 48;
+    static constexpr const float scale = 6;
+
+    float rads[nblobs];
+    float angs[nblobs];
+
+    float offset = 0;
+    int fcounter = 0;
 };
 
 class LDCORESHARED_EXPORT FilterColorFreq: public ldFilter { // colors from frequency spectrum graph
 public:
     FilterColorFreq(int type = 0) {m_type = type;} int m_type;
-    virtual void process(Vertex &input) override;
+    virtual void process(ldVertex &input) override;
     virtual QString name() override {
         if (m_type == 0) return QObject::tr("Color Freq A");
         else if (m_type == 1) return QObject::tr("Color Freq B");
@@ -97,7 +113,7 @@ class LDCORESHARED_EXPORT ldShimmerFilter : public ldFilter
     LD_WRITABLE_MIN_MAX_PROPERTY(float, colors)
 public:
     ldShimmerFilter();
-    virtual void process(Vertex &input) override;
+    virtual void process(ldVertex &input) override;
     virtual QString name() override { return QObject::tr("Shimmer A"); }
     virtual bool isMusicAware() const override { return true; }
 
@@ -108,19 +124,6 @@ private:
 // additional colorize filters
 
 // utility classes
-class FramePulse {
-public:
-    float value = 0;
-    float freq = 1;
-    bool tick = true;
-    bool first = true;
-    bool gate = true;
-    float gatemax = 4.0f;
-    FramePulse(float _freq = 1, float _value = 0);
-    void start(float _freq = 1, float _value = 0);
-    void update(float delta);
-};
-
 class ColorPanelCanvas {
 public:
     static const int maxsize = 16;
@@ -187,36 +190,45 @@ public:
 class LDCORESHARED_EXPORT FilterColorScroll : public ldFilter { // scrolling stripes color patterns
 public:
     FilterColorScroll(int type = 0);
-    virtual void process(Vertex &input) override;
-    virtual QString name() override { if (m_type == 2) return QObject::tr("Colorize Scroll C");
-                                    if (m_type == 1) return QObject::tr("Colorize Scroll B");
-                                                    return QObject::tr("Colorize Scroll A");}
+    virtual void process(ldVertex &input) override;
+    virtual QString name() override;
     virtual bool isMusicAware() const override { return (m_type != 0); }
 private:
-//    bool m_alt;
     int m_type;
-    FramePulse pulse1;
-    FramePulse pulse2;
-    FramePulse pulse3;
+    ldFilterMath::FramePulse pulse1;
+    ldFilterMath::FramePulse pulse2;
+    ldFilterMath::FramePulse pulse3;
+    ldFilterMath::FramePulse pulse4;
+};
+
+class LDCORESHARED_EXPORT FilterColorRainbeam : public ldFilter { // scrolling stripes color patterns
+public:
+    FilterColorRainbeam(int type = 0);
+    virtual void process(ldVertex &input) override;
+    virtual QString name() override { return QObject::tr("Colorize Rainbeam");}
+    virtual bool isMusicAware() const override { return (m_type != 0); }
+private:
+    int m_type;
+    ldFilterMath::FramePulse fp;
 };
 
 class LDCORESHARED_EXPORT FilterColorPanels : public ldFilter { // color based on grid with flood fill style animation
 public:
     FilterColorPanels(bool alt = false);
-    virtual void process(Vertex &input) override;
+    virtual void process(ldVertex &input) override;
     virtual QString name() override { return QObject::tr(!m_alt?"Colorize Panel":"Colorize Crumble"); }
     virtual bool isMusicAware() const override { return !m_alt; }
 private:
     bool m_alt;
     ColorPanelCanvas panel;
-    FramePulse pulse1;
-    FramePulse pulse2;
+    ldFilterMath::FramePulse pulse1;
+    ldFilterMath::FramePulse pulse2;
 };
 
 class LDCORESHARED_EXPORT FilterColorGlass : public ldFilter { // color objects separately; color is chosen and remains until next blank points
 public:
     FilterColorGlass(bool alt = false);
-    virtual void process(Vertex &input) override;
+    virtual void process(ldVertex &input) override;
     virtual QString name() override { return QObject::tr(!m_alt?"Colorize Glass":"Colorize Mosaic"); }
     virtual bool isMusicAware() const override { return true; }
 private:
@@ -227,23 +239,23 @@ private:
     int phase = 0;
     float curvalue = 0;
     float curoffset = 0;
-    FramePulse pulse1;
+    ldFilterMath::FramePulse pulse1;
 };
 
 class LDCORESHARED_EXPORT FilterColorAura : public ldFilter { // color using noise maps, emphasis on outside areas
 public:
     FilterColorAura(bool alt = false);
-    virtual void process(Vertex &input) override;
+    virtual void process(ldVertex &input) override;
     virtual QString name() override { return QObject::tr(!m_alt?"Colorize Aura A":"Colorize Aura B"); }
     virtual bool isMusicAware() const override { return m_alt; }
 private:
     bool m_alt;
-    FramePulse fc1;
-    FramePulse fc2;
-    FramePulse fc3;
-    FramePulse fc4;
-    FramePulse fc5;
-    FramePulse fc6;
+    ldFilterMath::FramePulse fc1;
+    ldFilterMath::FramePulse fc2;
+    ldFilterMath::FramePulse fc3;
+    ldFilterMath::FramePulse fc4;
+    ldFilterMath::FramePulse fc5;
+    ldFilterMath::FramePulse fc6;
     GridNoise sbg1;
     GridNoise sbg2;
     GridNoise sbg3;
@@ -254,17 +266,17 @@ private:
 class LDCORESHARED_EXPORT FilterColorAcid : public ldFilter { // color using noise maps, hue cycle effect
 public:
     FilterColorAcid(bool alt = false);
-    virtual void process(Vertex &input) override;
+    virtual void process(ldVertex &input) override;
     virtual QString name() override { return QObject::tr(!m_alt?"Colorize Acid A":"Colorize Acid B"); }
     virtual bool isMusicAware() const override { return m_alt; }
 private:
     bool m_alt;
-    FramePulse fc1;
-    FramePulse fc2;
-    FramePulse fc3;
-    FramePulse fc4;
-    FramePulse fc5;
-    FramePulse fc6;
+    ldFilterMath::FramePulse fc1;
+    ldFilterMath::FramePulse fc2;
+    ldFilterMath::FramePulse fc3;
+    ldFilterMath::FramePulse fc4;
+    ldFilterMath::FramePulse fc5;
+    ldFilterMath::FramePulse fc6;
     GridNoise sbg1;
     GridNoise sbg2;
     GridNoise sbg3;
@@ -275,29 +287,26 @@ private:
 class LDCORESHARED_EXPORT FilterColorLava : public ldFilter { // color using noise maps, rising effect
 public:
     FilterColorLava(bool alt = false);
-    virtual void process(Vertex &input) override;
+    virtual void process(ldVertex &input) override;
     virtual QString name() override { return QObject::tr(!m_alt?"Colorize Lava":"Colorize Slime"); }
     virtual bool isMusicAware() const override { return false; }
 private:
     bool m_alt;
-    FramePulse fc1;
-    FramePulse fc2;
-    FramePulse fc3;
-    FramePulse fc4;
-//    FramePulse fc5;
-//    FramePulse fc6;
+    ldFilterMath::FramePulse fc1;
+    ldFilterMath::FramePulse fc2;
+    ldFilterMath::FramePulse fc3;
+    ldFilterMath::FramePulse fc4;
     GridNoise sbg1;
     GridNoise sbg2;
     GridNoise sbg3;
     GridNoise sbg4;
-//    int huecount = 0;
 };
 
 
 class LDCORESHARED_EXPORT FilterColorVolt : public ldFilter { // color based on remapping HSV space
 public:
     FilterColorVolt(bool alt = false);
-    virtual void process(Vertex &input) override;
+    virtual void process(ldVertex &input) override;
     virtual QString name() override { return QObject::tr(!m_alt?"Color Volt A":"Color Volt B"); }
     virtual bool isMusicAware() const override { return m_alt; }
 private:

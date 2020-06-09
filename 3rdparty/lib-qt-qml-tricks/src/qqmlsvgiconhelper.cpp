@@ -135,7 +135,7 @@ void QQmlSvgIconHelper::refresh (void) {
                 image.fill (Qt::transparent);
                 painter.setRenderHint (QPainter::Antialiasing,            true);
                 painter.setRenderHint (QPainter::SmoothPixmapTransform,   true);
-                painter.setRenderHint (QPainter::HighQualityAntialiasing, true);
+//                painter.setRenderHint (QPainter::HighQualityAntialiasing, true);
                 if (QFile::exists (sourcePath)) {
                     s_renderer.load (sourcePath);
                     if (s_renderer.isValid ()) {

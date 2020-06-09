@@ -160,14 +160,7 @@ void ldAnimationVisualizer::draw()
 
 void ldAnimationVisualizer::loadAnimation()
 {
-    if(m_filePath.endsWith("ldva2", Qt::CaseInsensitive)
-        || m_filePath.endsWith("ldva2.lds", Qt::CaseInsensitive)) {
-        m_asb.load2(m_filePath);
-    }
-    else if(m_filePath.endsWith("ldva4", Qt::CaseInsensitive)
-             || m_filePath.endsWith("ldva4.lds", Qt::CaseInsensitive)) {
-        m_asb.load4(m_filePath);
-    }
+    m_asb.load(m_filePath);
 }
 
 int ldAnimationVisualizer::currentFrame() const

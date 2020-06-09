@@ -73,10 +73,14 @@ void ldVisualizer::start() {
     m_renderer->setRenderParamsQuality();
 
     onShouldStart();
+
+    m_isVisActive = true;
 }
 
 void ldVisualizer::stop() {
     onShouldStop();
+
+    m_isVisActive = false;
 
     // restore global rate
     if(m_rate != 0) {

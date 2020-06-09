@@ -27,7 +27,7 @@
 //
 
 #include "ldCore/Helpers/Audio/ldNoiseField.h"
-#include <math.h>
+#include <cmath>
 
 float rand01() {
     return ((float)rand())/RAND_MAX;

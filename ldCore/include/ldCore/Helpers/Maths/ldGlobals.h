@@ -21,17 +21,20 @@
 #ifndef LDGLOBALS_H
 #define LDGLOBALS_H
 
-#include <math.h>
+#include <cmath>
 
 #include "ldCore/ldCore_global.h"
 
-const float M_PIf = static_cast<float> (M_PI);
-const float M_PI_2f = static_cast<float> (M_PI_2);
-const float M_PI_4f = static_cast<float> (M_PI_4);
-const double M_2PI  = 2.0*M_PI;
-const float M_2PIf = static_cast<float> (M_2PI);
+constexpr float M_PIf = static_cast<float> (M_PI);
+constexpr float M_PI_2f = static_cast<float> (M_PI_2);
+constexpr float M_PI_4f = static_cast<float> (M_PI_4);
+constexpr double M_2PI  = 2.0*M_PI;
+constexpr float M_2PIf = static_cast<float> (M_2PI);
 
-LDCORESHARED_EXPORT bool cmpf(float a, float b, float epsilon = 0.005f);
+inline LDCORESHARED_EXPORT bool cmpf(float a, float b, float epsilon = 0.005f)
+{
+    return (fabsf(a - b) < epsilon);
+}
 
 #endif // LDGLOBALS_H
 

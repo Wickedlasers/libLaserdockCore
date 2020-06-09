@@ -41,6 +41,7 @@ namespace ldColorUtil
     LDCORESHARED_EXPORT void hueShift(float& r, float& g, float& b, float hueoffset);
 
     LDCORESHARED_EXPORT uint32_t colorRGB(uint32_t r, uint32_t g, uint32_t b);
+    LDCORESHARED_EXPORT uint32_t colorRGBf(float r, float g, float b);
 
     /** Get RGB color from HSV */
     LDCORESHARED_EXPORT uint32_t colorHSV(float h, float s, float v);

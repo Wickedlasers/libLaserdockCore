@@ -1172,7 +1172,7 @@ static double nsvg__atof(const char* s)
 	if (*cur == 'e' || *cur == 'E') {
 		int expPart = 0;
 		cur++; // skip 'E'
-		expPart = strtol(cur, &end, 10); // Parse digit sequence with sign
+		expPart = static_cast<int>(strtol(cur, &end, 10)); // Parse digit sequence with sign
 		if (cur != end) {
 			res *= pow(10.0, (double)expPart);
 		}
@@ -2841,7 +2841,7 @@ static void nsvg__content(void* ud, char* s)
 {
 	NSVGparser* p = (NSVGparser*)ud;
 	if (p->titleFlag) {
-		int len = strlen(s);
+		int len = static_cast<int>(strlen(s));
 		NSVGshape *shape = p->image->shapes;
 		const int lim = sizeof(shape->title);
 		if(len > lim-1)

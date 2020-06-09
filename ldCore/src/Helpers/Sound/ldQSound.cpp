@@ -38,6 +38,16 @@ ldQSound::~ldQSound()
     stopImpl();
 }
 
+bool ldQSound::isPlaying() const
+{
+    for (const std::unique_ptr<QSoundEffect> &sound : m_sounds) {
+        if (sound->isPlaying())
+            return true;
+    }
+
+    return false;
+}
+
 void ldQSound::play()
 {
     QMutexLocker lock(&m_mutex);

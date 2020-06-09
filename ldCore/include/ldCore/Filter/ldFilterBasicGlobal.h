@@ -30,10 +30,10 @@
 
 #include "ldCore/Render/ldRendererOpenlase.h"
 #include "ldCore/ldCore_global.h"
-#include "ldCore/Utilities/ldBasicDataStructures.h"
 
 #include "ldBasicFilters.h"
 #include "ldSoundLevelFilter.h"
+
 
 /** Filters that are applied to Vertex before it is sent to simulator */
 class LDCORESHARED_EXPORT ldFilterBasicGlobal: public ldFilter {
@@ -43,20 +43,20 @@ public:
     virtual ~ldFilterBasicGlobal();
 
     /** ldFilter impl */
-    virtual void process(Vertex &v) override;
+    virtual void process(ldVertex &v) override;
 
     /** Filters */
-    ldTtlFilter *ttlFilter() const;
     ldColorCurveFilter *colorCurveFilter() const;
     ldColorFaderFilter *colorFaderFilter() const;
     ldHueFilter *hueFilter() const;
     ldHueMatrixFilter *hueMatrixFilter() const;
     ldHueShiftFilter *hueShiftFilter() const;
-    ldTracerFilter *tracerFilter() const;
     ldSoundLevelFilter *soundLevelFilter() const;
+    ldTracerFilter *tracerFilter() const;
+
+    void setHueFiltersActive(bool active);
 
 private:
-    std::unique_ptr<ldTtlFilter> m_ttlFilter;
     std::unique_ptr<ldColorCurveFilter> m_colorCurveFilter;
     std::unique_ptr<ldColorFaderFilter> m_colorFaderFilter;
     std::unique_ptr<ldHueFilter> m_hueFilter;
@@ -65,7 +65,7 @@ private:
     std::unique_ptr<ldSoundLevelFilter> m_soundLevelFilter;
     std::unique_ptr<ldTracerFilter> m_tracerFilter;
 
-    ldColorCurve curveR, curveG, curveB;
+    bool m_isHueFiltersActive = true;
 };
 
 

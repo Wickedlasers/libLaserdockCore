@@ -27,10 +27,11 @@
 #include "ldCore/Helpers/Audio/ldAppakBpmSelector.h"
 #include "ldCore/Helpers/Audio/ldAppakPeaks.h"
 #include "ldCore/Helpers/Audio/ldAppakSpectrum.h"
+#include "ldCore/Helpers/Audio/ldBeatDetector.h"
 #include "ldCore/Helpers/Audio/ldBpmBeatDetector.h"
-#include "ldCore/Helpers/Audio/ldDropDetector.h"
 #include "ldCore/Helpers/Audio/ldHybridReactor.h"
 #include "ldCore/Helpers/Audio/ldManualBpm.h"
+#include "ldCore/Helpers/Audio/ldManualBpmBeat.h"
 #include "ldCore/Helpers/Audio/ldTempoAC.h"
 #include "ldCore/Helpers/Audio/ldTempoTracker.h"
 
@@ -38,6 +39,7 @@
 ldMusicManager::ldMusicManager(QObject* parent)
     : QObject(parent)
     , m_manualBpm(new ldManualBpm(this))
+    , m_manualBpmBeat(new ldManualBpmBeat(m_manualBpm, this))
 {
     qDebug() << __FUNCTION__;
 
@@ -126,8 +128,10 @@ ldMusicManager::ldMusicManager(QObject* parent)
     hybridAutoColor2.reset(new ldHybridAutoColor2);
     hybridColorPalette.reset(new ldHybridColorPalette);
 
-    m_bpmBeatDetector.reset(new ldBpmBeatDetector());
-    m_bpmBeatDetector->setDuration(0.7f);
+    m_beatDetector.reset(new ldBeatDetector());
+    m_beatDetector->setDuration(0.7f);
+
+    m_bpmBeatDetector.reset(new ldBpmBeatDetector(m_beatDetector.get()));
 }
 
 
@@ -236,7 +240,9 @@ void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float delta) {
     // appak bpm selector
     appakaBpmSelector->process(m_tempoTrackerFast->bpm(), appakaBeat->bpm, m_peaks->lastBpmApproximation());
 
-    m_bpmBeatDetector->process(appakaBpmSelector->bestBpm(), m_peaks->output(), delta);
+    m_beatDetector->process(appakaBpmSelector->bestBpm(), m_peaks->output(), delta);
+    m_bpmBeatDetector->process(delta);
+
     emit updated();
 }
 
@@ -290,6 +296,11 @@ ldManualBpm *ldMusicManager::manualBpm() const
     return m_manualBpm;
 }
 
+ldManualBpmBeat *ldMusicManager::manualBpmBeat() const
+{
+    return m_manualBpmBeat;
+}
+
 const ldTempoTracker *ldMusicManager::tempoTrackerFast() const
 {
     return m_tempoTrackerFast.get();
@@ -300,9 +311,9 @@ const ldTempoTracker *ldMusicManager::tempoTrackerSlow() const
     return m_tempoTrackerSlow.get();
 }
 
-const ldBpmBeatDetector *ldMusicManager::bpmBeatDetector() const
+const ldBeatDetector *ldMusicManager::beatDetector() const
 {
-    return m_bpmBeatDetector.get();
+    return m_beatDetector.get();
 }
 
 bool ldMusicManager::isSilent() const

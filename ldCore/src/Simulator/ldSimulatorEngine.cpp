@@ -20,22 +20,25 @@
 
 #include "ldCore/Simulator/ldSimulatorEngine.h"
 
-#include <math.h>
+#include <cmath>
 
 #include <QtGui/QOpenGLShaderProgram>
 
+#include <ldCore/Simulator/ldSimulatorGrid.h>
+
+#include "ldSimulatorProcessor.h"
+
 namespace  {
-    const unsigned int default_size_for_vbuffer = 1000;
-    const unsigned int history_sample_count = 1000;
+    const unsigned int DEFAULT_SIZE_FOR_VBUFFER = 1000;
+    const unsigned int HISTORY_SAMPLE_COUNT = 1000;
 }
 
 ldSimulatorEngine::ldSimulatorEngine()
-    : m_buffer(default_size_for_vbuffer)
+    : m_buffer(DEFAULT_SIZE_FOR_VBUFFER)
+    , m_processor(new ldSimulatorProcessor)
+    , m_grid(new ldSimulatorGrid())
 {
-    vbuffer.resize(default_size_for_vbuffer);
-
-    m_last.clear();
-    m_lastOn.clear();
+    vbuffer.resize(DEFAULT_SIZE_FOR_VBUFFER);
 }
 
 ldSimulatorEngine::~ldSimulatorEngine()
@@ -62,126 +65,87 @@ void ldSimulatorEngine::init()
 {
     initializeOpenGLFunctions();
 
-    // Generate 2 VBOs
-    glGenBuffers(2, vboIds);
+    glGenBuffers(1, vboIds);
 }
 
 void ldSimulatorEngine::uninit()
 {
-    glDeleteBuffers(2, vboIds);
+    glDeleteBuffers(1, vboIds);
 }
 
 void ldSimulatorEngine::drawLaserGeometry(QOpenGLShaderProgram *program)
 {
-    if (m_lock.tryLockForRead()) {
-        glBindBuffer(GL_ARRAY_BUFFER, vboIds[0]);
-        glBufferData(GL_ARRAY_BUFFER, history_sample_count * sizeof(Vertex), (const void*) &vbuffer[0], GL_DYNAMIC_DRAW);
+    if (!m_lock.tryLockForRead())
+        return;
 
-        // Offset for position
-        quintptr offset = 0;
+    drawBuffer(program, vbuffer);
+    if(m_grid->isEnabled())
+        drawBuffer(program, m_grid->buffer());
 
-        // Tell OpenGL programmable pipeline how to locate vertex position data
-        int vertexLocation = program->attributeLocation("a_position");
-        Q_ASSERT(vertexLocation >= 0);
-        program->enableAttributeArray(vertexLocation);
-        glVertexAttribPointer((GLuint) vertexLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void *)offset);
-
-        offset += sizeof(float) * 3;
-
-        int colorLocation = program->attributeLocation("a_color");
-        Q_ASSERT(colorLocation >= 0);
-        program->enableAttributeArray(colorLocation);
-        glVertexAttribPointer((GLuint) colorLocation, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void *)offset);
-
-        // TODO draw points separately in release mode too
-//        glDrawArrays(GL_POINTS, 0, history_sample_count);
-        glDrawArrays(GL_LINE_STRIP, 0, history_sample_count);
-
-        m_lock.unlock();
-    }
+    m_lock.unlock();
 }
 
-void ldSimulatorEngine::pushVertexData(Vertex * data, unsigned int size) {
+void ldSimulatorEngine::pushVertexData(ldVertex * data, unsigned int size) {
 
     // need lock first
-    if (m_lock.tryLockForWrite()) {
+    if (!m_lock.tryLockForWrite())
+        return;
 
-        // create temp buffer for dots processing
-        const int maxsize = 2048;
-        Vertex data_processed[maxsize];
-        if (size > maxsize) size = maxsize;
+    // create temp buffer for dots processing
+    const int maxsize = 2048;
+    ldVertex data_processed[maxsize];
+    if (size > maxsize) size = maxsize;
 
-        // process dots
-        bigger_dots(data, data_processed, size);
+    // process dots
+    m_processor->bigger_dots(data, data_processed, size);
 
-        // send processed data to the drawing engine
-        m_buffer.Push(data_processed, size);
-        m_buffer.Get(&vbuffer[0], history_sample_count);
+    // send processed data to the drawing engine
+    m_buffer.Push(data_processed, size);
+    m_buffer.Get(&vbuffer[0], HISTORY_SAMPLE_COUNT);
 
-        // done
-        m_lock.unlock();
-    }
+    // done
+    m_lock.unlock();
 }
 
-// function for altering laser data to make points bigger before being sent to simulator
-void ldSimulatorEngine::bigger_dots(Vertex* inData, Vertex* outData, unsigned int size) {
-
-    const float mindist = 0.005f; // force lines to have this min length
-
-    for (uint i = 0; i < size; i++) {
-
-        outData[i] = inData[i]; // initial value
-
-        // color logic
-        bool ison = false;
-        ison |= inData[i].color[0] != 0;
-        ison |= inData[i].color[1] != 0;
-        ison |= inData[i].color[2] != 0;
-
-        if (ison) {
-            // remember color of last nonblack point
-            m_lastOn = inData[i];
-
-            // distance calcs
-            float dx = (outData[i].x() - m_last.x());
-            float dy = (outData[i].y() - m_last.y());
-            float delta2 = dx*dx + dy*dy;
-            float delta = sqrtf(delta2);
-            m_moveDist += delta;
-            if (delta >= mindist) {
-                // get a vector of length mindist, pointed in last direction laser moved
-                m_lastDeltaX = dx * mindist / delta;
-                m_lastDeltaY = dy * mindist / delta;
-            }
-        }
-
-        // check for end of a line, make changes to the points here
-        if (m_wasOn && !ison) {
-
-            // force last point to be a color
-            //data2[i] = laston;
-            outData[i].color[0] = m_lastOn.color[0];
-            outData[i].color[1] = m_lastOn.color[1];
-            outData[i].color[2] = m_lastOn.color[2];
-
-            // force line length to be a minimum
-            if (m_moveDist < mindist) {
-                outData[i].x() += m_lastDeltaX;
-                outData[i].y() += m_lastDeltaY;
-            }
-        }
-
-        // check for start of a new line
-        if (!m_wasOn && ison) {
-            m_moveDist = 0;
-        }
-
-        // save static values for next point's delta calcs
-        if(!inData[i].isBlank())
-            m_last = inData[i];
-
-        m_wasOn = ison;
-
-    }
+ldSimulatorGrid *ldSimulatorEngine::grid() const
+{
+    return m_grid.get();
 }
 
+void ldSimulatorEngine::drawBuffer(QOpenGLShaderProgram *program, const std::vector<ldVertex> &buffer)
+{
+    glBindBuffer(GL_ARRAY_BUFFER, vboIds[0]);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<qopengl_GLsizeiptr>(buffer.size() * sizeof(ldVertex)),
+                 &buffer[0],
+                 GL_DYNAMIC_DRAW);
+
+    // Offset for position
+    quintptr offset = 0;
+
+    // Tell OpenGL programmable pipeline how to locate vertex position data
+    int vertexLocation = program->attributeLocation("a_position");
+    Q_ASSERT(vertexLocation >= 0);
+    program->enableAttributeArray(vertexLocation);
+    glVertexAttribPointer(static_cast<GLuint>(vertexLocation),
+                          ldVertex::POS_COUNT,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          sizeof(ldVertex),
+                          reinterpret_cast<const void *>(offset));
+
+    offset += sizeof(float) * ldVertex::POS_COUNT;
+
+    int colorLocation = program->attributeLocation("a_color");
+    Q_ASSERT(colorLocation >= 0);
+    program->enableAttributeArray(colorLocation);
+    glVertexAttribPointer(static_cast<GLuint>(colorLocation),
+                          ldVertex::COLOR_COUNT,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          sizeof(ldVertex),
+                          reinterpret_cast<const void *>(offset));
+
+    // Draw
+    glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(buffer.size()));
+}

@@ -26,26 +26,29 @@
 #include "ldCore/ldCore_global.h"
 
 class ldAbstractHardwareManager;
+class ldFilterManager;
+class ldHardware;
 
 class LDCORESHARED_EXPORT ldHardwareManager : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ldHardwareManager(QObject *parent = 0);
+    explicit ldHardwareManager(ldFilterManager *filterManager, QObject *parent = nullptr);
     ~ldHardwareManager();
 
     int getDeviceCount() const;
+    std::vector<ldHardware*> devices() const;
 
     std::vector<ldAbstractHardwareManager*> hardwareManagers() const;
+
+    ldFilterManager *filterManager() const;
 
 public slots:
     void addHardwareManager(ldAbstractHardwareManager *hardwareManager);
 
     void setConnectedDevicesActive(bool active);
-
-    void setFlipX(bool isFlipX);
-    void setFlipY(bool isFlipY);
+    void setExplicitActiveDevice(int index);
 
 signals:
     void deviceCountChanged(uint count);
@@ -57,6 +60,8 @@ private:
     uint m_deviceCount = 0;
 
     std::vector<ldAbstractHardwareManager*> m_hardwareManagers;
+
+    ldFilterManager *m_filterManager;
 };
 
 #endif // LDHARDWAREMANAGER_H

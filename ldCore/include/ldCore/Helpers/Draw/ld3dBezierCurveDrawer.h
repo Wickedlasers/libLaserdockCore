@@ -30,10 +30,10 @@
 
 #include <memory>
 
-#include <QtCore/QTime>
-#include <ldCore/Helpers/BezierCurve/ldBezierCurveFrame.h>
+#include <QtCore/QElapsedTimer>
 
-#include "ldCore/Helpers/Maths/ldMaths.h"
+#include <ldCore/Helpers/BezierCurve/ldBezierCurveFrame.h>
+#include <ldCore/Helpers/Maths/ldMaths.h>
 
 class ldAbstractColorEffect;
 class ldRendererOpenlase;
@@ -97,13 +97,15 @@ private:
     Steps3dTState getStateByIndice(uint indice, float inputCoeff) const;
     void nextStep();
     bool checkCurrentStep();
+    float elapsedSec() const;
 
     Step _currentStep = Step::INTRO;
 
     int _colorStep = 0;
     int _colorNextStep = 170;
 
-    QTime _elapsedTimer;
+    QElapsedTimer _elapsedTimer;
+    qint64 _elapsedCorrection = 0;
 
     ld3dBezierCurveFrame _bezier3dSequence;
 

@@ -38,6 +38,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/ldEnumHelper.h
         ${SRCDIR}/Helpers/ldLaserController.cpp
         ${INCDIR}/Helpers/ldLaserController.h
+        ${SRCDIR}/Helpers/ldPropertyObject.cpp
+        ${INCDIR}/Helpers/ldPropertyObject.h
         ${SRCDIR}/Helpers/ldRandomGenerator.cpp
         ${INCDIR}/Helpers/ldRandomGenerator.h
         #Data/
@@ -68,6 +70,10 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Filter/ldFilterColorize.h
         ${SRCDIR}/Filter/ldFilterManager.cpp
         ${INCDIR}/Filter/ldFilterManager.h
+        ${SRCDIR}/Filter/ldFilterProcessor.cpp
+        ${INCDIR}/Filter/ldFilterProcessor.h
+        ${SRCDIR}/Filter/ldHardwareFilter.cpp
+        ${INCDIR}/Filter/ldHardwareFilter.h
         ${SRCDIR}/Filter/ldProjectionUtil.cpp
         ${INCDIR}/Filter/ldProjectionUtil.h
         ${SRCDIR}/Filter/ldSoundLevelFilter.cpp
@@ -101,6 +107,10 @@ target_sources(${PROJECT_NAME} PRIVATE
         #Simulator
         ${SRCDIR}/Simulator/ldSimulatorEngine.cpp
         ${INCDIR}/Simulator/ldSimulatorEngine.h
+        ${SRCDIR}/Simulator/ldSimulatorGrid.cpp
+        ${INCDIR}/Simulator/ldSimulatorGrid.h
+        ${SRCDIR}/Simulator/ldSimulatorProcessor.cpp
+        ${SRCDIR}/Simulator/ldSimulatorProcessor.h
         ${SRCDIR}/Simulator/ldSimulatorRenderer.cpp
         ${INCDIR}/Simulator/ldSimulatorRenderer.h
         #Shape
@@ -108,8 +118,9 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Shape/ldList.h
         ${SRCDIR}/Shape/ldParticleGeometry.cpp
         ${INCDIR}/Shape/ldParticleGeometry.h
-        ${SRCDIR}/Shape/ldShader.cpp
         ${INCDIR}/Shape/ldShader.h
+        ${SRCDIR}/Shape/ldShaderManager.cpp
+        ${INCDIR}/Shape/ldShaderManager.h
         ${SRCDIR}/Shape/ldShape.cpp
         ${INCDIR}/Shape/ldShape.h
         #Sound
@@ -119,6 +130,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${SRCDIR}/Sound/ldFFT.h
         ${SRCDIR}/Sound/ldQAudioInputDevice.cpp
         ${SRCDIR}/Sound/ldQAudioInputDevice.h
+        ${SRCDIR}/Sound/ldSoundAnalyzer.cpp
+        ${INCDIR}/Sound/ldSoundAnalyzer.h
         ${SRCDIR}/Sound/ldSoundData.cpp
         ${INCDIR}/Sound/ldSoundData.h
         ${SRCDIR}/Sound/ldSoundDeviceInfo.cpp
@@ -142,12 +155,17 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${SRCDIR}/Task/ldTaskWorker.cpp
         ${INCDIR}/Task/ldTaskWorker.h
         #Utilities
-        ${INCDIR}/Utilities/ldBasicDataStructures.h
-        ${SRCDIR}/Utilities/ldBasicDataStructures.cpp
-        ${SRCDIR}/Utilities/ldRingBuffer.cpp
-        ${SRCDIR}/Utilities/ldRingBuffer.h
+        ${INCDIR}/Utilities/ldAudioBuffer.h
+        ${INCDIR}/Utilities/ldBuffer.h
+        ${INCDIR}/Utilities/ldCircularBuffer.h
+        ${INCDIR}/Utilities/ldCompressedSample.h
+        ${SRCDIR}/Utilities/ldCompressedSample.cpp
         ${INCDIR}/Utilities/ldThreadSafeQueue.h
         ${INCDIR}/Utilities/ldUtils.h
+        ${INCDIR}/Utilities/ldVertex.h
+        ${SRCDIR}/Utilities/ldVertex.cpp
+        ${INCDIR}/Utilities/ldVertexFrame.h
+        ${SRCDIR}/Utilities/ldVertexFrame.cpp
         #Visualizations
         ${SRCDIR}/Visualizations/ldLogoLaserdock.cpp
         ${INCDIR}/Visualizations/ldLogoLaserdock.h
@@ -171,16 +189,20 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/Audio/ldAppakSpectrum.h
         ${SRCDIR}/Helpers/Audio/ldAudioBasic.cpp
         ${INCDIR}/Helpers/Audio/ldAudioBasic.h
+        ${SRCDIR}/Helpers/Audio/ldBeatDetector.cpp
+        ${INCDIR}/Helpers/Audio/ldBeatDetector.h
+        ${SRCDIR}/Helpers/Audio/ldMultipleBeatDetector.cpp
+        ${INCDIR}/Helpers/Audio/ldMultipleBeatDetector.h
         ${SRCDIR}/Helpers/Audio/ldBpmBeatDetector.cpp
         ${INCDIR}/Helpers/Audio/ldBpmBeatDetector.h
-        ${SRCDIR}/Helpers/Audio/ldDropDetector.cpp
-        ${INCDIR}/Helpers/Audio/ldDropDetector.h
         ${SRCDIR}/Helpers/Audio/ldDurationalStatEstimator.cpp
         ${INCDIR}/Helpers/Audio/ldDurationalStatEstimator.h
         ${SRCDIR}/Helpers/Audio/ldHybridReactor.cpp
         ${INCDIR}/Helpers/Audio/ldHybridReactor.h
         ${SRCDIR}/Helpers/Audio/ldManualBpm.cpp
         ${INCDIR}/Helpers/Audio/ldManualBpm.h
+        ${SRCDIR}/Helpers/Audio/ldManualBpmBeat.cpp
+        ${INCDIR}/Helpers/Audio/ldManualBpmBeat.h
         ${SRCDIR}/Helpers/Audio/ldMusicFeature.cpp
         ${INCDIR}/Helpers/Audio/ldMusicFeature.h
         ${SRCDIR}/Helpers/Audio/ldNoiseField.cpp
@@ -233,9 +255,10 @@ target_sources(${PROJECT_NAME} PRIVATE
         #Helpers/Maths
         ${INCDIR}/Helpers/Maths/ldAnimatedAngle.cpp
         ${INCDIR}/Helpers/Maths/ldAnimatedAngle.h
+        ${SRCDIR}/Helpers/Maths/ldFilterMath.cpp
+        ${INCDIR}/Helpers/Maths/ldFilterMath.h
         ${SRCDIR}/Helpers/Maths/ldGeometryUtil.cpp
         ${INCDIR}/Helpers/Maths/ldGeometryUtil.h
-        ${INCDIR}/Helpers/Maths/ldGlobals.cpp
         ${INCDIR}/Helpers/Maths/ldGlobals.h
         ${SRCDIR}/Helpers/Maths/ldMathSpectrum.cpp
         ${INCDIR}/Helpers/Maths/ldMathSpectrum.h
@@ -247,8 +270,6 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/Maths/ldRect.h
         ${SRCDIR}/Helpers/Maths/ldRect3.cpp
         ${INCDIR}/Helpers/Maths/ldRect3.h
-        ${SRCDIR}/Helpers/Maths/ldSimpleVector.cpp
-        ${INCDIR}/Helpers/Maths/ldSimpleVector.h
         ${SRCDIR}/Helpers/Maths/ldSmoothUtil.cpp
         ${INCDIR}/Helpers/Maths/ldSmoothUtil.h
         ${SRCDIR}/Helpers/Maths/ldVec2.cpp
@@ -285,6 +306,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/Text/ldTextLabel.h
         ${SRCDIR}/Helpers/Text/ldTextSvgHelper.cpp
         ${INCDIR}/Helpers/Text/ldTextSvgHelper.h
+        ${SRCDIR}/Helpers/Text/ldTicker.cpp
+        ${INCDIR}/Helpers/Text/ldTicker.h
         #Helpers/Visualizer
         ${SRCDIR}/Helpers/Visualizer/ldAnimTimerUtil.cpp
         ${INCDIR}/Helpers/Visualizer/ldAnimTimerUtil.h
@@ -315,13 +338,25 @@ target_sources(${PROJECT_NAME} PRIVATE
         )
 
 # loopback audio support on Windows
-if(WIN32)
-    target_sources(${PROJECT_NAME} PRIVATE
-        ${SRCDIR}/Sound/ldLoopbackAudioDevice.cpp
-        ${SRCDIR}/Sound/ldLoopbackAudioDevice.h
-        ${SRCDIR}/Sound/ldLoopbackAudioDeviceWorker.cpp
-        ${SRCDIR}/Sound/ldLoopbackAudioDeviceWorker.h
-        )
+if(WIN32 OR LD_ANDROID_BUILD)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_LOOPBACK_DEVICE_ENABLED)
+
+    if(WIN32)
+        target_sources(${PROJECT_NAME} PRIVATE
+            ${SRCDIR}/Sound/win/ldLoopbackAudioDevice.cpp
+            ${SRCDIR}/Sound/win/ldLoopbackAudioDevice.h
+            ${SRCDIR}/Sound/win/ldLoopbackAudioDeviceWorker.cpp
+            ${SRCDIR}/Sound/win/ldLoopbackAudioDeviceWorker.h
+            )
+    endif()
+
+    if(LD_ANDROID_BUILD)
+        target_sources(${PROJECT_NAME} PRIVATE
+            ${SRCDIR}/Sound/android/ldLoopbackAudioDevice.cpp
+            ${SRCDIR}/Sound/android/ldLoopbackAudioDevice.h
+            )
+    endif()
+
 endif()
 
 
@@ -344,7 +379,7 @@ endif()
 
 set(CMAKE_PREFIX_PATH "${QTDIR}/lib/cmake")
 
-set(QT5_MIN_VERSION 5.12)
+set(QT5_MIN_VERSION 5.14)
 find_package(Qt5 ${QT5_MIN_VERSION} COMPONENTS Core Gui Multimedia Gamepad REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Multimedia Qt5::Gamepad)
 
@@ -356,17 +391,24 @@ target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Multimedia 
 target_link_libraries(${PROJECT_NAME} PUBLIC
     3rdparty::aubio
     3rdparty::libqtqmltricks
-    3rdparty::openlase)
+    3rdparty::openlase
+    3rdparty::openmp
+    )
 
 # private
 target_link_libraries(${PROJECT_NAME} PRIVATE
     3rdparty::kiss_fft130
-    3rdparty::laserdocklib
     3rdparty::libaudiodecoder
     3rdparty::simplecrypt
     3rdparty::nanosvg
     )
 
+# ------------  LD_CORE_ENABLE_LASERDOCKLIB -------------
+
+if(LD_CORE_ENABLE_LASERDOCKLIB)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_ENABLE_LASERDOCKLIB)
+    target_link_libraries(${PROJECT_NAME} PRIVATE 3rdparty::laserdocklib)
+endif()
 
 # ------------  LD_CORE_ENABLE_LIBLZR -------------
 
@@ -431,6 +473,18 @@ if(LD_CORE_ENABLE_OPENCV)
     target_link_libraries(${PROJECT_NAME} PUBLIC opencv_core opencv_imgproc opencv_highgui opencv_videoio) # opencv_imgcodecs is dependency
 endif()
 
+# -----------  LD_CORE_ENABLE_QUAZIP -----------
+
+if(LD_CORE_ENABLE_QUAZIP)
+    target_sources(${PROJECT_NAME} PRIVATE
+        # TODO: move
+        ${SRCDIR}/Android/ldZipExtractor.cpp
+        ${INCDIR}/Android/ldZipExtractor.h
+        )
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE 3rdparty::quazip)
+endif()
+
 # ------------  LD_CORE_ENABLE_QT_QUICK ------------
 
 if(LD_CORE_ENABLE_QT_QUICK)
@@ -454,8 +508,6 @@ if(LD_CORE_RESOURCES_EXTRACTOR)
         )
 
     target_compile_definitions(${PROJECT_NAME} PUBLIC LD_CORE_RESOURCES_EXTRACTOR)
-
-    target_link_libraries(${PROJECT_NAME} PRIVATE 3rdparty::quazip)
 endif()
 
 # -------------  Android ----------

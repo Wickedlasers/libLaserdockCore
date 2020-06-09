@@ -20,14 +20,14 @@
 
 #include "ldCore/Filter/ldFilterBasicGlobal.h"
 
-#include <math.h>
-#include <QtCore/QDebug>
-#include "ldCore/Helpers/Color/ldColorUtil.h"
+#include <cmath>
 
+#include <QtCore/QDebug>
+
+#include <ldCore/Helpers/Color/ldColorUtil.h>
 
 ldFilterBasicGlobal::ldFilterBasicGlobal()
     : ldFilter()
-    , m_ttlFilter(new ldTtlFilter())
     , m_colorCurveFilter(new ldColorCurveFilter())
     , m_colorFaderFilter(new ldColorFaderFilter())
     , m_hueFilter(new ldHueFilter())
@@ -42,34 +42,27 @@ ldFilterBasicGlobal::~ldFilterBasicGlobal()
 {
 }
 
-void ldFilterBasicGlobal::process(Vertex &v)
+void ldFilterBasicGlobal::process(ldVertex &v)
 {
-    if (m_ttlFilter->m_enabled)
-        m_ttlFilter->process(v);
-    
     if (m_tracerFilter->m_enabled)
         m_tracerFilter->processFilter(v);
 
-    if (m_hueMatrixFilter->m_enabled)
-        m_hueMatrixFilter->processFilter(v);
+    if(m_isHueFiltersActive) {
+        if (m_hueMatrixFilter->m_enabled)
+            m_hueMatrixFilter->processFilter(v);
 
-    if(m_hueShiftFilter->m_enabled)
-        m_hueShiftFilter->processFilter(v);
+        if(m_hueShiftFilter->m_enabled)
+            m_hueShiftFilter->processFilter(v);
 
-    if(m_hueFilter->m_enabled)
-        m_hueFilter->processFilter(v);
+        if(m_hueFilter->m_enabled)
+            m_hueFilter->processFilter(v);
 
-    if(m_colorCurveFilter->m_enabled)
         m_colorCurveFilter->processFilter(v);
+    }
 
     m_soundLevelFilter->processFilter(v);
 
     m_colorFaderFilter->processFilter(v);
-}
-
-ldTtlFilter *ldFilterBasicGlobal::ttlFilter() const
-{
-    return m_ttlFilter.get();
 }
 
 ldColorCurveFilter *ldFilterBasicGlobal::colorCurveFilter() const
@@ -105,4 +98,9 @@ ldTracerFilter *ldFilterBasicGlobal::tracerFilter() const
 ldSoundLevelFilter *ldFilterBasicGlobal::soundLevelFilter() const
 {
     return m_soundLevelFilter.get();
+}
+
+void ldFilterBasicGlobal::setHueFiltersActive(bool active)
+{
+    m_isHueFiltersActive = active;
 }

@@ -60,8 +60,8 @@ ldCoreExample::ldCoreExample(QQmlApplicationEngine *engine, QObject *parent)
     , m_resExtractor(new ldResourcesExtractor(this))
     #endif
 {
-    qmlRegisterType<ldCore>();
-    qmlRegisterType<ldSpiralFighterGame>();
+    qmlRegisterAnonymousType<ldCore>("WickedLasers", 1);
+    qmlRegisterAnonymousType<ldSpiralFighterGame>("WickedLasers", 1);
 
     m_ldCore->initialize();
     m_ldCore->task()->setIsShowLogo(false);
@@ -91,13 +91,13 @@ void ldCoreExample::init()
         return;
     }
 
-    ldCore::instance()->task()->setCurrentVisualizer(m_visualizers[0].get());
+    ldCore::instance()->task()->setVisualizer(m_visualizers[0].get());
 }
 
 void ldCoreExample::activateVis(int index)
 {
     if(index < 5) {
-        ldCore::instance()->task()->setCurrentVisualizer(m_visualizers[index].get());
+        ldCore::instance()->task()->setVisualizer(m_visualizers[index].get());
         m_game->set_isActive(false);
     } else {
         m_game->set_isActive(true);

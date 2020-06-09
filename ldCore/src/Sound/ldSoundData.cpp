@@ -26,14 +26,13 @@
 //  Copyright (c) 2014 Wicked Lasers. All rights reserved.
 //
 
-#include <math.h>
+#include <cmath>
 #include <QtCore/QDebug>
 #include <QtCore/qendian.h>
 
 #include "ldCore/Helpers/Maths/ldMaths.h"
 #include "ldCore/Sound/ldSoundData.h"
 #include "ldCore/Sound/ldSoundInterface.h"
-#include <ldCore/Utilities/ldBasicDataStructures.h>
 #include <ldCore/Utilities/ldUtils.h>
 
 #include "ldFFT.h"
@@ -63,10 +62,8 @@ AudioBlock::AudioBlock(bool clear)
 /*!
  * \brief ldSoundData::ldSoundData
  */
-ldSoundData::ldSoundData(const QAudioFormat &format, QObject* parent) :
+ldSoundData::ldSoundData(QObject* parent) :
     QObject(parent),
-    m_format(format),
-    m_maxAmplitude(0),
     m_fft(new LDFFT(SAMPLE_SIZE)),
     m_waveformOriginal(SAMPLE_SIZE),
     m_waveform(SAMPLE_SIZE),
@@ -76,51 +73,6 @@ ldSoundData::ldSoundData(const QAudioFormat &format, QObject* parent) :
     frequencyGap(1.0f/30.0f)
 {
     volumeCorrectionInit();
-
-    switch (m_format.sampleSize()) {
-    case 8:
-        switch (m_format.sampleType()) {
-        case QAudioFormat::UnSignedInt:
-            m_maxAmplitude = 255;
-            break;
-        case QAudioFormat::SignedInt:
-            m_maxAmplitude = 127;
-            break;
-        default:
-            break;
-        }
-        break;
-    case 16:
-        switch (m_format.sampleType()) {
-        case QAudioFormat::UnSignedInt:
-            m_maxAmplitude = 65535;
-            break;
-        case QAudioFormat::SignedInt:
-            m_maxAmplitude = 32767;
-            break;
-        default:
-            break;
-        }
-        break;
-
-    case 32:
-        switch (m_format.sampleType()) {
-        case QAudioFormat::UnSignedInt:
-            m_maxAmplitude = 0xffffffff;
-            break;
-        case QAudioFormat::SignedInt:
-        case QAudioFormat::Float: // Kind of
-            m_maxAmplitude = 0x7fffffff;
-            break;
-        default:
-            break;
-        }
-        break;
-
-    default:
-        m_maxAmplitude = 0x8FFF; // default value
-        break;
-    }
 }
 
 /*!

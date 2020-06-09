@@ -126,13 +126,14 @@ is required.
 class ldAppakBpmSelector;
 class ldAppakPeaks;
 class ldAppakSpectrum;
+class ldBeatDetector;
 class ldBpmBeatDetector;
-class ldDropDetector;
 class ldHybridAnima;
 class ldHybridFlash;
 class ldHybridAutoColor2;
 class ldHybridColorPalette;
 class ldManualBpm;
+class ldManualBpmBeat;
 class ldSpectrogram;
 class ldTempoAC;
 class ldTempoTracker;
@@ -164,11 +165,12 @@ public:
 
     const ldAppakPeaks* peaks() const;
     ldManualBpm* manualBpm() const;
+    ldManualBpmBeat* manualBpmBeat() const;
 
     const ldTempoTracker* tempoTrackerFast() const;
     const ldTempoTracker* tempoTrackerSlow() const;
 
-    const ldBpmBeatDetector *bpmBeatDetector() const;
+    const ldBeatDetector *beatDetector() const;
 
     // sound gate
     bool isSilent() const;
@@ -232,6 +234,7 @@ private:
     std::unique_ptr<ldSilentThree> silentThree;
 
     ldManualBpm *m_manualBpm = nullptr;
+    ldManualBpmBeat *m_manualBpmBeat = nullptr;
     std::unique_ptr<ldAppakBpmSelector> appakaBpmSelector;
     std::unique_ptr<ldAppakPeaks> m_peaks;
 
@@ -246,6 +249,7 @@ private:
 
     int m_realSoundLevel = 0;
 
+    std::unique_ptr<ldBeatDetector> m_beatDetector;
     std::unique_ptr<ldBpmBeatDetector> m_bpmBeatDetector;
 };
 

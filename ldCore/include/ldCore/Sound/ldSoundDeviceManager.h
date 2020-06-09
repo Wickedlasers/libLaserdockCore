@@ -29,23 +29,21 @@
 #include <ldCore/Sound/ldSoundInterface.h>
 #include <ldCore/Sound/ldSoundDeviceInfo.h>
 
-#ifdef _WIN32
-#define LD_LOOPBACK_DEVICE_ENABLED
-#endif
-
 class ldQAudioInputDevice;
-#ifdef LD_CORE_ENABLE_MIDI
-class ldMidiDevice;
-#endif
+class ldSoundAnalyzer;
 class ldSoundStubDevice;
 
 #ifdef LD_LOOPBACK_DEVICE_ENABLED
 class ldLoopbackAudioDevice;
 #endif
 
+#ifdef LD_CORE_ENABLE_MIDI
+class ldMidiDevice;
+#endif
+
 typedef void (*ldActivateCallbackFunc)(const ldSoundDeviceInfo &info);
 
-class LDCORESHARED_EXPORT ldSoundDeviceManager: public ldSoundInterface
+class LDCORESHARED_EXPORT ldSoundDeviceManager: public QObject
 {
     Q_OBJECT
 public:
@@ -54,9 +52,6 @@ public:
     explicit ldSoundDeviceManager(QObject *parent = nullptr);
     ~ldSoundDeviceManager();
     
-    // ldSoundInterface
-    virtual QAudioFormat getAudioFormat() const override;
-
     QList<ldSoundDeviceInfo> getAvailableDevices(const ldSoundDeviceInfo::Type &type = ldSoundDeviceInfo::Type::None) const;
 
     ldSoundDeviceInfo getDefaultDevice(const ldSoundDeviceInfo::Type &type = ldSoundDeviceInfo::Type::None) const;
@@ -65,6 +60,8 @@ public:
     void setDeviceInfo(const ldSoundDeviceInfo &info);
 
     void setActivateCallbackFunc(ldActivateCallbackFunc func);
+
+    ldSoundAnalyzer *analyzer() const;
 
 signals:
     void error(QString error);
@@ -78,7 +75,7 @@ private:
     bool activateQAudioInputDevice(const ldSoundDeviceInfo &info);
 
 #ifdef LD_LOOPBACK_DEVICE_ENABLED
-    void activateOutputDevice(ldSoundDeviceInfo name);
+    bool activateOutputDevice(ldSoundDeviceInfo name);
 #endif
 
 #ifdef LD_CORE_ENABLE_MIDI
@@ -91,8 +88,6 @@ private:
     void refreshAvailableDevices();
 
     bool m_isStopping = false;
-
-    QAudioFormat m_format;
 
     QList<ldSoundDeviceInfo> m_devices;
     ldSoundDeviceInfo m_info;
@@ -108,6 +103,8 @@ private:
     ldSoundStubDevice* m_stubDevice;
 
     ldActivateCallbackFunc m_activateCallbackFunc = nullptr;
+
+    ldSoundAnalyzer *m_analyzer = nullptr;
 };
 
 #endif //LDSOUNDDEVICEMANAGER_H

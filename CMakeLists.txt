@@ -12,15 +12,23 @@ option(LD_CORE_BUILD_EXAMPLE "Build Example" ON)
 option(LD_CORE_BUILD_TESTS "Build Tests" OFF)
 # library flags
 option(LD_CORE_ENABLE_LIBLZR "Enable liblzr" OFF)
+option(LD_CORE_ENABLE_QUAZIP "Support of resources extraction (android)" OFF)
 # Android resources extraction
 option(LD_CORE_RESOURCES_EXTRACTOR "Support of resources extraction (android)" OFF)
 
 include(CMakeDependentOption)
-CMAKE_DEPENDENT_OPTION(LD_CORE_RESOURCES_EXTRACTOR "Enable resource extractor" OFF
+CMAKE_DEPENDENT_OPTION(LD_CORE_RESOURCES_EXTRACTOR "" OFF
     "NOT LD_ANDROID_BUILD" ON)
 
+CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_QUAZIP "" OFF
+    "NOT LD_CORE_RESOURCES_EXTRACTOR" ON)
+
+# do not remove this option, it can be useful for testing sometimes
+set(LD_CORE_ENABLE_LASERDOCKLIB ON)
+#message(STATUS "LD_CORE_ENABLE_LASERDOCKLIB ${LD_CORE_ENABLE_LASERDOCKLIB}")
+
 if(APPLE)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.12")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13")
 endif()
 
 if ((CMAKE_BUILD_TYPE STREQUAL "Release") OR (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo") OR (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel"))
@@ -50,6 +58,12 @@ include(SetupAndroidToolchain)
 
 project(ldCore)
 
+# we need find Qt here because of weird bugs
+find_package(Qt5 COMPONENTS Core Gui Network Multimedia OpenGL Quick Widgets REQUIRED)
+if(ANDROID)
+    find_package(Qt5 COMPONENTS AndroidExtras REQUIRED)
+endif()
+
 add_subdirectory(3rdparty)
 add_subdirectory(ldCore)
 
@@ -69,6 +83,6 @@ endif()
 
 # just ignore Qt creator annoying default variable
 if(DEFINED QT_QMAKE_EXECUTABLE)
-    set(LD_IGNORE ${QT_QMAKE_EXECUTABLE})
+    mark_as_advanced(QT_QMAKE_EXECUTABLE)
 endif()
 

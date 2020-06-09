@@ -20,9 +20,9 @@
 
 #include "ldCore/Shape/ldShape.h"
 
-#include <math.h>
+#include <cmath>
 
-#include "ldCore/Shape/ldShader.h"
+#include "ldCore/Shape/ldShaderManager.h"
 
 // XXX: Yes, shapes might have a sort problem once every 15 days if the app runs at 60 FPS and each frame sprites are reordered.
 static ldRendererOpenlase* s_globalRender = NULL;

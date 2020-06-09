@@ -21,6 +21,9 @@
 #include "ldQAudioInputDevice.h"
 
 #include <QtCore/QtDebug>
+#include <QtMultimedia/QAudioInput>
+
+#include <ldCore/Sound/ldSoundData.h>
 
 namespace {
     static const int bufferFrames = 4096;  // 4096 ~= 10hz ~= 3 frames@30fps
@@ -91,18 +94,30 @@ bool ldQAudioInputDevice::activateInputDevice(const QAudioDeviceInfo &info)
     m_audioInput->setBufferSize(AUDIO_SUB_BLOCK_SIZE * m_format.channelCount() * 4); //2940 * 4
 #else
     // on mac & android small buffer works better
-    m_audioInput->setBufferSize(AUDIO_SUB_BLOCK_SIZE * m_format.channelCount());
+    int bufferSize = AUDIO_SUB_BLOCK_SIZE * m_format.channelCount();
+//    if(m_format.sampleSize() > 8) {
+//        double bufferModifier = m_format.sampleSize() / 8 / 2;
+//        if(bufferModifier > 1)
+//            bufferSize = static_cast<int>(bufferSize*bufferModifier);
+//    }
+//    qDebug() << bufferSize;
+    m_audioInput->setBufferSize(bufferSize);
 #endif
 
-  //m_audioInput->setBufferSize(AUDIO_SUB_BLOCK_SIZE * m_format.channelCount() * (m_format.sampleSize()/8));
 
     //m_audioInput->setNotifyInterval(5);
     m_input.reset(m_audioInput->start());
+    if(!m_audioInput) {
+        qWarning() << "Can't access audio input stream" << info.deviceName();
+        emit error(tr("Failed to access audio input, please check your privacy settings"));
+        return false;
+    }
     qDebug() << "Actually used format " << m_audioInput->format() << m_audioInput->format().sampleSize() << m_audioInput->bufferSize();
     if(m_input) {
         connect(m_input.data(), &QIODevice::readyRead, this, &ldQAudioInputDevice::onInputReadyRead);
         return true;
     } else {
+        qWarning() << "Can't open audio input stream" << info.deviceName();
         emit error(tr("Failed to open audio device"));
         return false;
     }

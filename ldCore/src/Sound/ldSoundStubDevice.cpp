@@ -21,7 +21,7 @@
 #include "ldSoundStubDevice.h"
 
 ldSoundStubDevice::ldSoundStubDevice(QObject *parent) :
-    QObject(parent)
+    ldSoundInterface(parent)
 {
     memset(m_fakeData, 0, FAKEDATA_LEN);
 

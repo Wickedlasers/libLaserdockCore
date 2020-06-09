@@ -27,7 +27,9 @@
 //
 
 #include "ldCore/Shape/ldParticleGeometry.h"
-#include "math.h"
+#include <cmath>
+
+#include <ldCore/Helpers/Maths/ldGlobals.h>
 
 const CCPoint CCPoint::ZERO = CCPoint();
 
@@ -60,7 +62,7 @@ void CCPoint::setPoint(float xArg, float yArg)
 
 bool CCPoint::equals(const CCPoint& target) const
 {
-    return ((x == target.x) && (y == target.y));
+    return cmpf(x, target.x) && cmpf(y, target.y);
 }
 
 
@@ -95,7 +97,7 @@ void CCSize::setSize(float widthArg, float heightArg)
 
 bool CCSize::equals(const CCSize& target) const
 {
-    return ((width == target.width) && (height == target.height));
+    return cmpf(width, target.width) && cmpf(height, target.height);
 }
 
 
@@ -138,7 +140,7 @@ CCPoint ccpLerp(const CCPoint& a, const CCPoint& b, float alpha)
 float clampf(float value, float min_inclusive, float max_inclusive)
 {
     if (min_inclusive > max_inclusive) {
-        CC_SWAP(min_inclusive, max_inclusive, float);
+        CC_SWAP(min_inclusive, max_inclusive, float)
     }
     return value < min_inclusive ? min_inclusive : value < max_inclusive? value : max_inclusive;
 }
@@ -223,7 +225,7 @@ bool ccpLineIntersect(const CCPoint& A, const CCPoint& B,
                       float *S, float *T)
 {
     // FAIL: Line undefined
-    if ( (A.x==B.x && A.y==B.y) || (C.x==D.x && C.y==D.y) )
+    if ( A.equals(B) || C.equals(D) )
     {
         return false;
     }
@@ -239,9 +241,9 @@ bool ccpLineIntersect(const CCPoint& A, const CCPoint& B,
     *S = DCx*ACy - DCy*ACx;
     *T = BAx*ACy - BAy*ACx;
     
-    if (denom == 0)
+    if (cmpf(denom, 0))
     {
-        if (*S == 0 || *T == 0)
+        if (cmpf(*S, 0) || cmpf(*T, 0))
         {
             // Lines incident
             return true;

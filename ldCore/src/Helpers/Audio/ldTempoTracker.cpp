@@ -96,7 +96,7 @@ void ldTempoTracker::process(ldSoundData* pSoundData, float delta)
     float bpm = aubio_tempo_get_bpm(m_aubio.get());
     if(!cmpf(bpm, 0)
             && !cmpf(confidence, 0.f)
-            && !isnan(confidence)) {
+        && !std::isnan(confidence)) {
         m_bpm = bpm;
         m_confidence = confidence;
 //        if(m_hop_size < SAMPLE_SIZE) qDebug() << m_bpm << m_confidence;

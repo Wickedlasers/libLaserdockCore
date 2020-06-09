@@ -120,11 +120,13 @@ private:
     int m_levelIndex;
     int m_worldIndex;
     ldSpiralFighterPlayer m_player;
+	int m_playerHitPoints = 5;
     float m_levelRotationDirection;
     int m_remainingStreamEnemies;
     int m_currentStreamSpawnPointIndex;
 
     int m_enemiesToDestroy;
+	int m_enemiesToSpawn;
     int m_enemiesPerStream;
 
     // Lists.

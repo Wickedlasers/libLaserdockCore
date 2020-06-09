@@ -38,7 +38,7 @@ ldUsbDataWorker::ldUsbDataWorker(ldBufferManager *bufferManager,
     , m_bufferManager(bufferManager)
     , m_hardwareManager(hardwareManager)
     , m_simulatorEngine(simulatorEngine)
-    , m_usbHardwareManager(new ldUsbHardwareManager(this))
+    , m_usbHardwareManager(new ldUsbHardwareManager(hardwareManager->filterManager(), this))
 {
     QObject::connect(m_thread_worker.data(), &ldThreadedDataWorker::activeChanged, this, &ldUsbDataWorker::isActiveTransferChanged);
 
@@ -52,7 +52,7 @@ ldUsbDataWorker::ldUsbDataWorker(ldBufferManager *bufferManager,
 
         m_worker_thread.quit();
         if(!m_worker_thread.wait(5000)) {
-            qWarning() << "ldUsbDataWorker2 worker_thread wasn't finished";
+            qWarning() << "ldThreadedDataWorker worker_thread wasn't finished";
         }
     });
 }

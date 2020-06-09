@@ -26,33 +26,33 @@
 //  Copyright (c) 2014 Wicked Lasers. All rights reserved.
 //
 
-#ifndef ldCore__ldBeatTracker__
-#define ldCore__ldBeatTracker__
+#ifndef LDBEATTRACKER_H
+#define LDBEATTRACKER_H
 
+#include <deque>
 #include <vector>
 
 #include <ldCore/ldCore_global.h>
 
-class LDCORESHARED_EXPORT ldBeatTracker {
+class LDCORESHARED_EXPORT ldBeatTracker
+{
 public:
     ldBeatTracker();
 
     void add(float f);
-    void set(int m_filterstart, int m_filterend);
-
+    void set(uint filterstart, uint m_filterend);
 
     float bestbpm() const;
     float bestphase() const;
 
-
 private:
-    std::vector<float> m_history;
+    std::deque<float> m_history;
     std::vector<float> m_apriori;
-    int m_filterstart = 0;
-    int m_filterend = 0;
+    uint m_filterstart = 0;
+    uint m_filterend = 0;
 
     float m_bestbpm = 0.f;
     float m_bestphase = 0.f;
 };
 
-#endif /* defined(__ldCore__ldBeatTracker__) */
+#endif // LDBEATTRACKER_H

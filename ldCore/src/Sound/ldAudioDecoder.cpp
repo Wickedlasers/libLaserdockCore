@@ -31,6 +31,7 @@
 #include <audiodecoder.h>
 #pragma warning(pop)
 
+#include <ldCore/Sound/ldSoundAnalyzer.h>
 #include <ldCore/Sound/ldSoundData.h>
 
 #ifdef _WIN32
@@ -45,14 +46,22 @@ const int ldAudioDecoder::BLOCK_SIZE = SAMPLE_SIZE_TO_SEND * 70;  // stereo int
 ldAudioDecoder::ldAudioDecoder(QObject *parent)
     : ldSoundInterface(parent)
     , m_isActive(false)
+    , m_analyzer(new ldSoundAnalyzer(this))
 {
     m_timer.setInterval(1000 / STUBFPS); // 18 ms
     m_timer.setTimerType(Qt::PreciseTimer);
     connect(&m_timer, &QTimer::timeout, this, &ldAudioDecoder::timerSlot);
+
+    connect(this, &ldSoundInterface::bufferUpdated, m_analyzer, &ldSoundAnalyzer::processAudioBuffer);
 }
 
 ldAudioDecoder::~ldAudioDecoder()
 {
+}
+
+ldSoundAnalyzer *ldAudioDecoder::analyzer() const
+{
+    return m_analyzer;
 }
 
 void ldAudioDecoder::start(const QString &filePath, qint64 elapsedTime)
@@ -183,7 +192,8 @@ void ldAudioDecoder::timerSlot()
         sampleToSend = &m_sampleData[0];
     }
 
-    processAudioBuffer(sampleToSend, sampleSizeToSend / 2);
+
+    emit bufferUpdated(sampleToSend, sampleSizeToSend / 2, getDefaultAudioFormat().sampleRate());
 #endif
 }
 

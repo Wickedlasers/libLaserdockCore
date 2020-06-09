@@ -18,73 +18,105 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#include <QtCore/QtDebug>
-
 #include "ldCore/Data/ldFrameBuffer.h"
 
-#include "ldCore/ldCore.h"
-#include "ldCore/Filter/ldDeadzoneFilter.h"
-#include "ldCore/Filter/ldFilterBasicData.h"
-#include "ldCore/Filter/ldFilter.h"
-#include "ldCore/Filter/ldFilterManager.h"
+#include <QtCore/QtDebug>
 
-#define LDFRAMEBUFFER_WARNING_FILL 300
+#include <ldCore/ldCore.h>
+#include <ldCore/Filter/ldDeadzoneFilter.h>
+#include <ldCore/Filter/ldFilterManager.h>
+#include <ldCore/Filter/ldHardwareFilter.h>
+#include <ldCore/Hardware/ldHardware.h>
+#include <ldCore/Hardware/ldHardwareManager.h>
+#include <ldCore/Utilities/ldVertexFrame.h>
 
 ldFrameBuffer::ldFrameBuffer(QObject *parent)
     : QObject(parent)
-    , m_filterManager(ldCore::instance()->filterManager())
 {
     m_buffer.resize(FRAMEBUFFER_CAPACITY);
-    m_compressed_buffer.resize(FRAMEBUFFER_CAPACITY);
 }
 
 ldFrameBuffer::~ldFrameBuffer()
 {
 }
 
-void ldFrameBuffer::push(Vertex& val, bool skip_filters, bool alter_val)
+void ldFrameBuffer::push(const ldVertex& val)
 {
-//    QMutexLocker lock(&m_mutex);
+    //    QMutexLocker lock(&m_mutex);
 
     if (m_fill >= FRAMEBUFFER_CAPACITY) return;
 
-    if(!skip_filters){
-        // filter if necessary
-        Vertex tval = val;
-        Vertex simVal;
+    m_buffer[m_fill] = val;
 
-        // apply data filter
-        m_filterManager->setFrameModes(m_frameModes);
-        m_filterManager->process(tval, simVal);
-
-        // compress and add to buffer
-        m_buffer[m_fill] = simVal;
-        m_compressed_buffer[m_fill] = CompressedSample(tval);
-        if (alter_val) val = simVal; // save this for screenshot feature
-    } else {
-        m_buffer[m_fill] = val;
-
-        m_filterManager->deadzoneFilter()->processFilter(val);
-        m_compressed_buffer[m_fill] = CompressedSample(val);
+    for(ldHardware *hardware : ldCore::instance()->hardwareManager()->devices()) {
+        ldHardwareFilter *hwFilter = hardware->filter();
+        ldVertex dataVal = val;
+        hwFilter->processVertex(dataVal);
+        hardware->setSample(m_fill, dataVal);
     }
 
     m_fill++;
 }
 
-unsigned int ldFrameBuffer::get(Vertex * pbuffer, CompressedSample &pcbuffer, unsigned int size)
+void ldFrameBuffer::pushFrame(ldVertexFrame &frame)
+{
+    //    QMutexLocker lock(&m_mutex);
+    if (m_fill >= FRAMEBUFFER_CAPACITY) return;
+
+    // process all frames
+    // frame size could be different on each device so we should make all buffers the same after processing
+    size_t maxFrameSize = 0;
+
+    for(ldHardware *hardware : ldCore::instance()->hardwareManager()->devices()) {
+        ldHardwareFilter *hwFilter = hardware->filter();
+        hwFilter->processFrame(frame);
+        maxFrameSize = std::max(maxFrameSize, hwFilter->lastFrame().size());
+    }
+    // resize all buffers to the biggest one
+    for(ldHardware *hardware : ldCore::instance()->hardwareManager()->devices()) {
+        ldHardwareFilter *hwFilter = hardware->filter();
+        hwFilter->lastFrame().resizeSmart(maxFrameSize);
+    }
+    frame.resizeSmart(maxFrameSize);
+
+    // no devices debug frame
+//    if(ldCore::instance()->hardwareManager()->devices().empty()) {
+//        ldHardwareFilter *stubFilter = ldCore::instance()->filterManager()->hardwareFilter();
+//        stubFilter->processFrame(frame);
+//        frame = stubFilter->lastFrame();
+//    }
+
+    // check that we fit in frame buffer
+    size_t sizeToPush = m_fill + frame.size() >= FRAMEBUFFER_CAPACITY && !frame.empty()
+                            ? FRAMEBUFFER_CAPACITY - m_fill
+                            : frame.size();
+
+    if(!sizeToPush)
+        return;
+
+    // memcpy for faster processing
+    memcpy(&m_buffer[m_fill], &(frame[0]), sizeToPush * sizeof (ldVertex));
+
+    for(ldHardware *hardware : ldCore::instance()->hardwareManager()->devices())
+        hardware->setFrame(m_fill, sizeToPush);
+
+
+    m_fill += sizeToPush;
+}
+
+uint ldFrameBuffer::get(ldVertex * pbuffer, uint size)
 {
 //    QMutexLocker lock(&m_mutex);
 
     // check for available
     unsigned int actual = 0;
-    int available = m_fill - m_exhuasted_index;
-    if(available > 0) {
+    if(m_fill > m_exhuasted_index) {
+        uint available = m_fill - m_exhuasted_index;
         // what buffer should be sent
-        actual = std::min((unsigned int) available, size);
+        actual = std::min(available, size);
 
         // pbuffer is optional
-        if(pbuffer) memcpy(pbuffer, &m_buffer[m_exhuasted_index], actual*sizeof(Vertex));
-        memcpy(&pcbuffer, &m_compressed_buffer[m_exhuasted_index], actual*sizeof(CompressedSample));
+        if(pbuffer) memcpy(pbuffer, &m_buffer[m_exhuasted_index], actual*sizeof(ldVertex));
 
         m_exhuasted_index += actual;
     }
@@ -109,18 +141,20 @@ void ldFrameBuffer::commit()
 void ldFrameBuffer::requestMore()
 {
     // temporary buffers
-    std::vector<Vertex> buffer;
-    std::vector<CompressedSample> compressed_buffer;
+    std::vector<ldVertex> buffer;
+    std::vector<ldCompressedSample> compressed_buffer;
 
     // store available data
-    qint32 available = getAvailable();
+    uint available = getAvailable();
     if(available > 0) {
         buffer.insert(buffer.end(),
                       m_buffer.begin() + m_exhuasted_index,
                       m_buffer.begin() + m_fill);
-        compressed_buffer.insert(compressed_buffer.end(),
-                                 m_compressed_buffer.begin() + m_exhuasted_index,
-                                 m_compressed_buffer.begin() + m_fill);
+
+        // TODO: implement ldHardware logic for network worker
+//        compressed_buffer.insert(compressed_buffer.end(),
+//                                 m_compressed_buffer.begin() + m_exhuasted_index,
+//                                 m_compressed_buffer.begin() + m_fill);
     }
 
     // clean everything
@@ -128,20 +162,15 @@ void ldFrameBuffer::requestMore()
 
     // insert old data in the begin
     m_buffer.insert(m_buffer.begin(), buffer.begin(), buffer.end());
-    m_compressed_buffer.insert(m_compressed_buffer.begin(), compressed_buffer.begin(), compressed_buffer.end());
+//    m_compressed_buffer.insert(m_compressed_buffer.begin(), compressed_buffer.begin(), compressed_buffer.end());
     m_fill += available;
 }
 
-void ldFrameBuffer::setFrameModes(int flags) {
-    m_frameModes = flags;
-
-    m_filterManager->resetFilters();
-}
-
-qint32 ldFrameBuffer::getAvailable() const
+uint ldFrameBuffer::getAvailable() const
 {
-    qint32 localBuffer = 0;
-    if (m_isFilled) {
+    uint localBuffer = 0;
+    if (m_isFilled
+        && m_fill > m_exhuasted_index) {
         localBuffer = m_fill - m_exhuasted_index;
     }
 
@@ -150,4 +179,9 @@ qint32 ldFrameBuffer::getAvailable() const
 
 bool ldFrameBuffer::isFilled() const{
     return m_isFilled;
+}
+
+uint ldFrameBuffer::getExhuastedIndex() const
+{
+    return m_exhuasted_index;
 }

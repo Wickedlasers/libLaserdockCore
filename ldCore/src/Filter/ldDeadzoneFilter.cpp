@@ -19,76 +19,163 @@
 **/
 
 #include "ldCore/Filter/ldDeadzoneFilter.h"
+
+#include <cmath>
+
 #include <QtCore/QDebug>
-#include <math.h>
 
 ldDeadzoneFilter::ldDeadzoneFilter()
 {
     m_lastV.clear();
 }
 
-void ldDeadzoneFilter::process(Vertex &v) {
-    if(!m_enabled)
+void ldDeadzoneFilter::processFrame(std::vector<ldVertex> &frame) {
+    if(!m_enabled || m_blocked)
+        return;
+
+    bool isLastOn = false;
+    for(uint i = 0; i < frame.size(); i++) {
+        // see if we're on
+        bool isOn = this->isOn(frame[i].x(), frame[i].y());
+
+        // compare on-status with last frame
+        if (isLastOn && isOn) {
+            // both points visible, do nothing
+
+            // check if there is a deadzone between 2 points
+
+            if(i > 0) {
+                const int INTERVAL_COUNT = 3;
+                float deltaX = frame[i].x() - frame[i-1].x();
+                float deltaY = frame[i].y() - frame[i-1].y();
+                ldVertex midV = frame[i-1];
+                float f = 1.f / INTERVAL_COUNT;
+                for(int j = 0; j < INTERVAL_COUNT; j++) {
+                    midV.x() += deltaX * f;
+                    midV.y() += deltaY * f;
+                    bool isDeltaOn = this->isOn(midV.x(), midV.y());
+                    if(!isDeltaOn) {
+                        frame.insert(frame.begin() + i, midV);
+                        i--;
+                        isLastOn = false;
+                        break;
+                    }
+                }
+            }
+        } else if (!isLastOn && !isOn) {
+            // both points not visible, keep laser black
+            attenuate(frame[i]);
+        } else {
+            if(i > 0) {
+                // all points for on/off switch should be on border
+                ldVec2 border = getBorderPoint(frame[i-1], frame[i], isLastOn);
+                frame[i].x() = border.x;
+                frame[i].y() = border.y;
+
+                // insert points to frame
+                auto insertBorderPoints = [&](int pointCnt) {
+                    frame.insert(frame.begin() + i + 1, pointCnt, frame[i]);
+                    i += pointCnt;
+                };
+
+//                auto getDistance = [&](const Vertex &v1, const Vertex &v2) {
+//                    return sqrtf(powf((v1.x()-v2.x()), 2) + powf((v1.y()-v2.y()), 2));
+//                };
+
+
+                static const int POINTS_TO_START = 8;
+//                static const int POINTS_TO_STOP = 4;
+
+                if(!isOn) {
+//                    const float MAX_DISTANCE = 0.01f;
+//                    float distance = getDistance(frame[i-1], frame[i]);
+//                    if(distance > MAX_DISTANCE) {
+//                        const int POINTS_TO_INSERT = distance / MAX_DISTANCE;
+//                        float distX = frame[i].x() - frame[i-1].x();
+//                        float distY = frame[i].y() - frame[i-1].y();
+//                        Vertex midV = frame[i-1];
+//                        float percent = 1.f / POINTS_TO_INSERT;
+//                        for(int j = 0; j < POINTS_TO_INSERT; j++) {
+//                            midV.x() += distX * percent;
+//                            midV.x() += distY * percent;
+//                            frame.insert(frame.begin() + i, midV);
+//                            i++;
+//                        }
+//                    }
+
+                    // first border is colored, next one is blank
+                    insertBorderPoints(POINTS_TO_START);
+                    // frame[i] here because v is an old item now; TODO: ref to more beautiful one solution
+                    attenuate(frame[i]);
+//                    insertBorderPoints(POINTS_TO_STOP);
+
+                } else {
+                    // store original value
+                    ldVertex original = frame[i];
+
+                    // first border is blank, next one is colored
+                    attenuate(frame[i]);
+                    insertBorderPoints(POINTS_TO_START);
+                    frame[i] = original;
+//                    insertBorderPoints(POINTS_TO_STOP);
+                }
+            }
+        }
+        // memory for dead zones
+        isLastOn = isOn;
+    }
+}
+
+void ldDeadzoneFilter::process(ldVertex &v) {
+    if(!m_enabled || m_blocked)
         return;
 
     // see if we're on
     bool isOn = this->isOn(v.x(), v.y());
     // compare on-status with last frame
-    if (m_lastOn && isOn) {
+    if (m_isLastOn && isOn) {
         // both points visible, do nothing
-    } else if (!m_lastOn && !isOn) {
+        pinToBorder(v);
+    } else if (!m_isLastOn && !isOn) {
         // both points not visible, keep laser black
         attenuate(v);
+        pinToBorder(v);
     } else {
 
+//        Vertex oldV = v;
         if(m_lastV.isValid()) {
             // snap to border
-            float bestx = m_lastV.x();
-            float besty = m_lastV.y();
-            //float bestx = v.x();
-            //float besty = v.y();
-            const int INTERVAL_COUNT = 32; // quality of interpolation, 8 should be fine?
-            float deltaX = v.x() - m_lastV.x();
-            float deltaY = v.y() - m_lastV.y();
-            for (int i = 0; i < INTERVAL_COUNT; i++) {
-                float f = (float) i / INTERVAL_COUNT;
-                float tx = m_lastV.x() + deltaX * f;
-                float ty = m_lastV.y() + deltaY * f;
-                bool testOn = this->isOn(tx, ty);
-                if (testOn == m_lastOn) {
-                    bestx = tx;
-                    besty = ty;
-                    break;
-                }
-            }
-
-            {
-                // smooth the snap at lower attenuations
-                Vertex vt = v;
-                vt.color[0] = 1;
-                attenuate(vt);
-                float att = vt.color[0];
-                float catt = 1-att;
-                bestx = catt*bestx + att*v.x();
-                besty = catt*besty + att*v.y();
-            }
-
-            v.x() = bestx;
-            v.y() = besty;
+            ldVec2 border = getBorderPoint(m_lastV, v, m_isLastOn);
+            v.x() = border.x;
+            v.y() = border.y;
+            m_borderCount = 0;
+            m_lastBorder = border;
         }
 
-        if (!isOn)
+//        if (!isOn)
             attenuate(v);
+//        qDebug() << (int) isOn << m_lastV << oldV << v;
     }
     // memory for dead zones
-    m_lastOn = isOn;
+    m_isLastOn = isOn;
     m_lastV = v;
 }
 
 void ldDeadzoneFilter::resetFilter()
 {
-    m_lastOn = true;
+    m_isLastOn = true;
     m_lastV.clear();
+}
+
+
+void ldDeadzoneFilter::add(const ldDeadzoneFilter::Deadzone &deadzone)
+{
+    m_deadzones.push_back(deadzone);
+}
+
+void ldDeadzoneFilter::clear()
+{
+    m_deadzones.clear();
 }
 
 const QList<ldDeadzoneFilter::Deadzone> &ldDeadzoneFilter::deadzones() const
@@ -107,33 +194,79 @@ void ldDeadzoneFilter::resetToDefault()
     add(ldDeadzoneFilter::Deadzone(QRectF(0, 0, 0.5, 0.5)));
 }
 
-void ldDeadzoneFilter::add(const ldDeadzoneFilter::Deadzone &deadzone)
+void ldDeadzoneFilter::setReverse(bool reverse)
 {
-    m_deadzones.push_back(deadzone);
+    m_reverse = reverse;
 }
 
-void ldDeadzoneFilter::clear()
+void ldDeadzoneFilter::setEnabled(bool enabled)
 {
-    m_deadzones.clear();
+    m_enabled = enabled;
+}
+
+void ldDeadzoneFilter::setBlocked(bool blocked)
+{
+    m_blocked = blocked;
+}
+
+void ldDeadzoneFilter::attenuate(ldVertex& v) const {
+    const Deadzone &dz = getDeadzone(v.x(), v.y());
+    v.r() *= (1-dz.attenuation());
+    v.g() *= (1-dz.attenuation());
+    v.b() *= (1-dz.attenuation());
 }
 
 bool ldDeadzoneFilter::isOn(float x, float y) const
 {
-    bool isOut = isOutside(x, y);
+    bool isOut = true;
+
+    for(const Deadzone &dz : m_deadzones) {
+        if(dz.visRect().contains(x, y)) {
+            isOut = false;
+            break;
+        }
+    }
     if(m_reverse) isOut = !isOut;
     return isOut;
 }
 
-bool ldDeadzoneFilter::isOutside(float x, float y) const {
-    bool isOutside = true;
+ldVec2 ldDeadzoneFilter::getBorderPoint(const ldVertex &lastV, const ldVertex &v, bool isLastOn) const
+{
+    // get border point
+    ldVec2 border(lastV.x(), lastV.y());
 
-    for(const Deadzone &dz : m_deadzones) {
-        if(dz.visRect().contains(x, y)) {
-            isOutside = false;
+    const int INTERVAL_COUNT = 32; // quality of interpolation, 8 should be fine?
+    float deltaX = v.x() - lastV.x();
+    float deltaY = v.y() - lastV.y();
+    for (int i = 0; i < INTERVAL_COUNT + 1; i++) {
+        float f = static_cast<float>(i) / INTERVAL_COUNT;
+        float tx = lastV.x() + deltaX * f;
+        float ty = lastV.y() + deltaY * f;
+        bool isDeltaOn = this->isOn(tx, ty);
+
+//        if((m_isLastOn && isDeltaOn)
+//            || (!m_isLastOn && isDeltaOn)) {
+        if (isDeltaOn != isLastOn) {
+//        if (isDeltaOn == m_isLastOn) {
+            border.x = tx;
+            border.y = ty;
             break;
         }
     }
-    return isOutside;
+
+
+    {
+        // smooth the snap at lower attenuations
+        const Deadzone &dz = getDeadzone(v.x(), v.y());
+        float catt = dz.attenuation();
+        float att = 1 - catt;
+
+        border.x = catt*border.x + att*v.x();
+        border.y = catt*border.y + att*v.y();
+    }
+
+
+    return border;
 }
 
 ldDeadzoneFilter::Deadzone ldDeadzoneFilter::getDeadzone(float x, float y) const {
@@ -144,30 +277,79 @@ ldDeadzoneFilter::Deadzone ldDeadzoneFilter::getDeadzone(float x, float y) const
         if(!dz.visRect().contains(x, y))
             continue;
 
-        if(dz.m_attenuation > maxAttenuation) {
+        if(dz.attenuation() > maxAttenuation) {
             deadzone = dz;
-            maxAttenuation = dz.m_attenuation;
+            maxAttenuation = dz.attenuation();
         }
     }
     return deadzone;
 }
 
-void ldDeadzoneFilter::attenuate(Vertex& v) {
-    const Deadzone &dz = getDeadzone(v.x(), v.y());
-    v.color[0] *= (1-dz.m_attenuation);
-    v.color[1] *= (1-dz.m_attenuation);
-    v.color[2] *= (1-dz.m_attenuation);
+void ldDeadzoneFilter::pinToBorder(ldVertex &v)
+{
+    if(!m_lastBorder.isNull()) {
+        v.x() = m_lastBorder.x;
+        v.y() = m_lastBorder.y;
+        m_borderCount++;
+        if(m_borderCount >= MAX_BORDER_COUNT)
+            m_lastBorder = ldVec2();
+    }
 }
+
 
 
 ldDeadzoneFilter::Deadzone::Deadzone(QRectF rect, float attenuation)
-    : m_rect(rect)
-    , m_attenuation(attenuation)
+    : m_attenuation(attenuation)
+    , m_rect(rect)
 {
-
+    updateVisRect();
 }
 
-QRectF ldDeadzoneFilter::Deadzone::visRect() const
+QRectF ldDeadzoneFilter::Deadzone::rect() const
+{
+    return m_rect;
+}
+
+const QRectF &ldDeadzoneFilter::Deadzone::visRect() const
+{
+    return  m_visRect;
+}
+
+void ldDeadzoneFilter::Deadzone::moveLeft(float value)
+{
+    m_rect.moveLeft(value);
+    updateVisRect();
+}
+
+void ldDeadzoneFilter::Deadzone::moveTop(float value)
+{
+    m_rect.moveTop(value);
+    updateVisRect();
+}
+
+void ldDeadzoneFilter::Deadzone::setWidth(float value)
+{
+    m_rect.setWidth(value);
+    updateVisRect();
+}
+
+void ldDeadzoneFilter::Deadzone::setHeight(float value)
+{
+    m_rect.setHeight(value);
+    updateVisRect();
+}
+
+void ldDeadzoneFilter::Deadzone::setAttenuation(float attenuation)
+{
+    m_attenuation = attenuation;
+}
+
+float ldDeadzoneFilter::Deadzone::attenuation() const
+{
+    return m_attenuation;
+}
+
+void ldDeadzoneFilter::Deadzone::updateVisRect()
 {
     float dpx = m_rect.x();
     float dpy = m_rect.y();
@@ -179,6 +361,6 @@ QRectF ldDeadzoneFilter::Deadzone::visRect() const
     float y1 = dpy*(1-dzy)-dzy;
     float y2 = dpy*(1-dzy)+dzy;
 
-    return QRectF(QPointF(x1, y1), QPointF(x2, y2));
+    m_visRect = QRectF(QPointF(x1, y1), QPointF(x2, y2));
 }
 

@@ -38,6 +38,7 @@ target_sources(liblzr PRIVATE
 if(WIN32)
     find_library (WS2_32_LIB NAMES Ws2_32)
     target_link_libraries(liblzr ${WS2_32_LIB})
+    mark_as_advanced(WS2_32_LIB)
 
     # disable various conversion warnings
     target_compile_options(liblzr PRIVATE /wd4146)

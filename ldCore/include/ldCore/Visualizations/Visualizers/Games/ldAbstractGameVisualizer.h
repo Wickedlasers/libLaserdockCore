@@ -91,16 +91,16 @@ public slots:
     virtual void moveRightX(double /*x*/) {}
     virtual void moveRightY(double /*y*/) {}
 
+    ldGameState state() const;
+    ldPlayingState playingState() const;
+
 signals:
-    /** Signal finished should be emitted manually when game is over*/
-    void finished();
+    void stateChanged(ldGameState state);
+    void playingStateChanged(ldPlayingState state);
 
 protected:
     static const int GAME_DEFAULT_RESET_TIME;
 
-    ldGameState state() const;
-
-    ldPlayingState playingState() const;
     void setGameOver();
 
     virtual void draw() override;
@@ -118,11 +118,16 @@ protected:
     // Variables used in all games.
     float m_gameTimer = 0.0f;
     int m_startGameTimerValue = 0;
+	int m_gameOverCountDown = 0;
     ldSoundEffects m_soundEffects;
     QMutex m_mutex;
 
 
 private:
+    void doReset();
+    void doPlay();
+    void doPause();
+
     // ldAbstractVisualizer
     virtual void onShouldStart() override final;
     virtual void onShouldStop() override final;

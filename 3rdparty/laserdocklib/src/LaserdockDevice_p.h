@@ -18,13 +18,13 @@ class LaserdockDevice;
 
 class LaserdockDevicePrivate {
 public:
-    libusb_device * usbdevice;
+    libusb_device * usbdevice = nullptr;
     struct libusb_device_handle *devh_ctl = nullptr;
     struct libusb_device_handle *devh_data = nullptr;
     int8_t bus_number = -1;
     int8_t device_address = -1;
     LaserdockDevice::Status status = LaserdockDevice::Status::UNKNOWN;
-
+    int last_error = 0;
 #ifdef ANDROID
     jobject m_jobject;
     LaserdockDevicePrivate(libusb_device * device, jobject jobj, LaserdockDevice * q_ptr);

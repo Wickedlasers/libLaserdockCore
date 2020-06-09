@@ -20,7 +20,7 @@
 
 #include "ldCore/Helpers/Visualizer/ldVisualizerHelper.h"
 
-#include <math.h>
+#include <cmath>
 
 #include <QtCore/QtDebug>
 
@@ -46,14 +46,20 @@
 
 #include "ldCore/Helpers/Visualizer/ldBeatTracker.h"
 
+//#include <cmath>
+//#include <cmath>
+
 #include <ldCore/Sound/ldSoundData.h>
 
 namespace {
-    static const int HISTORY_COUNT = 120;
+    static constexpr uint HISTORY_COUNT = 120;
 
-    static const int beat_overdrive = AUDIO_OVERDRIVE_FACTOR;
-    static const int maxbeathistory = 4*HISTORY_COUNT*beat_overdrive;
-    static const int maxbeatfilters = HISTORY_COUNT*beat_overdrive;
+    static constexpr uint beat_overdrive = AUDIO_OVERDRIVE_FACTOR;
+    static constexpr uint maxbeathistory = 4*HISTORY_COUNT*beat_overdrive;
+    static constexpr uint maxbeatfilters = HISTORY_COUNT*beat_overdrive;
+
+    static constexpr uint STRIDE_SKIP = overdrive;
+    //#define STRIDE_SKIP 1
 }
 
 ldBeatTracker::ldBeatTracker() {
@@ -63,18 +69,18 @@ ldBeatTracker::ldBeatTracker() {
 
 void ldBeatTracker::add(float f) {
 
-    int historysize = MIN(MAX(4, m_filterend*5), maxbeathistory);
-    m_history.insert(m_history.begin(), f);
+    uint historysize = std::min(std::max(4u, m_filterend*5), maxbeathistory);
+    m_history.push_front(f);
     m_history.resize(historysize);
 
     m_filterstart = MAX(3, m_filterstart);
 
     float bestEnergy = 0;
-    int bestStride = 0;
-    int bestPhase = 0;
+    uint bestStride = 0;
+    uint bestPhase = 0;
 
-    for (int stride = m_filterstart; stride < m_filterend; stride+=STRIDE_SKIP) {
-        for (int phase = 0; phase < stride; phase++) {
+    for (uint stride = m_filterstart; stride < m_filterend; stride+=STRIDE_SKIP) {
+        for (uint phase = 0; phase < stride; phase++) {
             float sum = 3*m_history[phase];
             sum += 2*m_history[phase+stride];
             sum += 1*m_history[phase+2*stride];
@@ -94,16 +100,18 @@ void ldBeatTracker::add(float f) {
     m_bestphase = bestPhase*m_bestbpm;
 }
 
-void ldBeatTracker::set(int _filterstart, int _filterend) {
-    m_filterstart = _filterstart;
-    m_filterend = _filterend;
+void ldBeatTracker::set(uint filterstart, uint filterend) {
+    Q_ASSERT(filterstart <= filterend);
+
+    m_filterstart = filterstart;
+    m_filterend = filterend;
     if (m_filterstart > maxbeatfilters) m_filterstart = maxbeatfilters;
     if (m_filterend > maxbeatfilters) m_filterend = maxbeatfilters;
-    for (int i = 0; i < maxbeatfilters; i++) {
+    for (uint i = 0; i < maxbeatfilters; i++) {
         float f = 0;
-        int nfilters = (m_filterend-m_filterstart);
+        uint nfilters = (m_filterend-m_filterstart);
         if (nfilters >= 1) f = ((i-m_filterstart)+0.5f)/nfilters;
-        f = 1-(f-0.5)*(f-0.5)*4;
+        f = 1-(f-0.5f)*(f-0.5f)*4;
         f *= 2;
         if (f<0) f = 0;
         if (f>1) f = 1;

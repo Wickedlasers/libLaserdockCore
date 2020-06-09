@@ -87,8 +87,8 @@ QByteArray ldSimpleCrypt::decrypt(const QString &filePath)
 
 void ldSimpleCrypt::encryptFolderR(const QString &folder)
 {
-    qDebug() << __FUNCTION__ << folder;
-    QDirIterator it(folder, QStringList() << "*.svg" << "*.ldva2" << "*.ldva4", QDir::Files, QDirIterator::Subdirectories);
+//    qDebug() << __FUNCTION__ << folder;
+    QDirIterator it(folder, QStringList() << "*.svg" << "*.ldva2" << "*.ldva4" << "*.ild", QDir::Files, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         encryptToFile(it.next());
     }

@@ -20,7 +20,7 @@
 
 #include "ldCore/Helpers/Maths/ldVec2.h"
 
-#include <math.h>
+#include <cmath>
 
 #include <QtCore/QMetaType>
 #include <QtCore/QtDebug>

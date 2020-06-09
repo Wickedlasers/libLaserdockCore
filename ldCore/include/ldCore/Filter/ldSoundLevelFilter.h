@@ -29,7 +29,7 @@ public:
     ldSoundLevelFilter();
 
     // ldFilter
-    virtual void process(Vertex &input) override;
+    virtual void process(ldVertex &input) override;
     virtual bool isMusicAware() const override { return true; }
 
     bool enabled() const;

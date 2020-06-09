@@ -26,8 +26,8 @@
 //  Copyright (c) 2013 Jake Huang. All rights reserved.
 //
 
-#ifndef Laserdock__ldParticleGeometry__
-#define Laserdock__ldParticleGeometry__
+#ifndef LDPARTICLEGEOMETRY_H
+#define LDPARTICLEGEOMETRY_H
 
 #include <ldCore/ldCore_global.h>
 
@@ -630,4 +630,4 @@ LDCORESHARED_EXPORT CCPoint ccpIntersectPoint(const CCPoint& A, const CCPoint& B
 
 
 
-#endif /* defined(__Laserdock__ldParticleGeometry__) */
+#endif // LDPARTICLEGEOMETRY_H

@@ -40,8 +40,6 @@ class LDCORESHARED_EXPORT ldBezierCurveFrame
 {
 public:
     explicit ldBezierCurveFrame(const std::vector<ldBezierCurveObject> &curves = std::vector<ldBezierCurveObject>());
-    ~ldBezierCurveFrame();
-
 
     /** Manage objects */
     void add(const ldBezierCurveObject &object);

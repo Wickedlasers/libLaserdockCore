@@ -115,6 +115,7 @@ void ldCore::initResources()
 
     ldAbstractGame::registerMetaTypes();
     ldVec2::registerMetaTypes();
+    ldVertex::registerMetaTypes();
 
 #ifdef LD_CORE_ENABLE_QT_QUICK
     ldSimulatorItem::registerMetatypes();
@@ -149,11 +150,10 @@ void ldCore::initialize()
     m_svgFontManager = new ldSvgFontManager(this);
     m_svgFontManager->addFont(ldSvgFont("Roboto", "roboto"));
 
-    m_hardwareManager = new ldHardwareManager(this);
-
     m_filterManager = new ldFilterManager();
     m_bufferManager = new ldBufferManager(this);
 
+    m_hardwareManager = new ldHardwareManager(m_filterManager, this);
     m_dataDispatcher = new ldDataDispatcher(m_bufferManager, m_hardwareManager, this);
 
     // create and load task
@@ -256,7 +256,7 @@ ldCore::ldCore(QObject *parent)
     , m_laserController(nullptr)
 {
 #ifdef LD_CORE_ENABLE_QT_QUICK
-    qmlRegisterType<ldLaserController>();
+    qmlRegisterAnonymousType<ldLaserController>("WickedLasers", 1);
 #endif
 
     m_instance = this;
@@ -291,7 +291,7 @@ void ldCore::initStorageDir()
 void ldCore::initResourceDir()
 {
 #if defined(Q_OS_MAC)
-        m_resourceDir = qApp->applicationDirPath() + "/../Resources";
+        m_resourceDir = QDir(qApp->applicationDirPath() + "/../Resources").absolutePath();
 #elif defined(Q_OS_WIN32)
         m_resourceDir = qApp->applicationDirPath() + "/Resources";
 #elif defined(Q_OS_ANDROID)

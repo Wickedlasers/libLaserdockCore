@@ -50,6 +50,8 @@ public:
     explicit ldQSound(const QString &filename);
     ~ldQSound();
 
+    bool isPlaying() const;
+
     void play();
     void stop();
 

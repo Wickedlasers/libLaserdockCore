@@ -63,6 +63,7 @@ override getVisualizerName() for name used by the app.
 #define LDVISUALIZER_H
 
 #include <QtCore/QObject>
+#include <QtCore/QMutex>
 #include <QtCore/QDebug>
 
 #include <ldCore/Sound/ldSoundData.h>
@@ -92,7 +93,7 @@ public:
     virtual bool isValid() const { return true; }
 
     Q_INVOKABLE virtual bool isMusicAware() const { return m_isMusicAware; }
-    Q_INVOKABLE virtual bool isRepeatAvailable() const { return false; }
+    Q_INVOKABLE virtual bool is3d() const { return m_is3d; }
 
 protected:
     virtual void onShouldStart();
@@ -117,10 +118,13 @@ protected:
     ldMusicManager* m_musicManager;
 
     bool m_isMusicAware = true; // most of visualizers are music aware
+    bool m_is3d = false;
 
     int m_rate = 0;
 
     mutable QMutex m_mutex;
+
+    bool m_isVisActive = false;
 };
 
 Q_DECLARE_METATYPE(ldVisualizer*)

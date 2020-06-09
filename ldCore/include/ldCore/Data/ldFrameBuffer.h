@@ -22,54 +22,59 @@
 #define LDFRAMEBUFFER_H
 
 #include <QtCore/QMutex>
-#include <QtCore/QMutexLocker>
 #include <QtCore/QObject>
 
-#include "ldCore/ldCore_global.h"
-#include "ldCore/Utilities/ldBasicDataStructures.h"
+#include <ldCore/ldCore_global.h>
+#include <ldCore/Utilities/ldVertexFrame.h>
 
-#define FRAMEBUFFER_CAPACITY 4000
-
-class ldFilter;
-class ldFilterManager;
+class ldVertexFrame;
 
 class LDCORESHARED_EXPORT ldFrameBuffer : public QObject
 {
     Q_OBJECT
 
 public:
+    static const int FRAMEBUFFER_CAPACITY = 4000;
+
     explicit ldFrameBuffer(QObject *parent = 0);
     ~ldFrameBuffer();
 
-    void push(Vertex& val, bool skip_filters = false, bool alter_val = false);
-    unsigned int get(Vertex * pbuffer, CompressedSample &pcbuffer, unsigned int size);
+    /** Add simulator value, the same value goes to output with minimal possible safety filters */
+    void push(const ldVertex &val);
 
-    void setFrameModes(int flags);
+    /** Add simulator/output vectors */
+    void pushFrame(ldVertexFrame &frame);
 
+    /** Read data for sim/output */
+    uint get(ldVertex * pbuffer, uint size);
+
+    /** Clear current buffer, request for more data */
     void reset();
+
+    /** Finish adding data */
     void commit();
 
+    /** Special case when laser need more data preserving the existing data */
     void requestMore();
 
-    qint32 getAvailable() const;
+    /** Get available size of data to read */
+    uint getAvailable() const;
+
+    /** Is buffer ready to read */
     bool isFilled() const;
 
+    uint getExhuastedIndex() const;
 signals:
     void isCleaned();
 
 private:
-    QMutex m_mutex;
+//    QMutex m_mutex;
 
-    ldFilterManager *m_filterManager = nullptr;
-    qint32 m_exhuasted_index = 0;
-    qint32 m_fill = 0;
+    uint m_exhuasted_index = 0;
+    uint m_fill = 0;
     bool m_isFilled = false;
 
-    std::vector<Vertex> m_buffer;
-    std::vector<CompressedSample> m_compressed_buffer;
-
-    int m_frameModes = 0;
-
+    std::vector<ldVertex> m_buffer;
 };
 
 #endif // LDFRAMEBUFFER_H

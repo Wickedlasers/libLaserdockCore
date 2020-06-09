@@ -25,6 +25,8 @@
 
 #include "ldCore/ldCore_global.h"
 
+class ldHardware;
+
 class LDCORESHARED_EXPORT ldAbstractHardwareManager : public QObject
 {
     Q_OBJECT
@@ -32,22 +34,18 @@ public:
     explicit ldAbstractHardwareManager(QObject *parent = nullptr);
 
     virtual uint deviceCount() const = 0;
-
-    bool isFlipX() const;
-    void setFlipX(bool isFlipX);
-
-    bool isFlipY() const;
-    void setFlipY(bool isFlipY);
+    virtual std::vector<ldHardware*> devices() const = 0;
 
 public slots:
     virtual void setConnectedDevicesActive(bool active) = 0;
+    void setExplicitActiveDevice(int index);
 
 signals:
     void deviceCountChanged(uint deviceCount);
 
 protected:
-    bool m_isFlipX = false;
-    bool m_isFlipY = false;
+    int m_explicitHardwareIndex = -1;
+
 };
 
 

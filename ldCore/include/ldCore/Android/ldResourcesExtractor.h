@@ -1,14 +1,11 @@
 #ifndef LDRESOURCESEXTRACTOR_H
 #define LDRESOURCESEXTRACTOR_H
 
-#include <QtCore/QObject>
-#include <QtCore/QThread>
-
 #include <QQmlHelpers>
 
 #include <ldCore/ldCore_global.h>
 
-class ldResourcesExtractorPrivate;
+class ldZipExtractor;
 
 // class to extract resources from obb file on android
 class LDCORESHARED_EXPORT ldResourcesExtractor : public QObject
@@ -30,11 +27,13 @@ public slots:
     void startExtraction();
 
 signals:
-    void finished(bool isOk);
+    void finished(bool isOk, const QString &errorMesssage = QString());
 
 private:
-    QScopedPointer<ldResourcesExtractorPrivate> m_private;
-    QThread m_workerThread;
+    void checkNeedExtraction(int resourcesVersionCode);
+    QString findObbFilePath(const QString &packageName, int resourcesVersionCode);
+
+    ldZipExtractor *m_zipExtractor;
 };
 
 #endif // LDRESOURCESEXTRACTOR_H

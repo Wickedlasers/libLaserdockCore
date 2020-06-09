@@ -23,6 +23,8 @@
 
 #include <memory>
 
+#include <QtCore/QMutex>
+
 #include <ldCore/Task/ldAbstractTask.h>
 #include <ldCore/Sound/ldSoundData.h>
 
@@ -36,9 +38,12 @@ class LDCORESHARED_EXPORT ldVisualizationTask : public ldAbstractTask
 {
     Q_OBJECT
 
-    Q_PROPERTY(ldVisualizer* currentVisualizer READ getCurrentVisualizer WRITE setCurrentVisualizer NOTIFY currentVisualizerChanged)
-
 public:
+    enum class SoundSource {
+        SoundInput,
+        AudioDecoder
+    };
+
     typedef struct {
         bool renderOpenlase = true;
         ldFrameBuffer * buffer = nullptr;
@@ -56,18 +61,25 @@ public:
     void update(quint64 delta, ldFrameBuffer * buf) override;
 
     RenderState *renderState();
-    ldVisualizer *getCurrentVisualizer() const;
+
+    ldVisualizer *getBaseVisualizer() const;
+
+    void setRotX(float x);
+    void setRotY(float y);
+    void setRotZ(float z);
 
 public slots:
-    void setCurrentVisualizer(ldVisualizer *visualizer = nullptr, int priority = 0);
+    void setVisualizer(ldVisualizer *visualizer = nullptr, int priority = 0);
 
     void setSoundLevelGate(int value);
     int soundLevelGate() const;
 
     void setIsShowLogo(bool showLogo);
 
+    void setSoundSource(const ldVisualizationTask::SoundSource &source);
+
 signals:
-    void currentVisualizerChanged(ldVisualizer *visualizer);
+    void baseVisualizerChanged(ldVisualizer *visualizer);
 
 private slots:
     void onUpdateAudio(const AudioBlock& block);
@@ -93,6 +105,12 @@ private:
 
     int m_soundLevelGate = 0;
     bool m_isShowLogo = true;
+
+    SoundSource m_soundSource = SoundSource::SoundInput;
+
+    float m_rotX = 0;
+    float m_rotY = 0;
+    float m_rotZ = 0;
 };
 
 #endif // LDVISUALIZATIONTASK_H

@@ -34,6 +34,17 @@
 
 /* Eric Brugère */
 
+namespace  {
+uint32_t float2intColor(float color)
+{
+    return static_cast<uint32_t>(color*255);
+}
+float int2floatColor(uint32_t color)
+{
+    return color / 255.f;
+}
+}
+
 // lerpInt
 int ldColorUtil::lerpInt(int a, int b, float amt)
 {
@@ -49,10 +60,10 @@ int ldColorUtil::lerpInt(int a, int b, float amt)
     b_[2] = b & 0xFF;
     //
     amt=clampf(amt, 0.0, 1.0);
+
     for (int i=0; i<3; i++)
-    {
-        c[i] = (int)(a_[i] + (b_[i] - a_[i]) * amt);
-    }
+        c[i] = static_cast<int>(a_[i] + (b_[i] - a_[i]) * amt);
+
     return ((c[0] << 16)+(c[1] << 8)+(c[2]));
 }
 
@@ -64,9 +75,9 @@ float ldColorUtil::lerpF(float a, float b, float amt)
 
 // brgToRgb
 uint32_t ldColorUtil::bgrToRgb(uint32_t brg) {
-    int b = brg >> 16 & 0xFF;
-    int g = brg >> 8 & 0xFF;
-    int r = brg & 0xFF;
+    uint32_t b = brg >> 16 & 0xFF;
+    uint32_t g = brg >> 8 & 0xFF;
+    uint32_t r = brg & 0xFF;
     // change pure black in white
     if (b == 0 && r==0 && g==0) {
         return 0xFFFFFF;
@@ -74,7 +85,7 @@ uint32_t ldColorUtil::bgrToRgb(uint32_t brg) {
     //
     r =  (r << 16);
     g =  (g << 8);
-    return (r+g+b);
+    return r+g+b;
 }
 
 uint32_t ldColorUtil::abgrToArgb(uint32_t abrg)
@@ -93,7 +104,7 @@ uint32_t ldColorUtil::abgrToArgb(uint32_t abrg)
 // colorForStep
 uint32_t ldColorUtil::colorForStep(float step, float decay)
 {
-    float decColor1 = step == 0 ? 0 : (1.0f - step)*360.0f;
+    float decColor1 = cmpf(step, 0) ? 0 : (1.0f - step)*360.0f;
     decColor1 = ldMaths::periodIntervalKeeper(decColor1 + decay*360.0f, 0.0f, 360.0f);
     return ldColorUtil::colorHSV(decColor1, 1.0f, 1.0f);
 }
@@ -117,16 +128,16 @@ void rgb2hsv(float& r, float& g, float& b, float& h, float& s, float& v) {
 
     float hue6 = 0;
     if (delta > 0) {
-        if (maxc == r) {
+        if (cmpf(maxc, r)) {
             hue6 =  (g - b) / delta + 0;
-        } else if (maxc == g) {
+        } else if (cmpf(maxc, g)) {
             hue6 =  (b - r) / delta + 2;
         } else {
             hue6 =  (r - g) / delta + 4;
         }
     }
     h = hue6/6;
-    h -= (int)h;
+    h -= static_cast<int>(h);
 
     float sat = 0;
     if (maxc > 0) sat = delta / maxc;
@@ -144,9 +155,9 @@ void hsv2rgb(float& h, float& s, float& v, float& r, float& g, float& b) {
     clampfp(s, 0, 1);
     clampfp(v, 0, 1);
     uint32_t c = ldColorUtil::colorHSV(h * 359, s, v);
-    r = ((c >> 16) & 0xff) / 255.0f;
-    g = ((c >> 8) & 0xff) / 255.0f;
-    b = ((c >> 0) & 0xff) / 255.0f;
+    r = int2floatColor((c >> 16) & 0xff);
+    g = int2floatColor((c >> 8) & 0xff);
+    b = int2floatColor((c >> 0) & 0xff);
     clampfp(r, 0, 1);
     clampfp(g, 0, 1);
     clampfp(b, 0, 1);
@@ -156,7 +167,7 @@ void hueSet(float& r, float& g, float& b, float hue) {
     float h, s, v;
     rgb2hsv(r, g, b, h, s, v);
     h = hue;
-    h -= (int)floorf(h);
+    h -= static_cast<int>(floorf(h));
     hsv2rgb(h, s, v, r, g, b);
 }
 
@@ -164,7 +175,7 @@ void hueShift(float& r, float& g, float& b, float hueoffset) {
     float h, s, v;
     rgb2hsv(r, g, b, h, s, v);
     h += hueoffset;
-    h -= (int)floorf(h);
+    h -= static_cast<int>(floorf(h));
     hsv2rgb(h, s, v, r, g, b);
 }
 
@@ -176,21 +187,25 @@ uint32_t colorRGB(uint32_t r, uint32_t g, uint32_t b)
     return result;
 }
 
+uint32_t colorRGBf(float r, float g, float b)
+{
+    return colorRGB(float2intColor(r), float2intColor(g), float2intColor(b));
+}
+
 uint32_t colorHSV(float h, float s, float v)
 {
-    int i;
     float f, p, q, t;
 
     uint32_t r, g, b;
 
-    if (s == 0)
+    if (cmpf(s, 0))
     {
         // achromatic (grey)
-        r = g = b = 255 * v;
+        r = g = b = static_cast<uint32_t>(255 * v);
     }
 
     h /= 60;                    // sector 0 to 5
-    i = floor(h);
+    int i = static_cast<int>(floor(h));
     f = h - i;                  // factorial part of h
     p = v * (1 - s);
     q = v * (1 - s * f);
@@ -199,34 +214,34 @@ uint32_t colorHSV(float h, float s, float v)
     switch (i)
     {
         case 0:
-            r = v * 255;
-            g = t * 255;
-            b = p * 255;
+            r = float2intColor(v);
+            g = float2intColor(t);
+            b = float2intColor(p);
             break;
         case 1:
-            r = q * 255;
-            g = v * 255;
-            b = p * 255;
+            r = float2intColor(q);
+            g = float2intColor(v);
+            b = float2intColor(p);
             break;
         case 2:
-            r = p * 255;
-            g = v * 255;
-            b = t * 255;
+            r = float2intColor(p);
+            g = float2intColor(v);
+            b = float2intColor(t);
             break;
         case 3:
-            r = p * 255;
-            g = q * 255;
-            b = v * 255;
+            r = float2intColor(p);
+            g = float2intColor(q);
+            b = float2intColor(v);
             break;
         case 4:
-            r = t * 255;
-            g = p * 255;
-            b = v * 255;
+            r = float2intColor(t);
+            g = float2intColor(p);
+            b = float2intColor(v);
             break;
         default: // case 5
-            r = v * 255;
-            g = p * 255;
-            b = q * 255;
+            r = float2intColor(v);
+            g = float2intColor(p);
+            b = float2intColor(q);
             break;
     }
 
@@ -265,9 +280,9 @@ void colorRGBtoHSVfloat(float r, float g, float b, float& h, float& s, float& v)
     // hue calc
     float hue6 = 0;
     if (delta > 0) {
-        if (maxc == r) {
+        if (cmpf(maxc, r)) {
             hue6 =  (g - b) / delta + 0;
-        } else if (maxc == g) {
+        } else if (cmpf(maxc, g)) {
             hue6 =  (b - r) / delta + 2;
         } else {
             hue6 =  (r - g) / delta + 4;
@@ -275,7 +290,8 @@ void colorRGBtoHSVfloat(float r, float g, float b, float& h, float& s, float& v)
     }
 
     // hsv
-    h = hue6/6;  h -= (int)h;
+    h = hue6/6;
+    h -= static_cast<int>(h);
     if (maxc > 0) s = delta / maxc; else s = 0;
     v = maxc;
 
@@ -290,9 +306,9 @@ void colorHSVtoRGBfloat(float h, float s, float v, float& r, float& g, float& b)
     clamp(s);
     clamp(v);
     uint32_t c = colorHSV(h * 359, s, v);
-    r = ((c >> 16) & 0xff) / 255.0f;
-    g = ((c >> 8) & 0xff) / 255.0f;
-    b = ((c >> 0) & 0xff) / 255.0f;
+    r = int2floatColor((c >> 16) & 0xff);
+    g = int2floatColor((c >> 8) & 0xff);
+    b = int2floatColor((c >> 0) & 0xff);
     clamp(r);
     clamp(g);
     clamp(b);
@@ -433,34 +449,32 @@ void HSVtoRGB(quint16 h, quint8 s, quint8 v, quint8 wheelLine, quint8 color[3]) 
     g = 255 - (((255 - g) * (s + 1)) >> 8);
     b = 255 - (((255 - b) * (s + 1)) >> 8);
 
-    color[0] = (quint8) (r * (v + 1));
-    color[1] = (quint8) (g * (v + 1));
-    color[2] = (quint8) (b * (v + 1));
+    color[0] = static_cast<quint8> (r * (v + 1));
+    color[1] = static_cast<quint8> (g * (v + 1));
+    color[2] = static_cast<quint8> (b * (v + 1));
 }
 
 // compliment to HSVtoRGB
 void RGBtoHSV(quint8 r, quint8 g, quint8 b, quint16 hsv[3]) {
-    float tempR, tempG, tempB;
-
-    tempR = (float)r / 255.0;
-    tempG = (float)g / 255.0;
-    tempB = (float)b / 255.0;
+    float tempR = int2floatColor(r);
+    float tempG = int2floatColor(g);
+    float tempB = int2floatColor(b);
 
     float minRGB = qMin(tempR, qMin(tempG, tempB));
     float maxRGB = qMax(tempR, qMax(tempG, tempB));
 
     // Black-gray-white
-    if (minRGB == maxRGB) {
+    if (cmpf(minRGB, maxRGB)) {
         hsv[0] = 0; // irrelevant, as saturation is nothing
         hsv[1] = 0;
-        hsv[2] = (quint16) (255.0 * maxRGB);
+        hsv[2] = static_cast<quint16>(255*maxRGB);
     } else {
         // Colors other than black-gray-white:
-        float d = (tempR == minRGB) ? tempG - tempB : ((tempB == minRGB) ? tempR - tempG : tempB - tempR);
-        float h = (tempR == minRGB) ? 3.0 : ((tempB == minRGB) ? 1.0 : 5.0);
-        hsv[0] = (quint16) (255.0 * (h - d / (maxRGB - minRGB)));
-        hsv[1] = (quint16) (255.0 * (maxRGB - minRGB) / maxRGB);
-        hsv[2] = (quint16) (255.0 * maxRGB);
+        float d = (cmpf(tempR, minRGB)) ? tempG - tempB : ((cmpf(tempB,minRGB)) ? tempR - tempG : tempB - tempR);
+        float h = (cmpf(tempR, minRGB)) ? 3.0 : ((cmpf(tempB, minRGB)) ? 1.0 : 5.0);
+        hsv[0] = static_cast<quint16> (255 * (h - d / (maxRGB - minRGB)));
+        hsv[1] = static_cast<quint16> (255 * (maxRGB - minRGB) / maxRGB);
+        hsv[2] = static_cast<quint16> (255 * maxRGB);
     }
 }
 

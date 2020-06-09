@@ -59,9 +59,9 @@ struct LDCORESHARED_EXPORT LaserPoint {
     LaserPoint();
     LaserPoint(float _x, float _y, float _r, float _g, float _b);
     LaserPoint(float _x, float _y, float _c);
-    LaserPoint(const Vertex &v);
+    LaserPoint(const ldVertex &v);
 
-    Vertex toVertex() const;
+    ldVertex toVertex() const;
     uint32_t c32() const;
 
     float x;// = 0;

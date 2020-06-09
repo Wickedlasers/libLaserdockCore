@@ -24,21 +24,26 @@
 #include <QtCore/QtDebug>
 #include <QtCore/QCoreApplication>
 
+#include <ldCore/Sound/ldSoundAnalyzer.h>
+
 #include "Sound/ldQAudioInputDevice.h"
+#include "Sound/ldSoundStubDevice.h"
+
 // loopback
 #ifdef LD_LOOPBACK_DEVICE_ENABLED
-#include "Sound/ldLoopbackAudioDevice.h"
-#include "Sound/ldLoopbackAudioDeviceWorker.h"
-#include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
+#ifdef Q_OS_WIN
+#include "Sound/win/ldLoopbackAudioDevice.h"
+#else
+#include "Sound/android/ldLoopbackAudioDevice.h"
 #endif
-// stub
-#include "Sound/ldSoundStubDevice.h"
+#endif
+
 // midi
 #ifdef LD_CORE_ENABLE_MIDI
+#include "Sound/ldMidiDevice.h"
 #include "ldCore/Sound/Midi/ldMidiInfo.h"
 #endif
 
-#include "Sound/ldMidiDevice.h"
 
 void ldSoundDeviceManager::registerMetaType()
 {
@@ -48,21 +53,23 @@ void ldSoundDeviceManager::registerMetaType()
 }
 
 ldSoundDeviceManager::ldSoundDeviceManager(QObject *parent)
-    : ldSoundInterface(parent)
+    : QObject(parent)
     , m_qaudioInputDevice(new ldQAudioInputDevice(this))
 #ifdef LD_CORE_ENABLE_MIDI
     , m_midiDevice(new ldMidiDevice(this))
 #endif
     , m_stubDevice(new ldSoundStubDevice(this))
+    , m_analyzer(new ldSoundAnalyzer(this))
 {
     qDebug() << __FUNCTION__;
 
-    connect(m_qaudioInputDevice, &ldQAudioInputDevice::soundUpdated, this, &ldSoundDeviceManager::soundUpdated);
+    connect(m_qaudioInputDevice, &ldQAudioInputDevice::soundUpdated, m_analyzer, &ldSoundAnalyzer::handleSoundUpdated);
     connect(m_qaudioInputDevice, &ldQAudioInputDevice::error, this, &ldSoundDeviceManager::error);
 #ifdef LD_CORE_ENABLE_MIDI
-    connect(m_midiDevice, &ldMidiDevice::soundUpdated, this, &ldSoundDeviceManager::soundUpdated);
+    connect(m_midiDevice, &ldMidiDevice::soundUpdated, m_analyzer, &ldSoundAnalyzer::handleSoundUpdated);
 #endif
-    connect(m_stubDevice, &ldSoundStubDevice::soundUpdated, this, &ldSoundDeviceManager::soundUpdated);
+    connect(m_stubDevice, &ldSoundStubDevice::soundUpdated, m_analyzer, &ldSoundAnalyzer::handleSoundUpdated);
+
 
     //
     refreshAvailableDevices();
@@ -85,11 +92,6 @@ ldSoundDeviceManager::ldSoundDeviceManager(QObject *parent)
 ldSoundDeviceManager::~ldSoundDeviceManager()
 {
     deleteAudioInput();
-}
-
-QAudioFormat ldSoundDeviceManager::getAudioFormat() const
-{
-    return m_format;
 }
 
 void ldSoundDeviceManager::refreshAvailableDevices()
@@ -169,6 +171,11 @@ void ldSoundDeviceManager::setActivateCallbackFunc(ldActivateCallbackFunc func)
     m_activateCallbackFunc = func;
 }
 
+ldSoundAnalyzer* ldSoundDeviceManager::analyzer() const
+{
+    return m_analyzer;
+}
+
 void ldSoundDeviceManager::notified()
 {
     qDebug() << "notified";
@@ -176,21 +183,34 @@ void ldSoundDeviceManager::notified()
 
 
 #ifdef LD_LOOPBACK_DEVICE_ENABLED
-void ldSoundDeviceManager::activateOutputDevice(ldSoundDeviceInfo info)
+bool ldSoundDeviceManager::activateOutputDevice(ldSoundDeviceInfo info)
 {
-//    m_info = info;// info.deviceName();
-
     qDebug() << "using sound output device: " << info.name();
-
-    // TODO: fill with correct loopback options
-    m_format = getDefaultAudioFormat();
 
     deleteAudioInput();
 
+#ifdef Q_OS_WIN
     m_loopbackAudioDevice = new ldLoopbackAudioDevice(info.name(), this);
-    connect(m_loopbackAudioDevice, SIGNAL(soundUpdated(const char*,qint64)), this, SIGNAL(soundUpdated(const char*,qint64)));
+#else
+    // android has only one loobpack device
+    Q_UNUSED(info)
+    m_loopbackAudioDevice = ldLoopbackAudioDevice::instance();
+    if(!m_loopbackAudioDevice->isValid()) {
+        m_loopbackAudioDevice = nullptr;
+        return false;
+    }
+#endif
+
+    if(!m_loopbackAudioDevice->setEnabled(true)) {
+        m_loopbackAudioDevice = nullptr;
+        return false;
+    }
+
+
+    connect(m_loopbackAudioDevice, &ldLoopbackAudioDevice::soundUpdated, m_analyzer, &ldSoundAnalyzer::handleSoundUpdated);
     connect(m_loopbackAudioDevice, &ldLoopbackAudioDevice::error, this, &ldSoundDeviceManager::error);
-    m_loopbackAudioDevice->startCapture();
+
+    return true;
 }
 #endif
 
@@ -206,10 +226,14 @@ void ldSoundDeviceManager::deleteAudioInput()
 
 #ifdef LD_LOOPBACK_DEVICE_ENABLED
     if(m_loopbackAudioDevice) {
-        disconnect(m_loopbackAudioDevice, SIGNAL(soundUpdated(const char*,qint64)), this, SIGNAL(soundUpdated(const char*,qint64)));
-        m_loopbackAudioDevice->stopCapture();
+        m_loopbackAudioDevice->setEnabled(false);
+#ifdef Q_OS_WIN
         m_loopbackAudioDevice->deleteLater();
-        m_loopbackAudioDevice = NULL;
+#else
+        disconnect(m_loopbackAudioDevice, &ldLoopbackAudioDevice::soundUpdated, m_analyzer, &ldSoundAnalyzer::handleSoundUpdated);
+        disconnect(m_loopbackAudioDevice, &ldLoopbackAudioDevice::error, this, &ldSoundDeviceManager::error);
+#endif
+        m_loopbackAudioDevice = nullptr;
     }
 
 #endif
@@ -241,8 +265,7 @@ bool ldSoundDeviceManager::initializeAudio(const ldSoundDeviceInfo &info)
 #ifdef LD_LOOPBACK_DEVICE_ENABLED
         // try look for loopback device
         if(ldLoopbackAudioDevice::getAvailableOutputDevices().contains(info.name())) {
-            activateOutputDevice(info);
-            isSuccess = true;
+            isSuccess = activateOutputDevice(info);
         }
 #endif
         break;
@@ -272,6 +295,14 @@ bool ldSoundDeviceManager::initializeAudio(const ldSoundDeviceInfo &info)
 		// show error - nothing found
         qWarning() << "show error - nothing found";
         emit error(tr("Error, can't open: %1").arg(info.name()));
+
+        // try to activate last device if exists
+        if(m_info.isValid()) {
+            // avoid infinitie loopback
+            ldSoundDeviceInfo oldInfo = m_info;
+            m_info = ldSoundDeviceInfo();
+            initializeAudio(oldInfo);
+        }
     } else {
         qDebug() << __FUNCTION__ << info.name() << info.type();
     }
@@ -293,11 +324,7 @@ bool ldSoundDeviceManager::activateQAudioInputDevice(const ldSoundDeviceInfo &in
 
     if (it != inputDevices.end()) {
         bool isOk = m_qaudioInputDevice->activateInputDevice(*it);
-        if(isOk) {
-            m_format = m_qaudioInputDevice->format();
-        } else {
-            deleteAudioInput();
-        }
+        if(!isOk) deleteAudioInput();
         return isOk;
     }
 
@@ -308,7 +335,6 @@ bool ldSoundDeviceManager::activateQAudioInputDevice(const ldSoundDeviceInfo &in
 void ldSoundDeviceManager::activateMidiDevice(ldSoundDeviceInfo info) {
 
     // dummy options for pcm data
-    m_format = getDefaultAudioFormat();
     m_midiDevice->start(info.id().value<ldMidiInfo>());
 
     qDebug() << "midi on";
@@ -319,7 +345,6 @@ void ldSoundDeviceManager::activateMidiDevice(ldSoundDeviceInfo info) {
 void ldSoundDeviceManager::activateStubDevice(ldSoundDeviceInfo /*info*/)
 {
     // dummy options for pcm data
-    m_format = getDefaultAudioFormat();
     m_stubDevice->start();
 }
 

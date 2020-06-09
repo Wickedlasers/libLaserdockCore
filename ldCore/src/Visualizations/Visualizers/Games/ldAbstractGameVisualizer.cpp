@@ -214,9 +214,7 @@ void ldAbstractGameVisualizer::reset()
 {
     QMutexLocker lock(&m_mutex);
 
-    onGameReset();
-    m_state = ldGameState::Reset;
-    m_playingState = ldPlayingState::InGame;
+    doReset();
 }
 
 void ldAbstractGameVisualizer::togglePlay()
@@ -230,15 +228,11 @@ void ldAbstractGameVisualizer::togglePlay()
     //start the game or continue current level
     if(state == ldGameState::Playing) {
         if(m_playingState == ldPlayingState::GameOver) {
-            onGameReset();
-            m_state = ldGameState::Reset;
-            m_playingState = ldPlayingState::InGame;
+            doReset();
         }
-        onGamePlay();
-        m_state = ldGameState::Playing;
+        doPlay();
     } else {
-        onGamePause();
-        m_state = ldGameState::Paused;
+        doPause();
     }
 }
 
@@ -276,34 +270,6 @@ void ldAbstractGameVisualizer::previousLevel()
     setLevelIndex(nextLevelIndex);
 }
 
-
-void ldAbstractGameVisualizer::onShouldStart()
-{
-    QMutexLocker lock(&m_mutex);
-
-    onGameShow();
-
-    if (m_state != ldGameState::Paused) {
-        onGameReset();
-        m_state = ldGameState::Reset;
-        m_playingState = ldPlayingState::InGame;
-    }
-}
-
-void ldAbstractGameVisualizer::onShouldStop()
-{
-    QMutexLocker lock(&m_mutex);
-
-    if(m_state == ldGameState::Playing && m_playingState == ldPlayingState::InGame) {
-        onGamePause();
-        m_state = ldGameState::Paused;
-    }
-
-    onGameHide();
-
-    m_soundEffects.stopAll();
-}
-
 ldAbstractGameVisualizer::ldGameState ldAbstractGameVisualizer::state() const
 {
     return m_state;
@@ -314,9 +280,71 @@ ldAbstractGameVisualizer::ldPlayingState ldAbstractGameVisualizer::playingState(
     return m_playingState;
 }
 
+
+void ldAbstractGameVisualizer::doReset()
+{
+    bool wasChanged = (m_state != ldGameState::Reset);
+    onGameReset();
+    m_state = ldGameState::Reset;
+    if(wasChanged) emit stateChanged(m_state);
+
+    if(m_playingState != ldPlayingState::InGame) {
+        m_playingState = ldPlayingState::InGame;
+        emit playingStateChanged(m_playingState);
+    }
+}
+
+void ldAbstractGameVisualizer::doPlay()
+{
+    bool wasChanged = (m_state != ldGameState::Playing);
+    onGamePlay();
+    m_state = ldGameState::Playing;
+    if(wasChanged) emit stateChanged(m_state);
+}
+
+void ldAbstractGameVisualizer::doPause()
+{
+    bool wasChanged = (m_state != ldGameState::Paused);
+    onGamePause();
+    m_state = ldGameState::Paused;
+    if(wasChanged) emit stateChanged(m_state);
+}
+
+
+void ldAbstractGameVisualizer::onShouldStart()
+{
+    QMutexLocker lock(&m_mutex);
+
+    onGameShow();
+
+    if (m_state != ldGameState::Paused) {
+        doReset();
+    }
+
+#ifdef LD_CORE_GAMES_ALWAYS_PLAY_STATE
+#endif
+}
+
+void ldAbstractGameVisualizer::onShouldStop()
+{
+    QMutexLocker lock(&m_mutex);
+
+    if(m_state == ldGameState::Playing && m_playingState == ldPlayingState::InGame) {
+        doPause();
+    }
+
+    onGameHide();
+
+    m_soundEffects.stopAll();
+}
+
 void ldAbstractGameVisualizer::setGameOver()
 {
+    if(m_playingState == ldPlayingState::GameOver)
+        return;
+
     m_playingState = ldPlayingState::GameOver;
+    emit playingStateChanged(m_playingState);
 }
 
 void ldAbstractGameVisualizer::draw() {

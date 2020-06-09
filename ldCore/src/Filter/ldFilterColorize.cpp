@@ -20,7 +20,7 @@
 
 #include "ldCore/Filter/ldFilterColorize.h"
 
-#include <math.h>
+#include <cmath>
 
 #include <QtCore/QDebug>
 
@@ -42,7 +42,7 @@ ldFilterColorFade::ldFilterColorFade(bool isProcessMusic)
 {
 }
 
-void ldFilterColorFade::process(Vertex &input) {
+void ldFilterColorFade::process(ldVertex &input) {
     if(m_isProcessMusic) {
         ldMusicManager *m = ldCore::instance()->musicManager();
         offset = 1 - m->hybridAnima->outputTrackPosition;
@@ -91,9 +91,8 @@ ldFilterColorLift::ldFilterColorLift() {
 //    float nde = 0.25f;// nextData[0].effect
 }
 
-void ldFilterColorLift::process(Vertex &input) {
-    bool isBlank = input.color[0] == 0 &&  input.color[1] == 0 && input.color[2] == 0;
-    if(isBlank) {
+void ldFilterColorLift::process(ldVertex &input) {
+    if(input.isBlank()) {
         return;
     }
 
@@ -131,17 +130,13 @@ void ldFilterColorLift::process(Vertex &input) {
     input = t.toVertex();
 }
 
-void ldFilterColorDrop::process(Vertex &input) {
+void ldFilterColorDrop::process(ldVertex &input) {
 
 	LaserPoint t(input);
 	float f = sqrtf(t.x*t.x + t.y*t.y);
 
 	ldMusicManager* mm = ldCore::instance()->musicManager();
 
-	static bool was = false;
-	static bool wait = false;
-	static int old = 0;
-	static int nw = 1;
 	float v = mm->tempoACFaster->phaseSmooth;
 	bool iz = (v > 0.95);
 	if (iz && !was) {
@@ -171,7 +166,17 @@ void ldFilterColorDrop::process(Vertex &input) {
 
 
 
-void FilterColorBlobs::process(Vertex &input) {
+FilterColorBlobs::FilterColorBlobs(int type)
+    : m_type(type)
+{
+    for (int i = 0; i < nblobs; i++)
+        rads[i] = ((float)i)/nblobs * scale;
+    //for (int i = 0; i < nblobs; i++) angs[i] = 1.0f/nblobs;
+    for (int i = 0; i < nblobs; i++)
+        angs[i] = (rand()%360)/360.0f;
+}
+
+void FilterColorBlobs::process(ldVertex &input) {
 
     LaserPoint t(input);
 
@@ -181,27 +186,14 @@ void FilterColorBlobs::process(Vertex &input) {
     float a = atan2f(t.y, t.x)/6.28f;
 
 
-    const int nblobs = 48;
-    const float scale = 6;
     float blobsize = 0.1f/2;
     if (m_type == 1) blobsize /= 1;
     if (m_type == 2) blobsize *= 2;
-    static float rads[nblobs];
-    static float angs[nblobs];
-    static bool didinit = false;
-    if (!didinit) {
-        didinit = true;
-        for (int i = 0; i < nblobs; i++) rads[i] = ((float)i)/nblobs * scale;
-        //for (int i = 0; i < nblobs; i++) angs[i] = 1.0f/nblobs;
-        for (int i = 0; i < nblobs; i++) angs[i] = (rand()%360)/360.0f;
-    }
 
     float ta = 0;
     float tb = 0;
     float tc = 0;
 
-    static float offset = 0;
-    static int fcounter = 0;
     fcounter++;
     if (fcounter >= 100) {
         fcounter = 0;
@@ -270,18 +262,29 @@ void FilterColorBlobs::process(Vertex &input) {
     if (m_type != 2)
     {
         float hh, ss;
-        ldColorUtil::colorRGBtoHSVfloat(input.color[0], input.color[1], input.color[2], hh, ss, vv);
+        ldColorUtil::colorRGBtoHSVfloat(input.r(), input.g(), input.b(), hh, ss, vv);
         hh += (offset/scale);
         hh -= (int) hh;
-        ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, input.color[0], input.color[1], input.color[2]);
+        ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, input.r(), input.g(), input.b());
     }
 
 }
 
+QString FilterColorBlobs::name()
+{
+    if (m_type == 0) return QObject::tr("Color Blobs A");
+    else if (m_type == 1) return QObject::tr("Color Blobs B");
+    else return QObject::tr("Color Blobs C");
+}
+
+bool FilterColorBlobs::isMusicAware() const
+{
+    return (m_type == 2);
+}
 
 
 
-void FilterColorFreq::process(Vertex &input) {
+void FilterColorFreq::process(ldVertex &input) {
 
     LaserPoint t(input);
 
@@ -352,10 +355,10 @@ void FilterColorFreq::process(Vertex &input) {
     if (m_type == 1) {
         float hm = rcost(mm->mrSlowBass->spinOutput4) * 0.33f;
         float hh, ss;
-        ldColorUtil::colorRGBtoHSVfloat(input.color[0], input.color[1], input.color[2], hh, ss, vv);
+        ldColorUtil::colorRGBtoHSVfloat(input.r(), input.g(), input.b(), hh, ss, vv);
         hh += hm;
         hh -= (int) hh;
-        ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, input.color[0], input.color[1], input.color[2]);
+        ldColorUtil::colorHSVtoRGBfloat(hh, ss, vv, input.r(), input.g(), input.b());
     }
 }
 
@@ -369,7 +372,7 @@ ldShimmerFilter::ldShimmerFilter()
 {
 }
 
-void ldShimmerFilter::process(Vertex &input) {
+void ldShimmerFilter::process(ldVertex &input) {
     float hueoffset = 0;
     ldMusicManager* m = ldCore::instance()->musicManager();
     //hueoffset = 1.0f/3.0f * m->tempoACFaster->phaseSmooth;
@@ -382,7 +385,7 @@ void ldShimmerFilter::process(Vertex &input) {
     float str = 1.0f/3.0f * 0.50f;
     //str *= clampf(0.0f+1.0f*m->tempoACSlow->phaseSmooth*4-3, 0, 1);
     hueoffset = 1 + sinf(fc*M_PI*2) * str * m_colors;
-    ldColorUtil::hueShift(input.color[0], input.color[1], input.color[2], hueoffset);
+    ldColorUtil::hueShift(input.b(), input.g(), input.b(), hueoffset);
 }
 
 
@@ -396,23 +399,16 @@ static void clamp01p(float &f) {f = clampf(f, 0, 1);}
 static float rand01() {return (float(rand()))/RAND_MAX;}
 static int randi(int n) {return rand()%n;}
 
-FramePulse::FramePulse(float _freq, float _value) {freq = _freq; value = _value; tick = true; first = true;}
-void FramePulse::start(float _freq, float _value) {freq = _freq; value = _value; tick = true; first = true;}
-void FramePulse::update(float delta) {
-    value += freq*delta;
-    tick = false;
-    if (gate || (gatemax > 0 && value >= gatemax)) if (value > 1) {value -= floorf(value); tick = true;}
-    if (first) {first = false; tick = true;}
-}
 
 FilterColorScroll::FilterColorScroll(int type) {m_type = type;}
-void FilterColorScroll::process(Vertex &input) {
+void FilterColorScroll::process(ldVertex &input) {
 
     LaserPoint t(input);
     ldMusicManager* mm = ldCore::instance()->musicManager();
     float gfreq = 1.0f/30000.0f;
     float h, s, v;
-    ldColorUtil::rgb2hsv(input.color[0], input.color[1], input.color[2], h, s, v);
+    ldColorUtil::rgb2hsv(input.r(), input.g(), input.b(), h, s, v);
+    float oldv = v, olds = s;
 
     float spd = 1;//mm->mrSlowBass->output;
     float spd2 = 1;//mm->mrSlowBass->output;
@@ -494,13 +490,88 @@ void FilterColorScroll::process(Vertex &input) {
     s = 1-dx*dx*beat;
     h += rcost(cscroll)*0.4f-0.2f;
     if (!fixedhue) h += hscroll;
-    h += 1; h -= (int)h;
+    h += 1; h -= int(h);
+
+    if (m_type == 3) {
+        ldMusicManager& m = *ldCore::instance()->musicManager();
+        float bps = ldFilterMath::normalizeToBPM(25, m.bestBpm()) / 60.0f;
+        //if (fp.tick || (fp.value < (1.0f/16.0f))) fp.freq = bps/32;
+        pulse4.freq = bps/32;
+        pulse4.update(1.0f/30000.0f);
+
+        float x = input.x(), y = input.y();
+        float wfreq = 0.50f;
+        float wangle = -pulse4.value*16;//rcost(pulse4.value*2)*3;
+        float rad = 2.6f;
+        float angle = pulse4.value*3;
+        float ripple = ldFilterMath::rippleEffect(x, y, wfreq, wangle, rad, angle);
+        //ripple2 = clamp01(ripple2*ripple2*3-2.0f)*0.75f;
+        //ripple2 = clamp01(ripple2*ripple2*2-1.0f)*0.50f;
+        ripple = clamp01(ripple*ripple*2-1.0f)*0.66f;
+        
+        h = ripple;
+        h = cycle01(ripple + pulse4.value*9);
+        s = clamp01(olds + 1 - ripple*2/0.66f);
+        v = oldv;// * ripple;
+
+        ldColorUtil::hsv2rgb(h, s, v, input.r(), input.g(), input.b());
+        return;
+
+    }
 
     input = t.toVertex();
-    ldColorUtil::hsv2rgb(h, s, v, input.color[0], input.color[1], input.color[2]);
+    ldColorUtil::hsv2rgb(h, s, v, input.r(), input.g(), input.b());
     return;
 
 }
+
+QString FilterColorScroll::name()
+{
+    if (m_type == 2)
+        return QObject::tr("Colorize Scroll C");
+
+    if (m_type == 1)
+        return QObject::tr("Colorize Scroll B");
+
+    return QObject::tr("Colorize Scroll A");
+}
+
+
+FilterColorRainbeam::FilterColorRainbeam(int type) {m_type = type;}
+void FilterColorRainbeam::process(ldVertex &input) {
+
+    //    float freq = 1.0f/30000.0f;
+    float h, s, v;
+    ldColorUtil::rgb2hsv(input.r(), input.g(), input.b(), h, s, v);
+    float oldv = v, olds = s;
+
+    ldMusicManager& m = *ldCore::instance()->musicManager();
+    float bps = ldFilterMath::normalizeToBPM(25, m.bestBpm()) / 60.0f;
+    //if (fp.tick || (fp.value < (1.0f/16.0f))) fp.freq = bps/32;
+    fp.freq = bps/32;
+    fp.update(1.0f/30000.0f);
+
+    float x = input.x(), y = input.y();
+    float wfreq = 0.50f;
+    float wangle = -fp.value*16;//rcost(pulse4.value*2)*3;
+    float rad = 2.6f;
+    float angle = fp.value*3;
+    float ripple = ldFilterMath::rippleEffect(x, y, wfreq, wangle, rad, angle);
+    float ripple2 = clamp01(ripple*ripple*1.5f-0.75f)*0.66f;
+
+    h = ripple;
+    h = cycle01(ripple2 + fp.value*6);
+    s = clamp01(olds - 1 + ripple*2);
+    float vf = 1;
+    //vf = rcostc(fp.value*4);
+    //vf = (1-vf)*1 + (0+vf)*ripple;
+    v = oldv * vf;
+
+    ldColorUtil::hsv2rgb(h, s, v, input.r(), input.g(), input.b());
+    return;
+
+}
+
 
 ColorPanelCanvas::ColorPanelCanvas() {init();}
 void ColorPanelCanvas::init() {
@@ -652,7 +723,7 @@ float ColorPanelCanvas::getfSmooth(float x, float y) {
 
 
 FilterColorPanels::FilterColorPanels(bool alt) {m_alt = alt;}
-void FilterColorPanels::process(Vertex &input) {
+void FilterColorPanels::process(ldVertex &input) {
 
     LaserPoint t(input);
     ldMusicManager* mm = ldCore::instance()->musicManager();
@@ -698,7 +769,7 @@ void FilterColorPanels::process(Vertex &input) {
 
 
     float h, s, v;
-    ldColorUtil::rgb2hsv(input.color[0], input.color[1], input.color[2], h, s, v);
+    ldColorUtil::rgb2hsv(input.r(), input.g(), input.b(), h, s, v);
 
     if (pulse1.tick) {
         panel.drop();
@@ -719,18 +790,18 @@ void FilterColorPanels::process(Vertex &input) {
         s = 1;
         //v = tv;
         input = t.toVertex();
-        ldColorUtil::hsv2rgb(h, s, v, input.color[0], input.color[1], input.color[2]);
+        ldColorUtil::hsv2rgb(h, s, v, input.r(), input.g(), input.b());
         return;
     }
 
 }
 
 FilterColorGlass::FilterColorGlass(bool alt) {m_alt = alt;}
-void FilterColorGlass::process(Vertex &input) {
+void FilterColorGlass::process(ldVertex &input) {
 
     LaserPoint t(input);
     float h, s, v;
-    ldColorUtil::rgb2hsv(input.color[0], input.color[1], input.color[2], h, s, v);
+    ldColorUtil::rgb2hsv(input.r(), input.g(), input.b(), h, s, v);
     ldMusicManager* mm = ldCore::instance()->musicManager();
 
     float gfreq = 1.0f/30000.0f;
@@ -809,7 +880,7 @@ void FilterColorGlass::process(Vertex &input) {
     }
 
     //input = t.toVertex();
-    ldColorUtil::hsv2rgb(h, s, v, input.color[0], input.color[1], input.color[2]);
+    ldColorUtil::hsv2rgb(h, s, v, input.r(), input.g(), input.b());
     return;
 }
 
@@ -987,7 +1058,7 @@ FilterColorAura::FilterColorAura(bool alt) {
     fc6.start(0.5f/30000.0f, 0.5f);
 }
 
-void FilterColorAura::process(Vertex &input) {
+void FilterColorAura::process(ldVertex &input) {
 
     ldMusicManager* mm = ldCore::instance()->musicManager();
 
@@ -1006,7 +1077,7 @@ void FilterColorAura::process(Vertex &input) {
 
     LaserPoint t(input);
     float h, s, v;
-    ldColorUtil::rgb2hsv(input.color[0], input.color[1], input.color[2], h, s, v);
+    ldColorUtil::rgb2hsv(input.r(), input.g(), input.b(), h, s, v);
 
     float mag = 0;
 
@@ -1045,20 +1116,20 @@ void FilterColorAura::process(Vertex &input) {
     ColorMapBPSW cmap;
 
     cmap.v = 1;
-    cmap.getRGB(mag*v, input.color[0], input.color[1], input.color[2]);
+    cmap.getRGB(mag*v, input.r(), input.g(), input.b());
     cmap.v = v;
 
     if (!m_alt) {
         cmap.hue6 = 5;
         cmap.v = v;
         float mag2 = clampf(mag*0.7f+0.3f, 0.3f, 1);
-        cmap.getRGB(mag2, input.color[0], input.color[1], input.color[2]);
+        cmap.getRGB(mag2, input.r(), input.g(), input.b());
     } else {
         if (fc6.tick) huecount = (huecount + 1) % 6;
         cmap.hue6 = huecount;
         cmap.v = 1;
         float mag2 = clampf(mag*0.66f, 0.0f, 0.66f);
-        cmap.getRGB(mag2*v, input.color[0], input.color[1], input.color[2]);
+        cmap.getRGB(mag2*v, input.r(), input.g(), input.b());
     }
     return;
 
@@ -1075,7 +1146,7 @@ FilterColorAcid::FilterColorAcid(bool alt) {
     fc5.start(fy/30000.0f, 0.5f);
     fc6.start(0.66f/30000.0f, 0.5f);
 }
-void FilterColorAcid::process(Vertex &input) {
+void FilterColorAcid::process(ldVertex &input) {
 
     ldMusicManager* mm = ldCore::instance()->musicManager();
 
@@ -1094,7 +1165,7 @@ void FilterColorAcid::process(Vertex &input) {
 
     LaserPoint t(input);
     float h, s, v;
-    ldColorUtil::rgb2hsv(input.color[0], input.color[1], input.color[2], h, s, v);
+    ldColorUtil::rgb2hsv(input.r(), input.g(), input.b(), h, s, v);
     float xx = (t.x+1)/2;
     float yy = (t.y+1)/2;
 
@@ -1141,7 +1212,7 @@ void FilterColorAcid::process(Vertex &input) {
     h += 0.66f;
     h -= floorf(h);
     s = 1;
-    ldColorUtil::hsv2rgb(h, s, v, input.color[0], input.color[1], input.color[2]);
+    ldColorUtil::hsv2rgb(h, s, v, input.r(), input.g(), input.b());
 
     ColorMapHSVGradient cg;
     cg.h2 = 1;//0.6667f;
@@ -1150,14 +1221,14 @@ void FilterColorAcid::process(Vertex &input) {
     cg.h1 = 0;//0.9999f;
     cg.s2 = 1;
     cg.v2 = v;
-    cg.getRGB(clampf(ff*1.5f-0.25f,0,1)*1, input.color[0], input.color[1], input.color[2]);
+    cg.getRGB(clampf(ff*1.5f-0.25f,0,1)*1, input.r(), input.g(), input.b());
 
     if (m_alt) {
         ColorMapBPSW cm;
         if (fc6.tick) huecount = (huecount + 1) % 6;
         cm.hue6 = huecount;
         cm.v = 1;
-        cm.getRGB(clampf(ff*1.5f-0.25f,0.15f,1)*v, input.color[0], input.color[1], input.color[2]);
+        cm.getRGB(clampf(ff*1.5f-0.25f,0.15f,1)*v, input.r(), input.g(), input.b());
     }
     return;
 }
@@ -1180,7 +1251,7 @@ FilterColorLava::FilterColorLava(bool alt) {
 //    fc5.start(fy/30000.0f, 0.5f);
 //    fc6.start(0.5f/30000.0f, 0.5f);
 }
-void FilterColorLava::process(Vertex &input) {
+void FilterColorLava::process(ldVertex &input) {
 //    ldMusicManager* mm = ldCore::instance()->musicManager();
 
 //    fc6.gate = mm->mrFastBass->walkerClickOutput;
@@ -1200,7 +1271,7 @@ void FilterColorLava::process(Vertex &input) {
 
     LaserPoint t(input);    if (m_alt) {t.y *= -1;}
     float h, s, v;
-    ldColorUtil::rgb2hsv(input.color[0], input.color[1], input.color[2], h, s, v);
+    ldColorUtil::rgb2hsv(input.r(), input.g(), input.b(), h, s, v);
 
 
     float mag = 0;
@@ -1246,16 +1317,16 @@ void FilterColorLava::process(Vertex &input) {
     cg.hue6 = !m_alt?0:1;
     cg.v = !m_alt?1:v;
     mag *= !m_alt?v:1;
-    cg.getRGB(mag, input.color[0], input.color[1], input.color[2]);
+    cg.getRGB(mag, input.r(), input.g(), input.b());
     return;
 
 }
 
 FilterColorVolt::FilterColorVolt(bool alt) {m_alt = alt;}
-void FilterColorVolt::process(Vertex &input) {
+void FilterColorVolt::process(ldVertex &input) {
     ldMusicManager* mm = ldCore::instance()->musicManager();
     float h, s, v;
-    ldColorUtil::rgb2hsv(input.color[0], input.color[1], input.color[2], h, s, v);
+    ldColorUtil::rgb2hsv(input.r(), input.g(), input.b(), h, s, v);
     if (!m_alt) {
         if (v < 0.01f) return;
         if (s < 0.01f) return;
@@ -1265,10 +1336,10 @@ void FilterColorVolt::process(Vertex &input) {
         cm.hue6 = ih6;
         float f = v*0.66f * (1 + (1-s)*1.0f);
         clamp01p(f);
-        cm.getRGB(f, input.color[0], input.color[1], input.color[2]);
+        cm.getRGB(f, input.r(), input.g(), input.b());
     } else {
         h = clampf(v*0.5f*(1+mm->mrSlowBass->output), 0, 0.8333f);
         s = 1;
-        ldColorUtil::hsv2rgb(h, s, v, input.color[0], input.color[1], input.color[2]);
+        ldColorUtil::hsv2rgb(h, s, v, input.r(), input.g(), input.b());
     }
 }

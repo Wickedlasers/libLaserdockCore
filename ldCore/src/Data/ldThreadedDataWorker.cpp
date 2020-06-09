@@ -38,7 +38,7 @@
 
 
 namespace  {
-const int SAMPLES_PER_PACKET = ldHardware::REMOTE_MAX_BUFFER;
+const uint SAMPLES_PER_PACKET = ldHardware::REMOTE_MAX_BUFFER;
 const int REMOTE_BUFFER_CUTOFF = 512;
 const int WAIT_CONNECT_SLEEP_MS = 12;
 const int WAIT_BUFFER_SLEEP_MS = 6;
@@ -67,26 +67,19 @@ void ldThreadedDataWorker::startProcess() {
 }
 
 void ldThreadedDataWorker::stopProcess() {
-    QMutexLocker locker(&m_runningMutex);
     m_isRunning = false;
 }
 
 void ldThreadedDataWorker::run()
 {
     // buffers
-    std::vector<Vertex> vertexVec(SAMPLES_PER_PACKET);
-    std::vector<CompressedSample> compressedSampleVec(SAMPLES_PER_PACKET);
+    std::vector<ldVertex> vertexVec(SAMPLES_PER_PACKET);
 
     m_simulatedBufferFullCount = 0;
     m_simTimer.start();
 
     while (true) {
-
-        QMutexLocker locker(&m_runningMutex);
-        QCoreApplication::processEvents(); // do we need this line here?
         if (!m_isRunning) break;
-        locker.unlock();
-
 
         // check remote buffer status and take appropriate action
         // (eg fill local buffer, send to device, or sleep)
@@ -107,7 +100,7 @@ void ldThreadedDataWorker::run()
             if (elapsed > 500) elapsed = 500;
             const int simulatedDeviceSamplesPerSec = 30000;
             if (elapsed > 0) {
-                int points = (simulatedDeviceSamplesPerSec/1000) * elapsed;
+                int points = static_cast<int> ((simulatedDeviceSamplesPerSec/1000) * elapsed);
                 m_simulatedBufferFullCount -= points;
                 if (m_simulatedBufferFullCount < 0) {
                     // note - simulates buffer underrun
@@ -131,13 +124,15 @@ void ldThreadedDataWorker::run()
         // everything is ok, process buffer flow
         } else {
             // count local
-            qint32 localBuffer = m_frameBuffer->getAvailable();
+            uint localBuffer = m_frameBuffer->getAvailable();
 
             // send
             if (localBuffer > 0) {
 
                 // try to divide into evenly sized pieces if we're over the size limit
-                int samples_to_send = localBuffer;
+                // NOTE: probably not necessary since later it is checked for available remote buffer
+                // but can be useful for smooth data sending
+                uint samples_to_send = localBuffer;
                 if (samples_to_send > SAMPLES_PER_PACKET*2)
                     samples_to_send /= 3;
                 if (samples_to_send > SAMPLES_PER_PACKET)
@@ -145,28 +140,33 @@ void ldThreadedDataWorker::run()
                 if (samples_to_send > SAMPLES_PER_PACKET)
                     samples_to_send = SAMPLES_PER_PACKET;
 
-                Vertex *simulatorBuffer = isSimulatorActive ? vertexVec.data() : nullptr;
-                unsigned int actualSamplesToSend = m_frameBuffer->get(simulatorBuffer, *compressedSampleVec.data(), samples_to_send);
+                // check for case when samples to send is more than availalbe remote buffer
+                Q_ASSERT(remoteBuffer >= 0);
+                uint availableRemoteBuffer = ldHardware::REMOTE_MAX_BUFFER - static_cast<uint>(remoteBuffer);
+                if(samples_to_send > availableRemoteBuffer)
+                    samples_to_send = availableRemoteBuffer;
+
+                ldVertex *simulatorBuffer = isSimulatorActive ? vertexVec.data() : nullptr;
+                uint exhaustedIndex = m_frameBuffer->getExhuastedIndex();
+                uint actualSamplesToSend = m_frameBuffer->get(simulatorBuffer, samples_to_send);
                 if (actualSamplesToSend > 0) {
                     // send
-                    if (m_isActive) m_usbDeviceManager->sendData(compressedSampleVec.data(), actualSamplesToSend);
+                    if (m_isActive) m_usbDeviceManager->sendData(exhaustedIndex, actualSamplesToSend);
                     if (simulatorBuffer) m_simulatorEngine->pushVertexData(simulatorBuffer, actualSamplesToSend);
-                    if (isSimulatorOnlyMode) {
-                        //qDebug() << "3434asdf" << simulatedBufferFullCount << ", " << actual;
-                        m_simulatedBufferFullCount += actualSamplesToSend;
-                    }
+                    if (isSimulatorOnlyMode) m_simulatedBufferFullCount += actualSamplesToSend;
+
                     localBuffer -= actualSamplesToSend;
                 }
 //                qDebug() << "remote buffer size is " << remoteBuffer << "\t" << localBuffer << "\t" << actual;
             }
 
             // refill if needed
-            if(localBuffer <= 0)
+            if(localBuffer == 0)
                 m_frameBuffer->reset();
         }
     }
-//    qDebug() << "ThreadedDataWorker2: End of loop";
     // end of loop
+//    qDebug() << "ldThreadedDataWorker: End of loop";
 }
 
 bool ldThreadedDataWorker::isActiveTransfer() const
