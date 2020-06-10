@@ -5,18 +5,18 @@ Windows/Mac/Linux: [![Build status](https://ci.appveyor.com/api/projects/status/
 
 # Supported platforms
 
-Windows (msvc2017 x86)
+Windows (msvc2019 x86)
 <br>
 macOS (clang)
 <br>
-android (ndk r20 + the latest sdk, arm64/armv7 supported)
+android (ndk r21 + the latest sdk, arm64/armv7 supported)
 <br>
 Linux (tested on Ubuntu 18.04)
 
 # Prepare to development
 
 1) Download Qt Online installer from https://www.qt.io/download-qt-installer
-2) Run installer and install Qt for mac/windows (the latest version is recommended, library was tested on 5.13)
+2) Run installer and install Qt for mac/windows (the latest version is recommended, library was tested on 5.15, 5.14 is minimal)
 3) Download the latest stable cmake if you don't have it already https://cmake.org/download/ Minimum cmake version is 3.11
 
 ### Qt Creator:
@@ -34,15 +34,15 @@ Linux (tested on Ubuntu 18.04)
 ### Visual Studio:
 
 1) copy dist.local.cmake and rename it to local.cmake
-2) Open local.cmake and set the path QT_BASE_DIR to your local Qt installation directory, e.g d:\Dev\Qt\5.13.0\
-3) Open x86 "Native tools command prompt for VS 2017" and go to libLaserdockCore dir
+2) Open local.cmake and set the path QT_BASE_DIR to your local Qt installation directory, e.g d:\Dev\Qt\5.15.0\
+3) Open "x86 Native tools command prompt for VS 2019" and go to libLaserdockCore dir
 4) mkdir build
 5) cd build
-6) cmake -G "Visual Studio 15 2017"  ..
+6) cmake -G "Visual Studio 16 2019"  ..
 
 Instead of step 1-2 you can set QTDIR manually by passing it to cmake on this step:
 <br>
-cmake -G "Visual Studio 15 2017" -DQTDIR="d:\Dev\Qt\5.13.0\msvc2017" ..
+cmake -G "Visual Studio 16 2019" -DQTDIR="d:\Dev\Qt\5.15.0\msvc2019" ..
 
 7) Build & run
 
