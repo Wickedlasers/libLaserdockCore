@@ -53,6 +53,7 @@ set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # load local
 include(local.cmake OPTIONAL)
 
+include(DetectLinux)
 include(DetectQt)
 include(SetupAndroidToolchain)
 
