@@ -32,10 +32,10 @@ for:
     only:
       - image: Ubuntu1804
   install:
-  - sudo add-apt-repository -y ppa:beineri/opt-qt-5.12.6-bionic # 5.12 here because there is no ppa for 5.13 for 18.04
+  - sudo add-apt-repository -y ppa:beineri/opt-qt-5.14.2-bionic # 5.14 here because there is no ppa for 5.15 for 18.04
   - sudo apt-get update
-  - sudo apt-get install -y qt512-meta-full libgl-dev
+  - sudo apt-get install -y qt514-meta-full libgl-dev
   build_script:
   - mkdir build && cd build
-  - cmake .. -DQTDIR="/opt/qt512"
+  - cmake .. -DQTDIR="/opt/qt514"
   - cmake --build . -- -j4
