@@ -15,7 +15,7 @@ for:
   build_script:
   - set CL=/MP # parallel build
   - mkdir build && cd build
-  - cmake .. -G "Visual Studio 15 2017" -A Win32 -DQTDIR="C:\Qt\5.14.2\msvc2017"
+  - cmake .. -G "Visual Studio 16 2019" -A Win32 -DQTDIR="C:\Qt\5.14.2\msvc2017"
   - cmake --build . --config Release
 -
   matrix:
