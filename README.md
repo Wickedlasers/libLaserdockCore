@@ -1,5 +1,5 @@
 # libLaserdockCore
-cmake repository for laserdock library
+cmake repository for laserdock library with WiFi Cube Support
 
 Windows/Mac/Linux: [![Build status](https://ci.appveyor.com/api/projects/status/mdaio12e06dyvjh9/branch/master?svg=true)](https://ci.appveyor.com/project/sergeywl/liblaserdockcore/branch/master)
 
