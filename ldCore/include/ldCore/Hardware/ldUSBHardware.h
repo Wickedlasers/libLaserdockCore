@@ -44,7 +44,7 @@ public:
 
         std::string serial_number;
 
-#ifdef LD_CORE_ENABLE_LASERDOCKLIB
+#ifdef LASERDOCKLIB_USB_SUPPORT
         LaserdockDevice *device = NULL;
 #endif
     };

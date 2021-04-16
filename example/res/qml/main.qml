@@ -18,6 +18,16 @@ Item {
             anchors.fill: parent
 
             RowLayout {
+                Switch {
+                    id:networkswitch
+                    focusPolicy: Qt.NoFocus
+                    text: qsTr("<font color='#fefefe'>WiFi")
+                    checked: ldCore.dataDispatcher.isNetwork
+                    onCheckedChanged: ldCore.dataDispatcher.isNetwork = networkswitch.checked
+                    }
+
+                Binding { target: ldCore.dataDispatcher; property: "isNetwork"; value: networkswitch.checked }
+
                 Button {
                     focusPolicy: Qt.NoFocus
                     enabled: ldCore.laserController.connectedDevices > 0

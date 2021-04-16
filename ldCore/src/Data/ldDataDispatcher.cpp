@@ -25,27 +25,55 @@
 
 #include "ldCore/ldCore.h"
 #include "ldCore/Data/ldAbstractDataWorker.h"
-#include "ldCore/Data/ldUsbDataWorker.h"
+#include "ldCore/Data/ldBufferManager.h"
+#include "ldCore/Data/ldHardwareDataWorker.h"
 #include "ldCore/Hardware/ldHardware.h"
 #include "ldCore/Hardware/ldHardwareManager.h"
+#include "ldCore/Hardware/ldNetworkHardwareManager.h"
+#include "ldCore/Settings/ldSettings.h"
 #include "ldCore/Simulator/ldSimulatorEngine.h"
 
-#include "ldCore/Data/ldBufferManager.h"
+#ifdef LASERDOCKLIB_USB_SUPPORT
+#include "ldCore/Hardware/ldUSBHardwareManager.h"
+#endif
 
-ldDataDispatcher::ldDataDispatcher(ldBufferManager *bufferManager, ldHardwareManager *hardwareManager, QObject *parent)
-  : QObject(parent)
-  , m_simulatorEngine(new ldSimulatorEngine())
-  , m_usbDataWorker(new ldUsbDataWorker(bufferManager, hardwareManager, m_simulatorEngine.get()))
-  , m_additionalDataWorker(nullptr)
+ldDataDispatcher::ldDataDispatcher(ldBufferManager *bufferManager, ldHardwareManager *hardwareManager, ldFilterManager* filterManager, QObject *parent)
+    : ldPropertyObject(parent)
+#ifdef LASERDOCKLIB_USB_SUPPORT
+    , m_isNetwork(false)
+#endif
+    , m_simulatorEngine(new ldSimulatorEngine())
+#ifdef LASERDOCKLIB_USB_SUPPORT
+    , m_usbDataWorker(new ldHardwareDataWorker(bufferManager, hardwareManager, new ldUsbHardwareManager(filterManager, this), m_simulatorEngine.get()))
+#endif
+    , m_networkDataWorker(new ldHardwareDataWorker(bufferManager,
+                                                   hardwareManager,
+                                                   new ldNetworkHardwareManager(filterManager/*, this*/), // FIXME can't have a parent if we are moving to a worker thread.
+                                                   m_simulatorEngine.get()))
+#ifdef LASERDOCKLIB_USB_SUPPORT
+    , m_activeDataWorker( (m_isNetwork) ? m_networkDataWorker.get() : m_usbDataWorker.get())
+#else
+    , m_activeDataWorker(m_networkDataWorker.get())
+#endif
 {
     qDebug() << __FUNCTION__;
 
-    connect(m_usbDataWorker.get(), &ldUsbDataWorker::isActiveTransferChanged, this, [&]() {
-        emit activeChanged(
-                    (m_additionalDataWorker && m_additionalDataWorker->isActiveTransfer())
-                    || m_usbDataWorker->isActiveTransfer()
-                    );
+#ifdef LASERDOCKLIB_USB_SUPPORT
+    connect(this, &ldDataDispatcher::isNetworkChanged, this, &ldDataDispatcher::onIsNetworkChanged);
+
+    connect(m_usbDataWorker.get(), &ldHardwareDataWorker::isActiveTransferChanged, this, [&]() {
+        emit activeChanged(m_networkDataWorker->isActiveTransfer() || m_usbDataWorker->isActiveTransfer());
     });
+#endif
+
+    connect(m_networkDataWorker.get(), &ldAbstractDataWorker::isActiveTransferChanged, this, [&]() {
+        emit activeChanged(m_networkDataWorker->isActiveTransfer()
+#ifdef LASERDOCKLIB_USB_SUPPORT
+                           || m_usbDataWorker->isActiveTransfer()
+#endif
+                           );
+    });
+
 
     // auto stop when hardware connects
     connect(hardwareManager, &ldHardwareManager::deviceCountChanged, this, [&](uint count) {
@@ -54,7 +82,11 @@ ldDataDispatcher::ldDataDispatcher(ldBufferManager *bufferManager, ldHardwareMan
         }
     });
 
-    m_usbDataWorker->setActive(true);
+    m_activeDataWorker->setActive(true);
+
+#ifdef LASERDOCKLIB_USB_SUPPORT
+    set_isNetwork(ldSettings()->value("dataDispatcher/isNetwork", m_isNetwork).toBool());
+#endif
 }
 
 ldDataDispatcher::~ldDataDispatcher()
@@ -64,30 +96,20 @@ ldDataDispatcher::~ldDataDispatcher()
 
 bool ldDataDispatcher::isActiveTransfer() const
 {
-    return m_usbDataWorker->isActiveTransfer()
-            || (m_additionalDataWorker && m_additionalDataWorker->isActiveTransfer())
+    return
+#ifdef LASERDOCKLIB_USB_SUPPORT
+        m_usbDataWorker->isActiveTransfer() ||
+#endif
+            m_networkDataWorker->isActiveTransfer()
             ;
 }
 
-void ldDataDispatcher::setAdditionalDataWorker(ldAbstractDataWorker *dataWorker)
+#ifdef LASERDOCKLIB_USB_SUPPORT
+ldUsbHardwareManager *ldDataDispatcher::usbDataManager() const
 {
-    if(m_additionalDataWorker) {
-        disconnect(m_additionalDataWorker, 0, this, 0);
-    }
-
-    m_additionalDataWorker = dataWorker;
-
-    if(m_additionalDataWorker) {
-        connect(m_additionalDataWorker, &ldAbstractDataWorker::isActiveTransferChanged, this, [&]() {
-            emit activeChanged(m_additionalDataWorker->isActiveTransfer() || m_usbDataWorker->isActiveTransfer());
-        });
-    }
+    return static_cast<ldUsbHardwareManager*>(m_usbDataWorker->deviceManager());
 }
-
-ldUsbDataWorker *ldDataDispatcher::usbDataWorker() const
-{
-    return m_usbDataWorker.get();
-}
+#endif
 
 ldSimulatorEngine *ldDataDispatcher::simulatorEngine() const
 {
@@ -96,26 +118,24 @@ ldSimulatorEngine *ldDataDispatcher::simulatorEngine() const
 
 void ldDataDispatcher::setActiveTransfer(bool active)
 {
-    // manage worker state to have nice output
-    if(m_additionalDataWorker) {
-        if(active) {
-            if(m_additionalDataWorker->hasActiveDevices()) {
-                m_additionalDataWorker->setActive(true);
-                // disable simulator output in USB worker because additional worker provide it already and it is preferrable option
-                m_usbDataWorker->setSimulatorEnabled(false);
-            }
-        } else {
-            // disable additional worker
-            m_additionalDataWorker->setActive(false);
-            // activate default usb stub
-            m_usbDataWorker->setActive(true);
-            m_usbDataWorker->setSimulatorEnabled(true);
-        }
-
-        m_additionalDataWorker->setActiveTransfer(active);
-    }
-
-    // ok, proceed transfer
-    m_usbDataWorker->setActiveTransfer(active);
+    m_activeDataWorker->setActiveTransfer(active);
 }
+
+#ifdef LASERDOCKLIB_USB_SUPPORT
+void ldDataDispatcher::onIsNetworkChanged(bool isNetwork)
+{
+    qDebug() << "change isNetwork to: " << isNetwork;
+    m_activeDataWorker->setActiveTransfer(false);
+    m_activeDataWorker->setActive(false);
+    m_activeDataWorker->setSimulatorEnabled(false);
+
+    m_activeDataWorker = isNetwork ? m_networkDataWorker.get() : m_usbDataWorker.get();
+
+
+    m_activeDataWorker->setActive(true);
+    m_activeDataWorker->setSimulatorEnabled(true);
+
+    ldSettings()->setValue("dataDispatcher/isNetwork", isNetwork);
+}
+#endif
 

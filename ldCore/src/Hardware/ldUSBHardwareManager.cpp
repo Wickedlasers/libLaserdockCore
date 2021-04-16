@@ -22,7 +22,7 @@
 
 #include <QtCore/QtDebug>
 
-#ifdef LD_CORE_ENABLE_LASERDOCKLIB
+#ifdef LASERDOCKLIB_USB_SUPPORT
 #include <laserdocklib/LaserdockDevice.h>
 #include <laserdocklib/LaserdockDeviceManager.h>
 #include <laserdocklib/LaserdockSample.h>
@@ -38,8 +38,17 @@ ldUsbHardwareManager::ldUsbHardwareManager(ldFilterManager *filterManager, QObje
     connect(this, &ldUsbHardwareManager::deviceCountChanged, this, &ldUsbHardwareManager::updateCheckTimerState);
     connect(&m_checkTimer, &QTimer::timeout, this, &ldUsbHardwareManager::usbDeviceCheck);
     m_checkTimer.setInterval(1000);
-
     updateCheckTimerState();
+
+    connect(this,&ldUsbHardwareManager::isActiveChanged,this,[&](){
+        if (get_isActive()) {
+            //qDebug() << "ldUsbHardwareManager::isActive = Yes";
+            updateCheckTimerState();
+        } else {
+            //qDebug() << "ldUsbHardwareManager::isActive = No";
+            QTimer::singleShot(0, &m_checkTimer, &QTimer::stop);
+        }
+    });
 }
 
 ldUsbHardwareManager::~ldUsbHardwareManager()
@@ -172,15 +181,19 @@ void ldUsbHardwareManager::setAuthenticateFunc(ldAuthenticateCallbackFunc authen
     m_authenticateCb = authenticateFunc;
 }
 
-
 void ldUsbHardwareManager::usbDeviceCheck()
 {
     QMutexLocker locker(&m_mutex);
 
-//    qDebug() << __FUNCTION__;
+    if (get_isActive()==false) return;
 
-#ifdef LD_CORE_ENABLE_LASERDOCKLIB
+    //qDebug() << "Hello";
+    //qDebug() << __FUNCTION__;
+
+#ifdef LASERDOCKLIB_USB_SUPPORT
     uint oldDeviceCount = m_usbHardwares.size();
+
+    //qDebug() << "devices:" << oldDeviceCount;
     // check for disconnected devices
     auto usbHardwareIt = m_usbHardwares.begin();
     while(usbHardwareIt != m_usbHardwares.end()) {
@@ -208,13 +221,17 @@ void ldUsbHardwareManager::usbDeviceCheck()
         }
     }
 
+
     std::vector<LaserdockDevice*> existingDevices;
     for(const std::unique_ptr<ldUSBHardware> &hardware : m_usbHardwares) {
         existingDevices.push_back(hardware->params().device);
     }
 
+
+
     // check for new devices
     std::vector<std::unique_ptr<LaserdockDevice> > newDevices = LaserdockDeviceManager::getInstance().get_laserdock_devices(existingDevices);
+
     for(std::unique_ptr<LaserdockDevice> &newDevice : newDevices) {
         // initialize device
         std::unique_ptr<ldUSBHardware> usbHardware(new ldUSBHardware(newDevice.release()));

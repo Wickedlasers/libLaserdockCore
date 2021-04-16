@@ -29,6 +29,8 @@
 #include "ldCore/Filter/ldFilterManager.h"
 #include <ldCore/Games/ldAbstractGame.h>
 #include "ldCore/Hardware/ldHardwareManager.h"
+#include "ldCore/Hardware/ldNetworkHardwareManager.h"
+#include "ldCore/Hardware/ldUSBHardwareManager.h"
 #include "ldCore/Helpers/Maths/ldVec2.h"
 #include "ldCore/Helpers/Text/ldSvgFontManager.h"
 #include "ldCore/Helpers/ldLaserController.h"
@@ -134,6 +136,7 @@ ldCore::~ldCore()
     qDebug() << "ldCore destroyed";
 }
 
+
 /*!
     \brief Instantiates member components and set up signals/slot connections.
 
@@ -154,7 +157,8 @@ void ldCore::initialize()
     m_bufferManager = new ldBufferManager(this);
 
     m_hardwareManager = new ldHardwareManager(m_filterManager, this);
-    m_dataDispatcher = new ldDataDispatcher(m_bufferManager, m_hardwareManager, this);
+
+    update_dataDispatcher(new ldDataDispatcher(m_bufferManager, m_hardwareManager, m_filterManager, this));
 
     // create and load task
     m_taskManager = new ldTaskManager(m_bufferManager, this);
@@ -206,11 +210,6 @@ ldAudioDecoder *ldCore::audioDecoder() const
     return m_audioDecoder;
 }
 
-ldDataDispatcher *ldCore::dataDispatcher() const
-{
-    return m_dataDispatcher;
-}
-
 ldBufferManager *ldCore::bufferManager() const
 {
     return m_bufferManager;
@@ -253,9 +252,11 @@ ldTaskManager *ldCore::taskManager() const
 
 ldCore::ldCore(QObject *parent)
     : QObject(parent)
+    , m_dataDispatcher(nullptr)
     , m_laserController(nullptr)
 {
 #ifdef LD_CORE_ENABLE_QT_QUICK
+    qmlRegisterAnonymousType<ldDataDispatcher>("WickedLasers", 1);
     qmlRegisterAnonymousType<ldLaserController>("WickedLasers", 1);
 #endif
 

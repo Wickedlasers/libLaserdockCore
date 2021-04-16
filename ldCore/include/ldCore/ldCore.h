@@ -47,6 +47,8 @@ class LDCORESHARED_EXPORT ldCore : public QObject
 {
     Q_OBJECT
 
+    QML_READONLY_PROPERTY(ldDataDispatcher*, dataDispatcher)
+
     /** Helper high-level class for easier laser control */
     QML_READONLY_PROPERTY(ldLaserController*, laserController)
 
@@ -74,7 +76,6 @@ public:
 
     /** Managers/accessors*/
     ldAudioDecoder *audioDecoder() const;
-    ldDataDispatcher *dataDispatcher() const;
     ldBufferManager *bufferManager() const;
     ldFilterManager *filterManager() const;
     ldHardwareManager *hardwareManager() const;
@@ -101,7 +102,6 @@ private:
 
     ldAudioDecoder *m_audioDecoder = nullptr;
     ldBufferManager *m_bufferManager = nullptr;
-    ldDataDispatcher *m_dataDispatcher = nullptr;
     ldFilterManager *m_filterManager = nullptr;
     ldHardwareManager *m_hardwareManager = nullptr;
     ldMusicManager *m_musicManager = nullptr;

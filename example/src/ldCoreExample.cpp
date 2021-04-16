@@ -29,7 +29,6 @@
 #include <ldCore/Sound/ldSoundDeviceManager.h>
 #include <ldCore/Visualizations/ldVisualizationTask.h>
 
-
 #ifdef LD_CORE_RESOURCES_EXTRACTOR
 #include <ldCore/Android/ldResourcesExtractor.h>
 

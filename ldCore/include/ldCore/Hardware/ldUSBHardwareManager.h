@@ -43,14 +43,14 @@ public:
     explicit ldUsbHardwareManager(ldFilterManager *filterManager, QObject *parent = 0);
     ~ldUsbHardwareManager();
 
-    int getBufferFullCount();
+    int getBufferFullCount() override;
 
     bool hasActiveUsbDevices() const;
 
     bool isDeviceActive(int index) const;
     void setDeviceActive(int index, bool active);
 
-    void sendData(uint startIndex, uint count);
+    void sendData(uint startIndex, uint count) override;
 
     virtual void setConnectedDevicesActive(bool active) override;
 

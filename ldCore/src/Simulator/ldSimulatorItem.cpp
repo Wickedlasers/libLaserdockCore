@@ -117,7 +117,7 @@ void ldSimulatorItem::sync()
 void ldSimulatorItem::init()
 {
     if (!m_renderer) {
-        m_renderer.reset(new ldSimulatorRenderer(ldCore::instance()->dataDispatcher()));
+        m_renderer.reset(new ldSimulatorRenderer(ldCore::instance()->get_dataDispatcher()));
         m_renderer->init();
         m_renderer->setClearColor(m_clearColor);
 

@@ -29,16 +29,16 @@ class ldBufferManager;
 class ldFrameBuffer;
 class ldHardwareManager;
 class ldSimulatorEngine;
-class ldUsbHardwareManager;
+class ldAbstractHardwareManager;
 
-/** Internal USB data worker class. Shouldn't be used in any external code */
+/** Internal data worker class. Shouldn't be used in any external code */
 class ldThreadedDataWorker : public QObject
 {
     Q_OBJECT
 
 public:
     explicit ldThreadedDataWorker(ldBufferManager *bufferManager,
-                        ldSimulatorEngine *simulatorEngine
+                                    ldSimulatorEngine *simulatorEngine
                         );
     ~ldThreadedDataWorker();
 
@@ -52,7 +52,7 @@ public slots:
     void setActiveTransfer(bool active);
     void setSimulatorEnabled(bool enabled);
 
-    void setUsbDeviceManager(ldUsbHardwareManager* usbDeviceManager);
+    void setHardwareDeviceManager(ldAbstractHardwareManager* hardwareDeviceManager);
 
 signals:
     void startRun();
@@ -71,7 +71,7 @@ private:
     ldBufferManager* m_bufferManager;
     ldSimulatorEngine* m_simulatorEngine;
 
-    ldUsbHardwareManager* m_usbDeviceManager = nullptr;
+    ldAbstractHardwareManager* m_hardwareDeviceManager = nullptr;
 
     ldFrameBuffer *m_frameBuffer;
 };

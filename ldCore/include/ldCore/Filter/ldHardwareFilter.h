@@ -30,6 +30,9 @@
 
 class ldFilter;
 
+template <typename T, typename Total, size_t N>
+class Moving_Average;
+
 class LDCORESHARED_EXPORT ldHardwareFilter : public QObject
 {
     Q_OBJECT
@@ -84,7 +87,11 @@ protected:
 private:
     void processFrameV(ldVertex &v);
 
+    static const size_t num_samples = 1200;
+
     ldVertexFrame m_lastFrame;
+    std::unique_ptr<Moving_Average<float,double,num_samples>> m_avg;
+    float m_scalelimiter{1.0f};
 
     std::unique_ptr<ldDeadzoneFilter> m_borderFilter;
     std::unique_ptr<ldColorCurveFilter> m_colorCurveFilter;

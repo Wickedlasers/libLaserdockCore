@@ -27,7 +27,7 @@ class ldCircleVisualizer : public ldVisualizer
 {
     Q_OBJECT
 public:
-    static void circle(ldRendererOpenlase *m_renderer, int points, float x, float y, float r, float c, float angle, int overlap, int windup, float dir = 1, bool gradient = false);
+    static void circle(ldRendererOpenlase *m_renderer, int points, int repeats,float x, float y, float r, float c, float angle, float dir = 1, bool gradient = false);
 
     explicit ldCircleVisualizer();
     virtual ~ldCircleVisualizer();

@@ -77,6 +77,7 @@ void ldHardwareManager::setExplicitActiveDevice(int index)
 
 void ldHardwareManager::addHardwareManager(ldAbstractHardwareManager *hardwareManager)
 {
+    connect(hardwareManager, &ldAbstractHardwareManager::isActiveChanged, this, &ldHardwareManager::updateDeviceCount);
     connect(hardwareManager, &ldAbstractHardwareManager::deviceCountChanged, this, &ldHardwareManager::updateDeviceCount);
 
     m_hardwareManagers.push_back(hardwareManager);
@@ -99,7 +100,8 @@ void ldHardwareManager::updateDeviceCount()
 {
     uint deviceCount = 0;
     for(const ldAbstractHardwareManager *hardwareManager : m_hardwareManagers) {
-       deviceCount += hardwareManager->deviceCount();
+        if(hardwareManager->get_isActive())
+            deviceCount += hardwareManager->deviceCount();
     }
     setDeviceCount(deviceCount);
 }

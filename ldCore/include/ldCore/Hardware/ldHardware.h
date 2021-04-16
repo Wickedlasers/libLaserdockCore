@@ -66,7 +66,7 @@ protected:
     std::vector<ldCompressedSample> m_compressed_buffer;
 
 private:
-    ldHardwareFilter *m_filter;
+    ldHardwareFilter *m_filter = nullptr;
     Status m_status = Status::UNKNOWN;
 
 };

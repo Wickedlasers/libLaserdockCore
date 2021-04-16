@@ -23,35 +23,44 @@
 
 #include <memory>
 
-#include <QtCore/QObject>
+#include <QQmlHelpers>
 
-#include "ldCore/ldCore_global.h"
+#include <ldCore/Helpers/ldPropertyObject.h>
 
 class ldBufferManager;
 class ldAbstractDataWorker;
 class ldHardwareManager;
 class ldSimulatorEngine;
-class ldUsbDataWorker;
+class ldHardwareDataWorker;
+class ldFilterManager;
+#ifdef LASERDOCKLIB_USB_SUPPORT
+class ldUsbHardwareManager;
+#endif
 
 /** Laserdock data transfer control class. Supports OpenGL simulator and additional custom worker for internal usage */
-class LDCORESHARED_EXPORT ldDataDispatcher : public QObject
+class LDCORESHARED_EXPORT ldDataDispatcher : public ldPropertyObject
 {
     Q_OBJECT
+
+#ifdef LASERDOCKLIB_USB_SUPPORT
+    QML_WRITABLE_PROPERTY(bool, isNetwork)
+#endif
+
 public:
     /** Constructor/destructor */
     explicit ldDataDispatcher(ldBufferManager *bufferManager,
                               ldHardwareManager *hardwareManager,
+                              ldFilterManager* filterManager,
                               QObject *parent = nullptr);
     ~ldDataDispatcher();
 
     /** If any worker is active */
     bool isActiveTransfer() const;
 
-    /** Additional optional data worker */
-    void setAdditionalDataWorker(ldAbstractDataWorker *dataWorker);
-
-    /** Main USB data worker */
-    ldUsbDataWorker* usbDataWorker() const;
+#ifdef LASERDOCKLIB_USB_SUPPORT
+    /** Main data worker */
+    ldUsbHardwareManager* usbDataManager() const;
+#endif
 
     /** Simulator core engine class */
     ldSimulatorEngine* simulatorEngine() const;
@@ -64,11 +73,18 @@ signals:
     /** Emitted when data workers state changed */
     void activeChanged(bool active);
 
+private slots:
+#ifdef LASERDOCKLIB_USB_SUPPORT
+    void onIsNetworkChanged(bool isNetwork);
+#endif
 private:
     std::unique_ptr<ldSimulatorEngine> m_simulatorEngine;
 
-    std::unique_ptr<ldUsbDataWorker> m_usbDataWorker;
-    ldAbstractDataWorker *m_additionalDataWorker = nullptr;
+#ifdef LASERDOCKLIB_USB_SUPPORT
+    std::unique_ptr<ldHardwareDataWorker> m_usbDataWorker;
+#endif
+    std::unique_ptr<ldHardwareDataWorker> m_networkDataWorker;
+    ldHardwareDataWorker* m_activeDataWorker=nullptr;
 };
 
 #endif // LDDATADISPATCHER_H

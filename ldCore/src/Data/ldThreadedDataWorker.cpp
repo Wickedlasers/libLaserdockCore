@@ -30,19 +30,17 @@
 
 #include "ldCore/Hardware/ldHardware.h"
 #include "ldCore/Hardware/ldHardwareManager.h"
-#include "ldCore/Hardware/ldUSBHardwareManager.h"
+#include "ldCore/Hardware/ldAbstractHardwareManager.h"
 #include "ldCore/Simulator/ldSimulatorEngine.h"
-
 #include "ldCore/Data/ldBufferManager.h"
 #include "ldCore/Data/ldFrameBuffer.h"
 
 
+
 namespace  {
-const uint SAMPLES_PER_PACKET = ldHardware::REMOTE_MAX_BUFFER;
-const int REMOTE_BUFFER_CUTOFF = 512;
-const int WAIT_CONNECT_SLEEP_MS = 12;
-const int WAIT_BUFFER_SLEEP_MS = 6;
+    const int MAX_SAMPLES_PER_PACKET = 1500;
 }
+
 
 ldThreadedDataWorker::ldThreadedDataWorker(ldBufferManager *bufferManager,
                                          ldSimulatorEngine *simulatorEngine
@@ -51,13 +49,14 @@ ldThreadedDataWorker::ldThreadedDataWorker(ldBufferManager *bufferManager,
     , m_simulatorEngine(simulatorEngine)
     , m_frameBuffer(new ldFrameBuffer(this))
 {
+
     bufferManager->registerBuffer(m_frameBuffer);
 
     connect(this, &ldThreadedDataWorker::startRun, this, &ldThreadedDataWorker::run);
 }
 
 ldThreadedDataWorker::~ldThreadedDataWorker()
-{
+{   
 }
 
 void ldThreadedDataWorker::startProcess() {
@@ -73,7 +72,7 @@ void ldThreadedDataWorker::stopProcess() {
 void ldThreadedDataWorker::run()
 {
     // buffers
-    std::vector<ldVertex> vertexVec(SAMPLES_PER_PACKET);
+    std::vector<ldVertex> vertexVec(MAX_SAMPLES_PER_PACKET);
 
     m_simulatedBufferFullCount = 0;
     m_simTimer.start();
@@ -81,22 +80,30 @@ void ldThreadedDataWorker::run()
     while (true) {
         if (!m_isRunning) break;
 
+        // get the buffering config from hardware device manager
+        // This must be done continuously, as the buffering strategy may change as different hardware devices
+        // are added / removed (e.g. adding network wifi cube + network ethernet cube will change strategy)
+        ldAbstractHardwareManager::DeviceBufferConfig cfg = m_hardwareDeviceManager->getBufferConfig();
+
         // check remote buffer status and take appropriate action
         // (eg fill local buffer, send to device, or sleep)
         const bool isSimulatorActive = m_simulatorEngine->hasListeners() && m_isSimulatorEnabled;
-        int remoteBuffer = m_isActive ? m_usbDeviceManager->getBufferFullCount() : -1;
+        int remoteBuffer = m_isActive ? m_hardwareDeviceManager->getBufferFullCount() : -1;
         bool isRemoteBufferAvailable = (remoteBuffer != -1);
 
         // simulate point count for simulator mode
         bool isSimulatorOnlyMode = !isRemoteBufferAvailable && isSimulatorActive;
 
+        qint64 curms = m_simTimer.elapsed();
+        qint64 elapsed = curms - m_lastMs;
+        m_lastMs = curms;
+        //qDebug() << "t=" << elapsed << "ms";
+
         // timer for simulated points
         if (isSimulatorOnlyMode) {
-            //qint64 elapsed = m_sim_timer.restart();
-            //qint64 curms = QDateTime::currentMSecsSinceEpoch();
-            qint64 curms = m_simTimer.elapsed();
-            qint64 elapsed = curms - m_lastMs;
-            m_lastMs = curms;
+            //qint64 curms = m_simTimer.elapsed();
+            //qint64 elapsed = curms - m_lastMs;
+            //m_lastMs = curms;
             if (elapsed > 500) elapsed = 500;
             const int simulatedDeviceSamplesPerSec = 30000;
             if (elapsed > 0) {
@@ -113,14 +120,16 @@ void ldThreadedDataWorker::run()
             isRemoteBufferAvailable = true;
         }
 
-        bool isRemoteBufferTooBig = (remoteBuffer > REMOTE_BUFFER_CUTOFF);
+        bool isRemoteBufferTooBig = (remoteBuffer > cfg.remote_buffer_cutoff);
+
 
         // if remote buffer is not available and there is no active simulator we sleep and wait for device
         if (!isRemoteBufferAvailable && !isSimulatorActive) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_CONNECT_SLEEP_MS));
+            if (cfg.wait_connect_sleep_ms>0) std::this_thread::sleep_for(std::chrono::milliseconds(cfg.wait_connect_sleep_ms));
         // if remote buffer big than just sleep
         } else if (isRemoteBufferTooBig) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_BUFFER_SLEEP_MS));
+            if (m_isActive) m_hardwareDeviceManager->sendData(0,0); // send null sample to trigger remote buffer size request
+            if (cfg.wait_buffer_sleep_ms>0) std::this_thread::sleep_for(std::chrono::milliseconds(cfg.wait_buffer_sleep_ms));
         // everything is ok, process buffer flow
         } else {
             // count local
@@ -130,39 +139,41 @@ void ldThreadedDataWorker::run()
             if (localBuffer > 0) {
 
                 // try to divide into evenly sized pieces if we're over the size limit
-                // NOTE: probably not necessary since later it is checked for available remote buffer
-                // but can be useful for smooth data sending
                 uint samples_to_send = localBuffer;
-                if (samples_to_send > SAMPLES_PER_PACKET*2)
-                    samples_to_send /= 3;
-                if (samples_to_send > SAMPLES_PER_PACKET)
-                    samples_to_send /= 2;
-                if (samples_to_send > SAMPLES_PER_PACKET)
-                    samples_to_send = SAMPLES_PER_PACKET;
 
-                // check for case when samples to send is more than availalbe remote buffer
-                Q_ASSERT(remoteBuffer >= 0);
-                uint availableRemoteBuffer = ldHardware::REMOTE_MAX_BUFFER - static_cast<uint>(remoteBuffer);
-                if(samples_to_send > availableRemoteBuffer)
-                    samples_to_send = availableRemoteBuffer;
+                if (cfg.max_samples_per_udp_xfer==0 || isSimulatorActive){
+                    if (samples_to_send > cfg.samples_per_packet*2)
+                        samples_to_send /= 3;
+                    if (samples_to_send > cfg.samples_per_packet)
+                        samples_to_send /= 2;
+                    if (samples_to_send > cfg.samples_per_packet)
+                        samples_to_send = cfg.samples_per_packet;
+                }
 
                 ldVertex *simulatorBuffer = isSimulatorActive ? vertexVec.data() : nullptr;
                 uint exhaustedIndex = m_frameBuffer->getExhuastedIndex();
                 uint actualSamplesToSend = m_frameBuffer->get(simulatorBuffer, samples_to_send);
+
                 if (actualSamplesToSend > 0) {
                     // send
-                    if (m_isActive) m_usbDeviceManager->sendData(exhaustedIndex, actualSamplesToSend);
+                    if (m_isActive) m_hardwareDeviceManager->sendData(exhaustedIndex, actualSamplesToSend);
                     if (simulatorBuffer) m_simulatorEngine->pushVertexData(simulatorBuffer, actualSamplesToSend);
-                    if (isSimulatorOnlyMode) m_simulatedBufferFullCount += actualSamplesToSend;
-
+                    if (isSimulatorOnlyMode) {
+                        //qDebug() << "3434asdf" << simulatedBufferFullCount << ", " << actual;
+                        m_simulatedBufferFullCount += actualSamplesToSend;
+                    }
                     localBuffer -= actualSamplesToSend;
+
+                    if (cfg.sleep_after_packet_send_ms>0) std::this_thread::sleep_for(std::chrono::milliseconds(cfg.sleep_after_packet_send_ms));
+
                 }
 //                qDebug() << "remote buffer size is " << remoteBuffer << "\t" << localBuffer << "\t" << actual;
             }
 
             // refill if needed
-            if(localBuffer == 0)
+            if(localBuffer == 0) {
                 m_frameBuffer->reset();
+            }
         }
     }
     // end of loop
@@ -190,7 +201,7 @@ void ldThreadedDataWorker::setSimulatorEnabled(bool enabled)
     m_isSimulatorEnabled = enabled;
 }
 
-void ldThreadedDataWorker::setUsbDeviceManager(ldUsbHardwareManager *usbDeviceManager)
+void ldThreadedDataWorker::setHardwareDeviceManager(ldAbstractHardwareManager *hardwareDeviceManager)
 {
-    m_usbDeviceManager = usbDeviceManager;
+    m_hardwareDeviceManager = hardwareDeviceManager;
 }

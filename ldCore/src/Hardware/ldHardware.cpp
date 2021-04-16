@@ -52,6 +52,8 @@ void ldHardware::setActive(bool active)
 
 void ldHardware::setFrame(uint index, size_t count)
 {
+    Q_ASSERT(m_filter != nullptr);
+
     for(uint i = 0; i < count; i++) {
         Q_ASSERT(index + i < m_compressed_buffer.size());
         m_compressed_buffer[index + i] = ldCompressedSample(m_filter->lastFrame()[i]);

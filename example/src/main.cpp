@@ -27,6 +27,7 @@
 
 #include "ldCoreExample.h"
 
+
 int main(int argc, char *argv[]) {
     ldCore::initResources();
 

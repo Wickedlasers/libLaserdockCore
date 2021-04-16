@@ -24,21 +24,26 @@
 
 #include "ldCircleVisualizer.h"
 
-void ldCircleVisualizer::circle(ldRendererOpenlase* m_renderer, int points, float x, float y, float r, float c, float angle, int overlap, int windup, float dir, bool gradient) {
+void ldCircleVisualizer::circle(ldRendererOpenlase* m_renderer, int points,int repeats, float x, float y, float r, float c, float angle, float dir, bool gradient) {
     m_renderer->begin(OL_LINESTRIP);
-    for (int i = 0-overlap-windup; i <= points+overlap+windup; i++) {
-        float tc = c;
-        if (i < (0-overlap)) tc = 0;
-        if (i > (points+overlap)) tc = 0;
-        float a = (i*dir)/points + angle;
-        float tx = r*cos(a*M_PI*2);
-        float ty = r*sin(a*M_PI*2);
-        uint32_t color = C_GREY(255*tc);
-        if (gradient) {
-            int hue = (360*a + 360*2); hue %= 360;
-            color = ldColorUtil::colorHSV(hue, 1, c);
+
+    float tx,ty,a;
+    uint32_t color;
+    while(repeats--) {
+        for (int i = 0; i <= points; i++) {
+            a = (i*dir)/points + angle;
+            tx = r*cos(a*M_PI*2);
+            ty = r*sin(a*M_PI*2);
+
+            if (gradient) {
+                int hue = (360*a + 360*2); hue %= 360;
+                color = ldColorUtil::colorHSV(hue, 1, c);
+            } else color = C_GREY(255*c);
+            m_renderer->vertex(x+tx, y+ty, color);
         }
-        m_renderer->vertex(x+tx, y+ty, color);
+
+         angle+=a;
+
     }
     m_renderer->end();
 }
@@ -54,8 +59,10 @@ ldCircleVisualizer::~ldCircleVisualizer() {}
 
 void ldCircleVisualizer::draw()
 {
+
     ldRendererOpenlase *r = m_renderer;
-    // set up render params
+    /*
+    // uncomment to set up custom render params
     OLRenderParams params;
     memset(&params, 0, sizeof params);
     params.rate = r->rate();
@@ -67,12 +74,9 @@ void ldCircleVisualizer::draw()
     params.end_dwell = 0;
     params.render_flags = RENDER_NOREVERSE | RENDER_NOREORDER;
     r->setRenderParams(&params);
+    */
 
-    circle(r, 100, 0, 0, 1.00, 1.00, 0, 0, 0,  1, false);
-    circle(r, 150, 0, 0, 1.00, 1.00, 0, 0, 0,  1, false);
-    circle(r, 200, 0, 0, 1.00, 1.00, 0, 0, 0,  1, false);
-    circle(r, 250, 0, 0, 1.00, 1.00, 0, 0, 0,  1, false);
-    circle(r, 300, 0, 0, 1.00, 1.00, 0, 0, 0,  1, false);
+    circle(r, 150,3, 0, 0, 1.00, 1.00, 0, 1, true);
     return;
 }
 

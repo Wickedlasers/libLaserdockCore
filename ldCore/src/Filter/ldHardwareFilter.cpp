@@ -30,6 +30,40 @@
 #include "ldCore/Filter/ldProjectionUtil.h"
 #include "ldCore/Data/ldFrameBuffer.h"
 
+// simple moving average template class
+template <typename T, typename Total, size_t N>
+class Moving_Average
+{
+  public:
+    Moving_Average& operator()(T sample)
+    {
+        if (num_samples_ < N)
+        {
+            samples_[num_samples_++] = sample;
+            total_ += sample;
+        }
+        else
+        {
+            T& oldest = samples_[num_samples_++ % N];
+            if (num_samples_== 0) { // wraparound detect (wraps at 2^64 or 2^32 )
+                samples_[num_samples_++] = sample;
+                total_ = sample;
+            } else {
+                total_ += sample - oldest;
+                oldest = sample;
+            }
+        }
+        return *this;
+    }
+
+  operator double() const { return total_ / std::min(num_samples_, N); }
+
+  private:
+    T samples_[N];
+    size_t num_samples_{0};
+    Total total_{0};
+};
+
 ldHardwareFilter::ldHardwareFilter(ldScaleFilter *globalScaleFilter, QObject *parent)
     : QObject(parent)
     , m_borderFilter(new ldDeadzoneFilter())
@@ -41,6 +75,7 @@ ldHardwareFilter::ldHardwareFilter(ldScaleFilter *globalScaleFilter, QObject *pa
     , m_scaleFilter(new ldScaleFilter())
     , m_shiftFilter(new ldShiftFilter(std::vector<ldScaleFilter*>{m_scaleFilter.get(), globalScaleFilter }))
     , m_ttlFilter(new ldTtlFilter())
+    , m_avg(new Moving_Average<float,double,num_samples>)
 {
     m_colorCurveFilter->m_enabled = true;
 
@@ -66,6 +101,8 @@ ldHardwareFilter::ldHardwareFilter(ldScaleFilter *globalScaleFilter, QObject *pa
 
 
     m_lastFrame.resize(ldFrameBuffer::FRAMEBUFFER_CAPACITY);
+
+
 }
 
 ldHardwareFilter::~ldHardwareFilter()
@@ -86,17 +123,19 @@ void ldHardwareFilter::processFrame(const ldVertexFrame &frame)
         processFrameV(v);
     }
 
-    m_deadzoneFilter->processFrame(m_lastFrame.frame());
 
     // before putting it into buffer we have to make minor polish
     for(ldVertex &v : m_lastFrame.frame())
         processSafeLaserOutput(v);
+
+    m_deadzoneFilter->processFrame(m_lastFrame.frame());
+
 }
 
 void ldHardwareFilter::processVertex(ldVertex &v)
 {
-    m_deadzoneFilter->processFilter(v);
     processSafeLaserOutput(v);
+    m_deadzoneFilter->processFilter(v);
 }
 
 void ldHardwareFilter::processFrameV(ldVertex &v)
@@ -208,9 +247,31 @@ void ldHardwareFilter::processSafeLaserOutput(ldVertex &v)
     bool mode_disable_overscan = ldCore::instance()->filterManager()->dataFilter()->frameModes & FRAME_MODE_UNSAFE_OVERSCAN;
     bool mode_disable_underscan = ldCore::instance()->filterManager()->dataFilter()->frameModes & FRAME_MODE_UNSAFE_UNDERSCAN;
 
-    if (!galvo_libre) {
+    // new overscan protection which will shrink the image in order to limit the galvo power.
+    // This algorithm uses a rolling average and still allows fast transients, but overall averages the galvo power usage.
+     if (!mode_disable_overscan) {
+         const float average_threshold = 0.04f;
+         const float minimum_scale_factor = 0.25f;
+         const float correction_factor = 0.00003f;
 
-        // scan protection
+         float tx = v.x() * m_scalelimiter;
+         float ty = v.y() * m_scalelimiter;
+         float dx = fabs(tx - m_lastX1);
+         float dy = fabs(ty - m_lastY1);
+         float avg = m_avg->operator ()(dx+dy);
+         // The values in the statement below were obtained by imperical means, by adjusting until the
+         // measured galvo power usage was within acceptable limits.
+         if (avg>=average_threshold && m_scalelimiter>=minimum_scale_factor) m_scalelimiter-=correction_factor;
+            else if (m_scalelimiter<1.0f)  {m_scalelimiter+=correction_factor;if (m_scalelimiter>1.0f) m_scalelimiter=1.0f;}
+
+         v.x() = m_lastX1 = tx;
+         v.y() = m_lastY1 = ty;
+     }
+
+
+    if (!galvo_libre) {
+        /*
+        // scan protection - old version left in for reference
         // overscan
         // quiet algorithm
         if (!mode_disable_overscan) {
@@ -238,7 +299,7 @@ void ldHardwareFilter::processSafeLaserOutput(ldVertex &v)
             v.x() = m_lastX1 = tx;
             v.y() = m_lastY1 = ty;
 
-        }
+        }*/
 
         // underscan
         // restless algorithm

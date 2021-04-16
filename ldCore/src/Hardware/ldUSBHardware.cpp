@@ -22,7 +22,7 @@
 
 #include <QtDebug>
 
-#ifdef LD_CORE_ENABLE_LASERDOCKLIB
+#ifdef LASERDOCKLIB_USB_SUPPORT
 #include <laserdocklib/LaserdockDevice.h>
 #endif
 
@@ -40,7 +40,7 @@ public:
     }
 
     void initialize(){
-#ifdef LD_CORE_ENABLE_LASERDOCKLIB
+#ifdef LASERDOCKLIB_USB_SUPPORT
         Q_Q(ldUSBHardware);
 
         bool rc; uint32_t temp;
@@ -174,8 +174,8 @@ public:
 
 //        Q_Q(ldUsbHardware);
 
-#ifdef LD_CORE_ENABLE_LASERDOCKLIB
-        // dirty conversion from CompressedSample to LaserdockSample...
+#ifdef LASERDOCKLIB_USB_SUPPORT
+        // dirty conversion from ldCompressedSample to LaserdockSample...
         return params.device->send_samples((LaserdockSample * ) samples, count);
 #else
         Q_UNUSED(samples)
@@ -185,7 +185,7 @@ public:
     }
 
     bool usb_send(QByteArray ba) {
-#ifdef LD_CORE_ENABLE_LASERDOCKLIB
+#ifdef LASERDOCKLIB_USB_SUPPORT
         return params.device->usb_send((unsigned char*) ba.data(), ba.length());
 #else
         Q_UNUSED(ba)
@@ -195,7 +195,7 @@ public:
 
 
     bool usb_get(QByteArray &ba) {
-#ifdef LD_CORE_ENABLE_LASERDOCKLIB
+#ifdef LASERDOCKLIB_USB_SUPPORT
         unsigned char *output = params.device->usb_get((unsigned char*) ba.data(), ba.length());
         if(output) {
             ba = QByteArray::fromRawData((char *)output, 64);
@@ -215,7 +215,7 @@ ldUSBHardware::ldUSBHardware(LaserdockDevice *device, QObject *parent)
     ,  d_ptr(new ldUSBHardwarePrivate(this))
 {    
     Q_D(ldUSBHardware);
-#ifdef LD_CORE_ENABLE_LASERDOCKLIB
+#ifdef LASERDOCKLIB_USB_SUPPORT
     d->params.device = device;
 #else
     Q_UNUSED(device)
@@ -224,7 +224,7 @@ ldUSBHardware::ldUSBHardware(LaserdockDevice *device, QObject *parent)
 }
 
 ldUSBHardware::~ldUSBHardware(){
-#ifdef LD_CORE_ENABLE_LASERDOCKLIB
+#ifdef LASERDOCKLIB_USB_SUPPORT
     Q_D(ldUSBHardware);
     if(d->params.device) {
         delete d->params.device;
@@ -249,10 +249,19 @@ ldUSBHardware::device_params &ldUSBHardware::params(){
 
 bool ldUSBHardware::send_samples(uint startIndex, uint count){
     Q_D(ldUSBHardware);
+
+    // send nothing, it's ok
+    if(count == 0)
+        return true;
+
     Q_ASSERT(startIndex + count < m_compressed_buffer.size());
     bool ok = d->send(&m_compressed_buffer[startIndex], count);
     if(!ok) {
+#ifdef LASERDOCKLIB_USB_SUPPORT
         qWarning() << __FUNCTION__ << "Can't send sample" << d->params.device->lastError();
+#else
+        qWarning() << __FUNCTION__ << "Can't send sample";
+#endif
         setStatus(Status::UNKNOWN);
     }
     return ok;
@@ -271,7 +280,7 @@ void ldUSBHardware::get_security_response(QByteArray &response){
 }
 
 int ldUSBHardware::get_full_count() {
-#ifdef LD_CORE_ENABLE_LASERDOCKLIB
+#ifdef LASERDOCKLIB_USB_SUPPORT
     Q_D(ldUSBHardware);
 
     uint32_t remoteEmptyBuffer;

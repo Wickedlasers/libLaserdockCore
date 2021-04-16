@@ -81,12 +81,13 @@ ldSoundDeviceManager::ldSoundDeviceManager(QObject *parent)
     qDebug().noquote() << debugStr;
 
 
-//    QList<ldSoundDeviceInfo> availableDevices = getAvailableDevices(ldSoundDeviceInfo::Type::QAudioInput);
-//    if(!availableDevices.isEmpty()) {
-//        setDeviceInfo(getDefaultDevice(ldSoundDeviceInfo::Type::QAudioInput));
-//    } else {
-//        qDebug() << "No audio input device found";
-//    }
+    //QList<ldSoundDeviceInfo> availableDevices = getAvailableDevices(ldSoundDeviceInfo::Type::QAudioInput);
+    //if(!availableDevices.isEmpty()) {
+    //    setDeviceInfo(getDefaultDevice(ldSoundDeviceInfo::Type::QAudioInput));
+    //    qDebug() << "Default audio input selected";
+    //} else {
+    //    qDebug() << "No audio input device found";
+    //}
 }
 
 ldSoundDeviceManager::~ldSoundDeviceManager()

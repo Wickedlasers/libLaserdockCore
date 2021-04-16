@@ -8,11 +8,7 @@
 #include <memory>
 #include <vector>
 
-#ifdef _WIN32
-#define LASERDOCKLIB_EXPORT __declspec(dllexport)
-#else
-#define LASERDOCKLIB_EXPORT
-#endif
+#include <laserdocklib/Laserdocklib.h>
 
 class LaserdockDevice;
 class LaserdockDeviceManagerPrivate;

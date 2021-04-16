@@ -22,6 +22,7 @@
 
 ldAbstractHardwareManager::ldAbstractHardwareManager(QObject *parent)
     : QObject(parent)
+    , m_isActive(false)
 {
 }
 

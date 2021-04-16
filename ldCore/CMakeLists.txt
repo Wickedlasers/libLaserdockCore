@@ -16,7 +16,11 @@ CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_MIDI "Enable midi" OFF
 
 project(ldCore)
 
-add_library(${PROJECT_NAME} SHARED)
+if(LD_IOS_BUILD)
+    add_library(${PROJECT_NAME})
+else()
+    add_library(${PROJECT_NAME} SHARED )
+endif()
 
 include(SetupCppFlags)
 setup_cpp_flags(${PROJECT_NAME})
@@ -53,8 +57,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Data/ldFrameBuffer.h
         ${SRCDIR}/Data/ldThreadedDataWorker.cpp
         ${SRCDIR}/Data/ldThreadedDataWorker.h
-        ${SRCDIR}/Data/ldUsbDataWorker.cpp
-        ${INCDIR}/Data/ldUsbDataWorker.h
+        ${SRCDIR}/Data/ldHardwareDataWorker.cpp
+        ${INCDIR}/Data/ldHardwareDataWorker.h
         #Filter
         ${SRCDIR}/Filter/ldBasicFilters.cpp
         ${INCDIR}/Filter/ldBasicFilters.h
@@ -92,10 +96,10 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Hardware/ldHardware.h
         ${SRCDIR}/Hardware/ldHardwareManager.cpp
         ${INCDIR}/Hardware/ldHardwareManager.h
-        ${SRCDIR}/Hardware/ldUSBHardware.cpp
-        ${INCDIR}/Hardware/ldUSBHardware.h
-        ${SRCDIR}/Hardware/ldUSBHardwareManager.cpp
-        ${INCDIR}/Hardware/ldUSBHardwareManager.h
+        ${SRCDIR}/Hardware/ldNetworkHardware.cpp
+        ${INCDIR}/Hardware/ldNetworkHardware.h
+        ${SRCDIR}/Hardware/ldNetworkHardwareManager.cpp
+        ${INCDIR}/Hardware/ldNetworkHardwareManager.h
         #Render
         ${SRCDIR}/Render/ldAbstractRenderer.cpp
         ${INCDIR}/Render/ldAbstractRenderer.h
@@ -390,9 +394,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Multimedia 
 # public
 target_link_libraries(${PROJECT_NAME} PUBLIC
     3rdparty::aubio
+    3rdparty::laserdocklib
     3rdparty::libqtqmltricks
     3rdparty::openlase
-    3rdparty::openmp
     )
 
 # private
@@ -403,12 +407,15 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     3rdparty::nanosvg
     )
 
-# ------------  LD_CORE_ENABLE_LASERDOCKLIB -------------
+if(LASERDOCKLIB_USB_SUPPORT)
+    target_sources(${PROJECT_NAME} PRIVATE
+        ${SRCDIR}/Hardware/ldUSBHardware.cpp
+        ${INCDIR}/Hardware/ldUSBHardware.h
+        ${SRCDIR}/Hardware/ldUSBHardwareManager.cpp
+        ${INCDIR}/Hardware/ldUSBHardwareManager.h
+        )
 
-if(LD_CORE_ENABLE_LASERDOCKLIB)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_ENABLE_LASERDOCKLIB)
-    target_link_libraries(${PROJECT_NAME} PRIVATE 3rdparty::laserdocklib)
-endif()
+ endif()
 
 # ------------  LD_CORE_ENABLE_LIBLZR -------------
 
@@ -468,9 +475,23 @@ if(LD_CORE_ENABLE_OPENCV)
         ${INCDIR}/Helpers/Image/ldImageHelper.h
         )
 
+
     # lib
     include(${CMAKE_CURRENT_LIST_DIR}/../3rdparty/opencv/CMakeLists.txt)
-    target_link_libraries(${PROJECT_NAME} PUBLIC opencv_core opencv_imgproc opencv_highgui opencv_videoio) # opencv_imgcodecs is dependency
+    if(LD_IOS_BUILD)
+        target_include_directories(${PROJECT_NAME} PUBLIC ${OPENCV_FRAMEWORK}/Headers)
+        target_link_libraries(${PROJECT_NAME}  PUBLIC ${OPENCV_FRAMEWORK}/opencv2)
+    else()
+        target_link_libraries(${PROJECT_NAME} PUBLIC opencv_core opencv_imgcodecs opencv_imgproc opencv_highgui opencv_videoio )
+    endif()
+endif()
+
+# ------------  LD_CORE_ENABLE_OPENMP -------------
+
+if(LD_CORE_ENABLE_OPENMP)
+    target_link_libraries(${PROJECT_NAME} PUBLIC
+        3rdparty::openmp
+        )
 endif()
 
 # -----------  LD_CORE_ENABLE_QUAZIP -----------
@@ -517,6 +538,10 @@ if(ANDROID)
     target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::AndroidExtras)
 
     target_link_libraries(${PROJECT_NAME} PRIVATE GLESv2)
+endif()
+
+if(LD_IOS_BUILD)
+    target_link_libraries(${PROJECT_NAME} PRIVATE z)
 endif()
 
 
