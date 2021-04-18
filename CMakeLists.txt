@@ -5,8 +5,10 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_LIST_DIR)
     message(STATUS "CMAKE_GENERATOR: ${CMAKE_GENERATOR}")
 endif()
 
-# android build flag
+# platform build flag
 option(LD_ANDROID_BUILD "Build for Android" OFF)
+option(LD_IOS_BUILD "Build for iOS" OFF)
+
 # main app configuration
 option(LD_CORE_BUILD_EXAMPLE "Build Example" ON)
 option(LD_CORE_BUILD_TESTS "Build Tests" OFF)
@@ -23,12 +25,19 @@ CMAKE_DEPENDENT_OPTION(LD_CORE_RESOURCES_EXTRACTOR "" OFF
 CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_QUAZIP "" OFF
     "NOT LD_CORE_RESOURCES_EXTRACTOR" ON)
 
-# do not remove this option, it can be useful for testing sometimes
-set(LD_CORE_ENABLE_LASERDOCKLIB ON)
-#message(STATUS "LD_CORE_ENABLE_LASERDOCKLIB ${LD_CORE_ENABLE_LASERDOCKLIB}")
+if(LD_IOS_BUILD)
+    option(LASERDOCKLIB_USB_SUPPORT "" OFF)
+    set(LD_CORE_ENABLE_OPENMP OFF) # OpenMP is not supported on iOS
+else()
+    mark_as_advanced(LASERDOCKLIB_USB_SUPPORT)
+    set(LD_CORE_ENABLE_OPENMP ON)
+endif()
+message(STATUS "LASERDOCKLIB_USB_SUPPORT ${LASERDOCKLIB_USB_SUPPORT}")
 
 if(APPLE)
+if(NOT LD_IOS_BUILD)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13")
+endif()
 endif()
 
 if ((CMAKE_BUILD_TYPE STREQUAL "Release") OR (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo") OR (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel"))
@@ -55,7 +64,22 @@ include(local.cmake OPTIONAL)
 
 include(DetectLinux)
 include(DetectQt)
+set(CMAKE_PREFIX_PATH ${QTDIR})
 include(SetupAndroidToolchain)
+
+if(LD_IOS_BUILD)
+    SET(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer")
+
+    set(ENABLE_BITCODE OFF)
+    set(PLATFORM OS64COMBINED)
+    set(DEPLOYMENT_TARGET "14.0")
+
+#    set(ARCHS x86_64)
+    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/cmake/ios.toolchain.cmake)
+
+    message(STATUS "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}")
+endif()
+
 
 project(ldCore)
 
@@ -85,5 +109,6 @@ endif()
 # just ignore Qt creator annoying default variable
 if(DEFINED QT_QMAKE_EXECUTABLE)
     mark_as_advanced(QT_QMAKE_EXECUTABLE)
+    set(LD_IGNORED ${QT_QMAKE_EXECUTABLE})
 endif()
 

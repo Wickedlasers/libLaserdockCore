@@ -30,6 +30,7 @@ ldFilterBasicGlobal::ldFilterBasicGlobal()
     : ldFilter()
     , m_colorCurveFilter(new ldColorCurveFilter())
     , m_colorFaderFilter(new ldColorFaderFilter())
+    , m_strobeFilter(new ldStrobeFilter())
     , m_hueFilter(new ldHueFilter())
     , m_hueMatrixFilter(new ldHueMatrixFilter())
     , m_hueShiftFilter(new ldHueShiftFilter())
@@ -63,6 +64,8 @@ void ldFilterBasicGlobal::process(ldVertex &v)
     m_soundLevelFilter->processFilter(v);
 
     m_colorFaderFilter->processFilter(v);
+
+    if (m_strobeFilter->m_enabled) m_strobeFilter->processFilter(v);
 }
 
 ldColorCurveFilter *ldFilterBasicGlobal::colorCurveFilter() const
@@ -73,6 +76,11 @@ ldColorCurveFilter *ldFilterBasicGlobal::colorCurveFilter() const
 ldColorFaderFilter *ldFilterBasicGlobal::colorFaderFilter() const
 {
     return m_colorFaderFilter.get();
+}
+
+ldStrobeFilter *ldFilterBasicGlobal::strobeFilter() const
+{
+    return m_strobeFilter.get();
 }
 
 ldHueFilter *ldFilterBasicGlobal::hueFilter() const

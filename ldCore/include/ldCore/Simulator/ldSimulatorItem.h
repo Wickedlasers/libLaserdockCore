@@ -54,6 +54,7 @@ public slots:
 
 private slots:
     void handleWindowChanged(QQuickWindow *win);
+    void onVisibleChanged();
 
 private:
     QScopedPointer<ldSimulatorRenderer> m_renderer;

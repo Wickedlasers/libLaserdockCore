@@ -181,6 +181,8 @@ public:
     float bestBpm() const;
     float slowBpm() const;
 
+    void setBpmModifier(float bpmModifier);
+
     std::unique_ptr<ldTempoAC> tempoACSlower;
     std::unique_ptr<ldTempoAC> tempoACSlow;
     std::unique_ptr<ldTempoAC> tempoACFast;
@@ -251,6 +253,8 @@ private:
 
     std::unique_ptr<ldBeatDetector> m_beatDetector;
     std::unique_ptr<ldBpmBeatDetector> m_bpmBeatDetector;
+
+    float m_bpmModifier = 1;
 };
 
 #endif // LDMUSICMANAGER_H

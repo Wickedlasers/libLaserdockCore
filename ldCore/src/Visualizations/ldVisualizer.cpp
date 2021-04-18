@@ -66,6 +66,11 @@ void ldVisualizer::start() {
     // set local rate if available
     if(m_rate != 0) {
         m_renderer->setRate(m_rate);
+    } else {
+         // having this will prevent renderer rate being out of sync if a user
+         // creates a visualizer and incorrectly uses m_renderer->setRate() instead of correctly
+         // setting m_rate in the class init.
+         m_renderer->setRate(ldAbstractRenderer::DEFAULT_RATE);
     }
 
     // set default quality values because some old visualizers don't do it

@@ -78,8 +78,11 @@ public slots:
 
     void setSoundSource(const ldVisualizationTask::SoundSource &source);
 
+    ldRendererOpenlase* get_openlase();
+
 signals:
     void baseVisualizerChanged(ldVisualizer *visualizer);
+    void currentFpsChanged(int fps);
 
 private slots:
     void onUpdateAudio(const AudioBlock& block);
@@ -98,6 +101,9 @@ private:
     std::shared_ptr<ldSoundData> m_sounddata;
     std::shared_ptr<ldSoundData> m_decoderSoundData;
     RenderState m_renderstate;
+    int m_current_fps{-1};
+    float m_fps_avg{0};
+    int m_fps_cnt{0};
 
     std::unique_ptr<ldLogoLaserdock> m_logo;
 

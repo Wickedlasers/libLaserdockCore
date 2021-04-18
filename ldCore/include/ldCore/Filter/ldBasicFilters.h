@@ -28,16 +28,54 @@
 
 #include "ldFilter.h"
 
+#include <QElapsedTimer>
+
+// ---------- ldColorFilter ----------
+
+/** Replace all colors by only one */
+class LDCORESHARED_EXPORT ldColorFilter : public ldFilter {
+public:
+    virtual void process(ldVertex &v) override;
+
+    bool enabled = false;
+    float r = 1.f;
+    float g = 1.f;
+    float b = 1.f;
+};
+
 // ---------- ldColorCurveFilter ----------
 
 // class for color curve
 class LDCORESHARED_EXPORT ldColorCurve {
 public:
-    float thold = 0;
-    float gain = 1;
-    float dflect = 0;
-
     float get(float f);
+
+    void setGamma(int val); // accepts range 100 (gamma 1.0 for linear) to 800 (gamma of 8.0)
+    void setGamma(float val); // accepts range 1.0f to 8.0f
+    int  getGamma(); // returns int version of the current gamma (100 to 800)
+    float getGammaf(); // returns real version of the current gamma (1.00f to 8.00f)
+
+    void setMin(int val); // set minimum value (0 = 0.0f, 255 = 1.0f)
+    void setMin(float val); // set minimum value (0.0f to 1.0f)
+    int  getMin(); // get integer value of the current min value (0-255)
+    float getMinf(); // returns real value of the current min value (0.0f to 1.0f)
+
+    void setMax(int val); // set max from integer val (0 = 0.0f, 255 = 1.0f)
+    void setMax(float val); // set max (0.0f to 1.0f)
+    int  getMax(); // returns integer value of the current max value (0-255)
+    float getMaxf(); // returns real value of the current max value (0.0f to 1.0f)
+
+private:
+    // int versions of min/max/gamma
+    int imin = 0;
+    int imax = 255;
+    int igamma = 220;
+    // real values of min/max/gamma
+    float minval = 0.0f;
+    float maxval = 1.0f;
+    float gammaval = 2.2f;
+
+
 };
 
 /** Smooth filters output colors to the only required one */
@@ -142,6 +180,28 @@ public:
 
     // color
     float m_brightness = 1.f;
+};
+
+// ---------- ldStrobeFilter ----------
+
+/** Strobe filter */
+class LDCORESHARED_EXPORT ldStrobeFilter : public ldFilter
+{
+public:
+    ldStrobeFilter();
+    virtual void process(ldVertex &input) override;
+
+    bool m_enabled = false;
+
+    // frame count (### temporary)
+    int m_frame = 0;
+    QElapsedTimer etimer;
+
+    // time on
+    int m_timeOn = 10;
+
+    // time off
+    int m_timeOff = 2;
 };
 
 // ---------- ldRotateFilter ----------

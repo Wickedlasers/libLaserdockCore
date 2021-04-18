@@ -353,7 +353,7 @@ float ldMusicManager::bestBpm() const
     if(m_manualBpm->isEnabled())
         return m_manualBpm->bpm();
     else
-        return appakaBpmSelector->bestBpm();
+        return appakaBpmSelector->bestBpm() * m_bpmModifier;
 }
 
 float ldMusicManager::slowBpm() const
@@ -361,6 +361,11 @@ float ldMusicManager::slowBpm() const
     if(m_manualBpm->isEnabled())
         return m_manualBpm->bpm();
     else
-        return m_tempoTrackerSlow->bpm();
+        return m_tempoTrackerSlow->bpm() * m_bpmModifier;
+}
+
+void ldMusicManager::setBpmModifier(float bpmModifier)
+{
+    m_bpmModifier = bpmModifier;
 }
 

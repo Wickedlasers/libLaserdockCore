@@ -110,16 +110,21 @@ static void CALLBACK midi_callback(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance,
     if (b1a == 9) {
         isValidNote = true;
         e.onset = true;
-        e.note = b2;
-        e.velocity = b3;
+        e.note = b2 & 0x7f;
+        e.velocity = b3 & 0x7f; // 7 bit for note
     }
     else if (b1a == 8) {
         isValidNote = true;
-        e.note = b2;
-    } else if(b1a == 11) {
-        message.faderNumber = b2;
-        message.value = b3;
-        isValidCCMessage = true;
+        e.note = b2 & 0x7f; // 7 bit for note
+    } else if(b1a == 11) { // midi control change message?
+        unsigned char cnum = b2 & 0x7f; // controller number is 7bit
+        if (cnum <120) // not within the reserved range of 120-127?
+        {
+            //qDebug() << "midi cc fader num:" << cnum << "value = " << (b3 & 0x7f);
+            message.faderNumber = cnum;
+            message.value = b3 & 0x7f; // 7 bit for value
+            isValidCCMessage = true;
+        }
     }
 
     ldMidiInput *input = (ldMidiInput*) dwInstance;

@@ -61,20 +61,22 @@ public:
 
     /** Add simulator data */
     void pushVertexData(ldVertex * data, unsigned int size);
+    /** inform simulator frame has completed */
+    void frame_complete();
 
     /** Simulator background grid */
     ldSimulatorGrid *grid() const;
 
 private:
-    void drawBuffer(QOpenGLShaderProgram *program, const std::vector<ldVertex> &buffer);
+    void drawBuffer(QOpenGLShaderProgram *program, const std::vector<ldVertex> &buffer, unsigned length = 0);
 
     GLuint vboIds[2] = {};
 
     ldVertexCircularBuffer m_buffer;
     QReadWriteLock m_lock;
     std::vector<ldVertex> vbuffer;
-
-    int m_listenerCount = 0;
+    unsigned vbuffer_size{0};
+    int m_listenerCount{0};
 
     std::unique_ptr<ldSimulatorProcessor> m_processor;
 

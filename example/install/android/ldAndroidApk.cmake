@@ -11,25 +11,35 @@ endif()
 set_property(TARGET ${PROJECT_NAME} PROPERTY VERSION ${PROJECT_VERSION})
 set_property(TARGET ${PROJECT_NAME} PROPERTY SOVERSION 0)
 
+set(LDCORE_DIR "${CMAKE_SOURCE_DIR}")
+set(OPENCV_LIBDIR ${LDCORE_DIR}/3rdparty/opencv/android/sdk/native/libs/${ANDROID_ABI})
+get_target_property(LIBUSB_SOURCE_DIR libusb SOURCE_DIR)
+get_target_property(LASERDOCKLIB_SOURCE_DIR laserdocklib SOURCE_DIR)
+
 set(QT_ANDROID_NDK_ROOT ${ANDROID_NDK})
 
 include(${CMAKE_SOURCE_DIR}/android/AddQtAndroidApk/AddQtAndroidApk.cmake)
 add_qt_android_apk(${PROJECT_NAME}_apk ${PROJECT_NAME}
-    JAVA_SOURCES ${CMAKE_SOURCE_DIR}/3rdparty/laserdocklib/java
+    JAVA_SOURCES ${LASERDOCKLIB_SOURCE_DIR}/java
     NAME "LaserdockExample"
-    ANDROID_RESOURCES_PATH ${CMAKE_SOURCE_DIR}/android/res
+    ANDROID_RESOURCES_PATH ${LDCORE_DIR}/android/res
     PACKAGE_NAME ${LD_EXAMPLE_PACKAGE_NAME}
-    ANDROID_MIN_API 21 # 5.0
-    ANDROID_TARGET_API 28 # 9.0 Oreo support
+    ANDROID_MIN_API ${ANDROID_NATIVE_API_LEVEL}
+    ANDROID_TARGET_API ${ANDROID_TARGET_API_LEVEL}
     DEPENDS openlase
     DEPENDS ldCore
     DEPENDS laserdocklib
     DEPENDS quazip
-    DEPENDS ${CMAKE_SOURCE_DIR}/3rdparty/laserdocklib/3rdparty/libusb/lib/android/${ANDROID_ABI}/libusb1.0.so
+    DEPENDS ${LIBUSB_SOURCE_DIR}/lib/android/${ANDROID_ABI}/libusb1.0.so
+#    DEPENDS ${OPENCV_LIBDIR}/libopencv_core.so
+#    DEPENDS ${OPENCV_LIBDIR}/libopencv_imgcodecs.so
+#    DEPENDS ${OPENCV_LIBDIR}/libopencv_imgproc.so
+#    DEPENDS ${OPENCV_LIBDIR}/libopencv_highgui.so
+#    DEPENDS ${OPENCV_LIBDIR}/libopencv_videoio.so
     QML_ROOT_PATH ${LD_QML_ROOT_PATH}
     #  For release deployment
     VERSION_CODE 1
-    KEYSTORE ${CMAKE_SOURCE_DIR}/example/install/android/libLaserdockCore.jks libLaserdockCore
+    KEYSTORE ${LDCORE_DIR}/example/install/android/libLaserdockCore.jks libLaserdockCore
     KEYSTORE_PASSWORD libLaserdockCore
     KEY_PASSWORD libLaserdockCore
     ${LD_ANDROID_INSTALL_ARG}

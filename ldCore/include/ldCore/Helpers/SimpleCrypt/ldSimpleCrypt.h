@@ -23,7 +23,7 @@ public:
 
     QByteArray decrypt(const QString &filePath);
 
-    void encryptFolderR(const QString &folder);
+    void encryptFolderR(const QString &folder, const QStringList &exceptionFolderList);
     void decryptFolderR(const QString &folder);
 
 private:

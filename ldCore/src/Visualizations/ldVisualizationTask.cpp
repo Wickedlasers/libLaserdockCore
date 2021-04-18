@@ -51,6 +51,7 @@
 
 namespace  {
     static const float ROTATION_RANGE = M_PIf;
+    static const float DAC_RATE = 30000.0f;
 }
 
 ldVisualizationTask::ldVisualizationTask(ldMusicManager *musicManager, ldAudioDecoder *audioDecoder, QObject *parent)
@@ -71,6 +72,10 @@ ldVisualizationTask::ldVisualizationTask(ldMusicManager *musicManager, ldAudioDe
     qRegisterMetaType<AudioBlock>("AudioBlock");
 }
 
+ldRendererOpenlase* ldVisualizationTask::get_openlase()
+{
+    return m_openlase;
+}
 /*!
     \brief Workhorse of the class. This called by \l ldTaskManager when the task needs to get updated.
 
@@ -101,13 +106,13 @@ void ldVisualizationTask::update(quint64 delta, ldFrameBuffer * buffer)
     m_renderstate.buffer = buffer;
     m_renderstate.delta = delta;
 
-    int fps = 30; // default value
+    int max_fps = 30; // default value for maximum allowed FPS
 
     ldVisualizer* vis = getActiveVis();
     // get fps and draw visualizer
     // make sure visualizer exists
     if (vis) {
-        fps = vis->targetFPS();
+        max_fps = vis->targetFPS();
         m_openlase->loadIdentity();
         m_openlase->loadIdentity3();
 
@@ -127,8 +132,24 @@ void ldVisualizationTask::update(quint64 delta, ldFrameBuffer * buffer)
     }
 
     // perform openlase rendering on the frame
-    if (this->renderState()->renderOpenlase)
-        m_openlase->renderFrame(buffer, fps, vis && vis->is3d());
+    if (this->renderState()->renderOpenlase) {
+        m_openlase->renderFrame(buffer, max_fps, vis && vis->is3d());
+        float result = DAC_RATE / m_openlase->m_lastFramePointCount;
+
+        // perform fps averaging, and update current fps if changed
+        m_fps_avg+=result;
+        m_fps_cnt++;
+        if (m_fps_cnt>=10){
+            int fps = static_cast<int>( (m_fps_avg / m_fps_cnt) + 0.5f);
+            m_fps_cnt = 0;
+            m_fps_avg = 0;
+
+            if (fps!=m_current_fps) {
+                m_current_fps = fps;
+                currentFpsChanged(m_current_fps);
+            }
+        }
+    }
 	
 	//qDebug() << buffer->getFill() << " - " << buffer->getCapacity();
 }

@@ -157,15 +157,19 @@ if(WIN32)
 endif()
 
 if(APPLE)
-    # set correct bundle prefix for Xcode generator
-    if(CMAKE_GENERATOR STREQUAL Xcode)
-        set(BUNDLE_SUB_PATH "${CMAKE_CURRENT_BINARY_DIR}/\${CONFIGURATION}")
+    if(LD_IOS_BUILD)
+        set(BUNDLE_RESOURCES_PATH $<TARGET_FILE_DIR:ldCore_Example>/Res)
     else()
-        set(BUNDLE_SUB_PATH ${CMAKE_CURRENT_BINARY_DIR})
+        # set correct bundle prefix for Xcode generator
+        if(CMAKE_GENERATOR STREQUAL Xcode)
+            set(BUNDLE_SUB_PATH "${CMAKE_CURRENT_BINARY_DIR}/\${CONFIGURATION}")
+        else()
+            set(BUNDLE_SUB_PATH ${CMAKE_CURRENT_BINARY_DIR})
+        endif()
+        # set bundle pathes
+        set(BUNDLE_PATH "${BUNDLE_SUB_PATH}/${PROJECT_NAME}.app")
+        set(BUNDLE_RESOURCES_PATH "${BUNDLE_PATH}/Contents/Resources")
     endif()
-    # set bundle pathes
-    set(BUNDLE_PATH "${BUNDLE_SUB_PATH}/${PROJECT_NAME}.app")
-    set(BUNDLE_RESOURCES_PATH "${BUNDLE_PATH}/Contents/Resources")
 
     # copy resources
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -184,3 +188,81 @@ if(CMAKE_GENERATOR STREQUAL "Visual Studio 14 2015" OR CMAKE_GENERATOR STREQUAL 
     configure_file(project.vcxproj.user.in ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.vcxproj.user @ONLY)
 endif()
 
+if(LD_IOS_BUILD)
+    set(MACOSX_BUNDLE_GUI_IDENTIFIER ldCoreExample)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/res/ios/Info.plist)
+
+
+    find_library(OQUARTZCORE_FRAMEWORK QuartzCore)
+    find_library(IMAGEIO_FRAMEWORK ImageIO)
+    find_library(AssetsLibrary_FRAMEWORK AssetsLibrary)
+    mark_as_advanced(OQUARTZCORE_FRAMEWORK
+        IMAGEIO_FRAMEWORK
+        AssetsLibrary_FRAMEWORK
+        )
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        ${OQUARTZCORE_FRAMEWORK}
+        ${IMAGEIO_FRAMEWORK}
+        ${AssetsLibrary_FRAMEWORK}
+        )
+
+
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-e,_qt_main_wrapper")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -u _qt_registerPlatformPlugin")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,@executable_path/Frameworks -lm")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${QTDIR}/lib -lQt5FontDatabaseSupport -lQt5GraphicsSupport -lQt5ClipboardSupport")
+
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lQt5QmlWorkerScript")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lQt5QuickControls2 -lQt5QuickParticles -lQt5QuickShapes -lQt5QuickTemplates2")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lQt5Quick -lQt5Qml")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lz")
+
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${QTDIR}/qml/QtQuick/Controls -lqtquickcontrolsplugin")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${QTDIR}/qml/QtQuick/Controls.2 -lqtquickcontrols2plugin")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${QTDIR}/qml/QtQuick/Layouts -lqquicklayoutsplugin")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${QTDIR}/qml/QtQuick/Templates.2 -lqtquicktemplates2plugin")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${QTDIR}/qml/QtQuick/Window.2 -lwindowplugin")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${QTDIR}/qml/QtQuick.2 -lqtquick2plugin")
+
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${Qt5Gui_PLUGINS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${Qt5Multimedia_PLUGINS})
+
+
+    #deploy
+
+    set(FRAMEWORKS_DIR $<TARGET_FILE_DIR:${PROJECT_NAME}>/Frameworks)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+        ${FRAMEWORKS_DIR})
+
+    if(LD_CORE_ENABLE_LIBLZR)
+        set(LIBLZR_PATH "$<TARGET_FILE:liblzr>")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${LIBLZR_PATH} ${FRAMEWORKS_DIR}/)
+    endif()
+
+    if(LD_CORE_ENABLE_OPENCV)
+        if(LD_IOS_BUILD)
+            include(${CMAKE_CURRENT_LIST_DIR}/../3rdparty/opencv/CMakeLists.txt)
+        endif()
+        set(OPENCV_PATH "${OPENCV_FRAMEWORK}")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${OPENCV_PATH} "${FRAMEWORKS_DIR}/opencv2.framework")
+    endif()
+
+    set(OPENLASE_PATH "$<TARGET_FILE:openlase>")
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${OPENLASE_PATH} ${FRAMEWORKS_DIR}/)
+
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND
+        codesign --deep --timestamp=none -f -s ${LD_APPLE_DEVELOPMENT_ID} $<TARGET_FILE_DIR:LaserOS>
+        VERBATIM
+        )
+endif()

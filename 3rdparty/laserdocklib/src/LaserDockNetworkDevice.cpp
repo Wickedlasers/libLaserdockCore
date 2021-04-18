@@ -20,8 +20,25 @@ namespace cmds {
     const uint8_t LASERCUBE_CMD_SET_ILDA_RATE =                     0x82;
     const uint8_t LASERCUBE_CMD_CLEAR_RINGBUFFER =                  0x8d;
     const uint8_t LASERCUBE_CMD_GET_RINGBUFFER_EMPTY_SAMPLE_COUNT = 0x8a;
+    const uint8_t LASERCUBE_CMD_SET_NV_MODEL_INFO =                 0x97;
     const uint8_t LASERCUBE_SECURITY_CMD_REQUEST =                  0xb0;
     const uint8_t LASERCUBE_SECURITY_CMD_RESPONSE =                 0xb1;
+
+    // These legacy get commands below have been replaced by
+    // the get full info command (x077)
+    /*
+    const uint8_t LASERCUBE_CMD_GET_OUTPUT =                        0x81;
+    const uint8_t LASERCUBE_CMD_GET_ILDA_RATE =                     0x83;
+    const uint8_t LASERCUBE_CMD_GET_MAX_ILDA_RATE =                 0x84;
+    const uint8_t LASERCUBE_CMD_GET_SAMP_ELEMENT_COUNT =            0x85;
+    const uint8_t LASERCUBE_CMD_GET_ISO_PACKET_SAMP_COUNT =         0x86;
+    const uint8_t LASERCUBE_CMD_GET_DAC_MIN  =                      0x87;
+    const uint8_t LASERCUBE_CMD_GET_DAC_MAX =                       0x88;
+    const uint8_t LASERCUBE_CMD_GET_RINGBUFFER_SAMPLE_COUNT =       0x89;
+    const uint8_t LASERCUBE_CMD_GET_LASERCUBE_FW_MAJOR_VERSION =    0x8b;
+    const uint8_t LASERCUBE_CMD_GET_LASERCUBE_FW_MINOR_VERSION =    0x8c;
+    const uint8_t LASERCUBE_CMD_GET_BULK_PACKET_SAMP_COUNT =        0x8e;
+    */
 }
 
 // values for the get/set output enable command
@@ -64,6 +81,10 @@ LaserdockNetworkDevice::LaserdockNetworkDevice(QString ip_address,QObject *paren
     m_cmdsocket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption,5250000);
 
     connect(m_cmdsocket, &QUdpSocket::readyRead,this, &LaserdockNetworkDevice::readPendingCommandResponses);
+//    connect(m_cmdsocket, &QUdpSocket::stateChanged,this, [&](QAbstractSocket::SocketState socketState) {
+//        qDebug() << "CMD" << m_hostaddr << socketState;
+//    });
+
 
     m_datasocket = new QUdpSocket(this);
     m_datasocket->bind( constants::data_port);
@@ -106,6 +127,41 @@ LaserdockNetworkDevice::LaserdockNetworkDevice(QString ip_address,QObject *paren
     send_command(info_pkt,sizeof(info_pkt),false);
     m_nocommstimer.start(constants::comms_timeout_period_ms); // start comms timeout timer (will be reset when we receive anything from cube)
     m_timer.start(constants::inactive_info_request_period_ms); // periodic timer for requesting full info from the network cube
+
+
+    /*
+    // connect to the initialized event which is triggered when we receive full info packet during device init.
+    connect(this,&LaserdockNetworkDevice::DeviceInitialized,[&](){
+
+        // test sending a security request to sha204 device on the remote network cube
+       // this sequence was grabbed using wireshark from the USB lasercube
+       uint8_t security_req_pkt[]={
+           //0xB0, // security request cmd (not needed now as it is added within SecurityRequest() function.
+           0x01, // wake option (1= sha204 wake-up, 0 = no wake)
+           0xe0, 0x2e, 0x00, 0x00, 0x40, 0x9c, 0x00,
+           0x00, 0x23, 0x27, 0x08, 0x00, 0x00, 0x00, 0xa1,
+           0x21, 0x00, 0x00, 0xea, 0x35, 0x00, 0x00, 0x75,
+           0x4f, 0x00, 0x00, 0x90, 0x1f, 0x00, 0x00, 0x40,
+           0x39, 0x00, 0x00, 0x9c, 0x6d, 0x00, 0x00, 0xf2,
+           0x2d, 0x00, 0x00, 0xa2, 0x6f, 0x00, 0x00, 0x73,
+           0xc4
+       };
+
+       QByteArray req(reinterpret_cast<const char*>(security_req_pkt),sizeof(security_req_pkt));
+       SecurityRequest(req); // send a security request packet (after which we expect a SecurityResponseReceived event)
+
+    });
+
+    // connect to the security response received event
+    // expected RX response bytes (unprogrammed factory default key):
+    // 23 5A 8A CA BD B4 10 B2 1C 9D 76 85 04 73 0B 2A 4F 8A 19 CD 22 BB FB 78 37 FC 82 7D 90 4A 3D 4D 0F 71 F2
+    // expected RX response bytes (USB lasercube key programmed into sha204):
+    // 23 34 8e 0c f3 01 6e 65 22 33 fb 3c 56 5f 32 07 fd 19 f4 1d 09 48 6f 25 4c 20 b2 4f 39 bd cb 20 b9 09 ce
+    connect(this,&LaserdockNetworkDevice::SecurityResponseReceived,this,[&](bool success,QByteArray response_data){
+        qDebug() << "Security response success:" << success;
+        qDebug() << "data:" << response_data.toHex();
+    });
+*/
 
 }
 
@@ -219,6 +275,26 @@ void LaserdockNetworkDevice::ResetStatus()
     }
 }
 
+void LaserdockNetworkDevice::SetModelInfo(uint8_t region,uint8_t model_num,QString model_str)
+{
+    const char *str = qPrintable(model_str);
+    size_t len = strlen(str)+1; // length of string plus null terminator
+
+    if (len<=25) { // total string size cannot exceed 25 char including null term
+
+        uint8_t cmd_buf[30]; // max size we need if using full model string length
+
+        cmd_buf[0] = cmds::LASERCUBE_CMD_SET_NV_MODEL_INFO;
+        cmd_buf[1] = 0xA2;
+        cmd_buf[2] = 0x2A;
+        cmd_buf[3] = region;
+        cmd_buf[4] = model_num;
+        strcpy(reinterpret_cast<char*>(&cmd_buf[5]),str);
+        len+=5; // add on the 5 bytes at start of packet
+        send_command(cmd_buf,len,false);
+        qDebug() << "LaserdockNetworkDevice::SetModelInfo cmd sent";
+    }
+}
 
 void LaserdockNetworkDevice::process()
 {
@@ -283,13 +359,13 @@ void LaserdockNetworkDevice::handleFullInfoPkt(const QByteArray &data)
 
             int8_t temperature = static_cast<int8_t>(data[24]);
             if (temperature!=m_temperature_degc) {
-                emit TemperatureUpdated(temperature);
+                TemperatureUpdated(temperature);
                 m_temperature_degc = temperature;
             }
 
             ConnectionType con = static_cast<ConnectionType>(data[25]+1);
             if (con!=m_contype){
-                emit ConnectionTypeUpdated(con);
+                ConnectionTypeUpdated(con);
                 m_contype = con;
             }
 
@@ -304,7 +380,7 @@ void LaserdockNetworkDevice::handleFullInfoPkt(const QByteArray &data)
 
             std::string serstr = str.toStdString();
             if (serstr!=m_serialnumber){
-                emit SerialNumberUpdated(str);
+                SerialNumberUpdated(str);
                 m_serialnumber = serstr;
             }
 
@@ -346,6 +422,12 @@ void LaserdockNetworkDevice::handleFullInfoPkt(const QByteArray &data)
                 m_status = AUTHENTICATING;
                 emit DeviceNeedsAuthenticating();
             }
+
+            /*
+            if (m_status!=INITIALIZED){
+                m_status = INITIALIZED; // we have received full info so we can go live
+                emit DeviceInitialized();
+            }*/
 
             m_disconnected = false;
             m_nocommstimer.start(constants::comms_timeout_period_ms); // restart comms timeout
@@ -833,21 +915,20 @@ bool LaserdockNetworkDevice::clear_ringbuffer()
     return true;
 }
 
-// unused in this implementation
+// ???? what's this?
 bool LaserdockNetworkDevice::runner_mode_enable(bool v)
 {
     Q_UNUSED(v)
     return false;
 }
 
-// unused in this implementation
-bool LaserdockNetworkDevice::runner_mode_run(bool v)
+// ???? what's this?
+bool LaserdockNetworkDevice::runner_mode_run(bool)
 {
-    Q_UNUSED(v)
     return false;
 }
 
-// unused in this implementation
+// ???? what's this?
 bool LaserdockNetworkDevice::runner_mode_load(LaserdockSample *samples, uint16_t position, uint16_t count)
 {
     Q_UNUSED(samples)

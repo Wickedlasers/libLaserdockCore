@@ -896,7 +896,8 @@ float olRenderFrame(int max_fps)
 	//olLog("Rendered frame! %d\n", cwbuf);
     cwbuf = (cwbuf+ 1) % fbufs;
 
-	return count / (float)params.rate;
+    //return count / (float)params.rate;
+    return (float)params.rate / count; // return fps
 }
 
 

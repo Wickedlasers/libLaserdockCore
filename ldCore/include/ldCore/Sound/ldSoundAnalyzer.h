@@ -36,8 +36,6 @@ public:
     explicit ldSoundAnalyzer(QObject *parent = nullptr);
     ~ldSoundAnalyzer();
 
-    static int s_latencyms;
-    static int s_enableLatency;
     static float s_volumeCoeff;
 
 public slots:

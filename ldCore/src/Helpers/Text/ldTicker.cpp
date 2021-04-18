@@ -35,6 +35,16 @@ ldTicker::~ldTicker()
 {
 }
 
+// calculate centered text position when speed is set to 0
+void ldTicker::updateXPos()
+{
+    if (cmpf(m_speed,0.0f)){
+        float xpos = 0.5f-(m_textLabel->getWidth()/2.0f);
+        if (xpos<0.0f) xpos = 0.0f;
+        m_textLabel->setPosition(ldVec2(xpos, m_textLabel->getPosition().y));
+    }
+}
+
 void ldTicker::setMessage(const QString &message)
 {
     setMessages(QStringList{message});
@@ -57,6 +67,7 @@ void ldTicker::setFontSize(float fontSize)
     m_textLabel->setFontSize(fontSize);
     // center height pos
     m_textLabel->setPosition(ldVec2(m_textLabel->getPosition().x, calcTextY()));
+    updateXPos();
 }
 
 float ldTicker::getFontSize() const
@@ -67,6 +78,7 @@ float ldTicker::getFontSize() const
 void ldTicker::setFont(int font)
 {
     m_textLabel->setFont(font);
+    updateXPos();
 }
 
 int ldTicker::font() const
@@ -82,6 +94,7 @@ double ldTicker::letterSpace() const
 void ldTicker::setLetterSpace(double letterSpace)
 {
     m_textLabel->setLetterSpace(letterSpace);
+    updateXPos();
 }
 
 float ldTicker::getHeight() const
@@ -113,6 +126,7 @@ float ldTicker::calcTextY()
 void ldTicker::setSpeed(float speed)
 {
     m_speed = speed;
+    updateXPos();
 }
 
 float ldTicker::speed() const
@@ -150,4 +164,5 @@ void ldTicker::updateCurrentMessage()
     text.replace('\n', '\t');
     m_textLabel->setText(text);
     restart();
+    updateXPos();
 }

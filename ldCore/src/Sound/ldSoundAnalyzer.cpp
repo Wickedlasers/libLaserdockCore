@@ -39,8 +39,6 @@ const int MAX_LAG_BUFFER_MS = 1000;
 const int MAX_SOUND_UPDATE_FRAMES = 4*SAMPLE_SIZE; // sample_size is measured in frames
 }
 
-int ldSoundAnalyzer::s_latencyms = 0;
-int ldSoundAnalyzer::s_enableLatency = true;
 float ldSoundAnalyzer::s_volumeCoeff = 1;
 
 
@@ -271,13 +269,12 @@ void ldSoundAnalyzer::processAudioBuffer(float *convertedBuffer, int frames, int
 void ldSoundAnalyzer::sendBlocks() {
     // process up to maxBlocks frames of audio at once
     int maxBlocks = 8;// * AUDIO_OVERDRIVE_FACTOR;
-    int lagframes = s_enableLatency ? 44.100f * s_latencyms * 2 : 0; // keep buffer at least this big
 
     // process blocks
     for (int bidx = 0; bidx < maxBlocks; bidx++) {
 
         // if >= 1 full frame available, then proces
-        if (m_pAudioBuffer->getSize() >= AUDIO_SUB_BLOCK_SIZE + lagframes) {
+        if (m_pAudioBuffer->getSize() >= AUDIO_SUB_BLOCK_SIZE) {
 
             // prepare to get a sub-block of data
             AudioBlock newSubBlock;

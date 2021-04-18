@@ -3,7 +3,11 @@ if(WIN32)
 endif()
 
 if(APPLE)
-    set(OpenCV_DIR "${CMAKE_CURRENT_LIST_DIR}/mac/share")
+    if(LD_IOS_BUILD)
+        set(OpenCV_DIR "${CMAKE_CURRENT_LIST_DIR}/ios")
+    else()
+        set(OpenCV_DIR "${CMAKE_CURRENT_LIST_DIR}/mac/share")
+    endif()
 endif()
 
 if(ANDROID)
@@ -11,7 +15,11 @@ if(ANDROID)
 endif()
 
 mark_as_advanced(OpenCV_DIR)
-set(CMAKE_PREFIX_PATH ${OpenCV_DIR})
-find_package(OpenCV COMPONENTS opencv_core opencv_imgproc opencv_videoio opencv_highgui opencv_imgcodecs REQUIRED)
 
+if(LD_IOS_BUILD)
+    set(OPENCV_FRAMEWORK "${OpenCV_DIR}/opencv2.framework")
+else()
+    list(APPEND CMAKE_PREFIX_PATH ${OpenCV_DIR})
+    find_package(OpenCV COMPONENTS opencv_core opencv_imgproc opencv_videoio opencv_highgui opencv_imgcodecs REQUIRED)
+endif()
 

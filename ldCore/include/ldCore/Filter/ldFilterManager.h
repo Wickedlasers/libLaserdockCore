@@ -58,6 +58,7 @@ public:
 
     ldColorCurveFilter *colorCurveFilter() const;
     ldColorFaderFilter *colorFaderFilter() const;
+    ldStrobeFilter *strobeFilter() const;
     ldHueFilter *hueFilter() const;
     ldHueShiftFilter *hueShiftFilter() const;
     ld3dRotateFilter *rotate3dFilter() const;

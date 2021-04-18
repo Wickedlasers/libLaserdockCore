@@ -111,10 +111,15 @@ public:
         }
     }
 
+    unsigned GetLevel()
+    {
+        return m_head;
+    }
 
     void Reset()
     {
         memset(ldBuffer<T>::GetData(), 0, ldBuffer<T>::GetSize() * sizeof(T));
+        m_head = 0;
     }
 
 private:

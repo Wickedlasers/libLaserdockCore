@@ -135,6 +135,10 @@ public slots:
     // set this device as authenticated or not.
     void DeviceAuthenticated(bool state);
 
+    // set the Non-Volatile device model info (used at factory only to program model type, number, and region)
+    // note: model_str can only be max 24 characters long
+    void SetModelInfo(uint8_t region,uint8_t model_num,QString model_str);
+
 private:
     static const uint max_buffered_samples = 140;
     static const uint uncompressed_sample_size_bytes = 10;

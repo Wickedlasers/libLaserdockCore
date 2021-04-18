@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # library
 add_library(liblzr SHARED)
 
+set_property(TARGET liblzr PROPERTY AUTOMOC OFF)
+set_property(TARGET liblzr PROPERTY AUTORCC OFF)
+set_property(TARGET liblzr PROPERTY AUTOUIC OFF)
+
 target_include_directories(liblzr PUBLIC .)
 
 target_sources(liblzr PRIVATE

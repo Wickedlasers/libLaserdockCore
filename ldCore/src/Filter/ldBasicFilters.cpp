@@ -24,40 +24,139 @@
 
 #include "ldCore/Helpers/Color/ldColorUtil.h"
 
+
+// ---------- ldColorFilter ----------
+
+void ldColorFilter::process(ldVertex &v)
+{
+    if(!enabled)
+        return;
+
+    if(v.r() == 0 && v.g() == 0 && v.b() == 0)
+        return;
+
+    v.r() = r;
+    v.g() = g;
+    v.b() = b;
+}
+
 // ---------- ldColorCurveFilter ----------
 
 float ldColorCurve::get(float f) {
-    // old
-    /* float a, b, z;
-         if      (f <= 0.25) {a =  0; b = x1; z = (f-0.00)*4;}
-         else if (f <= 0.50) {a = x1; b = x2; z = (f-0.25)*4;}
-         else if (f <= 0.75) {a = x2; b = x3; z = (f-0.50)*4;}
-         else                {a = x3; b =  1; z = (f-0.75)*4;}
-         return (1-z)*a + (z)*b;*/
+    if (f<=minval) return minval;
+    return minval + ((maxval-minval)* pow(f , gammaval));
+}
 
-    float midx = (1-dflect)/2;
-    float midy = ((1+dflect)/2) * (gain-thold) + thold;
+// accepts range 100 (gamma 1.0 for linear) to 800 (gamma of 8.0)
+void ldColorCurve::setGamma(int val)
+{
+    if (val<100) val = 100;
+    if (val>800) val = 800;
 
-    if (f < midx) {
-        float slope = (midy-thold)/(midx-0);
-        return  slope*(f-0) + thold;
-    } else {
-        float slope = (gain-midy)/(1-midx);
-        return  slope*(f-midx) + midy;
-    }
+    igamma = val;
+    gammaval = val / 100.0f; // convert to 1.0f to 8.0f
+
+}
+
+// accepts range 1.0 for linear to maximum gamma of 8.0
+void ldColorCurve::setGamma(float val)
+{
+    if (val<1.0f) val = 1.0f;
+    if (val>8.0f) val = 8.0f;
+
+    gammaval = val;
+    igamma = val * 100.0f;
+}
+
+// returns int version of the current gamma (100 to 800)
+int ldColorCurve::getGamma()
+{
+    return igamma;
+}
+
+// returns real version of the current gamma (1.0f to 8.0f)
+float ldColorCurve::getGammaf()
+{
+    return gammaval;
+}
+
+// set minimum value (0 = 0.0f, 255 = 1.0f)
+void ldColorCurve::setMin(int val)
+{
+    if (val<0) val = 0;
+    if (val>255) val = 255;
+
+    imin = val;
+    minval = val / 255.0f;
+
+}
+
+// set minimum value range 0.0 to 1.0f
+void ldColorCurve::setMin(float val)
+{
+    if (val<0.0f) val = 0.0f;
+    if (val>1.0f) val = 1.0f;
+
+    minval = val;
+    imin = val * 255.0f;
+}
+
+// get integer val of the current min value (0-255)
+int  ldColorCurve::getMin()
+{
+    return imin;
+}
+
+// get real val of the current min value (0.0f to 1.0f)
+float  ldColorCurve::getMinf()
+{
+    return minval;
+}
+
+// set max from integer (0 = 0.0f, 255 = 1.0f)
+void ldColorCurve::setMax(int val)
+{
+    if (val<0) val = 0;
+    if (val>255) val = 255;
+
+    imax = val;
+    maxval = val / 255.0f;
+}
+
+void ldColorCurve::setMax(float val)
+{
+    if (val<0.0f) val = 0.0f;
+    if (val>1.0f) val = 1.0f;
+
+    maxval = val;
+    imax = val * 255.0f;
+}
+
+// returns int of the current max value (0-255)
+int  ldColorCurve::getMax()
+{
+    return imax;
+}
+
+// returns int of the current max value (0-255)
+float  ldColorCurve::getMaxf()
+{
+    return maxval;
 }
 
 ldColorCurveFilter::ldColorCurveFilter()
 {
-    curveR.gain = (int)(255 * 0.91) / 255.0f;
-    curveG.gain = (int)(255 * 0.99) / 255.0f;
-    curveB.gain = (int)(255 * 0.48) / 255.0f;
-    curveR.thold = (int)(255 * 0.0) / 255.0f;
-    curveG.thold = (int)(255 * 0.0) / 255.0f;
-    curveB.thold = (int)(255 * 0.0) / 255.0f;
-    curveR.dflect = (int)(100 * 0) / 100.0f;
-    curveG.dflect = (int)(100 * 0) / 100.0f;
-    curveB.dflect = (int)(100 * 0) / 100.0f;
+    curveR.setMin(0.0f);
+    curveG.setMin(0.0f);
+    curveB.setMin(0.0f);
+
+    curveR.setMax(1.0f);
+    curveG.setMax(1.0f);
+    curveB.setMax(1.0f);
+
+    curveR.setGamma(1.0f);
+    curveG.setGamma(1.0f);
+    curveB.setGamma(1.0f);
 }
 
 void ldColorCurveFilter::process(ldVertex &v)
@@ -165,6 +264,26 @@ void ldPowerFilter::process(ldVertex &v)
 
     for (int i = 0; i < ldVertex::COLOR_COUNT; i++)
         v.color[i] = fminf(fmaxf(v.color[i], 0), 1);
+}
+
+// ---------- ldStrobeFilter ----------
+
+ldStrobeFilter::ldStrobeFilter()
+{
+    etimer.start();
+}
+
+void ldStrobeFilter::process(ldVertex &v)
+{
+    if (!m_enabled) return;
+
+    m_frame = (etimer.elapsed() % 1000) % (m_timeOn + m_timeOff);
+
+    if (m_frame >= m_timeOn)
+    {
+        // time off
+        v.r() = v.g() = v.b() = 0;
+    }
 }
 
 // ---------- ldRotateFilter ----------

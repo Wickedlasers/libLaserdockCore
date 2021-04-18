@@ -11,3 +11,7 @@ if(LD_ANDROID_BUILD)
         set(ANDROID_ABI "arm64-v8a" CACHE STRING "") # currently only "arm64-v8a" and "armeabi-v7a" values are supported
     endif()
 endif()
+
+if(LD_IOS_BUILD)
+    set(LD_APPLE_DEVELOPMENT_ID "XXXXXXXXX" CACHE STRING "" FORCE)
+endif()

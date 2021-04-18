@@ -45,6 +45,6 @@ std::vector<std::unique_ptr<LaserdockDevice> > LaserdockDeviceManagerPrivate::ge
         }
     }
 
-    libusb_free_device_list(libusb_device_list, cnt);
+    libusb_free_device_list(libusb_device_list, 1);
     return laserdockDevices;
 }

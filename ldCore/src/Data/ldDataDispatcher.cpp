@@ -51,7 +51,7 @@ ldDataDispatcher::ldDataDispatcher(ldBufferManager *bufferManager, ldHardwareMan
                                                    new ldNetworkHardwareManager(filterManager/*, this*/), // FIXME can't have a parent if we are moving to a worker thread.
                                                    m_simulatorEngine.get()))
 #ifdef LASERDOCKLIB_USB_SUPPORT
-    , m_activeDataWorker( (m_isNetwork) ? m_networkDataWorker.get() : m_usbDataWorker.get())
+    , m_activeDataWorker(m_usbDataWorker.get())
 #else
     , m_activeDataWorker(m_networkDataWorker.get())
 #endif
@@ -124,7 +124,6 @@ void ldDataDispatcher::setActiveTransfer(bool active)
 #ifdef LASERDOCKLIB_USB_SUPPORT
 void ldDataDispatcher::onIsNetworkChanged(bool isNetwork)
 {
-    qDebug() << "change isNetwork to: " << isNetwork;
     m_activeDataWorker->setActiveTransfer(false);
     m_activeDataWorker->setActive(false);
     m_activeDataWorker->setSimulatorEnabled(false);

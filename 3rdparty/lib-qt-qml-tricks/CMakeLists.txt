@@ -16,6 +16,7 @@ set(Qt5Gui_DIR "${QTDIR}/lib/cmake/Qt5Gui")
 set(Qt5Qml_DIR "${QTDIR}/lib/cmake/Qt5Qml")
 set(Qt5Quick_DIR "${QTDIR}/lib/cmake/Qt5Quick")
 set(Qt5Svg_DIR "${QTDIR}/lib/cmake/Qt5Svg")
+set(CMAKE_PREFIX_PATH "${QTDIR}/lib/cmake")
 find_package(Qt5 CONFIG REQUIRED Core Gui Qml Quick Svg)
 target_link_libraries(libqtqmltricks PRIVATE Qt5::Core Qt5::Gui Qt5::Qml Qt5::Quick Qt5::Svg)
 

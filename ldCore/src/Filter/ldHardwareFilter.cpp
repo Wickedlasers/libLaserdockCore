@@ -67,6 +67,7 @@ class Moving_Average
 ldHardwareFilter::ldHardwareFilter(ldScaleFilter *globalScaleFilter, QObject *parent)
     : QObject(parent)
     , m_borderFilter(new ldDeadzoneFilter())
+    , m_colorFilter(new ldColorFilter())
     , m_colorCurveFilter(new ldColorCurveFilter())
     , m_deadzoneFilter(new ldDeadzoneFilter())
     , m_flipFilter(new ldFlipFilter())
@@ -107,6 +108,11 @@ ldHardwareFilter::ldHardwareFilter(ldScaleFilter *globalScaleFilter, QObject *pa
 
 ldHardwareFilter::~ldHardwareFilter()
 {
+}
+
+ldColorFilter *ldHardwareFilter::colorFilter() const
+{
+    return m_colorFilter.get();
 }
 
 ldColorCurveFilter *ldHardwareFilter::baseColorCurveFilter() const
@@ -153,6 +159,7 @@ void ldHardwareFilter::processFrameV(ldVertex &v)
         // ttl filter should be before color adjustments
         m_ttlFilter->processFilter(v);
         m_colorCurveFilter->process(v);
+        m_colorFilter->process(v);
     }
 
     // keystone

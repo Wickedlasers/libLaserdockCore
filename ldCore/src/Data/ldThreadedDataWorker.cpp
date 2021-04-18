@@ -128,6 +128,7 @@ void ldThreadedDataWorker::run()
             if (cfg.wait_connect_sleep_ms>0) std::this_thread::sleep_for(std::chrono::milliseconds(cfg.wait_connect_sleep_ms));
         // if remote buffer big than just sleep
         } else if (isRemoteBufferTooBig) {
+#pragma message ( "THIS NETWORK CODE NEEDS FIXING!" )
             if (m_isActive) m_hardwareDeviceManager->sendData(0,0); // send null sample to trigger remote buffer size request
             if (cfg.wait_buffer_sleep_ms>0) std::this_thread::sleep_for(std::chrono::milliseconds(cfg.wait_buffer_sleep_ms));
         // everything is ok, process buffer flow
@@ -173,6 +174,7 @@ void ldThreadedDataWorker::run()
             // refill if needed
             if(localBuffer == 0) {
                 m_frameBuffer->reset();
+                m_simulatorEngine->frame_complete();
             }
         }
     }

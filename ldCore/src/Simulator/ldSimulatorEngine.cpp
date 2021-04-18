@@ -29,16 +29,16 @@
 #include "ldSimulatorProcessor.h"
 
 namespace  {
-    const unsigned int DEFAULT_SIZE_FOR_VBUFFER = 1000;
-    const unsigned int HISTORY_SAMPLE_COUNT = 1000;
+    // ensure buffer can hold the most comlex frame (mostly due to games complexity)
+    const unsigned int DEFAULT_SIZE_FOR_VBUFFER = 3500;
 }
 
 ldSimulatorEngine::ldSimulatorEngine()
-    : m_buffer(DEFAULT_SIZE_FOR_VBUFFER)
+    : m_buffer(DEFAULT_SIZE_FOR_VBUFFER)    
     , m_processor(new ldSimulatorProcessor)
     , m_grid(new ldSimulatorGrid())
 {
-    vbuffer.resize(DEFAULT_SIZE_FOR_VBUFFER);
+    vbuffer.resize(DEFAULT_SIZE_FOR_VBUFFER);    
 }
 
 ldSimulatorEngine::~ldSimulatorEngine()
@@ -75,21 +75,16 @@ void ldSimulatorEngine::uninit()
 
 void ldSimulatorEngine::drawLaserGeometry(QOpenGLShaderProgram *program)
 {
-    if (!m_lock.tryLockForRead())
-        return;
-
-    drawBuffer(program, vbuffer);
+    m_lock.lockForWrite();
+    drawBuffer(program, vbuffer,vbuffer_size);
     if(m_grid->isEnabled())
-        drawBuffer(program, m_grid->buffer());
-
+            drawBuffer(program, m_grid->buffer());
     m_lock.unlock();
 }
 
 void ldSimulatorEngine::pushVertexData(ldVertex * data, unsigned int size) {
 
-    // need lock first
-    if (!m_lock.tryLockForWrite())
-        return;
+    m_lock.lockForWrite();
 
     // create temp buffer for dots processing
     const int maxsize = 2048;
@@ -99,12 +94,27 @@ void ldSimulatorEngine::pushVertexData(ldVertex * data, unsigned int size) {
     // process dots
     m_processor->bigger_dots(data, data_processed, size);
 
-    // send processed data to the drawing engine
-    m_buffer.Push(data_processed, size);
-    m_buffer.Get(&vbuffer[0], HISTORY_SAMPLE_COUNT);
+
+    // buffer up partial frame points (until frame_complete() func is called).
+     m_buffer.Push(data_processed, size);
 
     // done
     m_lock.unlock();
+}
+
+void ldSimulatorEngine::frame_complete()
+{
+    m_lock.lockForWrite();
+
+    vbuffer_size = m_buffer.GetLevel();
+
+    if (vbuffer_size>0) {
+        m_buffer.Get(&vbuffer[0], vbuffer_size );
+        m_buffer.Reset();
+    }
+
+    m_lock.unlock();
+
 }
 
 ldSimulatorGrid *ldSimulatorEngine::grid() const
@@ -112,11 +122,13 @@ ldSimulatorGrid *ldSimulatorEngine::grid() const
     return m_grid.get();
 }
 
-void ldSimulatorEngine::drawBuffer(QOpenGLShaderProgram *program, const std::vector<ldVertex> &buffer)
-{
+void ldSimulatorEngine::drawBuffer(QOpenGLShaderProgram *program, const std::vector<ldVertex> &buffer, unsigned length)
+{    
+    if (length==0) length = buffer.size(); // if length is specified use it, otherwise use buffer size
+
     glBindBuffer(GL_ARRAY_BUFFER, vboIds[0]);
     glBufferData(GL_ARRAY_BUFFER,
-                 static_cast<qopengl_GLsizeiptr>(buffer.size() * sizeof(ldVertex)),
+                 static_cast<qopengl_GLsizeiptr>(length * sizeof(ldVertex)),
                  &buffer[0],
                  GL_DYNAMIC_DRAW);
 
@@ -147,5 +159,5 @@ void ldSimulatorEngine::drawBuffer(QOpenGLShaderProgram *program, const std::vec
                           reinterpret_cast<const void *>(offset));
 
     // Draw
-    glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(buffer.size()));
+    glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(length));
 }

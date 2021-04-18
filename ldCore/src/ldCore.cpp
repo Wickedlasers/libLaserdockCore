@@ -136,7 +136,6 @@ ldCore::~ldCore()
     qDebug() << "ldCore destroyed";
 }
 
-
 /*!
     \brief Instantiates member components and set up signals/slot connections.
 
@@ -297,6 +296,8 @@ void ldCore::initResourceDir()
         m_resourceDir = qApp->applicationDirPath() + "/Resources";
 #elif defined(Q_OS_ANDROID)
         m_resourceDir = storageDir() + "/resources";
+#elif defined(Q_OS_IOS)
+        m_resourceDir = qApp->applicationDirPath() + "/Res";
 #else
         m_resourceDir = qApp->applicationDirPath();
 #endif

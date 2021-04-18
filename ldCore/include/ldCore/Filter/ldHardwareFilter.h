@@ -43,6 +43,7 @@ public:
 
     void resetFilters();
 
+    ldColorFilter *colorFilter() const;
     ldColorCurveFilter *baseColorCurveFilter() const;
     ldDeadzoneFilter *deadzone() const;
     ldFlipFilter *flipFilter();
@@ -94,6 +95,7 @@ private:
     float m_scalelimiter{1.0f};
 
     std::unique_ptr<ldDeadzoneFilter> m_borderFilter;
+    std::unique_ptr<ldColorFilter> m_colorFilter;
     std::unique_ptr<ldColorCurveFilter> m_colorCurveFilter;
     std::unique_ptr<ldDeadzoneFilter> m_deadzoneFilter;
     std::unique_ptr<ldFlipFilter> m_flipFilter;

@@ -66,6 +66,7 @@ public:
 private:
     float calcTextY();
     void updateCurrentMessage();
+    void updateXPos();
 
     std::unique_ptr<ldTextLabel> m_textLabel;
 

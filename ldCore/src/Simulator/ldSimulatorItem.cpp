@@ -43,6 +43,7 @@ ldSimulatorItem::ldSimulatorItem(QQuickItem *parent)
     , m_clearColor(QColor("#131823"))
     , m_isActive(false)
 {
+    connect(this, &QQuickItem::visibleChanged, this, &ldSimulatorItem::onVisibleChanged);
     connect(this, &QQuickItem::windowChanged, this, &ldSimulatorItem::handleWindowChanged);
 }
 
@@ -92,7 +93,7 @@ void ldSimulatorItem::paint()
 
     // Not strictly needed for this example, but generally useful for when
     // mixing with raw OpenGL.
-//    window()->resetOpenGLState();
+    // window()->resetOpenGLState();
 
     window()->update();
 }
@@ -126,7 +127,7 @@ void ldSimulatorItem::init()
             // delay in order to skip previous visualizer
             QTimer::singleShot(100, m_renderer.data(), &ldSimulatorRenderer::loadEngine);
         }
-        if(m_autostart) {
+        if(m_autostart && isVisible()) {
             start();
         }
     }
@@ -150,6 +151,17 @@ void ldSimulatorItem::handleWindowChanged(QQuickWindow *win)
         // and nothing would show.
         win->setClearBeforeRendering(false);
     }
+}
+
+void ldSimulatorItem::onVisibleChanged()
+{
+    if(!m_autostart)
+        return;
+
+    if(isVisible())
+        start();
+    else
+        stop();
 }
 
 

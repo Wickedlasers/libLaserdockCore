@@ -17,6 +17,16 @@ target_sources(kiss_fft130 PRIVATE
     tools/kiss_fftr.h
     )
 
+# TODO: Check if OpenMP has sense
+# Note by Sergey: from my check on mac CPU is 100% for all cores if _OPENMP is enabled
+# Most probably we don't need it here
+#if(LD_CORE_ENABLE_OPENMP)
+#    target_compile_definitions(kiss_fft130 PRIVATE _OPENMP)
+#    target_link_libraries(kiss_fft130 PUBLIC
+#        3rdparty::openmp
+#        )
+#endif()
+
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     target_compile_options(kiss_fft130 PRIVATE -fPIC)
 endif()

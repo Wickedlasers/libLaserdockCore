@@ -495,6 +495,7 @@ void FilterColorScroll::process(ldVertex &input) {
     if (m_type == 3) {
         ldMusicManager& m = *ldCore::instance()->musicManager();
         float bps = ldFilterMath::normalizeToBPM(25, m.bestBpm()) / 60.0f;
+        if(cmpf(bps, 0)) bps = 1/60.f;
         //if (fp.tick || (fp.value < (1.0f/16.0f))) fp.freq = bps/32;
         pulse4.freq = bps/32;
         pulse4.update(1.0f/30000.0f);
@@ -547,6 +548,7 @@ void FilterColorRainbeam::process(ldVertex &input) {
 
     ldMusicManager& m = *ldCore::instance()->musicManager();
     float bps = ldFilterMath::normalizeToBPM(25, m.bestBpm()) / 60.0f;
+    if(cmpf(bps, 0)) bps = 1/60.f;
     //if (fp.tick || (fp.value < (1.0f/16.0f))) fp.freq = bps/32;
     fp.freq = bps/32;
     fp.update(1.0f/30000.0f);

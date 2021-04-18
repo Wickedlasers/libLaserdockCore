@@ -19,7 +19,11 @@
 **/
 
 #include "ldCore/Sound/Midi/ldMidiTypes.h"
+#include <QDebug>
 
+namespace  {
+static const int MIDI_OCTAVE_START = -2; // octave starts at -2, not 0
+}
 
 QString ldMidiNote::noteToString(uint8_t note)
 {
@@ -51,9 +55,11 @@ QString ldMidiNote::noteToString(uint8_t note)
         break;
     }
 
-    int octave = note / 12;
+    int octave = (note / 12) + MIDI_OCTAVE_START;
 
     noteStr += QString::number(octave);
+
+    //qDebug() << "ldMidiNote::noteToString: " << noteStr;
 
     return noteStr;
 }
@@ -113,13 +119,24 @@ uint8_t ldMidiNote::noteFromString(const QString &noteStr, bool &ok)
         return result;
     }
 
+    // midi note range starts at C-2 (value of 0) up to G8 (127)
+    bool isneg = false;
+    if (noteStr[indexToCheck]=='-'){
+        indexToCheck++;
+        isneg= true;
+    }
+
     bool octaveOk;
     int octave = noteStr.mid(indexToCheck).toInt(&octaveOk);
     if(!octaveOk) {
         return result;
     }
+    if(isneg)
+        octave *= -1;
 
-    result += octave * 12;
+    octave-=MIDI_OCTAVE_START;
+
+    result += (octave * 12);
 
     ok = true;
     return result;

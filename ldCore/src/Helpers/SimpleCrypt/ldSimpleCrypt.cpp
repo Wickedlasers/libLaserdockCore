@@ -85,12 +85,17 @@ QByteArray ldSimpleCrypt::decrypt(const QString &filePath)
     return decodedData;
 }
 
-void ldSimpleCrypt::encryptFolderR(const QString &folder)
+void ldSimpleCrypt::encryptFolderR(const QString &folder, const QStringList &exceptionFolderList)
 {
 //    qDebug() << __FUNCTION__ << folder;
     QDirIterator it(folder, QStringList() << "*.svg" << "*.ldva2" << "*.ldva4" << "*.ild", QDir::Files, QDirIterator::Subdirectories);
     while (it.hasNext()) {
-        encryptToFile(it.next());
+        QString filePath = it.next();
+        QString parentDir = QFileInfo(filePath).dir().dirName();
+        if(exceptionFolderList.contains(parentDir))
+            continue;
+
+        encryptToFile(filePath);
     }
 }
 

@@ -85,11 +85,10 @@ void ldFilterManager::processFrame(ldVertexFrame &frame)
         if(m_preGlobalFilter)
             m_preGlobalFilter->processFilter(frame[i]);
 
-        m_basicGlobalFilter.processFilter(frame[i]);
-
-        // apply global filter to simulator output
         if (m_globalFilter)
             m_globalFilter->processFilter(frame[i]);
+
+        m_basicGlobalFilter.processFilter(frame[i]);
     }
 }
 
@@ -109,6 +108,11 @@ ldColorCurveFilter *ldFilterManager::colorCurveFilter() const
 ldColorFaderFilter *ldFilterManager::colorFaderFilter() const
 {
     return m_basicGlobalFilter.colorFaderFilter();
+}
+
+ldStrobeFilter *ldFilterManager::strobeFilter() const
+{
+    return m_basicGlobalFilter.strobeFilter();
 }
 
 ldHueFilter *ldFilterManager::hueFilter() const
