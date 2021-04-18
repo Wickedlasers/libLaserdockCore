@@ -26,7 +26,7 @@ for:
   - brew install qt5
   build_script:
   - mkdir build && cd build
-  - cmake .. -DQTDIR="/usr/local/opt/qt"
+  - cmake .. -DQTDIR="/usr/local/opt/qt@5"
   - cmake --build . -- -j4
 -
   matrix:
