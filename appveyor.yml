@@ -22,6 +22,7 @@ for:
     only:
       - image: macOS
   install:
+  - brew update
   - brew install qt5
   build_script:
   - mkdir build && cd build
