@@ -103,6 +103,7 @@ float ldRendererOpenlase::renderFrame(ldFrameBuffer * buffer, int max_fps, bool 
     }
 
     // filter openlase result
+    m_filterManager->lock();
     m_filterManager->resetFilters();
     m_filterManager->setFrameModes(m_frameModes);
 
@@ -113,6 +114,7 @@ float ldRendererOpenlase::renderFrame(ldFrameBuffer * buffer, int max_fps, bool 
     }
 
     m_filterManager->processFrame(m_frame);
+    m_filterManager->unlock();
 
     // apply data filter
     buffer->pushFrame(m_frame);

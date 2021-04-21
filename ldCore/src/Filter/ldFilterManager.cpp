@@ -154,3 +154,13 @@ void ldFilterManager::setHueFiltersActive(bool active)
 {
     m_basicGlobalFilter.setHueFiltersActive(active);
 }
+
+void ldFilterManager::lock()
+{
+    m_mutex.lock();
+}
+
+void ldFilterManager::unlock()
+{
+    m_mutex.unlock();
+}

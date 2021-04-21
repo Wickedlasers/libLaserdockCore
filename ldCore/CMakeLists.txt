@@ -390,7 +390,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Multimedia 
 
 # -------------  3RDPARTY -----------
 
-
 # public
 target_link_libraries(${PROJECT_NAME} PUBLIC
     3rdparty::aubio

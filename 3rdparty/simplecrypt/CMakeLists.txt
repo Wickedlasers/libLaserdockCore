@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
+set(SIMPLECRYPT_XOR_KEY "0" CACHE STRING "Simplecrypt ")
+
 add_library(simplecrypt)
 
 set_property(TARGET simplecrypt PROPERTY AUTOMOC OFF)
@@ -18,6 +20,7 @@ target_link_libraries(simplecrypt PRIVATE
     Qt5::Core
     )
 
+target_compile_definitions(simplecrypt PRIVATE SIMPLECRYPT_XOR_KEY=${SIMPLECRYPT_XOR_KEY})
 
 if(LD_CORE_ENABLE_OPENMP)
     target_link_libraries(simplecrypt PUBLIC

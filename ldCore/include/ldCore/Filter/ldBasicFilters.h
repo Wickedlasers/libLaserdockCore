@@ -266,6 +266,8 @@ public:
     void setYScale(float value); // 0.1..1
     float yScale() const;
 
+    void setScale(float value);
+
     // enabled
     void setEnabled(bool enabled);
     bool isEnabled() const;

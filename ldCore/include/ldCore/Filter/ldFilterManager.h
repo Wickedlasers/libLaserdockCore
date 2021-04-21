@@ -22,6 +22,7 @@
 #define LDFILTERMANAGER_H
 
 #include <QtCore/QObject>
+#include <QtCore/QMutex>
 
 #include "ldCore/ldCore_global.h"
 
@@ -69,6 +70,9 @@ public:
 
     void setHueFiltersActive(bool active);
 
+    void lock();
+    void unlock();
+
 private:
     ldFilterBasicGlobal m_basicGlobalFilter;
     ldFilterBasicData m_dataFilter;
@@ -79,6 +83,7 @@ private:
 
     std::unique_ptr<ld3dRotateFilter> m_3dRotateFilter;
 
+    QMutex m_mutex;
 };
 
 #endif // LDFILTERMANAGER_H

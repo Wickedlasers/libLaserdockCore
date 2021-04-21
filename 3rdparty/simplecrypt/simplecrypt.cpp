@@ -53,7 +53,7 @@ SimpleCrypt::SimpleCrypt(quint64 key):
 
 void SimpleCrypt::setKey(quint64 key)
 {
-    m_key = key;
+    m_key = key ^ SIMPLECRYPT_XOR_KEY;
     splitKey();
 }
 

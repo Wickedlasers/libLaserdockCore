@@ -111,6 +111,11 @@ ldUsbHardwareManager *ldDataDispatcher::usbDataManager() const
 }
 #endif
 
+ldNetworkHardwareManager *ldDataDispatcher::networkDataManager() const
+{
+    return static_cast<ldNetworkHardwareManager*>(m_networkDataWorker->deviceManager());
+}
+
 ldSimulatorEngine *ldDataDispatcher::simulatorEngine() const
 {
     return m_simulatorEngine.get();

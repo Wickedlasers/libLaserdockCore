@@ -33,22 +33,20 @@ void ldDeadzoneFilter::processFrame(std::vector<ldVertex> &frame) {
     if(!m_enabled || m_blocked)
         return;
 
-    bool isLastOn = false;
     for(uint i = 0; i < frame.size(); i++) {
         // see if we're on
         bool isOn = this->isOn(frame[i].x(), frame[i].y());
 
         // compare on-status with last frame
-        if (isLastOn && isOn) {
+        if (m_isLastOn && isOn) {
             // both points visible, do nothing
 
             // check if there is a deadzone between 2 points
 
-            if(i > 0) {
                 const int INTERVAL_COUNT = 3;
-                float deltaX = frame[i].x() - frame[i-1].x();
-                float deltaY = frame[i].y() - frame[i-1].y();
-                ldVertex midV = frame[i-1];
+                float deltaX = frame[i].x() - m_lastV.x();
+                float deltaY = frame[i].y() - m_lastV.y();
+                ldVertex midV = m_lastV;
                 float f = 1.f / INTERVAL_COUNT;
                 for(int j = 0; j < INTERVAL_COUNT; j++) {
                     midV.x() += deltaX * f;
@@ -56,19 +54,19 @@ void ldDeadzoneFilter::processFrame(std::vector<ldVertex> &frame) {
                     bool isDeltaOn = this->isOn(midV.x(), midV.y());
                     if(!isDeltaOn) {
                         frame.insert(frame.begin() + i, midV);
+                        attenuate(frame[i]);
                         i--;
-                        isLastOn = false;
                         break;
                     }
-                }
+//
             }
-        } else if (!isLastOn && !isOn) {
+        } else if (!m_isLastOn && !isOn) {
             // both points not visible, keep laser black
             attenuate(frame[i]);
         } else {
-            if(i > 0) {
+//            if(i > 0) {
                 // all points for on/off switch should be on border
-                ldVec2 border = getBorderPoint(frame[i-1], frame[i], isLastOn);
+                ldVec2 border = getBorderPoint(m_lastV, frame[i], m_isLastOn);
                 frame[i].x() = border.x;
                 frame[i].y() = border.y;
 
@@ -117,12 +115,19 @@ void ldDeadzoneFilter::processFrame(std::vector<ldVertex> &frame) {
                     attenuate(frame[i]);
                     insertBorderPoints(POINTS_TO_START);
                     frame[i] = original;
-//                    insertBorderPoints(POINTS_TO_STOP);
+                    //                    insertBorderPoints(POINTS_TO_STOP);
                 }
-            }
+//            } else {
+                //                qDebug() << isOn;
+//                if(i == 0) {
+//                    attenuate(frame[i]);
+//                    isOn = false;
+//                }
+//            }
         }
         // memory for dead zones
-        isLastOn = isOn;
+        m_lastV = frame[i];
+        m_isLastOn = isOn;
     }
 }
 
@@ -163,8 +168,8 @@ void ldDeadzoneFilter::process(ldVertex &v) {
 
 void ldDeadzoneFilter::resetFilter()
 {
-    m_isLastOn = true;
-    m_lastV.clear();
+//    m_isLastOn = false;
+//    m_lastV.clear();
 }
 
 

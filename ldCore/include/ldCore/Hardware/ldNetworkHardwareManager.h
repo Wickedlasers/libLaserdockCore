@@ -18,6 +18,9 @@ class ldNetworkHardware;
 
 typedef bool (*ldNetworkAuthenticateCallbackFunc)(ldNetworkHardware *device);
 
+typedef QByteArray (*ldGenerateSecurityRequestCallbackFunc)();
+typedef bool (*ldAuthenticateSecurityResponseCallbackFunc)(const QByteArray &resData);
+
 class LDCORESHARED_EXPORT ldNetworkHardwareManager : public ldAbstractHardwareManager
 {
     Q_OBJECT
@@ -42,8 +45,8 @@ public:
 
     virtual DeviceBufferConfig getBufferConfig()  override;
 
-public slots:
-
+    void setGenerateSecurityRequestCb(ldGenerateSecurityRequestCallbackFunc authenticateFunc);
+    void setAuthenticateSecurityCb(ldAuthenticateSecurityResponseCallbackFunc checkFunc);
 
 private:
     signals:
@@ -69,6 +72,10 @@ private:
     QThread m_managerworkerthread;
     QTimer *m_checkTimer;
     QUdpSocket *m_pingskt;
+
+    ldGenerateSecurityRequestCallbackFunc m_genSecReqCb = nullptr;
+    ldAuthenticateSecurityResponseCallbackFunc m_authSecRespCb = nullptr;
+
 
     std::vector<std::unique_ptr<ldNetworkHardware> > m_initializingnetworkHardwares; // somewhere to store new hardware while it is being initialized
     std::vector<std::unique_ptr<ldNetworkHardware> > m_networkHardwares; // once a network hardware has succesully initialized, it is stored here

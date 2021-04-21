@@ -8,7 +8,6 @@
 
 #include <ldCore/Filter/ldFilterManager.h>
 #include <ldCore/Hardware/ldNetworkHardware.h>
-#include <string.h>
 
 ldNetworkHardwareManager::ldNetworkHardwareManager(ldFilterManager *filterManager, QObject *parent)
     : ldAbstractHardwareManager(parent)
@@ -38,24 +37,41 @@ ldAbstractHardwareManager::DeviceBufferConfig ldNetworkHardwareManager::getBuffe
      return *m_currentBufferConfig;
 }
 
+void ldNetworkHardwareManager::setGenerateSecurityRequestCb(ldGenerateSecurityRequestCallbackFunc authenticateFunc)
+{
+    m_genSecReqCb = authenticateFunc;
+}
+
+void ldNetworkHardwareManager::setAuthenticateSecurityCb(ldAuthenticateSecurityResponseCallbackFunc checkFunc)
+{
+    m_authSecRespCb = checkFunc;
+}
+
 // A network cube device is requesting that we authenticate it
 // We should send out a security request from this event
 void ldNetworkHardwareManager::DeviceAuthenticateRequest(LaserdockNetworkDevice&device)
 {
     qDebug() << "device @" << device.get_ip_address() << "needs authenticating...";
-    uint8_t security_req_pkt[]={
-        0x01,
-        0xe0, 0x2e, 0x00, 0x00, 0x40, 0x9c, 0x00,
-        0x00, 0x23, 0x27, 0x08, 0x00, 0x00, 0x00, 0xa1,
-        0x21, 0x00, 0x00, 0xea, 0x35, 0x00, 0x00, 0x75,
-        0x4f, 0x00, 0x00, 0x90, 0x1f, 0x00, 0x00, 0x40,
-        0x39, 0x00, 0x00, 0x9c, 0x6d, 0x00, 0x00, 0xf2,
-        0x2d, 0x00, 0x00, 0xa2, 0x6f, 0x00, 0x00, 0x73,
-        0xc4
-    };
 
-    QByteArray req(reinterpret_cast<const char*>(security_req_pkt),sizeof(security_req_pkt));
-    device.SecurityRequest(req); // send a security request packet (after which we expect a SecurityResponseReceived event)
+    QByteArray reqByteArray;
+    if(m_genSecReqCb) {
+        reqByteArray = m_genSecReqCb();
+    } else {
+        uint8_t security_req_pkt[]={
+            0x01,
+            0xe0, 0x2e, 0x00, 0x00, 0x40, 0x9c, 0x00,
+            0x00, 0x23, 0x27, 0x08, 0x00, 0x00, 0x00, 0xa1,
+            0x21, 0x00, 0x00, 0xea, 0x35, 0x00, 0x00, 0x75,
+            0x4f, 0x00, 0x00, 0x90, 0x1f, 0x00, 0x00, 0x40,
+            0x39, 0x00, 0x00, 0x9c, 0x6d, 0x00, 0x00, 0xf2,
+            0x2d, 0x00, 0x00, 0xa2, 0x6f, 0x00, 0x00, 0x73,
+            0xc4
+        };
+
+        reqByteArray = QByteArray(reinterpret_cast<const char*>(security_req_pkt),sizeof(security_req_pkt));
+    }
+
+   device.SecurityRequest(reqByteArray); // send a security request packet (after which we expect a SecurityResponseReceived event)
 }
 
 // we handle the security response back from a network cube device here
@@ -64,8 +80,19 @@ void ldNetworkHardwareManager::DeviceAuthenticateRequest(LaserdockNetworkDevice&
 void ldNetworkHardwareManager::DeviceAuthenticateResponse(LaserdockNetworkDevice &device,
                                                           bool& success, QByteArray& response_data)
 {
-    // for now we will just tell the device that it was authenticated OK.
-    device.DeviceAuthenticated(true);
+    if(!m_authSecRespCb) {
+        // for now we will just tell the device that it was authenticated OK.
+        device.DeviceAuthenticated(true);
+        return;
+    }
+
+    if(m_authSecRespCb(response_data)) {
+      qDebug() << "Device Authenication Successful.";
+      device.DeviceAuthenticated(true);
+    } else {
+      qDebug() << "Device Authenication Failed.";
+      device.DeviceAuthenticated(false);
+    }
 }
 
 // This handles adding of a new network cube to our manager

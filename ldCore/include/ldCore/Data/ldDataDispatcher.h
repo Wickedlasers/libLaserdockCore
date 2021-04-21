@@ -33,6 +33,7 @@ class ldHardwareManager;
 class ldSimulatorEngine;
 class ldHardwareDataWorker;
 class ldFilterManager;
+class ldNetworkHardwareManager;
 #ifdef LASERDOCKLIB_USB_SUPPORT
 class ldUsbHardwareManager;
 #endif
@@ -61,6 +62,7 @@ public:
     /** Main data worker */
     ldUsbHardwareManager* usbDataManager() const;
 #endif
+    ldNetworkHardwareManager* networkDataManager() const;
 
     /** Simulator core engine class */
     ldSimulatorEngine* simulatorEngine() const;

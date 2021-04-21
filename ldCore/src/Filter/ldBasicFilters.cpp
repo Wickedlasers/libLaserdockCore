@@ -383,6 +383,15 @@ float ldScaleFilter::yScale() const
     return m_yScale;
 }
 
+void ldScaleFilter::setScale(float value)
+{
+    if (value > SCALE_MAX_VALUE) value = SCALE_MAX_VALUE;
+    if (value < SCALE_MIN_VALUE) value = SCALE_MIN_VALUE;
+
+    m_xScale = value;
+    m_yScale = value;
+}
+
 void ldScaleFilter::setEnabled(bool enabled)
 {
     m_enabled = enabled;
