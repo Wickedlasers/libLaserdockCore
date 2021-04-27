@@ -9,6 +9,9 @@
 #include <ldCore/Filter/ldFilterManager.h>
 #include <ldCore/Hardware/ldNetworkHardware.h>
 
+ldGenerateSecurityRequestCallbackFunc ldNetworkHardwareManager::m_genSecReqCb = nullptr;
+ldAuthenticateSecurityResponseCallbackFunc ldNetworkHardwareManager::m_authSecRespCb = nullptr;
+
 ldNetworkHardwareManager::ldNetworkHardwareManager(ldFilterManager *filterManager, QObject *parent)
     : ldAbstractHardwareManager(parent)
     , m_filterManager(filterManager)
@@ -17,10 +20,7 @@ ldNetworkHardwareManager::ldNetworkHardwareManager(ldFilterManager *filterManage
     set_isActive(false);
     moveToThread(&m_managerworkerthread);
     m_managerworkerthread.start();
-
     QTimer::singleShot(0,this, &ldNetworkHardwareManager::init);
-
-
 }
 
 ldNetworkHardwareManager::~ldNetworkHardwareManager()

@@ -50,6 +50,7 @@
 #include "src/Visualizations/Visualizers/Simple/ldCircleVisualizer.h"
 #include "src/Visualizations/Visualizers/Simple/ldSquareVisualizer.h"
 #include "src/Visualizations/Visualizers/Spectrum/ldSpectrumBandVisualizer.h"
+#include "ldCore/Data/ldDataDispatcher.h"
 
 ldCoreExample::ldCoreExample(QQmlApplicationEngine *engine, QObject *parent)
     : QObject(parent)

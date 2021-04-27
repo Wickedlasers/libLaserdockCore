@@ -45,8 +45,8 @@ public:
 
     virtual DeviceBufferConfig getBufferConfig()  override;
 
-    void setGenerateSecurityRequestCb(ldGenerateSecurityRequestCallbackFunc authenticateFunc);
-    void setAuthenticateSecurityCb(ldAuthenticateSecurityResponseCallbackFunc checkFunc);
+    static void setGenerateSecurityRequestCb(ldGenerateSecurityRequestCallbackFunc authenticateFunc);
+    static void setAuthenticateSecurityCb(ldAuthenticateSecurityResponseCallbackFunc checkFunc);
 
 private:
     signals:
@@ -73,8 +73,8 @@ private:
     QTimer *m_checkTimer;
     QUdpSocket *m_pingskt;
 
-    ldGenerateSecurityRequestCallbackFunc m_genSecReqCb = nullptr;
-    ldAuthenticateSecurityResponseCallbackFunc m_authSecRespCb = nullptr;
+    static ldGenerateSecurityRequestCallbackFunc m_genSecReqCb;
+    static ldAuthenticateSecurityResponseCallbackFunc m_authSecRespCb;
 
 
     std::vector<std::unique_ptr<ldNetworkHardware> > m_initializingnetworkHardwares; // somewhere to store new hardware while it is being initialized
