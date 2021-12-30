@@ -46,6 +46,7 @@
 
 #include <complex>
 #include <ostream>
+#include <sstream>
 
 //! @cond IGNORED
 
@@ -267,6 +268,11 @@ static inline std::ostream& operator << (std::ostream& out, const MatSize& msize
             out << " x ";
     }
     return out;
+}
+
+static inline std::ostream &operator<< (std::ostream &s, cv::Range &r)
+{
+    return s << "[" << r.start << " : " << r.end << ")";
 }
 
 } // cv

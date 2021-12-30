@@ -92,7 +92,7 @@ private:
     ldVisualizer *getActiveVis() const;
     void startVisualizer(ldVisualizer *v);
 
-    mutable QMutex m_mutex;
+    mutable QRecursiveMutex m_mutex;
 
     ldMusicManager *m_musicManager;
     ldAudioDecoder *m_audioDecoder;
@@ -112,7 +112,7 @@ private:
     int m_soundLevelGate = 0;
     bool m_isShowLogo = true;
 
-    SoundSource m_soundSource = SoundSource::SoundInput;
+    std::atomic<SoundSource> m_soundSource = SoundSource::SoundInput;
 
     float m_rotX = 0;
     float m_rotY = 0;

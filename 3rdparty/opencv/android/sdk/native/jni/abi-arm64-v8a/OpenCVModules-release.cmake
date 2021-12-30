@@ -25,6 +25,15 @@ set_target_properties(opencv_imgproc PROPERTIES
 list(APPEND _IMPORT_CHECK_TARGETS opencv_imgproc )
 list(APPEND _IMPORT_CHECK_FILES_FOR_opencv_imgproc "${_IMPORT_PREFIX}/sdk/native/libs/arm64-v8a/libopencv_imgproc.so" )
 
+# Import target "opencv_features2d" for configuration "Release"
+set_property(TARGET opencv_features2d APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+set_target_properties(opencv_features2d PROPERTIES
+  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/sdk/native/libs/arm64-v8a/libopencv_features2d.so"
+  IMPORTED_SONAME_RELEASE "libopencv_features2d.so"
+  )
+
+list(APPEND _IMPORT_CHECK_TARGETS opencv_features2d )
+list(APPEND _IMPORT_CHECK_FILES_FOR_opencv_features2d "${_IMPORT_PREFIX}/sdk/native/libs/arm64-v8a/libopencv_features2d.so" )
 
 # Import target "opencv_imgcodecs" for configuration "Release"
 set_property(TARGET opencv_imgcodecs APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
@@ -36,7 +45,6 @@ set_target_properties(opencv_imgcodecs PROPERTIES
 list(APPEND _IMPORT_CHECK_TARGETS opencv_imgcodecs )
 list(APPEND _IMPORT_CHECK_FILES_FOR_opencv_imgcodecs "${_IMPORT_PREFIX}/sdk/native/libs/arm64-v8a/libopencv_imgcodecs.so" )
 
-
 # Import target "opencv_videoio" for configuration "Release"
 set_property(TARGET opencv_videoio APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(opencv_videoio PROPERTIES
@@ -46,6 +54,16 @@ set_target_properties(opencv_videoio PROPERTIES
 
 list(APPEND _IMPORT_CHECK_TARGETS opencv_videoio )
 list(APPEND _IMPORT_CHECK_FILES_FOR_opencv_videoio "${_IMPORT_PREFIX}/sdk/native/libs/arm64-v8a/libopencv_videoio.so" )
+
+# Import target "opencv_calib3d" for configuration "Release"
+set_property(TARGET opencv_calib3d APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+set_target_properties(opencv_calib3d PROPERTIES
+  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/sdk/native/libs/arm64-v8a/libopencv_calib3d.so"
+  IMPORTED_SONAME_RELEASE "libopencv_calib3d.so"
+  )
+
+list(APPEND _IMPORT_CHECK_TARGETS opencv_calib3d )
+list(APPEND _IMPORT_CHECK_FILES_FOR_opencv_calib3d "${_IMPORT_PREFIX}/sdk/native/libs/arm64-v8a/libopencv_calib3d.so" )
 
 # Import target "opencv_highgui" for configuration "Release"
 set_property(TARGET opencv_highgui APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
@@ -57,6 +75,15 @@ set_target_properties(opencv_highgui PROPERTIES
 list(APPEND _IMPORT_CHECK_TARGETS opencv_highgui )
 list(APPEND _IMPORT_CHECK_FILES_FOR_opencv_highgui "${_IMPORT_PREFIX}/sdk/native/libs/arm64-v8a/libopencv_highgui.so" )
 
+# Import target "opencv_ccalib" for configuration "Release"
+set_property(TARGET opencv_ccalib APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+set_target_properties(opencv_ccalib PROPERTIES
+  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/sdk/native/libs/arm64-v8a/libopencv_ccalib.so"
+  IMPORTED_SONAME_RELEASE "libopencv_ccalib.so"
+  )
+
+list(APPEND _IMPORT_CHECK_TARGETS opencv_ccalib )
+list(APPEND _IMPORT_CHECK_FILES_FOR_opencv_ccalib "${_IMPORT_PREFIX}/sdk/native/libs/arm64-v8a/libopencv_ccalib.so" )
 
 # Commands beyond this point should not need to know the version.
 set(CMAKE_IMPORT_FILE_VERSION)

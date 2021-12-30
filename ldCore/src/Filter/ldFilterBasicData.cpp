@@ -29,6 +29,7 @@ ldFilterBasicData::ldFilterBasicData()
     : ldFilter()
     , m_rotateFilter(new ldRotateFilter())
     , m_scaleFilter(new ldScaleFilter())
+    , m_powerFilter(new ldPowerFilter())
 {
 
 }
@@ -42,6 +43,18 @@ void ldFilterBasicData::process(ldVertex &v) {
     
     bool mode_disable_scale = frameModes & FRAME_MODE_SKIP_TRANSFORM;
 
+    int burnflags =
+            FRAME_MODE_UNSAFE_UNDERSCAN |
+            FRAME_MODE_UNSAFE_OVERSCAN |
+            FRAME_MODE_DISABLE_COLOR_CORRECTION |
+            FRAME_MODE_DISABLE_ROTATION;
+
+    bool isburnmode = (frameModes & burnflags) == burnflags;
+
+    if (!isburnmode) {
+        m_powerFilter->processFilter(v);
+    }
+
     if (!mode_disable_scale) {
         m_rotateFilter->processFilter(v);
         m_scaleFilter->processFilter(v);
@@ -52,6 +65,11 @@ void ldFilterBasicData::process(ldVertex &v) {
 ldScaleFilter *ldFilterBasicData::scaleFilter() const
 {
     return m_scaleFilter.get();
+}
+
+ldPowerFilter *ldFilterBasicData::powerFilter() const
+{
+    return m_powerFilter.get();
 }
 
 ldRotateFilter *ldFilterBasicData::rotateFilter() const

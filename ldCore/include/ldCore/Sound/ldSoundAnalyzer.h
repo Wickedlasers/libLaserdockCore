@@ -36,6 +36,7 @@ public:
     explicit ldSoundAnalyzer(QObject *parent = nullptr);
     ~ldSoundAnalyzer();
 
+    static const int MAX_SOUND_UPDATE_FRAMES;
     static float s_volumeCoeff;
 
 public slots:

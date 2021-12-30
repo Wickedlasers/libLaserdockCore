@@ -25,10 +25,11 @@
 
 #include <QQmlHelpers>
 
+#include <ldCore/ldCore.h>
+#include "ldSpiralFighterGame.h"
+
 class QQmlApplicationEngine;
 
-class ldCore;
-class ldSpiralFighterGame;
 class ldVisualizer;
 
 #ifdef Q_OS_ANDROID

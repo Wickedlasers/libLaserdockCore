@@ -237,9 +237,20 @@ QString ldUSBHardware::id() const
     Q_D(const ldUSBHardware);
 
     // TODO serial_number is not unique, use Jake's proposal instead https://github.com/Wickedlasers/laserdock_apps_cmake/issues/523
-    return QString::fromStdString(d->params.serial_number);
+    return QString::fromStdString(d->params.device->get_serial_number());
 }
 
+QString ldUSBHardware::hwType() const
+{
+    return "USB";
+}
+
+QString ldUSBHardware::address() const
+{
+     Q_D(const ldUSBHardware);
+    //return QString::fromStdString(d->params.device->get_device_path());
+    return QString();
+}
 
 ldUSBHardware::device_params &ldUSBHardware::params(){
     Q_D(ldUSBHardware);

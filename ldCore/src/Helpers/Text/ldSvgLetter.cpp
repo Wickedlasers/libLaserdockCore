@@ -27,10 +27,16 @@
 
 QMap<QString, ldBezierCurveObject> SVG_LETTERS_CACHE;
 
-ldSvgLetter::ldSvgLetter(const QString &svgPath)
+ldSvgLetter::ldSvgLetter(const QString &svgPath, const QChar &charValue)
     : m_svgPath(svgPath)
+    , m_charValue(charValue)
 {
     m_originalObject.setUnitedCoordinates(true);
+}
+
+QChar ldSvgLetter::charValue() const
+{
+    return m_charValue;
 }
 
 const ldBezierCurveObject &ldSvgLetter::data() const

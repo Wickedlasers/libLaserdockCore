@@ -1,0 +1,38 @@
+python2.7 opencv/platforms/ios/build_framework.py --iphoneos_deployment_target 11.0 --iphoneos_archs arm64 --iphonesimulator_archs x86_64 --disable-bitcode \
+--without aruco \
+--without bgsegm \
+--without bioinspired \
+--without ccalib \
+--without dnn \
+--without dnn_objdetect \
+--without dpm \
+--without face \
+--without flann \
+--without fuzzy \
+--without hfs \
+--without img_hash \
+--without ml \
+--without line_descriptor \
+--without objdetect \
+--without optflow \
+--without phase_unwrapping \
+--without photo \
+--without plot \
+--without reg \
+--without rgbd \
+--without saliency \
+--without shape \
+--without stereo \
+--without stitching \
+--without structured_light \
+--without superres \
+--without surface_matching \
+--without tracking \
+--without video \
+--without videostab \
+--without xphoto \
+--without xfeatures2d \
+--without ximgproc \
+--without xobjdetect \
+ios
+#--dynamic \

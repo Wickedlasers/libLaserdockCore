@@ -107,13 +107,16 @@ static void CALLBACK midi_callback(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance,
     }
 
     // check for onset or offset
-    if (b1a == 9) {
+    if (b1a == 9) { // note on or off depending on velocity
         isValidNote = true;
-        e.onset = true;
         e.note = b2 & 0x7f;
-        e.velocity = b3 & 0x7f; // 7 bit for note
+        uint8_t velocity = b3 & 0x7f; // 7 bit for note;
+        e.velocity = velocity;
+        // spec states that note off can also occur on equipment by velocity=0
+        // instead of a note off message
+        if (velocity) e.onset = true;
     }
-    else if (b1a == 8) {
+    else if (b1a == 8) { // note off
         isValidNote = true;
         e.note = b2 & 0x7f; // 7 bit for note
     } else if(b1a == 11) { // midi control change message?

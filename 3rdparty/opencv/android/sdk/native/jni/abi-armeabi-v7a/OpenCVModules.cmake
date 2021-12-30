@@ -4,7 +4,7 @@ if("${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}" LESS 2.5)
    message(FATAL_ERROR "CMake >= 2.6.0 required")
 endif()
 cmake_policy(PUSH)
-cmake_policy(VERSION 2.6)
+cmake_policy(VERSION 2.6...3.18)
 #----------------------------------------------------------------
 # Generated CMake target import file.
 #----------------------------------------------------------------
@@ -16,8 +16,7 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 set(_targetsDefined)
 set(_targetsNotDefined)
 set(_expectedTargets)
-foreach(_expectedTarget opencv_core opencv_imgproc opencv_imgcodecs opencv_videoio opencv_highgui
-)
+foreach(_expectedTarget opencv_core opencv_imgproc opencv_features2d opencv_imgcodecs opencv_videoio opencv_calib3d opencv_highgui opencv_ccalib)
   list(APPEND _expectedTargets ${_expectedTarget})
   if(NOT TARGET ${_expectedTarget})
     list(APPEND _targetsNotDefined ${_expectedTarget})
@@ -62,6 +61,13 @@ set_target_properties(opencv_imgproc PROPERTIES
   INTERFACE_LINK_LIBRARIES "opencv_core"
 )
 
+# Create imported target opencv_features2d
+add_library(opencv_features2d SHARED IMPORTED)
+
+set_target_properties(opencv_features2d PROPERTIES
+  INTERFACE_LINK_LIBRARIES "opencv_core;opencv_imgproc"
+)
+
 # Create imported target opencv_imgcodecs
 add_library(opencv_imgcodecs SHARED IMPORTED)
 
@@ -76,6 +82,13 @@ set_target_properties(opencv_videoio PROPERTIES
   INTERFACE_LINK_LIBRARIES "opencv_core;opencv_imgproc;opencv_imgcodecs"
 )
 
+# Create imported target opencv_calib3d
+add_library(opencv_calib3d SHARED IMPORTED)
+
+set_target_properties(opencv_calib3d PROPERTIES
+  INTERFACE_LINK_LIBRARIES "opencv_core;opencv_imgproc;opencv_features2d"
+)
+
 # Create imported target opencv_highgui
 add_library(opencv_highgui SHARED IMPORTED)
 
@@ -83,6 +96,12 @@ set_target_properties(opencv_highgui PROPERTIES
   INTERFACE_LINK_LIBRARIES "opencv_core;opencv_imgproc;opencv_imgcodecs;opencv_videoio"
 )
 
+# Create imported target opencv_ccalib
+add_library(opencv_ccalib SHARED IMPORTED)
+
+set_target_properties(opencv_ccalib PROPERTIES
+  INTERFACE_LINK_LIBRARIES "opencv_core;opencv_imgproc;opencv_features2d;opencv_imgcodecs;opencv_videoio;opencv_calib3d;opencv_highgui"
+)
 
 if(CMAKE_VERSION VERSION_LESS 2.8.12)
   message(FATAL_ERROR "This file relies on consumers using CMake 2.8.12 or greater.")

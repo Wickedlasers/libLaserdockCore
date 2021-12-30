@@ -43,10 +43,6 @@ class LDCORESHARED_EXPORT ldDataDispatcher : public ldPropertyObject
 {
     Q_OBJECT
 
-#ifdef LASERDOCKLIB_USB_SUPPORT
-    QML_WRITABLE_PROPERTY(bool, isNetwork)
-#endif
-
 public:
     /** Constructor/destructor */
     explicit ldDataDispatcher(ldBufferManager *bufferManager,
@@ -58,10 +54,6 @@ public:
     /** If any worker is active */
     bool isActiveTransfer() const;
 
-#ifdef LASERDOCKLIB_USB_SUPPORT
-    /** Main data worker */
-    ldUsbHardwareManager* usbDataManager() const;
-#endif
     ldNetworkHardwareManager* networkDataManager() const;
 
     /** Simulator core engine class */
@@ -75,17 +67,11 @@ signals:
     /** Emitted when data workers state changed */
     void activeChanged(bool active);
 
-private slots:
-#ifdef LASERDOCKLIB_USB_SUPPORT
-    void onIsNetworkChanged(bool isNetwork);
-#endif
 private:
     std::unique_ptr<ldSimulatorEngine> m_simulatorEngine;
 
-#ifdef LASERDOCKLIB_USB_SUPPORT
-    std::unique_ptr<ldHardwareDataWorker> m_usbDataWorker;
-#endif
-    std::unique_ptr<ldHardwareDataWorker> m_networkDataWorker;
+    std::unique_ptr<ldHardwareDataWorker> m_dataWorker;
+
     ldHardwareDataWorker* m_activeDataWorker=nullptr;
 };
 

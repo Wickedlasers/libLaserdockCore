@@ -41,6 +41,9 @@ public:
 
     virtual int getBufferFullCount() {return 0;}
 
+    virtual int getSmallestBufferCount() {return 0;}
+    virtual int getLargestBufferCount() {return 0;}
+
     virtual bool hasActiveDevices() const {return false;}
 
     virtual void sendData(uint startIndex, uint count) = 0;
@@ -60,12 +63,17 @@ public:
         return m_default_device_config;
     } // get the buffer config for the hardware device(s)
 
+    virtual void debugAddDevice() = 0;
+    virtual void debugRemoveDevice() = 0;
+    virtual QString managerName() const = 0;
+
 protected:
     DeviceBufferConfig m_default_device_config{768,1024,12,6,0,0,0}; // original values for USB cube
 
 public slots:
     virtual void setConnectedDevicesActive(bool active) = 0;
     void setExplicitActiveDevice(int index);
+    virtual void setActiveTransfer(bool active) = 0;
 
 signals:
     void deviceCountChanged(uint deviceCount);

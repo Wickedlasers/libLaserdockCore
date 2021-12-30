@@ -50,9 +50,11 @@ void ldFrameBuffer::push(const ldVertex& val)
 
     for(ldHardware *hardware : ldCore::instance()->hardwareManager()->devices()) {
         ldHardwareFilter *hwFilter = hardware->filter();
-        ldVertex dataVal = val;
-        hwFilter->processVertex(dataVal);
-        hardware->setSample(m_fill, dataVal);
+        if (hwFilter) {
+            ldVertex dataVal = val;
+            hwFilter->processVertex(dataVal);
+            hardware->setSample(m_fill, dataVal);
+        }
     }
 
     m_fill++;
@@ -69,13 +71,15 @@ void ldFrameBuffer::pushFrame(ldVertexFrame &frame)
 
     for(ldHardware *hardware : ldCore::instance()->hardwareManager()->devices()) {
         ldHardwareFilter *hwFilter = hardware->filter();
-        hwFilter->processFrame(frame);
-        maxFrameSize = std::max(maxFrameSize, hwFilter->lastFrame().size());
+        if (hwFilter) {
+            hwFilter->processFrame(frame);
+            maxFrameSize = std::max(maxFrameSize, hwFilter->lastFrame().size());
+        }
     }
     // resize all buffers to the biggest one
     for(ldHardware *hardware : ldCore::instance()->hardwareManager()->devices()) {
         ldHardwareFilter *hwFilter = hardware->filter();
-        hwFilter->lastFrame().resizeSmart(maxFrameSize);
+        if (hwFilter) hwFilter->lastFrame().resizeSmart(maxFrameSize);
     }
     frame.resizeSmart(maxFrameSize);
 

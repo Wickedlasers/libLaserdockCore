@@ -130,6 +130,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         #Sound
         ${SRCDIR}/Sound/ldAudioDecoder.cpp
         ${INCDIR}/Sound/ldAudioDecoder.h
+        ${SRCDIR}/Sound/ldAudioFileDecoder.cpp
+        ${INCDIR}/Sound/ldAudioFileDecoder.h
         ${SRCDIR}/Sound/ldFFT.cpp
         ${SRCDIR}/Sound/ldFFT.h
         ${SRCDIR}/Sound/ldQAudioInputDevice.cpp
@@ -481,7 +483,7 @@ if(LD_CORE_ENABLE_OPENCV)
         target_include_directories(${PROJECT_NAME} PUBLIC ${OPENCV_FRAMEWORK}/Headers)
         target_link_libraries(${PROJECT_NAME}  PUBLIC ${OPENCV_FRAMEWORK}/opencv2)
     else()
-        target_link_libraries(${PROJECT_NAME} PUBLIC opencv_core opencv_imgcodecs opencv_imgproc opencv_highgui opencv_videoio )
+        target_link_libraries(${PROJECT_NAME} PUBLIC opencv_core opencv_imgcodecs opencv_imgproc opencv_highgui opencv_videoio opencv_features2d opencv_calib3d )
     endif()
 endif()
 

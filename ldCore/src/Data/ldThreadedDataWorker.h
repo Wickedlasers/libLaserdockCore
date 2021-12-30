@@ -52,7 +52,7 @@ public slots:
     void setActiveTransfer(bool active);
     void setSimulatorEnabled(bool enabled);
 
-    void setHardwareDeviceManager(ldAbstractHardwareManager* hardwareDeviceManager);
+    void setHardwareDeviceManagers(std::vector<ldAbstractHardwareManager*> hardwareDeviceManagers);
 
 signals:
     void startRun();
@@ -71,7 +71,7 @@ private:
     ldBufferManager* m_bufferManager;
     ldSimulatorEngine* m_simulatorEngine;
 
-    ldAbstractHardwareManager* m_hardwareDeviceManager = nullptr;
+    std::vector<ldAbstractHardwareManager*> m_hardwareDeviceManagers;
 
     ldFrameBuffer *m_frameBuffer;
 };

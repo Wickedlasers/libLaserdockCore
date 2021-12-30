@@ -45,6 +45,8 @@
 #ifndef OPENCV_CORE_CVDEF_H
 #define OPENCV_CORE_CVDEF_H
 
+#include "opencv2/core/version.hpp"
+
 //! @addtogroup core_utils
 //! @{
 
@@ -86,12 +88,24 @@ namespace cv { namespace debug_build_guard { } using namespace debug_build_guard
 #define __CV_VA_NUM_ARGS_HELPER(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, N, ...) N
 #define __CV_VA_NUM_ARGS(...) __CV_VA_NUM_ARGS_HELPER(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 
-#if defined __GNUC__
+#ifdef CV_Func
+// keep current value (through OpenCV port file)
+#elif defined __GNUC__ || (defined (__cpluscplus) && (__cpluscplus >= 201103))
+#define CV_Func __func__
+#elif defined __clang__ && (__clang_minor__ * 100 + __clang_major__ >= 305)
+#define CV_Func __func__
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION >= 199901)
 #define CV_Func __func__
 #elif defined _MSC_VER
 #define CV_Func __FUNCTION__
+#elif defined(__INTEL_COMPILER) && (_INTEL_COMPILER >= 600)
+#define CV_Func __FUNCTION__
+#elif defined __IBMCPP__ && __IBMCPP__ >=500
+#define CV_Func __FUNCTION__
+#elif defined __BORLAND__ && (__BORLANDC__ >= 0x550)
+#define CV_Func __FUNC__
 #else
-#define CV_Func ""
+#define CV_Func "<unknown>"
 #endif
 
 //! @cond IGNORED
@@ -181,7 +195,12 @@ namespace cv {
 #undef abs
 #undef Complex
 
+#if defined __cplusplus
+#include <limits>
+#else
 #include <limits.h>
+#endif
+
 #include "opencv2/core/hal/interface.h"
 
 #if defined __ICL
@@ -335,6 +354,13 @@ enum CpuFeatures {
 
 #include "cv_cpu_dispatch.h"
 
+#if !defined(CV_STRONG_ALIGNMENT) && defined(__arm__) && !(defined(__aarch64__) || defined(_M_ARM64))
+// int*, int64* should be propertly aligned pointers on ARMv7
+#define CV_STRONG_ALIGNMENT 1
+#endif
+#if !defined(CV_STRONG_ALIGNMENT)
+#define CV_STRONG_ALIGNMENT 0
+#endif
 
 /* fundamental constants */
 #define CV_PI   3.1415926535897932384626433832795
@@ -374,7 +400,9 @@ typedef union Cv64suf
 }
 Cv64suf;
 
+#ifndef OPENCV_ABI_COMPATIBILITY
 #define OPENCV_ABI_COMPATIBILITY 300
+#endif
 
 #ifdef __OPENCV_BUILD
 #  define DISABLE_OPENCV_24_COMPATIBILITY
@@ -526,7 +554,7 @@ Cv64suf;
 #  define CV_XADD(addr, delta) (int)_InterlockedExchangeAdd((long volatile*)addr, delta)
 #else
   #ifdef OPENCV_FORCE_UNSAFE_XADD
-    CV_INLINE CV_XADD(int* addr, int delta) { int tmp = *addr; *addr += delta; return tmp; }
+    CV_INLINE int CV_XADD(int* addr, int delta) { int tmp = *addr; *addr += delta; return tmp; }
   #else
     #error "OpenCV: can't define safe CV_XADD macro for current platform (unsupported). Define CV_XADD macro through custom port header (see OPENCV_INCLUDE_PORT_FILE)"
   #endif
@@ -741,7 +769,7 @@ protected:
     float16_t() {}
     explicit float16_t(float x)
     {
-    #if CV_AVX2
+    #if CV_FP16
         __m128 v = _mm_load_ss(&x);
         w = (ushort)_mm_cvtsi128_si32(_mm_cvtps_ph(v, 0));
     #else
@@ -772,7 +800,7 @@ protected:
 
     operator float() const
     {
-    #if CV_AVX2
+    #if CV_FP16
         float f;
         _mm_store_ss(&f, _mm_cvtph_ps(_mm_cvtsi32_si128(w)));
         return f;

@@ -124,7 +124,8 @@ ldSimulatorGrid *ldSimulatorEngine::grid() const
 
 void ldSimulatorEngine::drawBuffer(QOpenGLShaderProgram *program, const std::vector<ldVertex> &buffer, unsigned length)
 {    
-    if (length==0) length = buffer.size(); // if length is specified use it, otherwise use buffer size
+    //if (length==0) length = buffer.size(); // if length is specified use it, otherwise use buffer size
+    if (length==0) return; // should always have length, if not then dont draw.
 
     glBindBuffer(GL_ARRAY_BUFFER, vboIds[0]);
     glBufferData(GL_ARRAY_BUFFER,

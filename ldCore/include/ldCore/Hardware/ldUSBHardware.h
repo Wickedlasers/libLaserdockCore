@@ -53,6 +53,8 @@ public:
     ~ldUSBHardware();
 
     virtual QString id() const override;
+    virtual QString hwType() const override;
+    virtual QString address() const override;
 
     void send_security_requst(QByteArray request);
     void get_security_response(QByteArray &response);

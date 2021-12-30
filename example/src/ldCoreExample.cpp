@@ -25,7 +25,6 @@
 #include <QtCore/QTimer>
 #include <QtQml/QtQml>
 
-#include <ldCore/ldCore.h>
 #include <ldCore/Sound/ldSoundDeviceManager.h>
 #include <ldCore/Visualizations/ldVisualizationTask.h>
 
@@ -43,7 +42,6 @@
 
 #endif // LD_CORE_RESOURCES_EXTRACTOR
 
-#include "ldSpiralFighterGame.h"
 
 #include "src/Visualizations/Visualizers/Animation/ldAnimationVisualizer.h"
 #include "src/Visualizations/Visualizers/Clock/ldAnalogClockVisualizer.h"

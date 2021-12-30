@@ -233,36 +233,35 @@ if(LD_IOS_BUILD)
 
     #deploy
 
-    set(FRAMEWORKS_DIR $<TARGET_FILE_DIR:${PROJECT_NAME}>/Frameworks)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory
-        ${FRAMEWORKS_DIR})
+#    set(FRAMEWORKS_DIR $<TARGET_FILE_DIR:${PROJECT_NAME}>/Frameworks)
+#    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E make_directory
+#        ${FRAMEWORKS_DIR})
 
-    if(LD_CORE_ENABLE_LIBLZR)
-        set(LIBLZR_PATH "$<TARGET_FILE:liblzr>")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${LIBLZR_PATH} ${FRAMEWORKS_DIR}/)
-    endif()
+#    if(LD_CORE_ENABLE_LIBLZR)
+#        set(LIBLZR_PATH "$<TARGET_FILE:liblzr>")
+#        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#            ${LIBLZR_PATH} ${FRAMEWORKS_DIR}/)
+#    endif()
 
-    if(LD_CORE_ENABLE_OPENCV)
-        if(LD_IOS_BUILD)
-            include(${CMAKE_CURRENT_LIST_DIR}/../3rdparty/opencv/CMakeLists.txt)
-        endif()
-        set(OPENCV_PATH "${OPENCV_FRAMEWORK}")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${OPENCV_PATH} "${FRAMEWORKS_DIR}/opencv2.framework")
-    endif()
+#    if(LD_CORE_ENABLE_OPENCV)
+#        if(LD_IOS_BUILD)
+#            include(${CMAKE_CURRENT_LIST_DIR}/../3rdparty/opencv/CMakeLists.txt)
+#        endif()
+#        set(OPENCV_PATH "${OPENCV_FRAMEWORK}")
+#        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#            COMMAND ${CMAKE_COMMAND} -E copy_directory
+#            ${OPENCV_PATH} "${FRAMEWORKS_DIR}/opencv2.framework")
+#    endif()
 
-    set(OPENLASE_PATH "$<TARGET_FILE:openlase>")
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${OPENLASE_PATH} ${FRAMEWORKS_DIR}/)
+#    set(OPENLASE_PATH "$<TARGET_FILE:openlase>")
+#    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#        ${OPENLASE_PATH} ${FRAMEWORKS_DIR}/)
 
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND
-        codesign --deep --timestamp=none -f -s ${LD_APPLE_DEVELOPMENT_ID} $<TARGET_FILE_DIR:LaserOS>
-        VERBATIM
+        codesign --deep --timestamp=none -f -s ${LD_APPLE_DEVELOPMENT_ID} $<TARGET_FILE_DIR:${PROJECT_NAME}>
         )
 endif()

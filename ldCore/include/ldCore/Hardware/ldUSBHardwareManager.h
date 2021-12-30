@@ -43,9 +43,13 @@ public:
     explicit ldUsbHardwareManager(ldFilterManager *filterManager, QObject *parent = 0);
     ~ldUsbHardwareManager();
 
-    int getBufferFullCount() override;
+    virtual QString managerName() const override { return "USB Hardware Manager"; }
 
-    bool hasActiveUsbDevices() const;
+    int getBufferFullCount() override;
+    int getSmallestBufferCount() override;
+    int getLargestBufferCount() override;
+
+    bool hasActiveDevices() const override;
 
     bool isDeviceActive(int index) const;
     void setDeviceActive(int index, bool active);
@@ -57,21 +61,27 @@ public:
     virtual uint deviceCount() const override;
     virtual std::vector<ldHardware*> devices() const override;
 
+    virtual void debugAddDevice() override;
+    virtual void debugRemoveDevice() override;
+
+    static void setAuthenticateFunc(ldAuthenticateCallbackFunc authenticateFunc);
+
 public slots:
-    void setAuthenticateFunc(ldAuthenticateCallbackFunc authenticateFunc);
+
+    void setActiveTransfer(bool active) override;
 
 private slots:
     void usbDeviceCheck();
 
 private:
-    void updateHardwareFilters();
     void updateCheckTimerState();
 
-    mutable QMutex m_mutex;
+    bool m_activeXfer{false};
+    mutable QRecursiveMutex m_mutex;
 
     QTimer m_checkTimer;
 
-    ldAuthenticateCallbackFunc m_authenticateCb = nullptr;
+    static ldAuthenticateCallbackFunc m_authenticateCb;
 
     std::vector<std::unique_ptr<ldUSBHardware> > m_usbHardwares;
     ldFilterManager *m_filterManager;

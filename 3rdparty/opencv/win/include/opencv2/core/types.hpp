@@ -702,24 +702,24 @@ public:
     //! the default constructor
     CV_WRAP KeyPoint();
     /**
-    @param _pt x & y coordinates of the keypoint
-    @param _size keypoint diameter
-    @param _angle keypoint orientation
-    @param _response keypoint detector response on the keypoint (that is, strength of the keypoint)
-    @param _octave pyramid octave in which the keypoint has been detected
-    @param _class_id object id
+    @param pt x & y coordinates of the keypoint
+    @param size keypoint diameter
+    @param angle keypoint orientation
+    @param response keypoint detector response on the keypoint (that is, strength of the keypoint)
+    @param octave pyramid octave in which the keypoint has been detected
+    @param class_id object id
      */
-    KeyPoint(Point2f _pt, float _size, float _angle=-1, float _response=0, int _octave=0, int _class_id=-1);
+    KeyPoint(Point2f pt, float size, float angle=-1, float response=0, int octave=0, int class_id=-1);
     /**
     @param x x-coordinate of the keypoint
     @param y y-coordinate of the keypoint
-    @param _size keypoint diameter
-    @param _angle keypoint orientation
-    @param _response keypoint detector response on the keypoint (that is, strength of the keypoint)
-    @param _octave pyramid octave in which the keypoint has been detected
-    @param _class_id object id
+    @param size keypoint diameter
+    @param angle keypoint orientation
+    @param response keypoint detector response on the keypoint (that is, strength of the keypoint)
+    @param octave pyramid octave in which the keypoint has been detected
+    @param class_id object id
      */
-    CV_WRAP KeyPoint(float x, float y, float _size, float _angle=-1, float _response=0, int _octave=0, int _class_id=-1);
+    CV_WRAP KeyPoint(float x, float y, float size, float angle=-1, float response=0, int octave=0, int class_id=-1);
 
     size_t hash() const;
 
@@ -1192,7 +1192,7 @@ _Tp Point_<_Tp>::dot(const Point_& pt) const
 template<typename _Tp> inline
 double Point_<_Tp>::ddot(const Point_& pt) const
 {
-    return (double)x*pt.x + (double)y*pt.y;
+    return (double)x*(double)(pt.x) + (double)y*(double)(pt.y);
 }
 
 template<typename _Tp> inline

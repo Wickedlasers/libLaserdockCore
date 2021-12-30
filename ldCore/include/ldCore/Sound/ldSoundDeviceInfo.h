@@ -48,7 +48,7 @@ public:
     QVariant id() const;
     QVariant data() const;
 
-    bool operator ==(const ldSoundDeviceInfo& other);
+    bool operator ==(const ldSoundDeviceInfo& other) const;
 
     bool isValid() const;
 

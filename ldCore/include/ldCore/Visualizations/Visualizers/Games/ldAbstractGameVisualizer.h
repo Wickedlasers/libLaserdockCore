@@ -120,7 +120,7 @@ protected:
     int m_startGameTimerValue = 0;
 	int m_gameOverCountDown = 0;
     ldSoundEffects m_soundEffects;
-    QMutex m_mutex;
+    QRecursiveMutex m_mutex;
 
 
 private:

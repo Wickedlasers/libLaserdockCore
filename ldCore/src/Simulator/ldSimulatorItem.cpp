@@ -62,6 +62,7 @@ void ldSimulatorItem::start()
 
     if(m_renderer) {
         connect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::paint, Qt::DirectConnection);
+        connect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::update, Qt::QueuedConnection);
         // delay in order to skip previous visualizer
         QTimer::singleShot(100, m_renderer.data(), &ldSimulatorRenderer::loadEngine);
     }
@@ -77,9 +78,15 @@ void ldSimulatorItem::stop()
 //    qDebug() << "Simulator stopped" << this;
 
     disconnect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::paint);
+    disconnect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::update);
     if(m_renderer) {
         m_renderer->unloadEngine();
     }
+}
+
+void ldSimulatorItem::update()
+{
+    window()->update();
 }
 
 void ldSimulatorItem::paint()
@@ -95,7 +102,7 @@ void ldSimulatorItem::paint()
     // mixing with raw OpenGL.
     // window()->resetOpenGLState();
 
-    window()->update();
+   // window()->update();
 }
 
 void ldSimulatorItem::sync()
@@ -124,6 +131,7 @@ void ldSimulatorItem::init()
 
         if(m_isActive) {
             connect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::paint, Qt::DirectConnection);
+            connect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::update, Qt::QueuedConnection);
             // delay in order to skip previous visualizer
             QTimer::singleShot(100, m_renderer.data(), &ldSimulatorRenderer::loadEngine);
         }

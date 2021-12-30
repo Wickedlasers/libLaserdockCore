@@ -48,8 +48,11 @@ public:
     void setGlobalFilter(ldFilter *globalFilter);
 
     ldFilterBasicData *dataFilter();
-    ldHardwareFilter *hardwareFilter();
-    ldHardwareFilter *hardwareFilter2();
+
+    // get existing filter by device id, or allocate a new one if a new device
+    ldHardwareFilter *getFilterById(QString device_id);
+    // remove an existing filter by device id
+    void removeFilterById(QString device_id);
 
     void setFrameModes(int frameModes);
 
@@ -64,6 +67,7 @@ public:
     ldHueShiftFilter *hueShiftFilter() const;
     ld3dRotateFilter *rotate3dFilter() const;
     ldScaleFilter *globalScaleFilter() const;
+    ldPowerFilter *globalPowerFilter() const;
     ldSoundLevelFilter *soundLevelFilter() const;
     ldRotateFilter *rotateFilter() const;
     ldTracerFilter *tracerFilter() const;
@@ -78,8 +82,7 @@ private:
     ldFilterBasicData m_dataFilter;
     ldFilter* m_preGlobalFilter = nullptr;
     ldFilter* m_globalFilter = nullptr;
-    std::unique_ptr<ldHardwareFilter> m_hardwareFilter;
-    std::unique_ptr<ldHardwareFilter> m_hardwareFilter2;
+    QMap<QString,QSharedPointer<ldHardwareFilter>> m_filtermap;
 
     std::unique_ptr<ld3dRotateFilter> m_3dRotateFilter;
 

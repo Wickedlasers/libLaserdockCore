@@ -118,6 +118,16 @@ ldNetworkHardware::~ldNetworkHardware()
 
 QString ldNetworkHardware::id() const
 {
+    return QString::fromStdString(params().device->get_serial_number());
+}
+
+QString ldNetworkHardware::hwType() const
+{
+    return "Network";
+}
+
+QString ldNetworkHardware::address() const
+{
     return params().device->get_ip_address();
 }
 

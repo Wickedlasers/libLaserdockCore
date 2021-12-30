@@ -17,7 +17,7 @@ OPENCV_MK_DIR:=$(dir $(lastword $(MAKEFILE_LIST)))
 OPENCV_3RDPARTY_LIBS_DIR:=$(OPENCV_THIS_DIR)/../3rdparty/libs/$(OPENCV_TARGET_ARCH_ABI)
 OPENCV_BASEDIR:=
 OPENCV_LOCAL_C_INCLUDES:="$(LOCAL_PATH)/$(OPENCV_THIS_DIR)/include/opencv" "$(LOCAL_PATH)/$(OPENCV_THIS_DIR)/include"
-OPENCV_MODULES:=shape superres bioinspired dnn_objdetect dpm highgui videoio face photo fuzzy hfs img_hash line_descriptor phase_unwrapping reg surface_matching tracking datasets dnn video plot ml flann xobjdetect imgcodecs objdetect xphoto imgproc core
+OPENCV_MODULES:=ccalib highgui calib3d videoio imgcodecs features2d imgproc core
 OPENCV_SUB_MK:=$(call my-dir)/OpenCV-$(TARGET_ARCH_ABI).mk
 
 ifeq ($(OPENCV_LIB_TYPE),)
@@ -25,7 +25,7 @@ ifeq ($(OPENCV_LIB_TYPE),)
 endif
 
 ifeq ($(OPENCV_LIB_TYPE),SHARED)
-    OPENCV_LIBS:=shape superres bioinspired dnn_objdetect dpm highgui videoio face photo fuzzy hfs img_hash line_descriptor phase_unwrapping reg surface_matching tracking datasets dnn video plot ml flann xobjdetect imgcodecs objdetect xphoto imgproc core
+    OPENCV_LIBS:=ccalib highgui calib3d videoio imgcodecs features2d imgproc core
     OPENCV_LIB_TYPE:=SHARED
 else
     OPENCV_LIBS:=$(OPENCV_MODULES)

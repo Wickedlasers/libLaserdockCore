@@ -153,7 +153,7 @@ void ldAbstractText::initTextFrame(const QString &word)
             continue;
         }
 
-        int index = ldTextSvgHelper::instance()->indexForSvgValidChars(strChar);
+        int index = ldTextSvgHelper::instance()->indexForSvgValidChars(strChar, m_fontFamily);
         if (index==-1) index = (int)m_allSvgLetters.size()-1;
 
         ldBezierCurveObject letterObject = m_allSvgLetters[index].data();
@@ -169,7 +169,7 @@ void ldAbstractText::initTextFrame(const QString &word)
 // getLetterAWidth
 float ldAbstractText::getLetterAWidth()
 {
-    int a_upper_index = ldTextSvgHelper::instance()->indexForSvgValidChars('A');
+    int a_upper_index = ldTextSvgHelper::instance()->indexForSvgValidChars('A', m_fontFamily);
     // should not happen
     if (a_upper_index < 0 || a_upper_index >= (int) m_allSvgLetters.size())
         return 0.10f;

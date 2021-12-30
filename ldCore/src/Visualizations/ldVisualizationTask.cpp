@@ -56,7 +56,6 @@ namespace  {
 
 ldVisualizationTask::ldVisualizationTask(ldMusicManager *musicManager, ldAudioDecoder *audioDecoder, QObject *parent)
     : ldAbstractTask(parent)
-    , m_mutex(QMutex::Recursive)
     , m_musicManager(musicManager)
     , m_audioDecoder(audioDecoder)
 {
@@ -134,19 +133,22 @@ void ldVisualizationTask::update(quint64 delta, ldFrameBuffer * buffer)
     // perform openlase rendering on the frame
     if (this->renderState()->renderOpenlase) {
         m_openlase->renderFrame(buffer, max_fps, vis && vis->is3d());
-        float result = DAC_RATE / m_openlase->m_lastFramePointCount;
 
-        // perform fps averaging, and update current fps if changed
-        m_fps_avg+=result;
-        m_fps_cnt++;
-        if (m_fps_cnt>=10){
-            int fps = static_cast<int>( (m_fps_avg / m_fps_cnt) + 0.5f);
-            m_fps_cnt = 0;
-            m_fps_avg = 0;
+        if(m_openlase->m_lastFramePointCount) {
+            float result = DAC_RATE / m_openlase->m_lastFramePointCount;
 
-            if (fps!=m_current_fps) {
-                m_current_fps = fps;
-                currentFpsChanged(m_current_fps);
+            // perform fps averaging, and update current fps if changed
+            m_fps_avg+=result;
+            m_fps_cnt++;
+            if (m_fps_cnt>=10){
+                int fps = static_cast<int>( (m_fps_avg / m_fps_cnt) + 0.5f);
+                m_fps_cnt = 0;
+                m_fps_avg = 0;
+
+                if (fps!=m_current_fps) {
+                    m_current_fps = fps;
+                    currentFpsChanged(m_current_fps);
+                }
             }
         }
     }
@@ -171,7 +173,7 @@ void ldVisualizationTask::setIsShowLogo(bool showLogo)
 
 void ldVisualizationTask::setSoundSource(const ldVisualizationTask::SoundSource &source)
 {
-    QMutexLocker lock(&m_mutex);
+//    QMutexLocker lock(&m_mutex); // deadlock from ldTimelineVisualizer::onShouldStart
     m_soundSource = source;
 }
 

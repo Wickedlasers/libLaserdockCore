@@ -33,7 +33,6 @@ ldNetworkHardwareManager::~ldNetworkHardwareManager()
 
 ldAbstractHardwareManager::DeviceBufferConfig ldNetworkHardwareManager::getBufferConfig()
 {
-     //QMutexLocker locker(&m_mutex);
      return *m_currentBufferConfig;
 }
 
@@ -47,10 +46,31 @@ void ldNetworkHardwareManager::setAuthenticateSecurityCb(ldAuthenticateSecurityR
     m_authSecRespCb = checkFunc;
 }
 
+void ldNetworkHardwareManager::debugAddDevice()
+{
+    QMutexLocker locker(&m_mutex);
+    QString ipAddress = QString("127.0.0.%1").arg(m_networkHardwares.size() + 1);
+    std::unique_ptr<LaserdockNetworkDevice> newDevice(new LaserdockNetworkDevice(ipAddress));
+    std::unique_ptr<ldNetworkHardware> networkHardware(new ldNetworkHardware(newDevice.release()));
+    networkHardware->params().device->setParent(networkHardware.get());
+    m_networkHardwares.push_back(std::move(networkHardware)); // move device from init list to the main list
+    emit deviceCountChanged(static_cast<uint>(m_networkHardwares.size()));
+}
+
+void ldNetworkHardwareManager::debugRemoveDevice()
+{
+    QMutexLocker locker(&m_mutex);
+    if(m_networkHardwares.empty())
+        return;
+    m_networkHardwares.erase(m_networkHardwares.begin() + m_networkHardwares.size() - 1);
+    emit deviceCountChanged(static_cast<uint>(m_networkHardwares.size()));
+}
+
 // A network cube device is requesting that we authenticate it
 // We should send out a security request from this event
 void ldNetworkHardwareManager::DeviceAuthenticateRequest(LaserdockNetworkDevice&device)
 {
+    QMutexLocker locker(&m_mutex);
     qDebug() << "device @" << device.get_ip_address() << "needs authenticating...";
 
     QByteArray reqByteArray;
@@ -80,6 +100,7 @@ void ldNetworkHardwareManager::DeviceAuthenticateRequest(LaserdockNetworkDevice&
 void ldNetworkHardwareManager::DeviceAuthenticateResponse(LaserdockNetworkDevice &device,
                                                           bool& success, QByteArray& response_data)
 {
+    QMutexLocker locker(&m_mutex);
     if(!m_authSecRespCb) {
         // for now we will just tell the device that it was authenticated OK.
         device.DeviceAuthenticated(true);
@@ -99,6 +120,7 @@ void ldNetworkHardwareManager::DeviceAuthenticateResponse(LaserdockNetworkDevice
 // we also connect to any important events from the new device
 void ldNetworkHardwareManager::AddNetworkDevice(QString& ip_addr)
 {
+    QMutexLocker locker(&m_mutex);
     std::unique_ptr<LaserdockNetworkDevice> newDevice(new LaserdockNetworkDevice(ip_addr,this));
 
     auto *device = newDevice.get();
@@ -138,6 +160,7 @@ void ldNetworkHardwareManager::AddNetworkDevice(QString& ip_addr)
 // any new devices are added, initialized, and authenticated.
 void ldNetworkHardwareManager::readPendingDeviceResponses()
 {
+     QMutexLocker locker(&m_mutex);
    // qDebug() << "someone responded to our ping!!!!!!!!";
     while (m_pingskt->hasPendingDatagrams()) {
             QNetworkDatagram datagram = m_pingskt->receiveDatagram();
@@ -183,7 +206,7 @@ void ldNetworkHardwareManager::readPendingDeviceResponses()
 
 int ldNetworkHardwareManager::getBufferFullCount() // called from ldthreadeddataworker
 {
-    //QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_mutex);
 
     int fullCount = -1;
     int tmp = 0;
@@ -203,7 +226,6 @@ int ldNetworkHardwareManager::getBufferFullCount() // called from ldthreadeddata
              networkHardware->ResetStatus(); // reset all hardware init status for this device
              m_initializingnetworkHardwares.push_back(std::move(networkHardware)); // move device back to init list
              networkHardwareIt = m_networkHardwares.erase(networkHardwareIt);
-             updateHardwareFilters();
              emit deviceCountChanged(static_cast<uint>(m_networkHardwares.size()));
          } else {
              networkHardwareIt++;
@@ -214,9 +236,49 @@ int ldNetworkHardwareManager::getBufferFullCount() // called from ldthreadeddata
     return fullCount;
 }
 
+int ldNetworkHardwareManager::getSmallestBufferCount()
+{
+    QMutexLocker locker(&m_mutex);
+
+    int fullCount = -1;
+    int tmp = 0;
+
+    auto networkHardwareIt = m_networkHardwares.begin();
+    while(networkHardwareIt != m_networkHardwares.end()) {
+        std::unique_ptr<ldNetworkHardware> &networkHardware = (*networkHardwareIt);
+        // we should explicitly activate devices before usage
+        if(!networkHardware->isActive()) {
+            networkHardwareIt++;
+            continue;
+        }
+
+        tmp = networkHardware->get_full_count();
+
+         if (tmp==-1){
+             networkHardware->ResetStatus(); // reset all hardware init status for this device
+             m_initializingnetworkHardwares.push_back(std::move(networkHardware)); // move device back to init list
+             networkHardwareIt = m_networkHardwares.erase(networkHardwareIt);
+             emit deviceCountChanged(static_cast<uint>(m_networkHardwares.size()));
+         } else {
+             networkHardwareIt++;
+             if (fullCount==-1) fullCount = tmp;
+             else if (tmp<fullCount) fullCount = tmp; // take the lowest buffer used from all connected cubes
+         }
+    } // end while
+
+    return fullCount;
+}
+
+// get the largest buffer level of all active devices
+int ldNetworkHardwareManager::getLargestBufferCount()
+{
+    return getBufferFullCount();
+}
+
+// get the smallest buffer level (which has the least samples left to output) of all devices
 void ldNetworkHardwareManager::sendData(uint startIndex, uint count)
 {
-    //QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_mutex);
 
     if (m_networkHardwares.empty()) {
         return;
@@ -247,18 +309,10 @@ void ldNetworkHardwareManager::sendData(uint startIndex, uint count)
                  networkHardware->ResetStatus(); // reset all hardware init status for this device
                  m_initializingnetworkHardwares.push_back(std::move(networkHardware)); // move device back to init list
                  networkHardwareIt = m_networkHardwares.erase(networkHardwareIt);
-                 updateHardwareFilters();
                  emit deviceCountChanged(static_cast<uint>(m_networkHardwares.size()));
              } else {
                  networkHardwareIt++;
              }
-
-            /*
-            // flip each next sample
-            for(uint i = 0; i < count; i++){
-                CompressedSample &sample = samples[i];
-                sample.x = CompressedSample::flipCoord(sample.x);
-            }*/
         }
     } // end else multiple hardware
 
@@ -268,17 +322,11 @@ void ldNetworkHardwareManager::sendData(uint startIndex, uint count)
 void ldNetworkHardwareManager::setConnectedDevicesActive(bool active)
 {
     emit ConnectedDevicesActiveChanged(active);
-    /*
-    for(std::unique_ptr<ldNetworkHardware> &networkHardware : m_networkHardwares) {
-        networkHardware->setActive(active);
-    }
-
-    updateCheckTimerState();
-    */
 }
 
 void ldNetworkHardwareManager::ConnectedDevicesActiveUpdate(bool active)
 {
+    QMutexLocker locker(&m_mutex);
     for(std::unique_ptr<ldNetworkHardware> &networkHardware : m_networkHardwares) {
         networkHardware->setActive(active);
     }
@@ -294,6 +342,7 @@ uint ldNetworkHardwareManager::deviceCount() const
 
 std::vector<ldHardware*> ldNetworkHardwareManager::devices() const
 {
+    QMutexLocker locker(&m_mutex);
     std::vector<ldHardware*> devices;
     for(const std::unique_ptr<ldNetworkHardware> &hardware : m_networkHardwares)
         devices.push_back(hardware.get());
@@ -303,6 +352,7 @@ std::vector<ldHardware*> ldNetworkHardwareManager::devices() const
 
 bool ldNetworkHardwareManager::isDeviceActive(int index) const
 {
+    QMutexLocker locker(&m_mutex);
     if(index < 0 || index >= static_cast<int>(m_networkHardwares.size())) {
         return false;
     }
@@ -313,6 +363,7 @@ bool ldNetworkHardwareManager::isDeviceActive(int index) const
 
 void ldNetworkHardwareManager::setDeviceActive(int index, bool active)
 {
+    QMutexLocker locker(&m_mutex);
     if(index < 0 || index >= static_cast<int>(m_networkHardwares.size())) {
         return;
     }
@@ -326,7 +377,8 @@ void ldNetworkHardwareManager::setDeviceActive(int index, bool active)
 
 bool ldNetworkHardwareManager::hasActiveDevices() const
 {
-    qDebug() << "ldNetworkHardwareManager::hasActiveDevices()";
+    QMutexLocker locker(&m_mutex);
+    //qDebug() << "ldNetworkHardwareManager::hasActiveDevices()";
     auto it = std::find_if(m_networkHardwares.begin(), m_networkHardwares.end(),
                            [&](const std::unique_ptr<ldNetworkHardware> &networkHardware) {
             return (networkHardware->isActive() && networkHardware->status() == ldHardware::Status::INITIALIZED);
@@ -337,6 +389,7 @@ bool ldNetworkHardwareManager::hasActiveDevices() const
 
 void ldNetworkHardwareManager::networkDeviceDisconnectCheck()
 {
+    QMutexLocker locker(&m_mutex);
     uint oldDeviceCount = static_cast<uint>(m_networkHardwares.size());
     // check for disconnected devices (each device does it's own device disconnect checking in the background)
     auto networkHardwareIt = m_networkHardwares.begin();
@@ -347,7 +400,6 @@ void ldNetworkHardwareManager::networkDeviceDisconnectCheck()
             networkHardware->ResetStatus(); // reset all hardware init status for this device
             m_initializingnetworkHardwares.push_back(std::move(networkHardware)); // move device back to init list
             networkHardwareIt = m_networkHardwares.erase(networkHardwareIt); // remove from the main list
-            updateHardwareFilters();
         } else networkHardwareIt++;
     }
 
@@ -360,6 +412,8 @@ void ldNetworkHardwareManager::networkDeviceDisconnectCheck()
 
 void ldNetworkHardwareManager::networkDeviceCheck()
 {
+    QMutexLocker locker(&m_mutex);
+
      if (get_isActive()==false) return;
     //qDebug() << "ldNetworkHardwareManager::networkDeviceCheck()";
     //qDebug() << QThread::currentThread();
@@ -396,8 +450,9 @@ void ldNetworkHardwareManager::networkDeviceCheck()
                     if (networkHardware->status() == ldHardware::Status::INITIALIZED){
                         // check authentication if available
                         qDebug() << "network h/w device initialised OK.";
+                        networkHardware->setFilter(m_filterManager->getFilterById(networkHardware->id()));
                         m_networkHardwares.push_back(std::move(networkHardware)); // move device from init list to the main list
-                        updateHardwareFilters();
+
 
                         initnetworkHardwareIt = m_initializingnetworkHardwares.erase(initnetworkHardwareIt); // remove from init list
                         continue;
@@ -426,8 +481,7 @@ void ldNetworkHardwareManager::networkDeviceCheck()
         if (networkHardware->params().device->get_disconnected()){ // this device has disconnected?
             networkHardware->ResetStatus(); // reset all hardware init status for this device
             m_initializingnetworkHardwares.push_back(std::move(networkHardware)); // move device back to init list
-            networkHardwareIt = m_networkHardwares.erase(networkHardwareIt); // remove from the main list
-            updateHardwareFilters();
+            networkHardwareIt = m_networkHardwares.erase(networkHardwareIt); // remove from the main lis
         } else networkHardwareIt++;
 
     }
@@ -444,6 +498,7 @@ void ldNetworkHardwareManager::networkDeviceCheck()
 // so we must choose a strategy for the buffering, with the least latency without dropouts etc.
 void ldNetworkHardwareManager::updateBufferingStrategy(QList<LaserdockNetworkDevice::ConnectionType> &contypes)
 {
+    QMutexLocker locker(&m_mutex);
     if (contypes.size()>0){
         // TODO: for now only use the first device's connection type to set buffering strategy
         // until more testing is performed when more cubes are available
@@ -499,11 +554,12 @@ void ldNetworkHardwareManager::updateBufferingStrategy(QList<LaserdockNetworkDev
 // and do not check if active because we don't want to have flickering
 void ldNetworkHardwareManager::updateCheckTimerState()
 {
+    QMutexLocker locker(&m_mutex);
     if (get_isActive()==false) return;
 
     QList<LaserdockNetworkDevice::ConnectionType> cubeConnectionTypes;
 
-    bool isActive = false;
+    bool isActive = m_activeXfer;
     for(std::unique_ptr<ldNetworkHardware> &networkHardware : m_networkHardwares) {
         if(networkHardware->isActive()) {
             isActive = true;
@@ -514,9 +570,6 @@ void ldNetworkHardwareManager::updateCheckTimerState()
     }
 
     updateBufferingStrategy(cubeConnectionTypes);
-
-    // FIXME: added by Paul - is it necessary here?
-    // updateHardwareFilters();
 
     // update all network devices with udp xfer strategy
     for(std::unique_ptr<ldNetworkHardware> &networkHardware : m_networkHardwares) {
@@ -532,16 +585,6 @@ void ldNetworkHardwareManager::updateCheckTimerState()
     }
 }
 
-void ldNetworkHardwareManager::updateHardwareFilters()
-{
-    for(uint i = 0; i < m_networkHardwares.size(); i++) {
-        auto &networkHardware = m_networkHardwares[i];
-        if(i == 0)
-            networkHardware->setFilter(m_filterManager->hardwareFilter());
-        else
-            networkHardware->setFilter(m_filterManager->hardwareFilter2());
-    }
-}
 void ldNetworkHardwareManager::init()
 {
     qDebug() << "ldNetworkHardwareManager::init()"  << QThread::currentThread();
@@ -577,4 +620,11 @@ void ldNetworkHardwareManager::init()
             QTimer::singleShot(0, m_checkTimer, &QTimer::stop);
         }
     });
+}
+
+void ldNetworkHardwareManager::setActiveTransfer(bool active)
+{
+    qDebug() << "ldNetworkHardwareManager::setActiveTransfer" << active;
+    m_activeXfer = active;
+    updateCheckTimerState();
 }

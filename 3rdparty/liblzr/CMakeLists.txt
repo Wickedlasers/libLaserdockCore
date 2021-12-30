@@ -4,7 +4,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # library
-add_library(liblzr SHARED)
+if(LD_IOS_BUILD)
+    add_library(liblzr)
+else()
+    add_library(liblzr SHARED)
+endif()
 
 set_property(TARGET liblzr PROPERTY AUTOMOC OFF)
 set_property(TARGET liblzr PROPERTY AUTORCC OFF)

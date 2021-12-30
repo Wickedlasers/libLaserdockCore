@@ -115,5 +115,3 @@ QString ldResourcesExtractor::findObbFilePath(const QString &packageName, int re
 
     return resourcesFilePath;
 }
-
-#include "ldResourcesExtractor.moc"

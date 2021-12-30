@@ -37,6 +37,9 @@ public:
 public slots:
     void togglePlay();
 
+    void debugAddDevice();
+    void debugRemoveDevice();
+
 private slots:
     void onHardwareDeviceCountChanged(uint count);
 

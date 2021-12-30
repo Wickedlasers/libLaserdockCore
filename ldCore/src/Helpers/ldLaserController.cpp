@@ -24,6 +24,7 @@
 #include <QtGui/QGuiApplication>
 
 #include "ldCore/ldCore.h"
+#include <ldCore/Hardware/ldAbstractHardwareManager.h>
 #include <ldCore/Hardware/ldHardwareManager.h>
 #include <ldCore/Data/ldDataDispatcher.h>
 
@@ -50,6 +51,38 @@ void ldLaserController::togglePlay()
 
     ldCore::instance()->hardwareManager()->setConnectedDevicesActive(isActive);
     ldCore::instance()->get_dataDispatcher()->setActiveTransfer(isActive);
+}
+
+void ldLaserController::debugAddDevice()
+{
+    ldAbstractHardwareManager *absHwMan = nullptr;
+    for(ldAbstractHardwareManager *hwm : ldCore::instance()->hardwareManager()->hardwareManagers()) {
+        if(hwm->get_isActive()) {
+            absHwMan = hwm;
+            break;
+        }
+    }
+
+    if(absHwMan)
+        absHwMan->debugAddDevice();
+
+    qDebug() << __FUNCTION__ << m_connectedDevices;
+}
+
+void ldLaserController::debugRemoveDevice()
+{
+    ldAbstractHardwareManager *absHwMan = nullptr;
+    for(ldAbstractHardwareManager *hwm : ldCore::instance()->hardwareManager()->hardwareManagers()) {
+        if(hwm->get_isActive()) {
+            absHwMan = hwm;
+            break;
+        }
+    }
+
+    if(absHwMan)
+        absHwMan->debugRemoveDevice();
+
+    qDebug() << __FUNCTION__ << m_connectedDevices;
 }
 
 void ldLaserController::refreshDeviceState()

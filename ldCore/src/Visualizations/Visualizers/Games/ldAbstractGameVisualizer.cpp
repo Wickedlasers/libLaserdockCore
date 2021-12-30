@@ -174,7 +174,6 @@ QList<QList<ldVec2> > ldAbstractGameVisualizer::optimizeShapesToLaser(const QLis
 // ldAbstractGameVisualizer
 ldAbstractGameVisualizer::ldAbstractGameVisualizer()
     : ldVisualizer()
-    , m_mutex(QMutex::Recursive)
 {
     //    m_rate = 20000;
 

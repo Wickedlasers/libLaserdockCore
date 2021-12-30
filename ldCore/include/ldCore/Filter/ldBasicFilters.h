@@ -124,7 +124,8 @@ public:
     virtual QString name() override { return QObject::tr("Custom hue basic"); }
 
     bool m_enabled = false;
-    float m_value = 0;
+    float m_hue = 0;
+    float m_saturation = -1;
 };
 
 

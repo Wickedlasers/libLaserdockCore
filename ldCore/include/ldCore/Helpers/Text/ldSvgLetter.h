@@ -29,8 +29,9 @@
 class LDCORESHARED_EXPORT ldSvgLetter
 {
 public:
-    explicit ldSvgLetter(const QString &svgPath);
+    explicit ldSvgLetter(const QString &svgPath, const QChar &charValue);
 
+    QChar charValue() const;
     const ldBezierCurveObject &data() const;
 
     void translate(const ldVec2 &v);
@@ -41,6 +42,7 @@ private:
     void updateObject() const;
 
     QString m_svgPath;
+    QChar m_charValue;
 
     ldVec2 m_translateVec;
     float m_scale = 1.f;

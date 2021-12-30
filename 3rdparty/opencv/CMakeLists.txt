@@ -20,6 +20,6 @@ if(LD_IOS_BUILD)
     set(OPENCV_FRAMEWORK "${OpenCV_DIR}/opencv2.framework")
 else()
     list(APPEND CMAKE_PREFIX_PATH ${OpenCV_DIR})
-    find_package(OpenCV COMPONENTS opencv_core opencv_imgproc opencv_videoio opencv_highgui opencv_imgcodecs REQUIRED)
+    find_package(OpenCV COMPONENTS opencv_core opencv_imgproc opencv_videoio opencv_highgui opencv_imgcodecs opencv_calib3d opencv_features2d REQUIRED)
 endif()
 

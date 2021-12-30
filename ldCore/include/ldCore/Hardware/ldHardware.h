@@ -42,6 +42,8 @@ public:
     ~ldHardware();
 
     virtual QString id() const = 0;
+    virtual QString hwType() const = 0;
+    virtual QString address() const = 0;
     Status status();
 
     bool isActive() const;

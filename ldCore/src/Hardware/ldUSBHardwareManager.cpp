@@ -31,6 +31,8 @@
 #include <ldCore/Filter/ldFilterManager.h>
 #include <ldCore/Hardware/ldUSBHardware.h>
 
+ldAuthenticateCallbackFunc ldUsbHardwareManager::m_authenticateCb = nullptr;
+
 ldUsbHardwareManager::ldUsbHardwareManager(ldFilterManager *filterManager, QObject *parent)
     : ldAbstractHardwareManager(parent)
     , m_filterManager(filterManager)
@@ -66,12 +68,21 @@ int ldUsbHardwareManager::getBufferFullCount()
         if(fullCount == -1) {
             qDebug() << "Remove disconnected device on get_full_count" << QString::fromStdString(m_usbHardwares[0]->params().serial_number);
             m_usbHardwares.erase(m_usbHardwares.begin());
-            updateHardwareFilters();
             emit deviceCountChanged(m_usbHardwares.size());
         }
     }
 
     return fullCount;
+}
+
+int ldUsbHardwareManager::getSmallestBufferCount()
+{
+    return getBufferFullCount();
+}
+
+int ldUsbHardwareManager::getLargestBufferCount()
+{
+    return getBufferFullCount();
 }
 
 void ldUsbHardwareManager::sendData(uint startIndex, uint count)
@@ -92,7 +103,6 @@ void ldUsbHardwareManager::sendData(uint startIndex, uint count)
                 qDebug() << "Remove disconnected device on send_samples" << QString::fromStdString(hardware->params().serial_number);
                 m_usbHardwares.erase(m_usbHardwares.begin() + hwIndex);
                 m_explicitHardwareIndex = -1;
-                updateHardwareFilters();
                 emit deviceCountChanged(m_usbHardwares.size());
             }
             return;
@@ -113,7 +123,6 @@ void ldUsbHardwareManager::sendData(uint startIndex, uint count)
             // erase disconnected device
             qDebug() << "Remove disconnected device on send_samples" << QString::fromStdString(usbHardware->params().serial_number);
             usbHardwareIt = m_usbHardwares.erase(usbHardwareIt);
-            updateHardwareFilters();
             emit deviceCountChanged(m_usbHardwares.size());
         } else {
             usbHardwareIt++;
@@ -124,6 +133,7 @@ void ldUsbHardwareManager::sendData(uint startIndex, uint count)
 
 void ldUsbHardwareManager::setConnectedDevicesActive(bool active)
 {
+    QMutexLocker locker(&m_mutex);
     for(std::unique_ptr<ldUSBHardware> &usbHardware : m_usbHardwares) {
         usbHardware->setActive(active);
     }
@@ -133,19 +143,41 @@ void ldUsbHardwareManager::setConnectedDevicesActive(bool active)
 
 uint ldUsbHardwareManager::deviceCount() const
 {
+    QMutexLocker locker(&m_mutex);
     return m_usbHardwares.size();
 }
 
 std::vector<ldHardware*> ldUsbHardwareManager::devices() const
 {
+    QMutexLocker locker(&m_mutex);
     std::vector<ldHardware*> devices;
     for(const std::unique_ptr<ldUSBHardware> &usbHardware : m_usbHardwares)
         devices.push_back(usbHardware.get());
     return devices;
 }
 
+void ldUsbHardwareManager::debugAddDevice()
+{
+    qWarning() << "not implemented yet";
+    return;
+
+     // FIXME: known crash
+//    std::unique_ptr<LaserdockDevice> newDevice(new LaserdockDevice(nullptr));
+//    std::unique_ptr<ldUSBHardware> usbHardware(new ldUSBHardware(newDevice.release()));
+//    m_usbHardwares.push_back(std::move(usbHardware)); // move device from init list to the main list
+//    emit deviceCountChanged(static_cast<uint>(m_usbHardwares.size()));
+}
+
+void ldUsbHardwareManager::debugRemoveDevice()
+{
+    QMutexLocker locker(&m_mutex);
+    m_usbHardwares.erase(m_usbHardwares.begin() + m_usbHardwares.size() - 1);
+    emit deviceCountChanged(static_cast<uint>(m_usbHardwares.size()));
+}
+
 bool ldUsbHardwareManager::isDeviceActive(int index) const
 {
+    QMutexLocker locker(&m_mutex);
     if(index < 0 || index >= (int) m_usbHardwares.size()) {
         return false;
     }
@@ -156,6 +188,8 @@ bool ldUsbHardwareManager::isDeviceActive(int index) const
 
 void ldUsbHardwareManager::setDeviceActive(int index, bool active)
 {
+    QMutexLocker locker(&m_mutex);
+
     if(index < 0 || index >= (int) m_usbHardwares.size()) {
         return;
     }
@@ -166,8 +200,9 @@ void ldUsbHardwareManager::setDeviceActive(int index, bool active)
     updateCheckTimerState();
 }
 
-bool ldUsbHardwareManager::hasActiveUsbDevices() const
+bool ldUsbHardwareManager::hasActiveDevices() const
 {
+    QMutexLocker locker(&m_mutex);
     auto it = std::find_if(m_usbHardwares.begin(), m_usbHardwares.end(),
                            [&](const std::unique_ptr<ldUSBHardware> &networkHardware) {
             return (networkHardware->isActive() && networkHardware->status() == ldHardware::Status::INITIALIZED);
@@ -215,7 +250,6 @@ void ldUsbHardwareManager::usbDeviceCheck()
         if (!pinged) {
             qDebug() << "Remove disconnected device on get_output" << QString::fromStdString(usbHardware->params().serial_number);
             usbHardwareIt = m_usbHardwares.erase(usbHardwareIt);
-            updateHardwareFilters();
         } else {
             usbHardwareIt++;
         }
@@ -249,9 +283,9 @@ void ldUsbHardwareManager::usbDeviceCheck()
             continue;
         }
 
+        usbHardware->setFilter(m_filterManager->getFilterById(usbHardware->id()));
         // add to list
         m_usbHardwares.push_back(std::move(usbHardware));
-        updateHardwareFilters();
     }
 
     if(oldDeviceCount != m_usbHardwares.size()) {
@@ -260,28 +294,23 @@ void ldUsbHardwareManager::usbDeviceCheck()
 #endif
 }
 
-void ldUsbHardwareManager::updateHardwareFilters()
-{
-    for(uint i = 0; i < m_usbHardwares.size(); i++) {
-        auto &usbHardware = m_usbHardwares[i];
-        if(i == 0)
-            usbHardware->setFilter(m_filterManager->hardwareFilter());
-        else
-            usbHardware->setFilter(m_filterManager->hardwareFilter2());
-    }
-}
 
 // check for new devices always when we are not active
 // and do not check if active because we don't want to have flickering
 void ldUsbHardwareManager::updateCheckTimerState()
 {
-    bool isActive = false;
+    QMutexLocker locker(&m_mutex);
+    bool isActive = m_activeXfer;
+
+
     for(std::unique_ptr<ldUSBHardware> &usbHardware : m_usbHardwares) {
         if(usbHardware->isActive()) {
             isActive = true;
             break;
         }
     }
+
+
     if(isActive) {
         QTimer::singleShot(0, &m_checkTimer, &QTimer::stop);
     } else {
@@ -290,3 +319,10 @@ void ldUsbHardwareManager::updateCheckTimerState()
     }
 }
 
+void ldUsbHardwareManager::setActiveTransfer(bool active)
+{
+    QMutexLocker locker(&m_mutex);
+    qDebug() << "ldUsbHardwareManager::setActiveTransfer" << active;
+    m_activeXfer = active;
+    updateCheckTimerState();
+}

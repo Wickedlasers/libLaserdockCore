@@ -29,7 +29,11 @@ public:
     explicit ldNetworkHardwareManager(ldFilterManager *filterManager, QObject *parent = nullptr);
     ~ldNetworkHardwareManager() override;
 
+    virtual QString managerName() const override { return "Network Hardware Manager"; }
+
     int getBufferFullCount() override;
+    int getSmallestBufferCount() override;
+    int getLargestBufferCount() override;
 
     bool hasActiveDevices() const override;
 
@@ -48,6 +52,12 @@ public:
     static void setGenerateSecurityRequestCb(ldGenerateSecurityRequestCallbackFunc authenticateFunc);
     static void setAuthenticateSecurityCb(ldAuthenticateSecurityResponseCallbackFunc checkFunc);
 
+    virtual void debugAddDevice() override;
+    virtual void debugRemoveDevice() override;
+
+public slots:
+    void setActiveTransfer(bool active) override;
+
 private:
     signals:
         void ConnectedDevicesActiveChanged(bool active);
@@ -63,10 +73,10 @@ private slots:
 private:
     void updateCheckTimerState();
     void updateBufferingStrategy(QList<LaserdockNetworkDevice::ConnectionType> &contypes);
-    void updateHardwareFilters();
     void AddNetworkDevice(QString& ip_addr);
 
-    mutable QMutex m_mutex;
+    mutable QRecursiveMutex m_mutex;
+    bool m_activeXfer{false};
 
     ldFilterManager *m_filterManager;
     QThread m_managerworkerthread;

@@ -10,6 +10,7 @@
 #include <QNetworkDatagram>
 #include <QtCore/QCoreApplication>
 #include <QNetworkInterface>
+#include <QVariant>
 
 // commands available over UDP
 namespace cmds {
@@ -370,7 +371,7 @@ void LaserdockNetworkDevice::handleFullInfoPkt(const QByteArray &data)
             }
 
             QString str;
-            str = QString("%1:%2:%3:%4:%5:%6")
+            str = QString("%1%2%3%4%5%6")
                     .arg( static_cast<uint8_t>(data[26]),2,16)
                     .arg( static_cast<uint8_t>(data[27]),2,16)
                     .arg( static_cast<uint8_t>(data[28]),2,16)
@@ -378,7 +379,7 @@ void LaserdockNetworkDevice::handleFullInfoPkt(const QByteArray &data)
                     .arg( static_cast<uint8_t>(data[30]),2,16)
                     .arg( static_cast<uint8_t>(data[31]),2,16);
 
-            std::string serstr = str.toStdString();
+            std::string serstr = str.toUpper().toStdString();
             if (serstr!=m_serialnumber){
                 SerialNumberUpdated(str);
                 m_serialnumber = serstr;

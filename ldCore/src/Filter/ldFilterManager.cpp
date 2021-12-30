@@ -28,8 +28,6 @@
 
 ldFilterManager::ldFilterManager(QObject *parent)
     : QObject(parent)
-    , m_hardwareFilter(new ldHardwareFilter(m_dataFilter.scaleFilter()))
-    , m_hardwareFilter2(new ldHardwareFilter(m_dataFilter.scaleFilter()))
     , m_3dRotateFilter(new ld3dRotateFilter())
 {
     qDebug() << __FUNCTION__;
@@ -38,6 +36,48 @@ ldFilterManager::ldFilterManager(QObject *parent)
 ldFilterManager::~ldFilterManager()
 {
 }
+
+// get existing filter by device id, or allocate a new one if a new device
+// if no id is provided, return a default hardware filter
+ldHardwareFilter *ldFilterManager::getFilterById(QString device_id)
+{
+    lock();
+    if (device_id=="") { // default id?
+       qDebug() << "get hardware filter for unknown device";
+       unlock();
+       return nullptr;
+    } else
+    if (m_filtermap.contains(device_id)) { // filter already created for this device id?
+        qDebug() << "get existing filter for device:" << device_id;
+        unlock();
+        return m_filtermap[device_id].get();
+    } else { // allocate a filter for this device id
+        qDebug() << "allocating hardware filter for device:" << device_id;
+        QSharedPointer<ldHardwareFilter> hw(new ldHardwareFilter(m_dataFilter.scaleFilter()));
+        //m_hardwareFilters.push_back(std::move(hw));
+       // m_filtermap[device_id] = hw.get();
+        m_filtermap[device_id] = hw;
+        unlock();
+        return m_filtermap[device_id].get();
+    }
+
+}
+
+// remove an existing filter by device id
+void ldFilterManager::removeFilterById(QString device_id)
+{
+    /*
+    lock();
+    if (m_filtermap.contains(device_id)) { // filter already created for this device id?
+        qDebug() << "remove hardware filter for device:" << device_id;
+        m_filtermap.remove(device_id);
+    } else {
+        qDebug() << "unable to remove hardware filter for unknown device";
+    }
+    unlock();
+    */
+}
+
 
 ldFilter *ldFilterManager::preGlobalFilter() const
 {
@@ -64,15 +104,6 @@ ldFilterBasicData *ldFilterManager::dataFilter()
     return &m_dataFilter;
 }
 
-ldHardwareFilter *ldFilterManager::hardwareFilter()
-{
-    return m_hardwareFilter.get();
-}
-
-ldHardwareFilter *ldFilterManager::hardwareFilter2()
-{
-    return m_hardwareFilter2.get();
-}
 
 void ldFilterManager::setFrameModes(int frameModes)
 {
@@ -133,6 +164,11 @@ ld3dRotateFilter *ldFilterManager::rotate3dFilter() const
 ldScaleFilter *ldFilterManager::globalScaleFilter() const
 {
     return m_dataFilter.scaleFilter();
+}
+
+ldPowerFilter *ldFilterManager::globalPowerFilter() const
+{
+    return m_dataFilter.powerFilter();
 }
 
 ldSoundLevelFilter *ldFilterManager::soundLevelFilter() const

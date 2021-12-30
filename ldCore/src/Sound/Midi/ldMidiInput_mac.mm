@@ -6,8 +6,6 @@
 #include <QtCore/QDebug>
 #include <QtCore/QMutex>
 #include <QtCore/QTimer>
-#include <QtMultimedia/QAudioProbe>
-#include <QtMultimedia/QAudioRecorder>
 
 #import <Foundation/Foundation.h>
 
@@ -149,6 +147,7 @@ void midiInputCallback (const MIDIPacketList *list,
                             e.note = packet->data[iByte + 1];
                             e.onset = false;
                             e.velocity = packet->data[iByte + 2];
+                            e.channel = status & 0x0f;
                             isValidNote = true;
                         }
                         break;
@@ -158,9 +157,13 @@ void midiInputCallback (const MIDIPacketList *list,
                         {
                             // save as event
                             e.note = packet->data[iByte + 1];
-                            e.onset = true;
-                            e.velocity = packet->data[iByte + 2];
+                            uint8_t velocity =  packet->data[iByte + 2];
+                            e.velocity = velocity;
+                            e.channel = status & 0x0f;
                             isValidNote = true;
+                            // spec states that note off can also occur on equipment by velocity=0
+                            if (velocity>0) e.onset = true;
+
                         }
                         break;
 

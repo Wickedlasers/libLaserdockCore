@@ -88,7 +88,9 @@ static void vert3(ldRendererOpenlase* r, ldShader* s, float x, float y, uint32_t
 
 void ldAnimationSequenceBezier::drawFrameBezier3(ldRendererOpenlase* r, int index) {
 
-
+    uint32_t c1 = _c1;
+    uint32_t c2 = _c2;
+    uint32_t c = color;
     ldRendererOpenlase* renderer = r;
     ldBezierPaths dataVect = m_frames[index];
     {
@@ -96,9 +98,11 @@ void ldAnimationSequenceBezier::drawFrameBezier3(ldRendererOpenlase* r, int inde
         for (const ldBezierPath &bezierPath : dataVect)
         {
             const std::vector<ldBezierCurve> &curves = bezierPath.data();
-//            if (bezierTab.size() < 2) continue;
-            //uint32_t color = ldColorUtil::colorHSV(0, 0, 1);
-            uint32_t c = color;
+            uint32_t col = bezierPath.color();
+            if (col!=0) {
+                c1 = c2 = col;
+            }
+
             ldShader* s = _shader1;
             float f = 0;
 
@@ -107,7 +111,7 @@ void ldAnimationSequenceBezier::drawFrameBezier3(ldRendererOpenlase* r, int inde
             {
                 const ldBezierCurve &b = curves[i];
                 f = (float)i / (curves.size());
-                c = (f >= _fstart && f <= _fend) ? (_c1) : (_c2);
+                c = (f >= _fstart && f <= _fend) ? (c1) : (c2);
                 s = (f >= _fstart && f <= _fend) ? (_shader1) : (_shader2);
 
                 vert3(renderer, s, b.start().x, b.start().y, c);
@@ -129,6 +133,10 @@ void ldAnimationSequenceBezier::drawFrameBezier3(ldRendererOpenlase* r, int inde
 void ldAnimationSequenceBezier::drawFrameLine4(ldRendererOpenlase* r, int index) {
 
     ldRendererOpenlase* renderer = r;
+    uint32_t c1 = _c1;
+    uint32_t c2 = _c2;
+    uint32_t c = color;
+
     const ldBezierPaths &dataVect = m_frames[index];
     {
         //
@@ -136,7 +144,12 @@ void ldAnimationSequenceBezier::drawFrameLine4(ldRendererOpenlase* r, int index)
         {
 //            float alt = 0.0;
             const ldGradient &gradient = bezierPath.gradient();
-            uint32_t c = color;
+            uint32_t col = bezierPath.color();
+            if (col!=0) {
+                c1 = c2 = col;
+            }
+
+
             ldShader* s = _shader1;
             float f = 0; float ff = 0;
 
@@ -157,7 +170,7 @@ void ldAnimationSequenceBezier::drawFrameLine4(ldRendererOpenlase* r, int index)
                 {
                     ff = (float)i / (maxPointsLocal - 1);
                     f = (j + ff) / (bezierPath.data().size());
-                    c = (f >= _fstart && f <= _fend) ? (_c1) : (_c2);
+                    c = (f >= _fstart && f <= _fend) ? (c1) : (c2);
                     s = (f >= _fstart && f <= _fend) ? (_shader1) : (_shader2);
 
                     float slope = 1.0*i / (maxPointsLocal - 1);
@@ -169,6 +182,7 @@ void ldAnimationSequenceBezier::drawFrameLine4(ldRendererOpenlase* r, int index)
                         s = nullptr;
                         c = gradient.getColor(p.x, p.y);
                     }
+
                     vert3(renderer, s, p.x, p.y, c);
                 }
 

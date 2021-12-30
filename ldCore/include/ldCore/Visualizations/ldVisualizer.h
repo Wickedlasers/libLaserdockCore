@@ -86,6 +86,7 @@ public:
     virtual int targetFPS() const { return 30; }
 
     void start();
+    void pause();
     void stop();
 
     void updateWith(ldSoundData *pSoundData, float delta);
@@ -95,8 +96,12 @@ public:
     Q_INVOKABLE virtual bool isMusicAware() const { return m_isMusicAware; }
     Q_INVOKABLE virtual bool is3d() const { return m_is3d; }
 
+    bool isVisActive() const;
+    bool isVisPaused() const;
+
 protected:
     virtual void onShouldStart();
+    virtual void onShouldPause();
     virtual void onShouldStop();
 
     /*!
@@ -125,6 +130,7 @@ protected:
     mutable QMutex m_mutex;
 
     bool m_isVisActive = false;
+    bool m_isVisPaused = false;
 };
 
 Q_DECLARE_METATYPE(ldVisualizer*)

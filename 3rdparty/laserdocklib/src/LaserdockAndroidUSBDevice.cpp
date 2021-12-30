@@ -88,6 +88,9 @@ struct LaserdockAndroidUSBDevicePrivate {
         return usbdevice.callObjectMethod("getDeviceName", "()Ljava/lang/String;").toString();
     }
 
+    QString serialNumber() {
+        return usbdevice.callObjectMethod("getSerialNumber", "()Ljava/lang/String;").toString();
+    }
 
     void initialize() {
 
@@ -127,7 +130,7 @@ std::string LaserdockAndroidDevice::get_device_name() const
 }
 
 std::string LaserdockAndroidDevice::get_serial_number() const {
-    return "unavailable";
+    return d->serialNumber().toStdString();
 }
 
 

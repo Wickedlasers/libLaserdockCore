@@ -35,7 +35,7 @@ signals:
 private:
     bool update_direction(int direction);
 
-    mutable QMutex m_mutex;
+    mutable QRecursiveMutex m_mutex;
     int m_direction = Right;
 };
 

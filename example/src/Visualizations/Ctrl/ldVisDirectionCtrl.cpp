@@ -10,7 +10,6 @@ void ldVisDirectionCtrl::registerMetaTypes()
 ldVisDirectionCtrl::ldVisDirectionCtrl(QObject *parent)
     : QObject(parent)
     , m_isActive(false)
-    , m_mutex(QMutex::Recursive)
 {
 }
 

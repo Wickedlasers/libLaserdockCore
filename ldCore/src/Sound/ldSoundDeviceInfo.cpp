@@ -60,7 +60,7 @@ QVariant ldSoundDeviceInfo::data() const
     return m_data;
 }
 
-bool ldSoundDeviceInfo::operator ==(const ldSoundDeviceInfo &other)
+bool ldSoundDeviceInfo::operator ==(const ldSoundDeviceInfo &other) const
 {
     return m_type == other.m_type
             &&  m_name == other.m_name

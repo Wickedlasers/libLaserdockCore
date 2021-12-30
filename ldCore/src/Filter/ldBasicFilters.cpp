@@ -188,14 +188,19 @@ void ldHueFilter::process(ldVertex &input)
     float h, s, v;
     ldColorUtil::colorRGBtoHSVfloat(input.r(), input.g(), input.b(), h, s, v);
 
-    h = m_value;
+    h = m_hue;
+    if(m_saturation != -1 && v > 0) {
+        s = m_saturation;
+        // non-saturated mode
+    } else if(m_saturation == -1) {
+        // colorize white color too, but save black parts as black
+        float minSaturation = 0.5f;
+        s = std::max(minSaturation, s) + 0.;
+        float saturationCoeff = 1.f - minSaturation;
+        s += std::max(v - saturationCoeff, 0.f);
 
-    // colorize white color too, but save black parts as black
-    float minSaturation = 0.5f;
-    float saturationCoeff = 1.f - minSaturation;
-    s = std::max(minSaturation, s) + 0.;
-    s += std::max(v - saturationCoeff, 0.f);
-    s = std::min(s, 1.0f);
+        s = std::min(s, 1.0f);
+    }
 
     ldColorUtil::colorHSVtoRGBfloat(h, s, v, input.r(), input.g(), input.b());
 }

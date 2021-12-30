@@ -37,6 +37,7 @@ public:
     virtual std::string get_serial_number() const;
     virtual int8_t get_bus_number() const;
     virtual int8_t get_device_address() const;
+    virtual std::string get_device_path() const;
     virtual std::string get_device_name() const;
 
     virtual bool enable_output();

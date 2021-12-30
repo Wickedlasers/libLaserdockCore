@@ -133,7 +133,7 @@ QSGNode * QQuickPolygon::updatePaintNode (QSGNode * oldNode, UpdatePaintNodeData
     // polygon background tesselation
     if (!m_triangles.isEmpty () && m_color.alpha () > 0) {
         m_backGeometry = new QSGGeometry (QSGGeometry::defaultAttributes_Point2D (), m_triangles.size ());
-        m_backGeometry->setDrawingMode (GL_TRIANGLES);
+        m_backGeometry->setDrawingMode (QSGGeometry::DrawTriangles);
         QSGGeometry::Point2D * vertex = m_backGeometry->vertexDataAsPoint2D ();
         const int size = m_triangles.size ();
         for (int idx = 0; idx < size; idx++) {
@@ -191,7 +191,7 @@ QSGNode * QQuickPolygon::updatePaintNode (QSGNode * oldNode, UpdatePaintNodeData
             trianglesStroke << firstVec1 << firstVec2 << lastVec1;
         }
         m_foreGeometry = new QSGGeometry (QSGGeometry::defaultAttributes_Point2D (), trianglesStroke.size ());
-        m_foreGeometry->setDrawingMode (GL_TRIANGLES);
+        m_foreGeometry->setDrawingMode (QSGGeometry::DrawTriangles);
         QSGGeometry::Point2D * vertex = m_foreGeometry->vertexDataAsPoint2D ();
         const int size = trianglesStroke.size ();
         for (int idx = 0; idx < size; idx++) {

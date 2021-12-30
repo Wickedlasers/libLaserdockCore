@@ -50,6 +50,7 @@ class ldProjectionBasic;
 #define FRAME_MODE_DISABLE_ROTATION 0x10
 
 #define LD_DEFAULT_OFFSET 4
+#define LD_DEFAULT_PRO_OFFSET 2
 
 /** Filters that are applied to final data right before it is sent to laser */
 class LDCORESHARED_EXPORT ldFilterBasicData: public ldFilter
@@ -65,6 +66,7 @@ public:
     /** filter classes */
     ldRotateFilter *rotateFilter() const;
     ldScaleFilter *scaleFilter() const;
+    ldPowerFilter *powerFilter() const;
 
 
     // frame mode flats
@@ -73,6 +75,7 @@ public:
 private:
     std::unique_ptr<ldRotateFilter> m_rotateFilter;
     std::unique_ptr<ldScaleFilter> m_scaleFilter;
+    std::unique_ptr<ldPowerFilter> m_powerFilter;
 };
 
 #endif // ldFilterBasicData_H

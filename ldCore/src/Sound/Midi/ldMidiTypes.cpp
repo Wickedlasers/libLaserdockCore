@@ -79,13 +79,13 @@ uint8_t ldMidiNote::noteFromString(const QString &noteStr, bool &ok)
     QChar sharpChar = noteStr[indexToCheck];
     if(mainNote == 'C') {
         result += 0;
-        if(sharpChar == "#") {
+        if(sharpChar == '#') {
             indexToCheck++;
             result += 1;
         }
     } else if(mainNote == 'D') {
         result += 2;
-        if(sharpChar == "#") {
+        if(sharpChar == '#') {
             indexToCheck++;
             result += 1;
         }
@@ -93,19 +93,19 @@ uint8_t ldMidiNote::noteFromString(const QString &noteStr, bool &ok)
         result += 4;
     } else if(mainNote == 'F') {
         result += 5;
-        if(sharpChar == "#") {
+        if(sharpChar == '#') {
             indexToCheck++;
             result += 1;
         }
     } else if(mainNote == 'G') {
         result += 7;
-        if(sharpChar == "#") {
+        if(sharpChar == '#') {
             indexToCheck++;
             result += 1;
         }
     } else if(mainNote == 'A') {
         result += 9;
-        if(sharpChar == "#") {
+        if(sharpChar == '#') {
             indexToCheck++;
             result += 1;
         }

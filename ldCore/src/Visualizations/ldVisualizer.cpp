@@ -80,17 +80,27 @@ void ldVisualizer::start() {
     onShouldStart();
 
     m_isVisActive = true;
+    m_isVisPaused = false;
+}
+
+void ldVisualizer::pause()
+{
+    onShouldPause();
+
+    m_isVisPaused = true;
 }
 
 void ldVisualizer::stop() {
     onShouldStop();
 
     m_isVisActive = false;
+    m_isVisPaused = false;
 
     // restore global rate
     if(m_rate != 0) {
         m_renderer->setRate(ldAbstractRenderer::DEFAULT_RATE);
     }
+
 }
 
 /*!
@@ -101,6 +111,11 @@ void ldVisualizer::stop() {
  */
 void ldVisualizer::onShouldStart()
 {
+}
+
+void ldVisualizer::onShouldPause()
+{
+
 }
 
 /*!
@@ -126,6 +141,16 @@ void ldVisualizer::updateWith(ldSoundData *pSoundData, float delta)
     }
 
     onUpdate(pSoundData, delta);
+}
+
+bool ldVisualizer::isVisActive() const
+{
+    return m_isVisActive;
+}
+
+bool ldVisualizer::isVisPaused() const
+{
+    return m_isVisPaused;
 }
 
 void ldVisualizer::draw()

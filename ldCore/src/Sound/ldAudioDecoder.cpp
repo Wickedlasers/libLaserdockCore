@@ -21,6 +21,7 @@
 #include "ldCore/Sound/ldAudioDecoder.h"
 
 #include <QtCore/QtDebug>
+#include <QtCore/QTimer>
 
 #ifdef Q_OS_ANDROID
 #include <QAndroidJniEnvironment>
@@ -42,16 +43,13 @@ const int ldAudioDecoder::IS_PRELOAD_FILE = false;
 
 const int ldAudioDecoder::SAMPLE_SIZE_TO_SEND = SAMPLE_SIZE;  // stereo int
 const int ldAudioDecoder::BLOCK_SIZE = SAMPLE_SIZE_TO_SEND * 70;  // stereo int
+const int ldAudioDecoder::DECODE_INTERVAL = 1000 / STUBFPS;
 
 ldAudioDecoder::ldAudioDecoder(QObject *parent)
     : ldSoundInterface(parent)
     , m_isActive(false)
     , m_analyzer(new ldSoundAnalyzer(this))
 {
-    m_timer.setInterval(1000 / STUBFPS); // 18 ms
-    m_timer.setTimerType(Qt::PreciseTimer);
-    connect(&m_timer, &QTimer::timeout, this, &ldAudioDecoder::timerSlot);
-
     connect(this, &ldSoundInterface::bufferUpdated, m_analyzer, &ldSoundAnalyzer::processAudioBuffer);
 }
 
@@ -101,7 +99,7 @@ void ldAudioDecoder::start(const QString &filePath, qint64 elapsedTime)
     m_elapsedTime = elapsedTime;
 
     m_elapsedTimer.start();
-    m_timer.start();
+    QTimer::singleShot(DECODE_INTERVAL, this, &ldAudioDecoder::timerSlot);
 
 #else
     Q_UNUSED(elapsedTime)
@@ -113,7 +111,6 @@ void ldAudioDecoder::start(const QString &filePath, qint64 elapsedTime)
 void ldAudioDecoder::pause()
 {
     m_elapsedTimer.invalidate();
-    m_timer.stop();
 
     update_isActive(false);
 }
@@ -194,6 +191,9 @@ void ldAudioDecoder::timerSlot()
 
 
     emit bufferUpdated(sampleToSend, sampleSizeToSend / 2, getDefaultAudioFormat().sampleRate());
+
+    if(m_isActive)
+        QTimer::singleShot(DECODE_INTERVAL, this, &ldAudioDecoder::timerSlot);
 #endif
 }
 
@@ -201,7 +201,6 @@ void ldAudioDecoder::reset()
 {
     m_filePath.clear();
 
-    m_timer.stop();
     m_elapsedTimer.invalidate();
     m_duration = -1;
 

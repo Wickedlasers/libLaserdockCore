@@ -7,6 +7,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
+#include <string>
+#include <sstream>
 
 #pragma warning(push, 0)
 #include <libusb/libusb.h>
@@ -158,6 +160,22 @@ LaserdockDevice::Status LaserdockDevice::status() const {
 std::string LaserdockDevice::get_serial_number() const
 {
     return d->get_serial_number();
+}
+
+std::string LaserdockDevice::get_device_path() const
+{
+    int bus = libusb_get_bus_number(d->usbdevice);
+
+    std::ostringstream os;
+    os << bus << "-";
+    uint8_t path[8];
+    int r = libusb_get_port_numbers(d->usbdevice, path, sizeof(path));
+    if (r > 0) {
+        os << (int)path[0];
+        for (int j = 1; j < r; j++)
+            os << "." << (int)path[j];
+    }
+    return os.str();
 }
 
 int8_t LaserdockDevice::get_bus_number() const

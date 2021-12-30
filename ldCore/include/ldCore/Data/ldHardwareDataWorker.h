@@ -40,7 +40,7 @@ public:
     /** Constructor/destructor */
     explicit ldHardwareDataWorker(ldBufferManager *bufferManager,
                               ldHardwareManager *hardwareManager,
-                              ldAbstractHardwareManager *deviceHardwareManager,
+                              std::vector<ldAbstractHardwareManager*> deviceHardwareManagers,
                               ldSimulatorEngine *simulatorEngine,
                               QObject *parent = nullptr);
     ~ldHardwareDataWorker();
@@ -60,6 +60,8 @@ public slots:
     /** Flag to use this worker to fill sumulator buffer */
     void setSimulatorEnabled(bool enabled);
 
+private slots:
+
 private:
     bool m_isActive = false;
 
@@ -70,7 +72,7 @@ private:
     ldHardwareManager* m_hardwareManager;
     ldSimulatorEngine* m_simulatorEngine;
 
-    ldAbstractHardwareManager* m_deviceHardwareManager;
+    std::vector<ldAbstractHardwareManager*> m_deviceHardwareManagers;
 };
 
 #endif /* ldHardwareDataWorker_H */

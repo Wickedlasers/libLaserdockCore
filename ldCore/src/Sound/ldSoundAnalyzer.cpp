@@ -36,11 +36,10 @@
 
 namespace  {
 const int MAX_LAG_BUFFER_MS = 1000;
-const int MAX_SOUND_UPDATE_FRAMES = 4*SAMPLE_SIZE; // sample_size is measured in frames
 }
 
+const int ldSoundAnalyzer::MAX_SOUND_UPDATE_FRAMES = 4*SAMPLE_SIZE; // sample_size is measured in frames
 float ldSoundAnalyzer::s_volumeCoeff = 1;
-
 
 ldSoundAnalyzer::ldSoundAnalyzer(QObject *parent) :
     QObject(parent)

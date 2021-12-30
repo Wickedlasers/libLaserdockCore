@@ -26,7 +26,6 @@
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QMutex>
 #include <QtCore/QObject>
-#include <QtCore/QTimer>
 
 #include <ldCore/Sound/ldSoundInterface.h>
 
@@ -77,13 +76,13 @@ private:
     static const int SAMPLE_SIZE_TO_SEND;
     static const int MAX_PRELOADED_BLOCKS = 3;
     static const int BLOCK_SIZE;
-    const int STUBFPS = 30*2;
+    static const int STUBFPS = 30*2;
+    static const int DECODE_INTERVAL;
 
     QMutex mutex;
 
     QString m_filePath;
 
-    QTimer m_timer;
     qint64 m_elapsedTime = 0;
     QElapsedTimer m_elapsedTimer;
     qint64 m_duration = -1;

@@ -39,41 +39,25 @@
 
 ldDataDispatcher::ldDataDispatcher(ldBufferManager *bufferManager, ldHardwareManager *hardwareManager, ldFilterManager* filterManager, QObject *parent)
     : ldPropertyObject(parent)
-#ifdef LASERDOCKLIB_USB_SUPPORT
-    , m_isNetwork(false)
-#endif
-    , m_simulatorEngine(new ldSimulatorEngine())
-#ifdef LASERDOCKLIB_USB_SUPPORT
-    , m_usbDataWorker(new ldHardwareDataWorker(bufferManager, hardwareManager, new ldUsbHardwareManager(filterManager, this), m_simulatorEngine.get()))
-#endif
-    , m_networkDataWorker(new ldHardwareDataWorker(bufferManager,
-                                                   hardwareManager,
-                                                   new ldNetworkHardwareManager(filterManager/*, this*/), // FIXME can't have a parent if we are moving to a worker thread.
-                                                   m_simulatorEngine.get()))
-#ifdef LASERDOCKLIB_USB_SUPPORT
-    , m_activeDataWorker(m_usbDataWorker.get())
-#else
-    , m_activeDataWorker(m_networkDataWorker.get())
-#endif
+    , m_simulatorEngine(new ldSimulatorEngine())    
+    , m_dataWorker(new ldHardwareDataWorker(
+        bufferManager,
+        hardwareManager,
+        std::vector<ldAbstractHardwareManager*>{
+            static_cast<ldAbstractHardwareManager*>(new ldNetworkHardwareManager(filterManager)),
+            #ifdef LASERDOCKLIB_USB_SUPPORT
+                static_cast<ldAbstractHardwareManager*>(new ldUsbHardwareManager(filterManager, this))
+            #endif
+        },
+        m_simulatorEngine.get()))
+    , m_activeDataWorker(m_dataWorker.get())
 {
     qDebug() << __FUNCTION__;
 
-#ifdef LASERDOCKLIB_USB_SUPPORT
-    connect(this, &ldDataDispatcher::isNetworkChanged, this, &ldDataDispatcher::onIsNetworkChanged);
 
-    connect(m_usbDataWorker.get(), &ldHardwareDataWorker::isActiveTransferChanged, this, [&]() {
-        emit activeChanged(m_networkDataWorker->isActiveTransfer() || m_usbDataWorker->isActiveTransfer());
+    connect(m_dataWorker.get(), &ldHardwareDataWorker::isActiveTransferChanged, this, [&]() {
+        emit activeChanged(m_dataWorker->isActiveTransfer());
     });
-#endif
-
-    connect(m_networkDataWorker.get(), &ldAbstractDataWorker::isActiveTransferChanged, this, [&]() {
-        emit activeChanged(m_networkDataWorker->isActiveTransfer()
-#ifdef LASERDOCKLIB_USB_SUPPORT
-                           || m_usbDataWorker->isActiveTransfer()
-#endif
-                           );
-    });
-
 
     // auto stop when hardware connects
     connect(hardwareManager, &ldHardwareManager::deviceCountChanged, this, [&](uint count) {
@@ -84,9 +68,6 @@ ldDataDispatcher::ldDataDispatcher(ldBufferManager *bufferManager, ldHardwareMan
 
     m_activeDataWorker->setActive(true);
 
-#ifdef LASERDOCKLIB_USB_SUPPORT
-    set_isNetwork(ldSettings()->value("dataDispatcher/isNetwork", m_isNetwork).toBool());
-#endif
 }
 
 ldDataDispatcher::~ldDataDispatcher()
@@ -96,24 +77,7 @@ ldDataDispatcher::~ldDataDispatcher()
 
 bool ldDataDispatcher::isActiveTransfer() const
 {
-    return
-#ifdef LASERDOCKLIB_USB_SUPPORT
-        m_usbDataWorker->isActiveTransfer() ||
-#endif
-            m_networkDataWorker->isActiveTransfer()
-            ;
-}
-
-#ifdef LASERDOCKLIB_USB_SUPPORT
-ldUsbHardwareManager *ldDataDispatcher::usbDataManager() const
-{
-    return static_cast<ldUsbHardwareManager*>(m_usbDataWorker->deviceManager());
-}
-#endif
-
-ldNetworkHardwareManager *ldDataDispatcher::networkDataManager() const
-{
-    return static_cast<ldNetworkHardwareManager*>(m_networkDataWorker->deviceManager());
+    return m_dataWorker->isActiveTransfer();
 }
 
 ldSimulatorEngine *ldDataDispatcher::simulatorEngine() const
@@ -125,21 +89,4 @@ void ldDataDispatcher::setActiveTransfer(bool active)
 {
     m_activeDataWorker->setActiveTransfer(active);
 }
-
-#ifdef LASERDOCKLIB_USB_SUPPORT
-void ldDataDispatcher::onIsNetworkChanged(bool isNetwork)
-{
-    m_activeDataWorker->setActiveTransfer(false);
-    m_activeDataWorker->setActive(false);
-    m_activeDataWorker->setSimulatorEnabled(false);
-
-    m_activeDataWorker = isNetwork ? m_networkDataWorker.get() : m_usbDataWorker.get();
-
-
-    m_activeDataWorker->setActive(true);
-    m_activeDataWorker->setSimulatorEnabled(true);
-
-    ldSettings()->setValue("dataDispatcher/isNetwork", isNetwork);
-}
-#endif
 

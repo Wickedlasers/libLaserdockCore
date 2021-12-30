@@ -19,10 +19,10 @@
 #      - OpenCV_LIBS                     : The list of libraries to link against.
 #      - OpenCV_INCLUDE_DIRS             : The OpenCV include directories.
 #      - OpenCV_COMPUTE_CAPABILITIES     : The version of compute capability
-#      - OpenCV_VERSION                  : The version of this OpenCV build: "3.4.9"
+#      - OpenCV_VERSION                  : The version of this OpenCV build: "3.4.15"
 #      - OpenCV_VERSION_MAJOR            : Major version part of OpenCV_VERSION: "3"
 #      - OpenCV_VERSION_MINOR            : Minor version part of OpenCV_VERSION: "4"
-#      - OpenCV_VERSION_PATCH            : Patch version part of OpenCV_VERSION: "9"
+#      - OpenCV_VERSION_PATCH            : Patch version part of OpenCV_VERSION: "15"
 #      - OpenCV_VERSION_STATUS           : Development status of this build: ""
 #
 #    Advanced variables:

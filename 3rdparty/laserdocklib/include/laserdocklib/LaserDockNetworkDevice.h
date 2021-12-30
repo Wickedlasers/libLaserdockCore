@@ -45,7 +45,6 @@ public:
     void ResetStatus();
 
     explicit LaserdockNetworkDevice(QString ip_address,QObject *parent = nullptr);
-    explicit LaserdockNetworkDevice();
 
     virtual ~LaserdockNetworkDevice();
 

@@ -47,6 +47,7 @@ public slots:
     void stop();
 
     void paint();
+    void update();
 
     void sync();
     void init();

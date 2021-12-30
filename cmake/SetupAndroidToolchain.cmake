@@ -5,7 +5,7 @@ if(LD_ANDROID_BUILD)
     endif()
 
     set(ANDROID_NATIVE_API_LEVEL 24) # 7.0
-    set(ANDROID_TARGET_API_LEVEL 29) # 10.0
+    set(ANDROID_TARGET_API_LEVEL 30) # 11.0
     set(ANDROID_TOOLCHAIN clang)
     set(ANDROID_STL c++_shared)
     set(ANDROID ON)

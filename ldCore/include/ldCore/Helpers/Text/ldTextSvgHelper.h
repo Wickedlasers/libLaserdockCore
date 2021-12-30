@@ -35,7 +35,7 @@ class LDCORESHARED_EXPORT ldTextSvgHelper
 public:
     static ldTextSvgHelper* instance();
 
-    int indexForSvgValidChars(const QChar& p_str);
+    int indexForSvgValidChars(const QChar& p_str, int font);
     QChar replaceAccentAndSome(const QChar& p_str);
     QString svgPathForChar(const QChar &p_str, int font);
 

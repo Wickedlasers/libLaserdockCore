@@ -5,7 +5,11 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # library
-add_library(openlase SHARED)
+if(LD_IOS_BUILD)
+    add_library(openlase)
+else()
+    add_library(openlase SHARED)
+endif()
 
 target_sources(openlase PRIVATE
     src/libol.c
