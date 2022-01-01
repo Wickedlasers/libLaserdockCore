@@ -112,7 +112,7 @@ private:
     int m_soundLevelGate = 0;
     bool m_isShowLogo = true;
 
-    std::atomic<SoundSource> m_soundSource = SoundSource::SoundInput;
+    std::atomic<SoundSource> m_soundSource{SoundSource::SoundInput};
 
     float m_rotX = 0;
     float m_rotY = 0;

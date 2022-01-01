@@ -58,7 +58,11 @@ public:
 
     qint64 duration() const
     {
+#ifdef Q_OS_ANDROID
         return m_audioDecoder->duration();
+#else
+        return 0;
+#endif
     }
 
 
