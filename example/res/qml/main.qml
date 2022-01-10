@@ -54,6 +54,15 @@ Item {
                         ListElement {
                             text: "Spiral Fighter"
                         }
+                        ListElement {
+                            text: "Angry Lasers (box2d)"
+                        }
+                        ListElement {
+                            text: "Arrow (ldLuaGame)"
+                        }
+                        ListElement {
+                            text: "Snake (ldRazer)"
+                        }
                     }
 
                     onActivated: activateVis(currentIndex)
@@ -61,17 +70,17 @@ Item {
             }
 
             RowLayout {
-                visible: visComboBox.currentIndex === 5 // Spiral Fighter
+                visible: visComboBox.currentIndex > 4
                 Button {
                     focusPolicy: Qt.NoFocus
 
-                    text: game.state === LdGameState.Playing
+                    text: game && game.state === LdGameState.Playing
                           ? qsTr("Pause Game")
-                          : game.state === LdGameState.Paused
+                          : game && game.state === LdGameState.Paused
                             ? qsTr("Resume Game")
                             : qsTr("Start Game")
 
-                    checked: game.state === LdGameState.Playing
+                    checked: game && game.state === LdGameState.Playing
 
                     onClicked: game.toggle()
                 }

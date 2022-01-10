@@ -1,6 +1,8 @@
 #include "ldCore/Hardware/ldNetworkHardware.h"
+#include "ldCore/Hardware/ldHardwareInfo.h"
 
 #include <QtDebug>
+#include <ldCore/ldCore.h>
 
 #include <laserdocklib/LaserDockNetworkDevice.h>
 
@@ -76,7 +78,32 @@ ldNetworkHardware::ldNetworkHardware(LaserdockNetworkDevice *device, QObject *pa
   ,  d_ptr(new ldNetworkHardwarePrivate(this))
 {
     Q_D(ldNetworkHardware);
-    d->params.device = device;    
+    d->params.device = device;
+
+    // info class must always exist in main gui thread
+    m_info->moveToThread(ldCore::instance()->thread());
+
+    connect(device,&LaserdockNetworkDevice::BatteryPercentUpdated,m_info,&ldHardwareInfo::update_batteryPercent);
+    connect(device,&LaserdockNetworkDevice::ModelNumberUpdated,m_info,&ldHardwareInfo::update_modelNumber);
+    connect(device,&LaserdockNetworkDevice::DACRateUpdated,m_info,&ldHardwareInfo::update_dacRate);
+    connect(device,&LaserdockNetworkDevice::MaxDACRateUpdated,m_info,&ldHardwareInfo::update_maxDacRate);
+    connect(device,&LaserdockNetworkDevice::TemperatureUpdated,m_info,&ldHardwareInfo::update_temperatureDegC);
+    connect(device,&LaserdockNetworkDevice::ModelNameUpdated,m_info,&ldHardwareInfo::update_modelName);
+    connect(device,&LaserdockNetworkDevice::SampleBufferSizeUpdated,m_info,&ldHardwareInfo::update_bufferSize);
+    connect(device,&LaserdockNetworkDevice::SampleBufferFreeUpdated,m_info,&ldHardwareInfo::update_bufferFree);
+    connect(device,&LaserdockNetworkDevice::FWMajorRevisionUpdated,m_info,&ldHardwareInfo::update_fwMajor);
+    connect(device,&LaserdockNetworkDevice::FWMinorRevisionUpdated,m_info,&ldHardwareInfo::update_fwMinor);
+    connect(device,&LaserdockNetworkDevice::PacketErrorsUpdated,m_info,&ldHardwareInfo::update_packetErrors);
+    connect(device,&LaserdockNetworkDevice::OverTemperatureUpdated,m_info,&ldHardwareInfo::update_overTemperature);
+    connect(device,&LaserdockNetworkDevice::TemperatureWarningUpdated,m_info,&ldHardwareInfo::update_temperatureWarning);
+    connect(device,&LaserdockNetworkDevice::InterlockEnabledUpdated,m_info,&ldHardwareInfo::update_interlockEnabled);
+
+    connect(device,&LaserdockNetworkDevice::ConnectionTypeUpdated,[&](LaserdockNetworkDevice::ConnectionType ct){
+        m_info->update_connectionType(static_cast<int>(ct));
+    });
+
+    m_info->update_hasValidInfo(true); // network device always has valid info available
+
 }
 
 void ldNetworkHardware::setActive(bool active)

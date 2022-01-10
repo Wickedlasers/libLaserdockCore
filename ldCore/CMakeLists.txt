@@ -94,6 +94,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Hardware/ldAbstractHardwareManager.h
         ${SRCDIR}/Hardware/ldHardware.cpp
         ${INCDIR}/Hardware/ldHardware.h
+        ${INCDIR}/Hardware/ldHardwareInfo.h
+        ${SRCDIR}/Hardware/ldHardwareInfo.cpp
         ${SRCDIR}/Hardware/ldHardwareManager.cpp
         ${INCDIR}/Hardware/ldHardwareManager.h
         ${SRCDIR}/Hardware/ldNetworkHardware.cpp

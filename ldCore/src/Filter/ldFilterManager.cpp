@@ -64,8 +64,9 @@ ldHardwareFilter *ldFilterManager::getFilterById(QString device_id)
 }
 
 // remove an existing filter by device id
-void ldFilterManager::removeFilterById(QString device_id)
+void ldFilterManager::removeFilterById(QString /*device_id*/)
 {
+    // disabled removing of a filter so that it is still available if the unit is switched off then on.
     /*
     lock();
     if (m_filtermap.contains(device_id)) { // filter already created for this device id?

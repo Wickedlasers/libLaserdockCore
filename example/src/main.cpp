@@ -24,6 +24,7 @@
 #include <QtQml/QQmlApplicationEngine>
 
 #include <ldCore/ldCore.h>
+#include <ldLuaGame/ldLuaGameVisualizer.h>
 
 #include "ldCoreExample.h"
 
@@ -40,6 +41,7 @@ Q_IMPORT_PLUGIN(QtQuickTemplates2Plugin)
 
 int main(int argc, char *argv[]) {
     ldCore::initResources();
+    ldLuaGameVisualizer::initBaseResources();
 
 #ifdef Q_OS_WIN
     QGuiApplication::setAttribute(Qt::AA_UseOpenGLES, true);

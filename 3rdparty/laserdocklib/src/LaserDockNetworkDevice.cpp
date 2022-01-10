@@ -194,16 +194,14 @@ bool LaserdockNetworkDevice::get_disconnected()
 bool LaserdockNetworkDevice::RequestDeviceAlive(QUdpSocket& skt)
 {
     uint8_t info_pkt[]={cmds::LASERCUBE_GET_ALIVE};
-     QList<QNetworkInterface> allInterfaces = QNetworkInterface::allInterfaces();
+     const QList<QNetworkInterface> allInterfaces = QNetworkInterface::allInterfaces();
      const QHostAddress &localhost = QHostAddress(QHostAddress::LocalHost);
-     QNetworkInterface eth;
 
      // we scan for valid network interfaces every time this func is called , so any new interfaces are picked up on after laseros has started
-     foreach(eth, allInterfaces) {
+     for (const auto& eth : allInterfaces) {
          if((eth.flags() & QNetworkInterface::IsUp) && (eth.flags() & QNetworkInterface::IsRunning) && !(eth.flags() & QNetworkInterface::IsPointToPoint)) {
-             QList<QNetworkAddressEntry> allEntries = eth.addressEntries();
-             QNetworkAddressEntry entry;
-             foreach (entry, allEntries) {
+             const QList<QNetworkAddressEntry> allEntries = eth.addressEntries();
+             for (const auto& entry : allEntries) {
                  if (entry.ip().protocol() == QAbstractSocket::IPv4Protocol  && entry.ip() != localhost){
                     //qDebug() <<"ip:" << entry.ip().toString() << "netmask" << entry.netmask().toString() << "broadcast" << entry.broadcast().toString();
                     skt.writeDatagram(reinterpret_cast<const char*>(info_pkt), sizeof(info_pkt), entry.broadcast(), constants::alive_port);
@@ -315,10 +313,64 @@ void LaserdockNetworkDevice::handleFullInfoPkt(const QByteArray &data)
 
         if (data.size()==64 && payload_ver_id==0){ // decode version 0 of the full info packet (allows for future upgrade)
             //qDebug() << "full network lasercube data info RX";
-            m_fw_major = static_cast<uint8_t>(data[3]);
-            m_fw_minor = static_cast<uint8_t>(data[4]);
+            uint8_t fwmaj,fwmin;
+
+            fwmaj = static_cast<uint8_t>(data[3]);
+            fwmin = static_cast<uint8_t>(data[4]);
+            if (fwmaj!=m_fw_major) {
+                m_fw_major = fwmaj;
+                emit FWMajorRevisionUpdated(fwmaj);
+            }
+            if (fwmin!=m_fw_minor) {
+                m_fw_minor = fwmin;
+                emit FWMinorRevisionUpdated(fwmin);
+            }
             //qDebug().nospace() << "Firmware Ver: " << m_fw_major << "." << m_fw_minor;
-            m_outputenabled = static_cast<bool>(data[5]) & 1 ? true : false;
+
+            uint8_t flags = static_cast<uint8_t>(data[5]);
+
+            bool oe = (flags & 1) ? true : false;
+            bool ilock = false;
+            bool twarn = false;
+            bool otemp = false;
+            uint8_t pkterrors = 0;
+
+            if ((m_fw_major>0) || (m_fw_minor>=13)) {
+                ilock = (flags & 2) ? true : false;
+                twarn = (flags & 4) ? true : false;
+                otemp = (flags & 8) ? true : false;
+                pkterrors = (flags>>4) & 0x0f;
+            } else { // <=v0.12
+                ilock = (flags & 8) ? true : false;
+                twarn = (flags & 16) ? true : false;
+                otemp = (flags & 32) ? true : false;
+            }
+
+            if (oe!=m_outputenabled) {
+                m_outputenabled = oe;
+                emit OutputEnableUpdated(oe);
+            }
+
+            if (ilock != m_interlock_enabled) {
+                m_interlock_enabled = ilock;
+                emit InterlockEnabledUpdated(ilock);
+            }
+
+            if (twarn != m_temperature_warn) {
+                m_temperature_warn = twarn;
+                emit TemperatureWarningUpdated(twarn);
+            }
+
+            if (otemp != m_over_temperature) {
+                m_over_temperature = otemp;
+                emit OverTemperatureUpdated(otemp);
+            }
+
+            if (pkterrors != m_packet_errors) {
+                m_packet_errors = pkterrors;
+                emit PacketErrorsUpdated(pkterrors);
+            }
+
             //qDebug() << "DAC Enabled:" << m_outputenabled;
             uint32_t dacrate;
             dacrate = static_cast<uint8_t>(data[10]);
@@ -330,10 +382,15 @@ void LaserdockNetworkDevice::handleFullInfoPkt(const QByteArray &data)
                 m_dac_rate = dacrate;
             }
             //qDebug() << "DAC rate:" << m_dac_rate;
-            m_max_dac_rate = static_cast<uint8_t>(data[14]);
-            m_max_dac_rate+= static_cast<uint32_t>(static_cast<uint8_t>(data[15])<<8);
-            m_max_dac_rate+= static_cast<uint32_t>(static_cast<uint8_t>(data[16])<<16);
-            m_max_dac_rate+= static_cast<uint32_t>(static_cast<uint8_t>(data[17])<<24);
+            uint32_t maxdacrate;
+            maxdacrate = static_cast<uint8_t>(data[14]);
+            maxdacrate+= static_cast<uint32_t>(static_cast<uint8_t>(data[15])<<8);
+            maxdacrate+= static_cast<uint32_t>(static_cast<uint8_t>(data[16])<<16);
+            maxdacrate+= static_cast<uint32_t>(static_cast<uint8_t>(data[17])<<24);
+            if (m_max_dac_rate!=maxdacrate) {
+                m_max_dac_rate = maxdacrate;
+                emit MaxDACRateUpdated(maxdacrate);
+            }
             //qDebug() << "Max DAC rate:" << m_max_dac_rate;
             uint16_t buffree;
             buffree = static_cast<uint8_t>(data[19]);
@@ -360,13 +417,13 @@ void LaserdockNetworkDevice::handleFullInfoPkt(const QByteArray &data)
 
             int8_t temperature = static_cast<int8_t>(data[24]);
             if (temperature!=m_temperature_degc) {
-                TemperatureUpdated(temperature);
+                emit TemperatureUpdated(temperature);
                 m_temperature_degc = temperature;
             }
 
             ConnectionType con = static_cast<ConnectionType>(data[25]+1);
             if (con!=m_contype){
-                ConnectionTypeUpdated(con);
+                emit ConnectionTypeUpdated(con);
                 m_contype = con;
             }
 
@@ -381,7 +438,7 @@ void LaserdockNetworkDevice::handleFullInfoPkt(const QByteArray &data)
 
             std::string serstr = str.toUpper().toStdString();
             if (serstr!=m_serialnumber){
-                SerialNumberUpdated(str);
+                emit SerialNumberUpdated(str);
                 m_serialnumber = serstr;
             }
 

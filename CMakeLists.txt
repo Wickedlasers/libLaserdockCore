@@ -10,13 +10,18 @@ option(LD_ANDROID_BUILD "Build for Android" OFF)
 option(LD_IOS_BUILD "Build for iOS" OFF)
 
 # main app configuration
-option(LD_CORE_BUILD_EXAMPLE "Build Example" ON)
+option(LD_CORE_BUILD_EXAMPLE "Build Example" OFF)
 option(LD_CORE_BUILD_TESTS "Build Tests" OFF)
 # library flags
+option(LD_CORE_ENABLE_BOX2D "Enable Box2D" OFF)
 option(LD_CORE_ENABLE_LIBLZR "Enable liblzr" OFF)
+option(LD_CORE_ENABLE_LUAGAME "Enable lua game module" OFF)
+option(LD_CORE_ENABLE_RAZER "Enable ldRazer game module" OFF)
 option(LD_CORE_ENABLE_QUAZIP "Support of resources extraction (android)" OFF)
 # Android resources extraction
 option(LD_CORE_RESOURCES_EXTRACTOR "Support of resources extraction (android)" OFF)
+
+message(STATUS "LD_CORE_BUILD_EXAMPLE ${LD_CORE_BUILD_EXAMPLE}")
 
 include(CMakeDependentOption)
 CMAKE_DEPENDENT_OPTION(LD_CORE_RESOURCES_EXTRACTOR "" OFF
@@ -24,6 +29,15 @@ CMAKE_DEPENDENT_OPTION(LD_CORE_RESOURCES_EXTRACTOR "" OFF
 
 CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_QUAZIP "" OFF
     "NOT LD_CORE_RESOURCES_EXTRACTOR" ON)
+
+CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_BOX2D "" OFF
+    "NOT LD_CORE_BUILD_EXAMPLE" ON)
+CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_LUAGAME "" OFF
+    "NOT LD_CORE_BUILD_EXAMPLE" ON)
+CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_RAZER "" OFF
+    "NOT LD_CORE_BUILD_EXAMPLE" ON)
+
+message(STATUS "LD_CORE_ENABLE_BOX2D ${LD_CORE_ENABLE_BOX2D}")
 
 if(LD_IOS_BUILD)
     option(LASERDOCKLIB_USB_SUPPORT "" OFF)
@@ -37,6 +51,8 @@ message(STATUS "LASERDOCKLIB_USB_SUPPORT ${LASERDOCKLIB_USB_SUPPORT}")
 if(APPLE)
 if(NOT LD_IOS_BUILD)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13")
+    # ALLOW LASEROS TO BUILD ON AN APPLE MAC M1 FOR X86_64 PLATFOIRM
+    SET(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Build architectures for OSX")
 endif()
 endif()
 
@@ -91,6 +107,7 @@ endif()
 
 add_subdirectory(3rdparty)
 add_subdirectory(ldCore)
+add_subdirectory(modules)
 
 # add example for library
 if(LD_CORE_BUILD_EXAMPLE)

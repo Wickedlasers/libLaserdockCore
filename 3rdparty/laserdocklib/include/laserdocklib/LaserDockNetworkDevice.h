@@ -116,17 +116,25 @@ public:
     void SecurityResponseReceived(bool success,QByteArray response_data);
 
     // new signal events triggered when data changes from this lasercube device
-    void DACRateUpdated(uint32_t dacrate);
-    void SampleBufferFreeUpdated(uint16_t buffer_free_samples);
-    void SampleBufferSizeUpdated(uint16_t buffer_size_samples);
-    void BatteryPercentUpdated(uint8_t battery_percent);
-    void TemperatureUpdated(int8_t temperature_degc);
+    void FWMajorRevisionUpdated(int rev);
+    void FWMinorRevisionUpdated(int rev);
+    void DACRateUpdated(int dacrate);
+    void MaxDACRateUpdated(int dacrate);
+    void SampleBufferFreeUpdated(int buffer_free_samples);
+    void SampleBufferSizeUpdated(int buffer_size_samples);
+    void BatteryPercentUpdated(int battery_percent);
+    void TemperatureUpdated(int temperature_degc);
     void ConnectionTypeUpdated(ConnectionType connection_type);
     void SerialNumberUpdated(QString serial_num_str);
     void ModelNameUpdated(QString model_name_str);
-    void ModelNumberUpdated(uint8_t model_num);
+    void ModelNumberUpdated(int model_num);
     void UniqueIdUpdated(QString unique_id_str);
     void IPAddressUpdated(QString ip_addr_str);
+    void OutputEnableUpdated(bool enabled);
+    void InterlockEnabledUpdated(bool enabled);
+    void TemperatureWarningUpdated(bool warning);
+    void OverTemperatureUpdated(bool overtemp);
+    void PacketErrorsUpdated(int errors);
 
 public slots:
     // perform a security request to this device
@@ -156,7 +164,7 @@ private:
     QUdpSocket*                         m_cmdsocket{nullptr};
     QUdpSocket*                         m_datasocket{nullptr};
     QHostAddress                        m_hostaddr;
-    QElapsedTimer                      m_elapsed_timer;
+    QElapsedTimer                       m_elapsed_timer;
     uint                                m_max_samples_per_udp_pkt{80};
     uint                                m_max_udp_packets{20};
     Status                              m_status{UNKNOWN};
@@ -170,12 +178,14 @@ private:
     uint8_t                             m_model_number{0};
     uint8_t                             m_model_region{0};
     bool                                m_outputenabled{false};
+    bool                                m_interlock_enabled{false};
+    bool                                m_temperature_warn{false};
+    bool                                m_over_temperature{false};
+    uint8_t                             m_packet_errors{255};
     uint32_t                            m_dac_rate{0};
     uint32_t                            m_max_dac_rate{0};
-    uint8_t                             m_fw_major{0};
-    uint8_t                             m_fw_minor{0};
-    uint16_t                            m_dac_range_min{0};
-    uint16_t                            m_dac_range_max{0};
+    uint8_t                             m_fw_major{255};
+    uint8_t                             m_fw_minor{255};
     uint16_t                            m_min_dac_value{0};
     uint16_t                            m_max_dac_value{0};
     uint8_t                             m_battery_pct{0};

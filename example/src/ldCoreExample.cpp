@@ -73,6 +73,7 @@ ldCoreExample::ldCoreExample(QQmlApplicationEngine *engine, QObject *parent)
         m_resExtractor->startExtraction();
     else
 #endif
+
         startApp();
 }
 
@@ -93,19 +94,33 @@ void ldCoreExample::init()
     ldCore::instance()->task()->setVisualizer(m_visualizers[0].get());
 }
 
+bool ldCoreExample::eventFilter(QObject *obj, QEvent *ev)
+{
+    if(m_game && m_game->get_isActive())
+        return m_game->eventFilter(obj, ev);
+
+    return QObject::eventFilter(obj, ev);
+}
+
 void ldCoreExample::activateVis(int index)
 {
     if(index < 5) {
         ldCore::instance()->task()->setVisualizer(m_visualizers[index].get());
-        m_game->set_isActive(false);
-    } else {
-        m_game->set_isActive(true);
+        update_game(nullptr);
+    } else if(index == 5) {
+        update_game(m_spiralFigtherGame);
+    } else if(index == 6) {
+        update_game(m_angryLasersGame);
+    } else if(index == 7) {
+        update_game(m_arrowGame);
+    } else if(index == 8) {
+        update_game(m_serpentGame);
     }
 }
 
 void ldCoreExample::setWindow(QObject *window)
 {
-    window->installEventFilter(m_game);
+    window->installEventFilter(this);
 }
 
 void ldCoreExample::startApp()
@@ -116,7 +131,17 @@ void ldCoreExample::startApp()
     m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldAnimationVisualizer(ldCore::instance()->resourceDir() + "/ldva2/Go-Go Girl.ldva2")));
     m_visualizers.push_back(std::unique_ptr<ldVisualizer>(new ldAnalogClockVisualizer));
 
-    m_game = new ldSpiralFighterGame(this);
+    m_angryLasersGame = new ldAngryLasers(this);
+    m_arrowGame = new ldArrow(this);
+    m_serpentGame = new ldSerpent(this);
+    m_spiralFigtherGame = new ldSpiralFighterGame(this);
 
+    connect(this, &ldCoreExample::gameChanged, this, [&](ldAbstractGame *game) {
+        m_angryLasersGame->set_isActive(false);
+        m_arrowGame->set_isActive(false);
+        m_spiralFigtherGame->set_isActive(false);
+        if(game)
+            game->set_isActive(true);
+    });
     QTimer::singleShot(0, this, &ldCoreExample::init);
 }

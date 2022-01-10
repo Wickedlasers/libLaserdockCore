@@ -1,0 +1,23 @@
+<RCC>
+    <qresource prefix="/base">
+     <file>Data/Class.lua</file>
+     <file>Data/Color.lua</file>
+     <file>Data/Colorise.lua</file>
+     <file>Data/Colors.lua</file>
+     <file>Data/Core.lua</file>
+     <file>Data/DeltaTimeCounter.lua</file>
+     <file>Data/Helpers.lua</file>
+     <file>Data/Object.lua</file>
+     <file>Data/Pause.lua</file>
+     <file>Data/Sound.lua</file>
+     <file>Data/State.lua</file>
+     <file>Data/TextLabel.lua</file>
+     <file>Data/Tick.lua</file>
+     <file>Data/Timer.lua</file>
+     <file>Data/Tween.lua</file>
+     <file>Data/TweenTemplates.lua</file>
+     <file>Data/Vector.lua</file>
+     <file>Data/External/easing.lua</file>
+     <file>Data/External/json.lua</file>
+     </qresource>
+</RCC>

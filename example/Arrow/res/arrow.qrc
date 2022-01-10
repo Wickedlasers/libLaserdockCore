@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/arrow">
+     <file>ldArrowVisualizer.lua</file>
+     <file>Data/Game/Map.lua</file>
+     <file>Data/Game/Arrow.lua</file>
+     <file>Data/Game/World.lua</file>
+     <file>Data/Game/Main.lua</file>
+     <file>Data/Game/CollisionHandler.lua</file>
+     <file>Data/Game/Diamond.lua</file>
+     <file>Data/Game/Triangle.lua</file>
+     <file>Data/Game/DiamondSpawner.lua</file>
+     <file>Data/Game/ParticleQuad.lua</file>
+     <file>Data/GameTitle.lua</file>
+     <file>Data/Graphics.lua</file>
+     </qresource>
+</RCC>

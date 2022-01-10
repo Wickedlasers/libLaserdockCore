@@ -42,7 +42,7 @@ ldHardwareDataWorker::ldHardwareDataWorker(ldBufferManager *bufferManager,
     , m_deviceHardwareManagers(deviceHardwareManagers)
 {    
 
-   for (auto devman : m_deviceHardwareManagers) {
+   for (const auto &devman : qAsConst(m_deviceHardwareManagers)) {
         m_hardwareManager->addHardwareManager(devman);
     }
 
@@ -53,7 +53,7 @@ ldHardwareDataWorker::ldHardwareDataWorker(ldBufferManager *bufferManager,
 
     QObject::connect(m_thread_worker.data(), &ldThreadedDataWorker::activeChanged, this, &ldHardwareDataWorker::isActiveTransferChanged);
 
-    for (auto devman : m_deviceHardwareManagers) {
+    for (const auto &devman : qAsConst(m_deviceHardwareManagers)) {
         connect(this,&ldHardwareDataWorker::isActiveTransferChanged,devman,&ldAbstractHardwareManager::setActiveTransfer);
     }
 
@@ -78,7 +78,7 @@ bool ldHardwareDataWorker::isActiveTransfer() const
 
 bool ldHardwareDataWorker::hasActiveDevices() const
 {
-    for (auto devman : m_deviceHardwareManagers) {
+    for (const auto &devman : qAsConst(m_deviceHardwareManagers)) {
         if (devman->hasActiveDevices()) return true;
     }
 
@@ -104,7 +104,7 @@ void ldHardwareDataWorker::setActive(bool active)
         m_thread_worker->stopProcess();
     }
 
-    for (auto devman : m_deviceHardwareManagers) {
+    for (const auto &devman : qAsConst(m_deviceHardwareManagers)) {
         devman->set_isActive(active);
     }
 }

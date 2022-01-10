@@ -28,17 +28,14 @@
 
 #include "ldSimulatorProcessor.h"
 
-namespace  {
-    // ensure buffer can hold the most comlex frame (mostly due to games complexity)
-    const unsigned int DEFAULT_SIZE_FOR_VBUFFER = 3500;
-}
+#include <ldCore/Data/ldFrameBuffer.h>
 
 ldSimulatorEngine::ldSimulatorEngine()
-    : m_buffer(DEFAULT_SIZE_FOR_VBUFFER)    
+    : m_buffer(ldFrameBuffer::FRAMEBUFFER_CAPACITY)
     , m_processor(new ldSimulatorProcessor)
     , m_grid(new ldSimulatorGrid())
 {
-    vbuffer.resize(DEFAULT_SIZE_FOR_VBUFFER);    
+    vbuffer.resize(ldFrameBuffer::FRAMEBUFFER_CAPACITY);
 }
 
 ldSimulatorEngine::~ldSimulatorEngine()
@@ -75,16 +72,15 @@ void ldSimulatorEngine::uninit()
 
 void ldSimulatorEngine::drawLaserGeometry(QOpenGLShaderProgram *program)
 {
-    m_lock.lockForWrite();
+    QMutexLocker lock(&m_mutex);
     drawBuffer(program, vbuffer,vbuffer_size);
     if(m_grid->isEnabled())
             drawBuffer(program, m_grid->buffer());
-    m_lock.unlock();
 }
 
 void ldSimulatorEngine::pushVertexData(ldVertex * data, unsigned int size) {
 
-    m_lock.lockForWrite();
+    QMutexLocker lock(&m_mutex);
 
     // create temp buffer for dots processing
     const int maxsize = 2048;
@@ -97,24 +93,18 @@ void ldSimulatorEngine::pushVertexData(ldVertex * data, unsigned int size) {
 
     // buffer up partial frame points (until frame_complete() func is called).
      m_buffer.Push(data_processed, size);
-
-    // done
-    m_lock.unlock();
 }
 
 void ldSimulatorEngine::frame_complete()
 {
-    m_lock.lockForWrite();
+    QMutexLocker lock(&m_mutex);
 
     vbuffer_size = m_buffer.GetLevel();
 
-    if (vbuffer_size>0) {
+    if (vbuffer_size>0) {        
         m_buffer.Get(&vbuffer[0], vbuffer_size );
         m_buffer.Reset();
     }
-
-    m_lock.unlock();
-
 }
 
 ldSimulatorGrid *ldSimulatorEngine::grid() const

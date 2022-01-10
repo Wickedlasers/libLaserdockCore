@@ -5,8 +5,9 @@ project(ldCore_Example)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # setup C++
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # setup Qt
 set(CMAKE_AUTOMOC ON)
@@ -76,9 +77,15 @@ endif()
 target_include_directories(${PROJECT_NAME} PRIVATE ../3rdparty)
 target_include_directories(${PROJECT_NAME} PRIVATE ../3rdparty/lib-qt-qml-tricks/include)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ldCore)
+target_link_libraries(${PROJECT_NAME} PRIVATE ldCore ldCore::LuaGame)
 
 
+add_subdirectory(AngryLasers)
+target_link_libraries(${PROJECT_NAME} PRIVATE ldAngryLasers)
+add_subdirectory(Arrow)
+target_link_libraries(${PROJECT_NAME} PRIVATE ldArrow)
+add_subdirectory(Serpent)
+target_link_libraries(${PROJECT_NAME} PRIVATE ldSerpent)
 add_subdirectory(SpiralFighter)
 target_link_libraries(${PROJECT_NAME} PRIVATE ldSpiralFighter)
 

@@ -26,6 +26,10 @@
 #include <QQmlHelpers>
 
 #include <ldCore/ldCore.h>
+
+#include "ldAngryLasers.h"
+#include "ldArrow.h"
+#include "ldSerpent.h"
 #include "ldSpiralFighterGame.h"
 
 class QQmlApplicationEngine;
@@ -41,13 +45,16 @@ class ldCoreExample : public QObject
     Q_OBJECT
 
     QML_CONSTANT_PROPERTY(ldCore*, ldCore)
-    QML_CONSTANT_PROPERTY(ldSpiralFighterGame*, game)
+    QML_READONLY_PROPERTY(ldAbstractGame*, game)
 
 public:
     ldCoreExample(QQmlApplicationEngine *engine, QObject *parent = nullptr);
     ~ldCoreExample();
 
     void init();
+
+    /** QObject */
+    virtual bool eventFilter(QObject *obj, QEvent *ev) override;
 
 public slots:
     void activateVis(int index);
@@ -64,6 +71,11 @@ private:
 #ifdef Q_OS_ANDROID
     ldResourcesExtractor* m_resExtractor;
 #endif
+
+    ldAngryLasers* m_angryLasersGame = nullptr;
+    ldArrow* m_arrowGame = nullptr;
+    ldSerpent* m_serpentGame = nullptr;
+    ldSpiralFighterGame* m_spiralFigtherGame = nullptr;
 };
 
 #endif // LDCOREEXAMPLE_H

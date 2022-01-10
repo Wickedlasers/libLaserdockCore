@@ -19,9 +19,8 @@
 **/
 
 #include "ldCore/Hardware/ldHardware.h"
-
+#include "ldCore/Hardware/ldHardwareInfo.h"
 #include <QtDebug>
-
 #include <ldCore/ldCore.h>
 #include <ldCore/Data/ldFrameBuffer.h>
 #include <ldCore/Filter/ldDeadzoneFilter.h>
@@ -40,9 +39,20 @@ ldHardware::Status ldHardware::status()
     return m_status;
 }
 
+bool ldHardware::isEnabled() const
+{
+    return m_enabled;
+}
+
+void ldHardware::setEnabled(bool en)
+{
+    m_enabled = en;
+}
+
+// device is only active if it is flagged as such, and it has not been disabled
 bool ldHardware::isActive() const
 {
-    return m_isActive;
+    return m_isActive && m_enabled;
 }
 
 void ldHardware::setActive(bool active)
@@ -80,8 +90,14 @@ ldHardwareFilter *ldHardware::filter() const
     return m_filter;
 }
 
+ldHardwareInfo* ldHardware::info() const
+{
+   return m_info;
+}
+
 ldHardware::ldHardware(QObject *parent)
     : QObject(parent)
+    , m_info(new ldHardwareInfo())
 {
     m_compressed_buffer.resize(ldFrameBuffer::FRAMEBUFFER_CAPACITY);
 }

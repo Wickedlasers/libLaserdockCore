@@ -75,7 +75,7 @@ void ldThreadedDataWorker::stopProcess() {
 void ldThreadedDataWorker::run()
 {
     // buffers
-    std::vector<ldVertex> vertexVec(MAX_SAMPLES_PER_PACKET);
+    std::vector<ldVertex> vertexVec(ldFrameBuffer::FRAMEBUFFER_CAPACITY);
 
     m_simulatedBufferFullCount = 0;
     m_simTimer.start();
@@ -95,7 +95,7 @@ void ldThreadedDataWorker::run()
 
 
         if (m_isActive) {
-            for (auto devman : m_hardwareDeviceManagers) {
+            for (const auto &devman : qAsConst(m_hardwareDeviceManagers)) {
                 if (devman->hasActiveDevices()) {
                     int level = devman->getSmallestBufferCount(); // get lowest buffer level from each manager
                     if(level!=-1) {
@@ -190,7 +190,7 @@ void ldThreadedDataWorker::run()
                     // send
                     if (m_isActive) {
                         //qDebug() << "s:" << actualSamplesToSend;
-                        for (auto devman : m_hardwareDeviceManagers) {
+                        for (const auto &devman : qAsConst(m_hardwareDeviceManagers)) {
                             if (devman->hasActiveDevices()) devman->sendData(exhaustedIndex, actualSamplesToSend);
                         }
                     }

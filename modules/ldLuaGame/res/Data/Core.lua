@@ -1,0 +1,3 @@
+Core = {}
+
+Core.visualizer = nil

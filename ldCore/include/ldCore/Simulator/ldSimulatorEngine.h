@@ -22,7 +22,7 @@
 #define LDSIMULATORENGINE_H
 
 #include <memory>
-
+#include <QMutexLocker>
 #include <QtCore/QReadWriteLock>
 #include <QtGui/QOpenGLFunctions>
 
@@ -73,7 +73,7 @@ private:
     GLuint vboIds[2] = {};
 
     ldVertexCircularBuffer m_buffer;
-    QReadWriteLock m_lock;
+    mutable QMutex m_mutex;
     std::vector<ldVertex> vbuffer;
     unsigned vbuffer_size{0};
     int m_listenerCount{0};

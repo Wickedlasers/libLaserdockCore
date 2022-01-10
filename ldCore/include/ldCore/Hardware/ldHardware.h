@@ -23,12 +23,13 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QDateTime>
-
+#include <QQmlHelpers>
 #include <ldCore/ldCore_global.h>
 #include <ldCore/Utilities/ldCompressedSample.h>
 #include <ldCore/Utilities/ldVertexFrame.h>
 
 class ldHardwareFilter;
+class ldHardwareInfo;
 
 class LDCORESHARED_EXPORT ldHardware : public QObject
 {
@@ -46,6 +47,9 @@ public:
     virtual QString address() const = 0;
     Status status();
 
+    bool isEnabled() const;
+    void setEnabled(bool en);
+
     bool isActive() const;
     void setActive(bool active);
 
@@ -55,6 +59,8 @@ public:
     void setFilter(ldHardwareFilter *filter);
     ldHardwareFilter *filter() const;
 
+    ldHardwareInfo* info() const;
+
 signals:
     void statusChanged(ldHardware::Status status);
 
@@ -63,13 +69,15 @@ protected:
 
     void setStatus(Status status);
 
-    bool m_isActive = false;
+    bool m_enabled {true};
+    bool m_isActive {false};
+    ldHardwareInfo *m_info{nullptr};
 
     std::vector<ldCompressedSample> m_compressed_buffer;
 
 private:
-    ldHardwareFilter *m_filter = nullptr;
-    Status m_status = Status::UNKNOWN;
+    ldHardwareFilter *m_filter{nullptr};
+    Status m_status{Status::UNKNOWN};
 
 };
 
