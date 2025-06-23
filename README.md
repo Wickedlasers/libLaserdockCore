@@ -9,19 +9,18 @@ Windows (msvc2019 x86)
 <br>
 macOS (clang)
 <br>
-android (ndk r21 + the latest sdk, arm64/armv7 supported)
+android 
 <br>
-Linux (tested on Ubuntu 18.04)
+Linux
 
 # Prepare to development
 
-1) Download Qt Online installer from https://www.qt.io/download-qt-installer
-2) Run installer and install Qt for mac/windows (the latest version is recommended, library was tested on 5.15, 5.14 is minimal)
-3) Download the latest stable cmake if you don't have it already https://cmake.org/download/ Minimum cmake version is 3.11
+* Download Qt Online installer from https://www.qt.io/download-qt-installer
+* Run installer and install Qt for mac/windows (the latest version is recommended, library was tested with Qt 6.7)
 
 ### Qt Creator:
-4) Ensure that Cmake  is available in Qt Creator Preferences -> Kits -> CMake. 
-5) Check Qt Creator Preferences -> Kits -> Kits page for any warnings
+* Check Qt Creator Preferences -> Kits -> Kits page for any warnings
+* If you need Android build ensure that page Preferences ->  SDKs is filled
 
 # How to start:
 
@@ -31,148 +30,122 @@ Linux (tested on Ubuntu 18.04)
 2) Setup build dirs and create them manually. Qt Creator won't do it until you check the corresponding checkbox in Preferences -> Kits -> Cmake. However this checkbox can create unnecessary dirs if you decide to change build dir later.
 3) Build & run
 
-### Visual Studio:
+## Windows visual studio build (can be broken since nobody uses it)
 
-1) copy dist.local.cmake and rename it to local.cmake
-2) Open local.cmake and set the path `QT_BASE_DIR` to your local Qt installation directory, e.g `d:\Dev\Qt\5.15.0\`
-3) Open x86 Native tools command prompt for VS 2019 and go to `libLaserdockCore` dir
-4) `mkdir build`
-5) `cd build`
-6) `cmake -G "Visual Studio 16 2019"  ..`
+1) mkdir build && cd build
 
-Instead of step 1-2 you can set `QTDIR` manually by passing it to cmake on this step:
-<br>
-`cmake -G "Visual Studio 16 2019" -DQTDIR="d:\Dev\Qt\5.15.0\msvc2019" ..`
+2) cmake -G "Visual Studio 16 2019" -A Win32 -DQTDIR="C:\dev\Qt\5.15.2\msvc2019" ..
 
-7) Build & run
+or
 
-### Xcode
+   cmake -G "Visual Studio 16 2019" -A x64 -DQTDIR="C:\dev\Qt\5.15.2\msvc2019_64" ..
 
-1) copy dist.local.cmake and rename it to local.cmake
-2) Open local.cmake and set the path `QT_BASE_DIR` to your local Qt installation directory, e.g `/Users/ncuxer/dev/Qt/5.13.0`
-3) `cd libLaserdockCore`
-4) `mkdir build && cd build`
-5) `cmake -G "Xcode" ..` 
+3) cmake -- build .
 
-Instead of steps 1-2 you can set `QTDIR` on this step:
-<br>
-`cmake -G "Xcode" -DQTDIR="/Users/ncuxer/dev/Qt/5.13.0/clang_64" ..`
+(or run .sln file)
 
-6) open `ldCore.xcodeproj`
-7) build and run
 
 # Code Style
-Code style helps to read and edit the project easier to all of us.  Please follow it.
+Code style helps to read and edit project easier to all of us. It is not strict policy but more like general recommendations.
 
 ### Common
 Do not use exceptions.     
 
 Do not use tabs symbols in code. You can setup your IDE to save tabs as spaces (1 tab is 4 spaces).
 
-Try to declare float variables with `f` suffix in a new code - `1.0f` or `1.f` instead of `1.0` or `1`
+Try to declare float variables with _f_ suffix in new code - _1.0f_ or _1.f_ instead of _1.0_ or _1_
 
 Try to avoid copy-paste.
+
+##### Containers
+Try to use std containers instead of Qt containers if it is possible. STD containers are more 'clear' than Qt. In some cases you have no choice and should use Qt container (if you want to use QStringList as **Q_PROPERTY** for example).
 
 ### Naming
 
 ##### Fields
-Recommended class field prefix is _m\_\*_, but try to keep the same style if some old class has other prefix.
+Recommended class field prefix is _m\_\*_, but try to keep the same style if some class has other prefix.
+
+We often use _\_\*_ as prefix. It is a bit dangerous however. 
+<br>
+С++ has some restrictions for underscore prefix usage by standard. _\_\*_ is reserved to use in global namespace.
+In ANY namespace standard reserves _\__\*_ (2 underscores prefix) and _\_A\*_ (underscore + any capital letter) for compiler internal usage so you should never use them.
 
 ##### 
-Try to create significant names to variables and functions and avoid short names (except some obvious one like x,y, etc).
+Try to give significant names to variables and functions and avoid short names (except some obvious one like x,y, etc).
 
-### Braces
-
-Please try to keep the existing braces style. 
-
-Clasess/structs/functions should have braces on new line:
-```
-class ldClass 
-
-{
-
-...
-
-};
-
-void doSomething() 
-
-{
-
-...
-
-}
-
-for/while/if should have braces in the end of the first line: 
-
-for(int i = 0; i < size; i++) {
-
-...
-
-}
-``
-//It is recommended avoid braces if you have only one line of cycle
-//if content. Just leave blank line before and after this construction to make it clear.
-
-if(true)
-
-    doSomething();
-
-```
 ##### Classes
-Common prefix for all classes/structs is _ld\*_. If some class is strictly connected to one mini-app, you can use app name as second prefix - _ldTunes\*_, _ldClock\*_.
+Common prefix for all classes/structs is _ld\*_. If some class is strictly connected to one mini-app, you can use app name as second prefix - _ldTunes\*_, _ldClock\*_, but app name can be changed later and we should be careful with it. Many classes are started with _ldVisualizer\*_ by historical reason but not related to *Visualizer* app.
+
+I used _\*WindowLogic_ classes before but it is better to avoid them and use plain good-structured objects in QML directly. QQmlHelpers library has some very useful macros for properties.
+
 
 ##### Member Order
-Recommended class member order: _public, public slots, signals, protected slots, protected, private slots, private_. In each section order is: _enum, static functions, constructor, functions, fields_. 
+Recommended class member order: _public, public slots, signals, protected slots, protected, private slots, private_. In each section order is: _enum, static functions, constructor, functions, fields_. Static fields should be avoided generally.
 
 ##### Include Order
 From common to local:
 
-1. `<The corresponding *.h file (if it is cpp file)\>`
+\<C++ std module\>
+<br>
+\<Qt Module with explicit submodule> 
+<br>
+\<Windows/mac/linux specific>
+<br>
+\<3rdparty library> 
+<br>
+\<ldCore/../..>
+<br>
+"LaserdocVisualizer/../.." 
+<br>
+"Subfolder/ldClass.h" 
 
-2. `<C++ std module\>`
-
-3. `<Qt Module with explicit submodule> `
-
-4. `<Windows/mac/linux specific>`
-
-5. `<3rdparty library>`
-
-6. `"ldCore/../.."`
-
-7. `"Subfolder/ldClass.h" `
-
-Try to sort includes in each subgroup in an alphabetical order.
-
-<br>Try to use forward declaration of classes in *.h files.
+Try to sort includes in each include subgroup in alphabetical order. 
+<br>Class forward declarations are preferred to Include directives.
+<br>in .cpp file the first inlcude should be current ".h" file
 
 ### C++11
 
 
 ##### for
-When it is possible try to use C++11 syntax _for_ with iterators, e.g `for(const ldClass &myClass : myClasses) ` instead of index-based for. 
+When it is possible try to use C++11 syntax _for_ with iterators, e.g _for(const ldClass &myClass : myClasses)_ instead of index-based for. It helps to avoid unnecessary variable for index in most cases and easier to read. If you need index than use old-style _for_ for sure. An try to avoid index names like i, j, k.
 
 ##### Const correctness
-Try to use const references for classes/structs in arguments whenever it is possible. If some function doesn't change class field and shouldn't do it in future by design mark this function as _const_ (getters usually).
+Pass all classes/strucs in functions by const reference and try to use const reference whenever it is possible for huge data. If some function doesn't change class field and shouldn't do it in future by design mark it as _const_.
 
 ##### enum class
-_enum class_ syntax from C++11 is preferrable instead of old-style enum in most cases. For any enum try to avoid if-else long trees and use `switch(){}` instead.
+_enum class_ syntax from C++11 is preferrable instead of old-style enum. However old-style enum is good to use as flag with **Q_FLAG**. The advantage of enum class that you should explicitly cast it to int using ldEnumHelper::asInteger and that you shouldn't worry about namespace - you always should use _ClassName::EnumName::EnumValue_ syntax and can't have issues with _ClassName::EnumValue_. For any enum try to avoid if-else long trees and use _switch(){}_ instead.
 
 ##### nullptr
-In new code use C++11 `nullptr` keyword. 
+In new code use C++11 _nullptr_ keyword. It's better than _NULL_ or _0_ because you can't compare 'nullptr' with int type, only with pointer. 
 
 ##### Field initialization
-Use C++11 style of variable initialization if it is possible - in \*.h file. If something is initialized from constructor then initialize it in constructor declaration. And initialize field in constructor itself if you don't have other options. All fields should be initialiazed.
+Use C++11 style of variable initialization if it is possible - in \*.h file. If something is initialized from constructor then initialize it in constructor declaration. And initialize field in constructor itself if you don't have other options. Also we should try to avoid classes with fields without default values, we use them quite often now but it looks weird because you can't rely on default constructor.
 
 ##### auto
 Use _auto_ keyword only for iterators and lambdas.
 
 ##### Smart pointers
-Try to avoid using keywords `delete` / `free`  and any manul memory operations. Prefer to use `std::unique_ptr`, `std::shared_ptr` or Qt parent-based object system.
+Try to avoid using keywords _delete_ / _free_ and any manul memory operations. Prefer to use _std::unique_ptr_, _std::shared_ptr_ or Qt parent-based object system.
+
 
 
 ### String
 
-Use QString always when it is possible. `char*` should be avoided generally. `std::string` is not so bad but it creates mess with QString conversions so try to avoid it too.
+Need to be discussed. Currently we have mess with QString and std::string, char* sometimes.
+
+##### char*
+char* should be avoided in modern C++ code generally. There is no any reason to use it for your code. Use it only when you need to pass it somewhere to 3rdparty library and there is no choice.
+
+##### QString vs std::string
+QString is faster, has more functions and easier to use. So it is recommended string.
+
+
+The only reason not to use it is if you don't want to restrict your class to Qt library and std::string is enough for you. In this cases std::string looks ok since you can always convert it to/from QString with one line.
+Sometimes we have mess as the result with many convertions and it looks ugly so try to use one string in the scope.
+
+
+### Qt
+
+`QFileInfo::completeSuffix` and `QFileInfo::baseName` shouldn't be used in general because they don't work as you can expect it if filename has other "." symbols. They can be used only for internal data even in theory and should never be used for any file with a custom name. `QFileInfo::suffix` and `QFileInfo::completeBaseName` are ok.
 
 
