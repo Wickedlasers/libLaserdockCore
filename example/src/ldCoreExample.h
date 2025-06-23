@@ -36,7 +36,7 @@ class QQmlApplicationEngine;
 
 class ldVisualizer;
 
-#ifdef Q_OS_ANDROID
+#ifdef LD_CORE_RESOURCES_EXTRACTOR
 class ldResourcesExtractor;
 #endif
 
@@ -68,7 +68,7 @@ private:
 
     std::vector<std::unique_ptr<ldVisualizer>> m_visualizers;
 
-#ifdef Q_OS_ANDROID
+#ifdef LD_CORE_RESOURCES_EXTRACTOR
     ldResourcesExtractor* m_resExtractor;
 #endif
 

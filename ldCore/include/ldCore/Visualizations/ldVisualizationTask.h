@@ -26,12 +26,12 @@
 #include <QtCore/QMutex>
 
 #include <ldCore/Task/ldAbstractTask.h>
-#include <ldCore/Sound/ldSoundData.h>
 
-class ldAudioDecoder;
 class ldLogoLaserdock;
-class ldMusicManager;
+class ldHardwareBatch;
 class ldRendererOpenlase;
+class ldSoundData;
+class ldSoundDataProvider;
 class ldVisualizer;
 
 class LDCORESHARED_EXPORT ldVisualizationTask : public ldAbstractTask
@@ -39,25 +39,21 @@ class LDCORESHARED_EXPORT ldVisualizationTask : public ldAbstractTask
     Q_OBJECT
 
 public:
-    enum class SoundSource {
-        SoundInput,
-        AudioDecoder
-    };
-
-    typedef struct {
+    typedef struct RenderStateStruct {
         bool renderOpenlase = true;
         ldFrameBuffer * buffer = nullptr;
         quint64 delta = 0;
     } RenderState;
 
-    explicit ldVisualizationTask(ldMusicManager *musicManager,
-                                 ldAudioDecoder *audioDecoder,
+    explicit ldVisualizationTask(ldSoundDataProvider *soundDataProvider,
+                                 ldHardwareBatch *hwBatch,
                                  QObject *parent = nullptr);
     ~ldVisualizationTask() override;
 
     // ldAbstractTask
     void start() override;
     void stop() override;
+
     void update(quint64 delta, ldFrameBuffer * buf) override;
 
     RenderState *renderState();
@@ -71,12 +67,7 @@ public:
 public slots:
     void setVisualizer(ldVisualizer *visualizer = nullptr, int priority = 0);
 
-    void setSoundLevelGate(int value);
-    int soundLevelGate() const;
-
     void setIsShowLogo(bool showLogo);
-
-    void setSoundSource(const ldVisualizationTask::SoundSource &source);
 
     ldRendererOpenlase* get_openlase();
 
@@ -85,8 +76,7 @@ signals:
     void currentFpsChanged(int fps);
 
 private slots:
-    void onUpdateAudio(const AudioBlock& block);
-    void onUpdateDecoderAudio(const AudioBlock& block);
+    void onSoundDataReady(ldSoundData *soundData);
 
 private:
     ldVisualizer *getActiveVis() const;
@@ -94,12 +84,10 @@ private:
 
     mutable QRecursiveMutex m_mutex;
 
-    ldMusicManager *m_musicManager;
-    ldAudioDecoder *m_audioDecoder;
+    ldSoundDataProvider *m_soundDataProvider;
+    ldHardwareBatch *m_hwBatch;
 
     QMap<int, ldVisualizer*> m_visualizers;
-    std::shared_ptr<ldSoundData> m_sounddata;
-    std::shared_ptr<ldSoundData> m_decoderSoundData;
     RenderState m_renderstate;
     int m_current_fps{-1};
     float m_fps_avg{0};
@@ -109,10 +97,8 @@ private:
 
     ldRendererOpenlase * m_openlase;
 
-    int m_soundLevelGate = 0;
-    bool m_isShowLogo = true;
+    bool m_isShowLogo = false;
 
-    std::atomic<SoundSource> m_soundSource{SoundSource::SoundInput};
 
     float m_rotX = 0;
     float m_rotY = 0;

@@ -22,6 +22,9 @@
 
 #include <QtCore/QtDebug>
 #include <QtMultimedia/QAudioInput>
+#if QT_VERSION >= 0x060000
+#include <QtMultimedia/QMediaDevices>
+#endif
 
 #include <ldCore/Sound/ldSoundData.h>
 
@@ -30,16 +33,48 @@ namespace {
     static const int BufferSize = bufferFrames*4; // 4096 frames 16bit stereo
 }
 
+
+#if QT_VERSION >= 0x060000
+QList<QAudioDevice> ldQAudioInputDevice::getDevices()
+{
+    QList<QAudioDevice> devices = QMediaDevices::audioInputs();
+#else // QT_VERSION >= 0x060000
 QList<QAudioDeviceInfo> ldQAudioInputDevice::getDevices()
 {
     QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
 
+#ifdef Q_OS_WIN
+    QStringList addedDevices;
+    auto it = devices.begin();
+    while (it != devices.end()) {
+        if(addedDevices.contains(it->deviceName())) {
+            qWarning() << __FUNCTION__ << QString("Ignoring duplicated device %1").arg(it->deviceName());
+            printInfo(*it);
+            for(QAudioDeviceInfo &eachInfo : devices) {
+                if(addedDevices.contains(eachInfo.deviceName())) {
+                    printInfo(eachInfo);
+                }
+            }
+            it = devices.erase(it);
+            continue;
+        }
+
+        addedDevices += (*it).deviceName();
+        it++;
+    }
+#endif // Q_OS_WIN
+#endif // QT_VERSION >= 0x060000
+
 #ifdef Q_OS_ANDROID
+    QStringList hiddenDevices{"camcorder", "voicerecognition"};
     // filter some internal devices on android
     auto it = devices.begin();
     while (it != devices.end()) {
-        if(it->deviceName() == "camcorder"
-                || it->deviceName() == "voicerecognition")
+#if QT_VERSION >= 0x060000
+        if(hiddenDevices.contains(it->id()))
+#else
+        if(hiddenDevices.contains(it->deviceName()))
+#endif
             it = devices.erase(it);
         else
             it++;
@@ -49,10 +84,50 @@ QList<QAudioDeviceInfo> ldQAudioInputDevice::getDevices()
     return devices;
 }
 
+
+#if QT_VERSION >= 0x060000
+QAudioDevice ldQAudioInputDevice::getDefaultDevice()
+{
+    return QMediaDevices::defaultAudioInput();
+}
+#else
 QAudioDeviceInfo ldQAudioInputDevice::getDefaultDevice()
 {
     return QAudioDeviceInfo::defaultInputDevice();
 }
+#endif
+
+#if QT_VERSION >= 0x060000
+void ldQAudioInputDevice::printInfo(const QAudioDevice &inputAudioDevice)
+{
+    qDebug() << inputAudioDevice.id()
+             << inputAudioDevice.description()
+             << inputAudioDevice.isDefault()
+             << inputAudioDevice.mode()
+             << inputAudioDevice.preferredFormat()
+             << inputAudioDevice.minimumSampleRate()
+             << inputAudioDevice.maximumSampleRate()
+             << inputAudioDevice.minimumChannelCount()
+             << inputAudioDevice.maximumChannelCount()
+             << inputAudioDevice.supportedSampleFormats()
+             << inputAudioDevice.channelConfiguration()
+        ;
+}
+#else
+void ldQAudioInputDevice::printInfo(const QAudioDeviceInfo &inputAudioDevice)
+{
+    qDebug() << inputAudioDevice.deviceName()
+             << inputAudioDevice.preferredFormat()
+             << inputAudioDevice.supportedByteOrders()
+             << inputAudioDevice.supportedChannelCounts()
+             << inputAudioDevice.supportedCodecs()
+             << inputAudioDevice.supportedSampleRates()
+             << inputAudioDevice.supportedSampleSizes()
+             << inputAudioDevice.supportedSampleTypes()
+             << inputAudioDevice.realm()
+        ;
+}
+#endif
 
 ldQAudioInputDevice::ldQAudioInputDevice(QObject *parent)
     : ldSoundInterface(parent)
@@ -67,24 +142,42 @@ ldQAudioInputDevice::~ldQAudioInputDevice()
 
 }
 
+#if QT_VERSION >= 0x060000
+bool ldQAudioInputDevice::activateInputDevice(const QAudioDevice &info)
+{
+//    m_info = ldSoundDeviceInfo(ldSoundDeviceInfo::Type::QAudioInput, info.id());
+
+    qDebug() << "Using sound input device: " << info.description() << info.id()
+             << "; preferred format" << info.preferredFormat();
+#else
 bool ldQAudioInputDevice::activateInputDevice(const QAudioDeviceInfo &info)
 {
 //    m_info = ldSoundDeviceInfo(ldSoundDeviceInfo::Type::QAudioInput, info.deviceName());
 
     qDebug() << "Using sound input device: " << info.deviceName()
              << "; preferred format" << info.preferredFormat();
+#endif
 
     m_format = getDefaultAudioFormat();
 
     if (!info.isFormatSupported(m_format)) {
+#if QT_VERSION >= 0x060000
+        m_format = info.preferredFormat();
+#else
         m_format = info.nearestFormat(m_format);
+#endif
         qWarning() << "Default format not supported - trying to use nearest:" << m_format;
     }
 
     // qDebug() << "mic audio createAudioInput()";
 
-    m_audioInput.reset(new QAudioInput(info, m_format, this));
-    connect(m_audioInput.data(), &QAudioInput::stateChanged, this, &ldQAudioInputDevice::onAudioInputStateChanged);
+#if QT_VERSION >= 0x060000
+    m_audioInput.reset(new QAudioSource(info, m_format));
+    connect(m_audioInput.get(), &QAudioSource::stateChanged, this, &ldQAudioInputDevice::onAudioInputStateChanged);
+#else
+    m_audioInput.reset(new QAudioInput(info, m_format));
+    connect(m_audioInput.get(), &QAudioInput::stateChanged, this, &ldQAudioInputDevice::onAudioInputStateChanged);
+#endif
 
     m_format = m_audioInput->format(); // FIXME: does it really needed? format should be the same as in QAudioInput constructor upper
 
@@ -108,16 +201,28 @@ bool ldQAudioInputDevice::activateInputDevice(const QAudioDeviceInfo &info)
     //m_audioInput->setNotifyInterval(5);
     m_input.reset(m_audioInput->start());
     if(!m_audioInput) {
+#if QT_VERSION >= 0x060000
+        qWarning() << "Can't access audio input stream" << info.description() << info.id();
+#else
         qWarning() << "Can't access audio input stream" << info.deviceName();
+#endif
         emit error(tr("Failed to access audio input, please check your privacy settings"));
         return false;
     }
+#if QT_VERSION >= 0x060000
+    qDebug() << "Actually used format " << m_audioInput->format() << m_audioInput->format().sampleFormat() << m_audioInput->bufferSize();
+#else
     qDebug() << "Actually used format " << m_audioInput->format() << m_audioInput->format().sampleSize() << m_audioInput->bufferSize();
+#endif
     if(m_input) {
-        connect(m_input.data(), &QIODevice::readyRead, this, &ldQAudioInputDevice::onInputReadyRead);
+        connect(m_input.get(), &QIODevice::readyRead, this, &ldQAudioInputDevice::onInputReadyRead);
         return true;
     } else {
+#if QT_VERSION >= 0x060000
+        qWarning() << "Can't open audio input stream" << info.description() << info.id();
+#else
         qWarning() << "Can't open audio input stream" << info.deviceName();
+#endif
         emit error(tr("Failed to open audio device"));
         return false;
     }
@@ -125,7 +230,7 @@ bool ldQAudioInputDevice::activateInputDevice(const QAudioDeviceInfo &info)
 
 bool ldQAudioInputDevice::isActive() const
 {
-    return m_audioInput;
+    return m_audioInput.get();
 }
 
 QAudioFormat ldQAudioInputDevice::format() const
@@ -136,6 +241,11 @@ QAudioFormat ldQAudioInputDevice::format() const
 void ldQAudioInputDevice::stop()
 {
     if (m_audioInput) {
+#if QT_VERSION >= 0x060000
+        disconnect(m_audioInput.get(), &QAudioSource::stateChanged, this, &ldQAudioInputDevice::onAudioInputStateChanged);
+#else
+        disconnect(m_audioInput.get(), &QAudioInput::stateChanged, this, &ldQAudioInputDevice::onAudioInputStateChanged);
+#endif
         m_audioInput->stop();
         m_audioInput.reset();
         // Note: The pointer will become invalid after the stream is stopped or if you start another stream.
@@ -147,7 +257,7 @@ void ldQAudioInputDevice::stop()
             m_input->close();
             m_input->reset();
 #else
-            m_input.take();
+            m_input.release();
 #endif
         }
     }
@@ -155,7 +265,7 @@ void ldQAudioInputDevice::stop()
 
 void ldQAudioInputDevice::onInputReadyRead()
 {
-    if (!m_audioInput) return;
+    if (!m_input) return;
 
     //qDebug() << "audio input bytes " << m_audioInput->bytesReady() << "/ " << BufferSize;
 

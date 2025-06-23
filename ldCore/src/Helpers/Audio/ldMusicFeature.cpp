@@ -317,7 +317,7 @@ static void nb2_class(float in[], float out[]) {
     prior[3] = prior[2];
 //    float g = 1.0/1000.0f;
     for (int i = 0; i < outlen; i++) {
-        float p = 1;
+//        float p = 1;
         float l = prior[i];
         for (int j = 0; j < inlen; j++) {
             float d = in[j] - getm(j, i);
@@ -328,7 +328,7 @@ static void nb2_class(float in[], float out[]) {
             //p *= phi(z);
             //p *= 1-erf(abs(z));
             //p *= GetBellCurvePoint(abs(z));
-            p *= pdf_gaussian(in[j], getm(j, i), gets(j, i));
+            //p *= pdf_gaussian(in[j], getm(j, i), gets(j, i));
             //p *= pdf_gaussian()
             l += logf(pdf_gaussian(z));
         }

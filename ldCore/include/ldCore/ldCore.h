@@ -21,17 +21,21 @@
 #ifndef LDCORE_H
 #define LDCORE_H
 
+
 #include <QQmlHelpers>
 
 #include "ldCore/ldCore_global.h"
 
 class ldAudioDecoder;
-class ldBufferManager;
 class ldDataDispatcher;
+struct ldDataDispatcherInstance;
+class ldDataDispatcherManager;
 class ldFilterManager;
 class ldLaserController;
+class ldHardwareBatch;
 class ldHardwareManager;
 class ldMusicManager;
+class ldSoundDataProvider;
 class ldSoundDeviceManager;
 class ldSvgFontManager;
 class ldTaskManager;
@@ -48,6 +52,7 @@ class LDCORESHARED_EXPORT ldCore : public QObject
     Q_OBJECT
 
     QML_READONLY_PROPERTY(ldDataDispatcher*, dataDispatcher)
+    QML_READONLY_PROPERTY(ldDataDispatcherManager*, dataDispatcherManager)
 
     /** Helper high-level class for easier laser control */
     QML_READONLY_PROPERTY(ldLaserController*, laserController)
@@ -76,10 +81,11 @@ public:
 
     /** Managers/accessors*/
     ldAudioDecoder *audioDecoder() const;
-    ldBufferManager *bufferManager() const;
     ldFilterManager *filterManager() const;
+    ldHardwareBatch *hwBatch() const;
     ldHardwareManager *hardwareManager() const;
     ldMusicManager *musicManager() const;
+    ldSoundDataProvider *soundDataProvider() const;
     ldSoundDeviceManager *soundDeviceManager() const;
     ldSvgFontManager *svgFontManager() const;
     ldVisualizationTask *task() const;
@@ -99,15 +105,14 @@ private:
 
     QString m_storageDir;
     QString m_resourceDir;
-
     ldAudioDecoder *m_audioDecoder = nullptr;
-    ldBufferManager *m_bufferManager = nullptr;
+    std::unique_ptr<ldDataDispatcherInstance> m_dataDispatcherInstance;
     ldFilterManager *m_filterManager = nullptr;
     ldHardwareManager *m_hardwareManager = nullptr;
     ldMusicManager *m_musicManager = nullptr;
+    ldSoundDataProvider *m_soundDataProvider = nullptr;
     ldSoundDeviceManager *m_soundDeviceManager = nullptr;
     ldSvgFontManager *m_svgFontManager = nullptr;
-    ldVisualizationTask *m_task = nullptr;
     ldTaskManager *m_taskManager = nullptr;
 #ifdef LD_CORE_RESOURCES_EXTRACTOR
     ldResourcesExtractor* m_resourcesExtractor = nullptr;

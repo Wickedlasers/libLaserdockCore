@@ -50,6 +50,7 @@ private:
 
     QTimer m_updateTimer;
     QElapsedTimer m_elapsedTimer;
+    float m_diff {0.0f};
 };
 
 #endif // LDMANUALBPMBEAT_H

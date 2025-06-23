@@ -1,8 +1,8 @@
-// sol3 
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,8 +24,8 @@
 #ifndef SOL_STATE_HPP
 #define SOL_STATE_HPP
 
-#include "state_view.hpp"
-#include "thread.hpp"
+#include <sol/state_view.hpp>
+#include <sol/thread.hpp>
 
 namespace sol {
 
@@ -34,8 +34,7 @@ namespace sol {
 		typedef std::unique_ptr<lua_State, detail::state_deleter> unique_base;
 
 	public:
-		state(lua_CFunction panic = default_at_panic)
-		: unique_base(luaL_newstate()), state_view(unique_base::get()) {
+		state(lua_CFunction panic = default_at_panic) : unique_base(luaL_newstate()), state_view(unique_base::get()) {
 			set_default_state(unique_base::get(), panic);
 		}
 

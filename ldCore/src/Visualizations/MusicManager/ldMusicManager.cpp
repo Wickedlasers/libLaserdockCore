@@ -19,7 +19,7 @@
 **/
 
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
-
+#include <QtQml/QtQml>
 #include <QtCore/QDebug>
 
 #include <ldCore/Sound/ldSoundInterface.h>
@@ -34,10 +34,13 @@
 #include "ldCore/Helpers/Audio/ldManualBpmBeat.h"
 #include "ldCore/Helpers/Audio/ldTempoAC.h"
 #include "ldCore/Helpers/Audio/ldTempoTracker.h"
+#include "ldCore/Helpers/Audio/ldAbletonLink.h"
 
 // initial state
 ldMusicManager::ldMusicManager(QObject* parent)
     : QObject(parent)
+    , m_bpmsource(BpmSourceManual)
+    , m_abletonLink(new ldAbletonLink(this))
     , m_manualBpm(new ldManualBpm(this))
     , m_manualBpmBeat(new ldManualBpmBeat(m_manualBpm, this))
 {
@@ -45,7 +48,7 @@ ldMusicManager::ldMusicManager(QObject* parent)
 
     // soundgate
     if (isFakeSound) qDebug() << "WARNING!!! ldMusicManager isFakeSound is true! ";
-    
+
     // spect
     // TODO: fix memory leak in spectFrame
     spectrogram.reset(new ldSpectrogram);
@@ -85,7 +88,7 @@ ldMusicManager::ldMusicManager(QObject* parent)
     //       tp0[MRPARAMS] = {0.60f,0.00f,0.00f,0.75f,0.00f,0.50f,0.00f,0.27f,0.55f,0.15f,0.40f,0.15f,1.00f,1.00f,1.00f,0.46f,0.46f,0.46f,1.00f,1.00f};
     float  t_tp0[MRPARAMS] = {0.60f,0.00f,0.00f,0.75f,0.00f,0.50f,0.00f,0.27f,0.55f,0.15f,0.40f,0.15f,0.98f,0.20f,0.40f,0.58f,0.37f,0.25f,0.75f,0.25f};
     float pv[MRPARAMS] = {0.50f,0.36f,1.00f,0.25f,0.50f,1.00f,0.00f,0.93f,0.81f,0.05f,0.63f,0.18f,1.00f,0.75f,0.80f,0.46f,0.46f,0.46f,0.98f,0.00f};
-    
+
 
     mrSlowBass->setParams(t_p2);
     mrFastBass->setParams(t_fa);
@@ -110,7 +113,7 @@ ldMusicManager::ldMusicManager(QObject* parent)
 
     // audioBasic
     audioBasic.reset(new ldAudioBasic);
-    
+
     // soundGate
     soundGate.reset(new ldSoundGate);
     silentThree.reset(new ldSilentThree);
@@ -121,7 +124,7 @@ ldMusicManager::ldMusicManager(QObject* parent)
 
     // pitch
 //    pitchTracker = new PitchTracker();
-    
+
     // hybrid
     hybridAnima.reset(new ldHybridAnima);
     hybridFlash.reset(new ldHybridFlash);
@@ -132,10 +135,65 @@ ldMusicManager::ldMusicManager(QObject* parent)
     m_beatDetector->setDuration(0.7f);
 
     m_bpmBeatDetector.reset(new ldBpmBeatDetector(m_beatDetector.get()));
+
+    setBpmSource(m_bpmsource);
+
 }
 
 
 ldMusicManager::~ldMusicManager() {}
+
+void ldMusicManager::registerMetaTypes()
+{
+    qmlRegisterUncreatableType<ldMusicManager>("WickedLasers", 1, 0, "LdMusicManagerBpmSource", "LdMusicManagerBpmSource enum can't be created");
+}
+
+void ldMusicManager::setBpmSource(bpmSource src)
+{
+    m_bpmsource = src;
+    emit beatSourceChanged(src);
+
+    switch(m_bpmsource) {
+        case BpmSourceAbletonLink :
+        qDebug() << "BPM source changed to: Ableton Link";
+            disconnect(beatDetector(), &ldBeatDetector::beatDetected, this, &ldMusicManager::beatDetected);
+            disconnect(manualBpmBeat(), &ldManualBpmBeat::beatDetected, this, &ldMusicManager::beatDetected);
+            connect(m_abletonLink,&ldAbletonLink::beatDetected,this,&ldMusicManager::beatDetected);
+            connect(m_abletonLink,&ldAbletonLink::barDetected,this,&ldMusicManager::barDetected);
+            manualBpm()->setEnabled(false);
+            manualBpmBeat()->stop();
+            m_abletonLink->setActive(true);
+        break;
+
+        case BpmSourceManual :
+            qDebug() << "BPM source changed to: Manual";
+            disconnect(beatDetector(), &ldBeatDetector::beatDetected, this, &ldMusicManager::beatDetected);
+            disconnect(m_abletonLink,&ldAbletonLink::barDetected,this,&ldMusicManager::barDetected);
+            disconnect(m_abletonLink,&ldAbletonLink::beatDetected,this,&ldMusicManager::beatDetected);
+            connect(manualBpmBeat(), &ldManualBpmBeat::beatDetected, this, &ldMusicManager::beatDetected);
+            manualBpm()->setEnabled(true);
+            manualBpmBeat()->start();
+            m_abletonLink->setActive(false);
+        break;
+
+        default : // audio beat
+            qDebug() << "BPM source changed to: Audio";
+            disconnect(m_abletonLink,&ldAbletonLink::barDetected,this,&ldMusicManager::barDetected);
+            disconnect(m_abletonLink,&ldAbletonLink::beatDetected,this,&ldMusicManager::beatDetected);
+            disconnect(manualBpmBeat(), &ldManualBpmBeat::beatDetected, this, &ldMusicManager::beatDetected);
+            connect(beatDetector(), &ldBeatDetector::beatDetected, this, &ldMusicManager::beatDetected);
+            manualBpm()->setEnabled(false);
+            manualBpmBeat()->stop();
+            m_abletonLink->setActive(false);
+        break;
+    }
+
+}
+
+ldMusicManager::bpmSource ldMusicManager::getBpmSource() const
+{
+    return m_bpmsource;
+}
 
 // process all algorithms
 void ldMusicManager::updateWith(std::shared_ptr<ldSoundData> psd, float delta) {
@@ -263,12 +321,12 @@ float ldMusicManager::high() const
 
 float ldMusicManager::volumePowerPre() const
 {
-    return m_psd ? m_psd->volumePowerPre : 0;
+    return m_psd ? m_psd->GetVolumePowerPre() : 0;
 }
 
 float ldMusicManager::volumePowerPost() const
 {
-    return m_psd ? m_psd->volumePowerPost : 0;
+    return m_psd ? m_psd->GetVolumePowerPost() : 0;
 }
 
 int ldMusicManager::soundLevel() const
@@ -350,18 +408,48 @@ bool ldMusicManager::isSilent3() const
 
 float ldMusicManager::bestBpm() const
 {
+    switch(m_bpmsource) {
+        case BpmSourceAbletonLink :
+            return m_abletonLink->bpm() * m_bpmModifier;
+        break;
+
+        case BpmSourceManual :
+            return m_manualBpm->bpm();
+        break;
+
+    default :
+        return appakaBpmSelector->bestBpm() * m_bpmModifier;
+    }
+
+    /*
     if(m_manualBpm->isEnabled())
         return m_manualBpm->bpm();
     else
         return appakaBpmSelector->bestBpm() * m_bpmModifier;
+        */
 }
 
 float ldMusicManager::slowBpm() const
 {
+    /*
     if(m_manualBpm->isEnabled())
         return m_manualBpm->bpm();
     else
         return m_tempoTrackerSlow->bpm() * m_bpmModifier;
+    */
+
+    switch(m_bpmsource) {
+        case BpmSourceAbletonLink:
+            return m_abletonLink->bpm();
+        break;
+
+        case BpmSourceManual :
+            return m_manualBpm->bpm();
+        break;
+
+    default :
+        return m_tempoTrackerSlow->bpm() * m_bpmModifier;
+    }
 }
 
 void ldMusicManager::setBpmModifier(float bpmModifier)
@@ -369,3 +457,14 @@ void ldMusicManager::setBpmModifier(float bpmModifier)
     m_bpmModifier = bpmModifier;
 }
 
+void ldMusicManager::setAbletonLinkQuantum(double quantum)
+{
+    m_abletonLink->setQuantum(quantum);
+    emit abletonParamsUpdated();
+}
+
+void ldMusicManager::setAbletonLinkBeatOffsetMs(int offset)
+{
+    m_abletonLink->setBeatOffsetCorrection(offset);
+    emit abletonParamsUpdated();
+}

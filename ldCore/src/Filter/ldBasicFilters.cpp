@@ -273,18 +273,32 @@ void ldPowerFilter::process(ldVertex &v)
 
 // ---------- ldStrobeFilter ----------
 
-ldStrobeFilter::ldStrobeFilter()
+ldStrobeFilter::ldStrobeFilter(bool enabled)
+    : LD_INIT_MIN_MAX_PROPERTY(timeOn, 100, 1, 1000)
+    , LD_INIT_MIN_MAX_PROPERTY(timeOff, 500, 1, 1000)
+    , m_enabled(enabled)
 {
-    etimer.start();
+    if(enabled)
+        etimer.start();
+
+    connect(this, &ldStrobeFilter::enabledChanged, this, [&] (bool enabled) {
+        if(enabled)
+            etimer.start();
+        else
+            etimer.invalidate();
+    });
 }
 
 void ldStrobeFilter::process(ldVertex &v)
 {
     if (!m_enabled) return;
 
-    m_frame = (etimer.elapsed() % 1000) % (m_timeOn + m_timeOff);
+    if(!etimer.isValid())
+        return;
 
-    if (m_frame >= m_timeOn)
+    int frame = etimer.elapsed() % (m_timeOn + m_timeOff);
+
+    if (frame >= m_timeOn)
     {
         // time off
         v.r() = v.g() = v.b() = 0;
@@ -336,16 +350,21 @@ void ld3dRotateFilter::process(ldVertex &input)
 
 void ldTracerFilter::process(ldVertex &input)
 {
-    //for (int i = 0; i < 4; i++) v.color[i] = 1; // old implementation, just sets everything white
+    if (input.x() == m_prevX && input.y() == m_prevY) return; // prevent hot beam if position does not change
+
     m_dash = !m_dash;
     if (m_dash)
         if (input.isBlank())
             for (int i = 0; i < ldVertex::COLOR_COUNT; i++) input.color[i] = 1;
+
+    // record last position
+    m_prevX = input.x();
+    m_prevY = input.y();
 }
 
 // ---------- ldScaleFilter ----------
 
-const float SCALE_MIN_VALUE = 0.1f;
+const float SCALE_MIN_VALUE = 0.01f;
 const float SCALE_MAX_VALUE = 1.f;
 
 ldScaleFilter::ldScaleFilter()

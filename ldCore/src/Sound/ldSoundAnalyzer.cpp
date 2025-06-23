@@ -101,8 +101,35 @@ void ldSoundAnalyzer::handleSoundUpdated(const char * data, qint64 len) {
 // TODO: implement other types
 void ldSoundAnalyzer::convertRawToStereoFloatFrame(const char *data, qint64 frames, const QAudioFormat &m_format, float interleavedFrame[]) {
 
-    if (frames == 0) return;
+    if (frames == 0)
+        return;
 
+#if QT_VERSION >= 0x060000
+    QAudioFormat::SampleFormat sampleFormat = m_format.sampleFormat();
+    int sampleSize = m_format.bytesPerSample()*8;
+#else
+    QAudioFormat::SampleType sampleType = m_format.sampleType();
+    int sampleSize = m_format.sampleSize();
+#endif
+    int bytesPerFrame = m_format.bytesPerFrame();
+    int channelCount = m_format.channelCount();
+#if QT_VERSION < 0x060000
+    QAudioFormat::Endian byteOrder = m_format.byteOrder();
+#endif
+    int bytesPerSample = bytesPerFrame/channelCount;
+
+#if QT_VERSION >= 0x060000
+    // only format supported now
+    bool isAndroidVisualizerFormat = m_format.sampleFormat() == QAudioFormat::UInt8;
+    bool isMicFormat =  m_format.sampleFormat() == QAudioFormat::Int16 || m_format.sampleFormat() == QAudioFormat::Int32;
+    bool isFloatFormat = m_format.sampleFormat() == QAudioFormat::Float;
+    if (!(isAndroidVisualizerFormat || isMicFormat || isFloatFormat)) {
+        qWarning() << "warning: audio format not supported: " << m_format.sampleFormat() << " format ";
+        return;
+    }
+    bool isSigned = (sampleFormat == QAudioFormat::SampleFormat::Int16) || (sampleFormat == QAudioFormat::SampleFormat::Int32);
+    bool isBigEndian = Q_BYTE_ORDER == Q_BIG_ENDIAN;
+#else
     // only format supported now
     bool isAndroidVisualizerFormat = (m_format.sampleSize() == 8)
                                      && (m_format.sampleType() == QAudioFormat::SignedInt || m_format.sampleType() == QAudioFormat::UnSignedInt);
@@ -115,18 +142,17 @@ void ldSoundAnalyzer::convertRawToStereoFloatFrame(const char *data, qint64 fram
         qWarning() << "warning: audio format not supported: " << m_format.sampleSize() << " bit " << m_format.sampleType();
         return;
     }
+    bool isSigned = (sampleType == QAudioFormat::SignedInt);
+    bool isBigEndian = byteOrder == QAudioFormat::BigEndian;
+#endif
 
     // check for data
     if(!data)
         return;
 
-    QAudioFormat::SampleType sampleType = m_format.sampleType();
-    int sampleSize = m_format.sampleSize();
-    int bytesPerFrame = m_format.bytesPerFrame();
-    int channelCount = m_format.channelCount();
-    QAudioFormat::Endian byteOrder = m_format.byteOrder();
-    int bytesPerSample = bytesPerFrame/channelCount;
 
+//    qDebug() << sampleFormat << sampleSize << bytesPerFrame << channelCount << bytesPerSample;
+//    qDebug() << isAndroidVisualizerFormat << isMicFormat << isFloatFormat << isSigned << isBigEndian;
     // temp buffer for max 32 bits (4 bytes)
     qint8 t[4];
 
@@ -140,19 +166,19 @@ void ldSoundAnalyzer::convertRawToStereoFloatFrame(const char *data, qint64 fram
             float fvalue = 0.f;
 
             if(isAndroidVisualizerFormat) {
-                if(sampleType == QAudioFormat::SignedInt) {
+                if(isSigned) {
                     qint8 byte = data[currentOffset];
                     fvalue = byte / 128.f;
                 } else {
                     quint8 byte = static_cast<quint8>(data[currentOffset]);
-                    fvalue = byte / 256.f;
+                    fvalue = (byte - 0x80) / 128.f;
                 }
             } else if(isMicFormat){
                 // pointer to first byte in sample
                 qint8 *ptr = (qint8*) (data + currentOffset);
 
                 // if it's big endian, copy bytes to temp buffer before and set correct byte position
-                if (byteOrder == QAudioFormat::BigEndian) {
+                if (isBigEndian) {
                     if(sampleSize == 16) {
                         t[0] = ptr[1];
                         t[1] = ptr[0];
@@ -263,6 +289,14 @@ void ldSoundAnalyzer::processAudioBuffer(float *convertedBuffer, int frames, int
         // direct call.
 //        sendBlocks();
 //    }
+}
+
+void ldSoundAnalyzer::reset()
+{
+    m_pAudioBuffer->clear();
+
+    m_pCurrentBlock.reset(new AudioBlock);
+    memset(m_pCurrentBlock.get(), 0, sizeof(AudioBlock));
 }
 
 void ldSoundAnalyzer::sendBlocks() {

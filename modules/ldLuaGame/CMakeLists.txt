@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 
 option(LD_ENABLE_LUA_LOG "Enable lua log" ON)
 
 add_subdirectory(3rdparty)
 
 add_library(ldLuaGame)
+fix_zstd(ldLuaGame)
 
 target_include_directories(ldLuaGame PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 

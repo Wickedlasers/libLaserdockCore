@@ -61,12 +61,17 @@ ldShaderManager::~ldShaderManager()
 {
 }
 
+void ldShaderManager::setLibol(ldLibol* libol)
+{
+    m_libol = libol;
+}
+
 void ldShaderManager::pushVertextPreShader(ldShader* shader)
 {
     assert(shader);
     m_VtxPreStack.push(shader);
     
-    olSetVertexPreShader(shader ? _vertex_pre_shader : NULL);
+    if (m_libol) m_libol->olSetVertexPreShader(shader ? _vertex_pre_shader : NULL);
 }
 
 void ldShaderManager::pushVertextShader(ldShader* shader)
@@ -74,7 +79,7 @@ void ldShaderManager::pushVertextShader(ldShader* shader)
     assert(shader);
     m_VtxStack.push(shader);
     
-    olSetVertexShader(shader ? _vertex_shader : NULL);
+    if (m_libol) m_libol->olSetVertexShader(shader ? _vertex_shader : NULL);
 
 }
 
@@ -83,7 +88,7 @@ void ldShaderManager::pushPixelShader(ldShader* shader)
     assert(shader);
     m_PxStack.push(shader);
     
-    olSetPixelShader(shader ? _pixel_shader : NULL);
+    if (m_libol) m_libol->olSetPixelShader(shader ? _pixel_shader : NULL);
 }
 
 ldShader* ldShaderManager::popVertextPreShader()

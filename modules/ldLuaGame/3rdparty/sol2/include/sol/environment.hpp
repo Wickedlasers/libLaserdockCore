@@ -1,8 +1,8 @@
-// sol3 
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,7 +24,7 @@
 #ifndef SOL_ENVIRONMENT_HPP
 #define SOL_ENVIRONMENT_HPP
 
-#include "table.hpp"
+#include <sol/table.hpp>
 
 namespace sol {
 
@@ -41,19 +41,15 @@ namespace sol {
 		basic_environment(basic_environment&&) = default;
 		basic_environment& operator=(const basic_environment&) = default;
 		basic_environment& operator=(basic_environment&&) = default;
-		basic_environment(const stack_reference& r)
-		: basic_environment(r.lua_state(), r.stack_index()) {
+		basic_environment(const stack_reference& r) : basic_environment(r.lua_state(), r.stack_index()) {
 		}
-		basic_environment(stack_reference&& r)
-		: basic_environment(r.lua_state(), r.stack_index()) {
+		basic_environment(stack_reference&& r) : basic_environment(r.lua_state(), r.stack_index()) {
 		}
 
-		basic_environment(lua_State* L, new_table nt)
-		: base_t(L, std::move(nt)) {
+		basic_environment(lua_State* L, new_table nt) : base_t(L, std::move(nt)) {
 		}
 		template <bool b>
-		basic_environment(lua_State* L, new_table t, const basic_reference<b>& fallback)
-		: basic_environment(L, std::move(t)) {
+		basic_environment(lua_State* L, new_table t, const basic_reference<b>& fallback) : basic_environment(L, std::move(t)) {
 			stack_table mt(L, new_table(0, 1));
 			mt.set(meta_function::index, fallback);
 			this->set(metatable_key, mt);
@@ -62,85 +58,127 @@ namespace sol {
 
 		basic_environment(env_key_t, const stack_reference& extraction_target)
 		: base_t(detail::no_safety, extraction_target.lua_state(), (stack::push_environment_of(extraction_target), -1)) {
-#if defined(SOL_SAFE_REFERENCES) && SOL_SAFE_REFERENCES
-			constructor_handler handler{};
+#if SOL_IS_ON(SOL_SAFE_REFERENCES)
+			constructor_handler handler {};
 			stack::check<env_key_t>(this->lua_state(), -1, handler);
 #endif // Safety
-			lua_pop(this->lua_state(), 2);
+			lua_pop(this->lua_state(), 1);
 		}
 		template <bool b>
 		basic_environment(env_key_t, const basic_reference<b>& extraction_target)
 		: base_t(detail::no_safety, extraction_target.lua_state(), (stack::push_environment_of(extraction_target), -1)) {
-#if defined(SOL_SAFE_REFERENCES) && SOL_SAFE_REFERENCES
-			constructor_handler handler{};
+#if SOL_IS_ON(SOL_SAFE_REFERENCES)
+			constructor_handler handler {};
 			stack::check<env_key_t>(this->lua_state(), -1, handler);
 #endif // Safety
-			lua_pop(this->lua_state(), 2);
+			lua_pop(this->lua_state(), 1);
 		}
-		basic_environment(lua_State* L, int index = -1)
-		: base_t(detail::no_safety, L, index) {
-#if defined(SOL_SAFE_REFERENCES) && SOL_SAFE_REFERENCES
-			constructor_handler handler{};
+		basic_environment(lua_State* L, int index = -1) : base_t(detail::no_safety, L, index) {
+#if SOL_IS_ON(SOL_SAFE_REFERENCES)
+			constructor_handler handler {};
 			stack::check<basic_environment>(L, index, handler);
 #endif // Safety
 		}
-		basic_environment(lua_State* L, ref_index index)
-		: base_t(detail::no_safety, L, index) {
-#if defined(SOL_SAFE_REFERENCES) && SOL_SAFE_REFERENCES
+		basic_environment(lua_State* L, ref_index index) : base_t(detail::no_safety, L, index) {
+#if SOL_IS_ON(SOL_SAFE_REFERENCES)
 			auto pp = stack::push_pop(*this);
-			constructor_handler handler{};
+			constructor_handler handler {};
 			stack::check<basic_environment>(L, -1, handler);
 #endif // Safety
 		}
-		template <typename T, meta::enable<meta::neg<meta::any_same<meta::unqualified_t<T>, basic_environment>>, meta::neg<std::is_same<base_type, stack_reference>>, meta::neg<std::is_same<lua_nil_t, meta::unqualified_t<T>>>, is_lua_reference<meta::unqualified_t<T>>> = meta::enabler>
-		basic_environment(T&& r) noexcept
-		: base_t(detail::no_safety, std::forward<T>(r)) {
-#if defined(SOL_SAFE_REFERENCES) && SOL_SAFE_REFERENCES
+		template <typename T,
+		     meta::enable<meta::neg<meta::any_same<meta::unqualified_t<T>, basic_environment>>, meta::neg<std::is_same<base_type, stack_reference>>,
+		          meta::neg<std::is_same<lua_nil_t, meta::unqualified_t<T>>>, is_lua_reference<meta::unqualified_t<T>>> = meta::enabler>
+		basic_environment(T&& r) noexcept : base_t(detail::no_safety, std::forward<T>(r)) {
+#if SOL_IS_ON(SOL_SAFE_REFERENCES)
 			if (!is_environment<meta::unqualified_t<T>>::value) {
 				auto pp = stack::push_pop(*this);
-				constructor_handler handler{};
+				constructor_handler handler {};
 				stack::check<basic_environment>(lua_state(), -1, handler);
 			}
 #endif // Safety
 		}
-		basic_environment(lua_nil_t r) noexcept
-		: base_t(detail::no_safety, r) {
+		basic_environment(lua_nil_t r) noexcept : base_t(detail::no_safety, r) {
 		}
 
 		template <typename T, meta::enable<is_lua_reference<meta::unqualified_t<T>>> = meta::enabler>
-		basic_environment(lua_State* L, T&& r) noexcept
-			: base_t(detail::no_safety, L, std::forward<T>(r)) {
-#if defined(SOL_SAFE_REFERENCES) && SOL_SAFE_REFERENCES
+		basic_environment(lua_State* L, T&& r) noexcept : base_t(detail::no_safety, L, std::forward<T>(r)) {
+#if SOL_IS_ON(SOL_SAFE_REFERENCES)
 			if (!is_environment<meta::unqualified_t<T>>::value) {
 				auto pp = stack::push_pop(*this);
-				constructor_handler handler{};
+				constructor_handler handler {};
 				stack::check<basic_environment>(lua_state(), -1, handler);
 			}
 #endif // Safety
 		}
 
 		template <typename T>
-		void set_on(const T& target) const {
+		bool set_on(const T& target) const {
 			lua_State* L = target.lua_state();
 			auto pp = stack::push_pop(target);
-#if SOL_LUA_VERSION < 502
+			int target_index = pp.index_of(target);
+#if SOL_LUA_VERSION_I_ < 502
 			// Use lua_setfenv
 			this->push();
-			lua_setfenv(L, -2);
+			int success_result = lua_setfenv(L, target_index);
+			return success_result != 0;
 #else
-			// Use upvalues as explained in Lua 5.2 and beyond's manual
-			this->push();
-			const char* name = lua_setupvalue(L, -2, 1);
-			if (name == nullptr) {
-				this->pop();
+			// If this is a C function, the environment is always placed in
+			// the first value, as is expected of sol2 (all upvalues have an empty name, "")
+			if (lua_iscfunction(L, target_index) != 0) {
+				const char* maybe_upvalue_name = lua_getupvalue(L, target_index, 1);
+				if (maybe_upvalue_name == nullptr) {
+					return false;
+				}
+				string_view upvalue_name(maybe_upvalue_name);
+				if (upvalue_name == "") {
+					this->push();
+					const char* success = lua_setupvalue(L, target_index, 1);
+					if (success == nullptr) {
+						// left things alone on the stack, pop them off
+						lua_pop(L, 2);
+						return false;
+					}
+					lua_pop(L, 1);
+					return true;
+				}
+				lua_pop(L, 1);
+				return false;
+			}
+			else {
+				// Must search for the right upvalue target on index
+				for (int upvalue_index = 1;; ++upvalue_index) {
+					const char* maybe_upvalue_name = lua_getupvalue(L, target_index, upvalue_index);
+					if (maybe_upvalue_name == nullptr) {
+						break;
+					}
+					string_view upvalue_name(maybe_upvalue_name);
+					if (upvalue_name == "_ENV") {
+						lua_pop(L, 1);
+						this->push();
+						const char* success = lua_setupvalue(L, target_index, upvalue_index);
+						if (success == nullptr) {
+							// left things alone on the stack, pop them off
+							lua_pop(L, 1);
+							break;
+						}
+						// whether or not we succeeded, we found _ENV
+						// so we need to break
+						return true;
+					}
+					lua_pop(L, 1);
+				}
+				// if we get here,
+				// we did not find an _ENV here...
+				return false;
 			}
 #endif
 		}
 	};
 
 	template <typename T, typename E>
-	void set_environment(const basic_environment<E>& env, const T& target) {
-		env.set_on(target);
+	bool set_environment(const basic_environment<E>& env, const T& target) {
+		return env.set_on(target);
 	}
 
 	template <typename E = reference, typename T>
@@ -153,11 +191,9 @@ namespace sol {
 	struct this_environment {
 		optional<environment> env;
 
-		this_environment()
-		: env(nullopt) {
+		this_environment() : env(nullopt) {
 		}
-		this_environment(environment e)
-		: env(std::move(e)) {
+		this_environment(environment e) : env(std::move(e)) {
 		}
 		this_environment(const this_environment&) = default;
 		this_environment(this_environment&&) = default;

@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -28,15 +28,15 @@
 
 namespace sol {
 	namespace detail {
-		struct unchecked_t {};
-		const unchecked_t unchecked = unchecked_t{};
+		struct unchecked_t { };
+		const unchecked_t unchecked = unchecked_t {};
 	} // namespace detail
 
 	namespace meta {
 		using sfinae_yes_t = std::true_type;
 		using sfinae_no_t = std::false_type;
 
-		template <typename T>
+		template <typename...>
 		using void_t = void;
 
 		template <typename T>
@@ -47,13 +47,13 @@ namespace sol {
 
 		namespace meta_detail {
 			template <typename T>
-			struct unqualified_non_alias : unqualified<T> {};
+			struct unqualified_non_alias : unqualified<T> { };
 
 			template <template <class...> class Test, class, class... Args>
-			struct is_detected : std::false_type {};
+			struct is_detected : std::false_type { };
 
 			template <template <class...> class Test, class... Args>
-			struct is_detected<Test, void_t<Test<Args...>>, Args...> : std::true_type {};
+			struct is_detected<Test, void_t<Test<Args...>>, Args...> : std::true_type { };
 		} // namespace meta_detail
 
 		template <template <class...> class Trait, class... Args>
@@ -61,6 +61,39 @@ namespace sol {
 
 		template <template <class...> class Trait, class... Args>
 		constexpr inline bool is_detected_v = is_detected<Trait, Args...>::value;
+
+		template <typename _Default, typename _Void, template <typename...> typename _Op, typename... _Args>
+		class detector {
+		public:
+			using value_t = ::std::false_type;
+			using type = _Default;
+		};
+
+		template <typename _Default, template <typename...> typename _Op, typename... _Args>
+		class detector<_Default, void_t<_Op<_Args...>>, _Op, _Args...> {
+		public:
+			using value_t = ::std::true_type;
+			using type = _Op<_Args...>;
+		};
+
+		class nonesuch {
+		public:
+			~nonesuch() = delete;
+			nonesuch(nonesuch const&) = delete;
+			nonesuch& operator=(nonesuch const&) = delete;
+		};
+
+		template <template <typename...> typename _Op, typename... _Args>
+		using detected_t = typename detector<nonesuch, void, _Op, _Args...>::type;
+
+		template <typename _Default, template <typename...> typename _Op, typename... _Args>
+		using detected_or = detector<_Default, void, _Op, _Args...>;
+
+		template <typename _Default, template <typename...> typename _Op, typename... _Args>
+		using detected_or_t = typename detector<_Default, void, _Op, _Args...>::type;
+
+		template <typename _Default, template <typename...> typename _Op, typename... _Args>
+		constexpr inline bool detected_or_v = detector<_Default, void, _Op, _Args...>::value;
 
 		template <std::size_t I>
 		using index_value = std::integral_constant<std::size_t, I>;
@@ -82,9 +115,9 @@ namespace sol {
 
 		namespace meta_detail {
 			template <typename T, template <typename...> class Templ>
-			struct is_specialization_of : std::false_type {};
+			struct is_specialization_of : std::false_type { };
 			template <typename... T, template <typename...> class Templ>
-			struct is_specialization_of<Templ<T...>, Templ> : std::true_type {};
+			struct is_specialization_of<Templ<T...>, Templ> : std::true_type { };
 		} // namespace meta_detail
 
 		template <typename T, template <typename...> class Templ>
@@ -103,6 +136,19 @@ namespace sol {
 
 		template <typename T>
 		using is_builtin_type = std::integral_constant<bool, std::is_arithmetic<T>::value || std::is_pointer<T>::value || std::is_array<T>::value>;
+
+		namespace meta_detail {
+			template <typename T, typename = void>
+			struct has_internal_marker_impl : std::false_type { };
+			template <typename T>
+			struct has_internal_marker_impl<T, void_t<typename T::SOL_INTERNAL_UNSPECIALIZED_MARKER_>> : std::true_type { };
+
+			template <typename T>
+			using has_internal_marker = has_internal_marker_impl<T>;
+
+			template <typename T>
+			constexpr inline bool has_internal_marker_v = has_internal_marker<T>::value;
+		} // namespace meta_detail
 
 	} // namespace meta
 } // namespace sol

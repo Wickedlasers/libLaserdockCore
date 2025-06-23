@@ -26,8 +26,8 @@
 /** Laser vertex. Used for easier processing */
 struct LDCORESHARED_EXPORT ldVertex
 {
-    static const int POS_COUNT = 2;
-    static const int COLOR_COUNT = 3;
+    static const int POS_COUNT = 3;
+    static const int COLOR_COUNT = 4;
 
     static void registerMetaTypes();
 
@@ -35,6 +35,8 @@ struct LDCORESHARED_EXPORT ldVertex
     float x() const;
     float &y();
     float y() const;
+    float &z();
+    float z() const;
 
     float &r();
     float r() const;
@@ -42,6 +44,8 @@ struct LDCORESHARED_EXPORT ldVertex
     float g() const;
     float &b();
     float b() const;
+    float &a();
+    float a() const;
 
     bool isValid() const;
     bool isBlank() const;
@@ -53,7 +57,7 @@ struct LDCORESHARED_EXPORT ldVertex
 
     /** x,y */
     float position[POS_COUNT];
-    /** r,g,b [0..1] */
+    /** r,g,b,a [0..1] */
     float color[COLOR_COUNT];
 };
 Q_DECLARE_METATYPE(ldVertex)

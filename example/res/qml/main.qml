@@ -5,112 +5,104 @@ import QtQuick.Window 2.2
 
 import WickedLasers 1.0
 
-Item {
-    id: rootItem
+Window {
+    id: mainWindow
 
-    Window {
-        id: mainWindow
+    width: 480
+    height: 640
 
-        width: 480
-        height: 640
+    color: "black"
 
-        ColumnLayout {
-            anchors.fill: parent
+    ColumnLayout {
+        anchors.fill: parent
 
-            RowLayout {
+        RowLayout {
+            Button {
+                focusPolicy: Qt.NoFocus
+                enabled: ldCore.laserController.connectedDevices > 0
 
-                Button {
-                    focusPolicy: Qt.NoFocus
-                    enabled: ldCore.laserController.connectedDevices > 0
+                text: checked ? qsTr("Stop") : qsTr("Start")
 
-                    text: checked ? qsTr("Stop") : qsTr("Start")
+                checked: ldCore.laserController.isActive
 
-                    checked: ldCore.laserController.isActive
+                onClicked: ldCore.laserController.togglePlay()
+            }
 
-                    onClicked: ldCore.laserController.togglePlay()
-                }
+            ComboBox {
+                id: visComboBox
 
-                ComboBox {
-                    id: visComboBox
+                focusPolicy: Qt.NoFocus
 
-                    focusPolicy: Qt.NoFocus
-
-                    model: ListModel {
-                        ListElement {
-                            text: "Circle"
-                        }
-                        ListElement {
-                            text: "Square"
-                        }
-                        ListElement {
-                            text: "Spectrum"
-                        }
-                        ListElement {
-                            text: "GoGoGirl"
-                        }
-                        ListElement {
-                            text: "Clock"
-                        }
-                        ListElement {
-                            text: "Spiral Fighter"
-                        }
-                        ListElement {
-                            text: "Angry Lasers (box2d)"
-                        }
-                        ListElement {
-                            text: "Arrow (ldLuaGame)"
-                        }
-                        ListElement {
-                            text: "Snake (ldRazer)"
-                        }
+                model: ListModel {
+                    ListElement {
+                        text: "Circle"
                     }
-
-                    onActivated: activateVis(currentIndex)
+                    ListElement {
+                        text: "Square"
+                    }
+                    ListElement {
+                        text: "Spectrum"
+                    }
+                    ListElement {
+                        text: "GoGoGirl"
+                    }
+                    ListElement {
+                        text: "Clock"
+                    }
+                    ListElement {
+                        text: "Spiral Fighter"
+                    }
+                    ListElement {
+                        text: "Angry Lasers (box2d)"
+                    }
+                    ListElement {
+                        text: "Arrow (ldLuaGame)"
+                    }
+                    ListElement {
+                        text: "Snake (ldRazer)"
+                    }
                 }
+
+                onActivated: activateVis(currentIndex)
             }
-
-            RowLayout {
-                visible: visComboBox.currentIndex > 4
-                Button {
-                    focusPolicy: Qt.NoFocus
-
-                    text: game && game.state === LdGameState.Playing
-                          ? qsTr("Pause Game")
-                          : game && game.state === LdGameState.Paused
-                            ? qsTr("Resume Game")
-                            : qsTr("Start Game")
-
-                    checked: game && game.state === LdGameState.Playing
-
-                    onClicked: game.toggle()
-                }
-                Button {
-                    focusPolicy: Qt.NoFocus
-
-                    text: qsTr("Reset")
-
-                    onClicked: game.reset()
-                }
-            }
-
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-
-                LdSimulatorItem {
-                    id: simulator
-                    width: parent.width
-                    height: width
-
-                    autostart: true
-                    clearColor: "black"
-                }
-            }
-            Item {  Layout.fillHeight: true }
-
         }
 
+        RowLayout {
+            visible: visComboBox.currentIndex > 4
+            Button {
+                focusPolicy: Qt.NoFocus
 
+                text: game && game.state === LdGameState.Playing
+                      ? qsTr("Pause Game")
+                      : game && game.state === LdGameState.Paused
+                        ? qsTr("Resume Game")
+                        : qsTr("Start Game")
+
+                checked: game && game.state === LdGameState.Playing
+
+                onClicked: game.toggle()
+            }
+            Button {
+                focusPolicy: Qt.NoFocus
+
+                text: qsTr("Reset")
+
+                onClicked: game.reset()
+            }
+        }
+
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            LdQSGSimulatorItem {
+                id: simulator
+                width: parent.width
+                height: width
+
+                isActive: visible
+            }
+        }
 
     }
 

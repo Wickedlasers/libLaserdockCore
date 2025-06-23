@@ -24,7 +24,10 @@
 #include <memory>
 #include <QMutexLocker>
 #include <QtCore/QReadWriteLock>
+
+#ifdef LD_CORE_USE_OPENGL
 #include <QtGui/QOpenGLFunctions>
+#endif
 
 #include <ldCore/ldCore_global.h>
 #include <ldCore/Utilities/ldVertex.h>
@@ -35,9 +38,16 @@ class QOpenGLShaderProgram;
 class ldSimulatorGrid;
 class ldSimulatorProcessor;
 
+class QSGGeometry;
+
 /** Simulator engine class */
-class LDCORESHARED_EXPORT ldSimulatorEngine : protected QOpenGLFunctions
+class LDCORESHARED_EXPORT ldSimulatorEngine
+        : public QObject
+        #ifdef LD_CORE_USE_OPENGL
+        , protected QOpenGLFunctions
+        #endif
 {
+    Q_OBJECT
 public:
     /** Constructor/destructor */
     explicit ldSimulatorEngine();
@@ -56,21 +66,34 @@ public:
     /** OpenGL uninitialization */
     void uninit();
 
+#ifdef LD_CORE_USE_OPENGL
     /** Draw simulator data on surface */
     void drawLaserGeometry(QOpenGLShaderProgram *program);
+#endif
+
+    void fillGeometry(QSGGeometry *geometry, const QSizeF &itemSize) const;
 
     /** Add simulator data */
-    void pushVertexData(ldVertex * data, unsigned int size);
+    void pushVertexData(ldVertex * data, unsigned int size, bool isLastPortion);
     /** inform simulator frame has completed */
     void frame_complete();
 
     /** Simulator background grid */
     ldSimulatorGrid *grid() const;
 
-private:
-    void drawBuffer(QOpenGLShaderProgram *program, const std::vector<ldVertex> &buffer, unsigned length = 0);
+    const std::vector<ldVertex> &buffer() const;
+    uint bufferSize() const;
 
+signals:
+    void bufferUpdated();
+
+private:
+#ifdef LD_CORE_USE_OPENGL
+    void drawBuffer(QOpenGLShaderProgram *program, const std::vector<ldVertex> &buffer, unsigned length);
     GLuint vboIds[2] = {};
+#endif
+
+    void fillGeometryFromVertex(QSGGeometry *geometry, const QSizeF &itemSize, const std::vector<ldVertex> &buffer, unsigned length) const;
 
     ldVertexCircularBuffer m_buffer;
     mutable QMutex m_mutex;
@@ -81,6 +104,8 @@ private:
     std::unique_ptr<ldSimulatorProcessor> m_processor;
 
     std::unique_ptr<ldSimulatorGrid> m_grid;
+
+    bool m_is3dMode{false};
 };
 
 Q_DECLARE_METATYPE(ldSimulatorEngine*)

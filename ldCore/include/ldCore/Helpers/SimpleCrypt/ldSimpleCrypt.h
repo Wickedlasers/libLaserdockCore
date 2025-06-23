@@ -16,6 +16,10 @@ public:
 
     static ldSimpleCrypt *instance();
 
+    // these 2 functions are added to handle ".lds" extension smoothly in case when you need it
+    static QString completeBaseName(const QString &path);
+    static QString suffix(const QString &path);
+
     void setKey(quint64 key);
 
     bool decryptToFile(const QString &filePath);

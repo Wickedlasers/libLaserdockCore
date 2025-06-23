@@ -10,11 +10,7 @@
 
 #include <QtCore/QCoreApplication>
 
-#include <QtConcurrent/QtConcurrent>
-#include <QtMultimedia/QAudioDeviceInfo>
-
 #include "ldLoopbackAudioDeviceWorker.h"
-
 
 /*!
   \class ldLoopbackAudioDevice

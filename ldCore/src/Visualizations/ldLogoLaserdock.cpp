@@ -91,7 +91,7 @@ void ldLogo::draw()
 
     for(const ldLogoLine &line : lines) {
         //LogoPoint p;
-        int points = line.points.size();
+        int points = static_cast<int>(line.points.size());
         int istart = fstart*(points-1);
         int iend = fend*(points-1);
 

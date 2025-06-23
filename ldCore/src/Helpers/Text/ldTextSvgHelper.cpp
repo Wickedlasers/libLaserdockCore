@@ -45,7 +45,7 @@ ldTextSvgHelper *ldTextSvgHelper::instance()
 }
 
 // indexForSvgValidChars
-int ldTextSvgHelper::indexForSvgValidChars(const QChar& p_str, int font)
+int ldTextSvgHelper::indexForSvgValidChars(const QChar& p_str, const QString &font)
 {
     const std::vector<ldSvgLetter> &fontLetters = m_laserdockSvgLetters[font];
     for(uint i = 0; i < fontLetters.size(); i++) {
@@ -72,10 +72,10 @@ QChar ldTextSvgHelper::replaceAccentAndSome(const QChar& p_str)
 }
 
 // svgForChar
-QString ldTextSvgHelper::svgPathForChar(const QChar& p_str, int font)
+QString ldTextSvgHelper::svgPathForChar(const QChar& p_str, const QString &fontPrefix)
 {
 
-    QString dir(ldCore::instance()->resourceDir() + "/svg/fonts/" + ldCore::instance()->svgFontManager()->font(font).prefix() + "/") ;
+    QString dir(ldCore::instance()->resourceDir() + "/svg/fonts/" + fontPrefix + "/") ;
 
     QString res = dir;
 
@@ -108,8 +108,12 @@ QString ldTextSvgHelper::svgPathForChar(const QChar& p_str, int font)
 }
 
 // resizeSvg
-std::vector<ldSvgLetter> ldTextSvgHelper::resizedSvgLetters(float p_scale, int font)
+std::vector<ldSvgLetter> ldTextSvgHelper::resizedSvgLetters(float p_scale, const QString &font)
 {
+    if(!m_laserdockSvgLetters.contains(font)) {
+        qWarning() << __FUNCTION__ << font << "wasn't found";
+        return std::vector<ldSvgLetter>();
+    }
     // make a copy for res
     std::vector<ldSvgLetter> res = m_laserdockSvgLetters[font];
 
@@ -340,13 +344,19 @@ void ldTextSvgHelper::initSvgLetters()
     // add undefined char svg at the end
     // !!!should be inited after m_svgValidChars!!!
     for(uint font = 0; font < ldCore::instance()->svgFontManager()->fonts().size(); font++) {
+        ldSvgFont svgFont = ldCore::instance()->svgFontManager()->font(font);
+        if(!svgFont.isInternalFont())
+            continue;
+
+        QString fontPrefix = svgFont.prefix();
+        QString fontFamily = svgFont.title();
         QList<QChar> allValidChars = m_svgValidChars;
         for (const QChar &validChar : allValidChars) {
             // load svg file
-            m_laserdockSvgLetters[font].push_back(ldSvgLetter(svgPathForChar(validChar, font), validChar));
+            m_laserdockSvgLetters[fontFamily].push_back(ldSvgLetter(svgPathForChar(validChar, fontPrefix), validChar));
         }
 
-        QDir dir(ldCore::instance()->resourceDir() + "/svg/fonts/" + ldCore::instance()->svgFontManager()->font(font).prefix() + "/");
+        QDir dir(ldCore::instance()->resourceDir() + "/svg/fonts/" + svgFont.prefix() + "/");
         QStringList unicodeFiles = dir.entryList(QStringList{"U__*.svg"}, QDir::Files | QDir::NoDotAndDotDot);
         for(const QString &unicodeFile : unicodeFiles) {
             QString unicodeValueString = unicodeFile.mid(3, unicodeFile.length() - 4 - 3);
@@ -357,11 +367,11 @@ void ldTextSvgHelper::initSvgLetters()
                 continue;
             }
             QChar charValue(unicode);
-            m_laserdockSvgLetters[font].push_back(ldSvgLetter(dir.absoluteFilePath(unicodeFile), charValue));
+            m_laserdockSvgLetters[fontFamily].push_back(ldSvgLetter(dir.absoluteFilePath(unicodeFile), charValue));
         }
 
         // add undefined char svg at the end
-        m_laserdockSvgLetters[font].push_back(ldSvgLetter(svgPathForChar(' ', font), QChar()));
+        m_laserdockSvgLetters[fontFamily].push_back(ldSvgLetter(svgPathForChar(' ', fontPrefix), QChar()));
     }
 }
 

@@ -26,7 +26,7 @@
 #include "ldCore/ldCore.h"
 #include <ldCore/Hardware/ldAbstractHardwareManager.h>
 #include <ldCore/Hardware/ldHardwareManager.h>
-#include <ldCore/Data/ldDataDispatcher.h>
+#include <ldCore/Data/ldDataDispatcherManager.h>
 
 ldLaserController::ldLaserController(QObject *parent)
     : QObject(parent)
@@ -36,7 +36,7 @@ ldLaserController::ldLaserController(QObject *parent)
     qDebug() << __FUNCTION__;
 
     connect(ldCore::instance()->hardwareManager(), &ldHardwareManager::deviceCountChanged, this, &ldLaserController::onHardwareDeviceCountChanged);
-    connect(ldCore::instance()->get_dataDispatcher(), &ldDataDispatcher::activeChanged, this, &ldLaserController::refreshPlayState);
+    connect(ldCore::instance()->get_dataDispatcherManager(), &ldDataDispatcherManager::activeXferChanged, this, &ldLaserController::refreshPlayState);
 
     refreshPlayState();
     refreshDeviceState();
@@ -50,17 +50,15 @@ void ldLaserController::togglePlay()
     qDebug() << "Laser output " << isActive;
 
     ldCore::instance()->hardwareManager()->setConnectedDevicesActive(isActive);
-    ldCore::instance()->get_dataDispatcher()->setActiveTransfer(isActive);
+    ldCore::instance()->get_dataDispatcherManager()->setActiveTransfer(isActive);
 }
 
 void ldLaserController::debugAddDevice()
 {
     ldAbstractHardwareManager *absHwMan = nullptr;
     for(ldAbstractHardwareManager *hwm : ldCore::instance()->hardwareManager()->hardwareManagers()) {
-        if(hwm->get_isActive()) {
-            absHwMan = hwm;
-            break;
-        }
+        absHwMan = hwm;
+        break;
     }
 
     if(absHwMan)
@@ -73,10 +71,8 @@ void ldLaserController::debugRemoveDevice()
 {
     ldAbstractHardwareManager *absHwMan = nullptr;
     for(ldAbstractHardwareManager *hwm : ldCore::instance()->hardwareManager()->hardwareManagers()) {
-        if(hwm->get_isActive()) {
-            absHwMan = hwm;
-            break;
-        }
+        absHwMan = hwm;
+        break;
     }
 
     if(absHwMan)
@@ -92,7 +88,7 @@ void ldLaserController::refreshDeviceState()
 
 void ldLaserController::refreshPlayState()
 {
-    update_isActive(ldCore::instance()->get_dataDispatcher()->isActiveTransfer());
+    update_isActive(ldCore::instance()->get_dataDispatcherManager()->isActiveTransfer());
 }
 
 void ldLaserController::onHardwareDeviceCountChanged(uint /*count*/)

@@ -20,16 +20,30 @@
 
 #include "ldCore/Helpers/Sound/ldSoundEffects.h"
 
-ldSoundEffects::ldSoundEffects() {
+#include <QtCore/QDebug>
+#include <QtCore/QThread>
+
+ldSoundEffects::ldSoundEffects()
+    : m_thread(new QThread())
+{
+    m_thread->start();
 }
 
 ldSoundEffects::~ldSoundEffects()
 {
+    stopAll();
+    m_thread->quit();
+    if(!m_thread->wait(500)) {
+        qWarning() << this << __FUNCTION__ << "emergency thread termination";
+        m_thread->terminate();
+        m_thread->wait(500);
+    }
 }
 
 void ldSoundEffects::insert(int sfx, const QString &resourcePath)
 {
     m_soundMap[sfx] = std::unique_ptr<ldQSound>(new ldQSound(resourcePath));
+    m_soundMap[sfx]->moveToThread(m_thread.get());
 }
 
 void ldSoundEffects::play(int sfx)

@@ -55,7 +55,7 @@ ldCoreExample::ldCoreExample(QQmlApplicationEngine *engine, QObject *parent)
     , m_ldCore(ldCore::create(parent))
     , m_game(nullptr)
     , m_qmlEngine(engine)
-    #ifdef Q_OS_ANDROID
+    #ifdef LD_CORE_RESOURCES_EXTRACTOR
     , m_resExtractor(new ldResourcesExtractor(this))
     #endif
 {
@@ -66,10 +66,10 @@ ldCoreExample::ldCoreExample(QQmlApplicationEngine *engine, QObject *parent)
     m_ldCore->task()->setIsShowLogo(false);
     m_ldCore->soundDeviceManager()->setDeviceInfo(m_ldCore->soundDeviceManager()->getDefaultDevice(ldSoundDeviceInfo::Type::QAudioInput));
 
-#ifdef Q_OS_ANDROID
-    m_resExtractor->init(LD_EXAMPLE_PACKAGE_NAME, LD_EXAMPLE_RESOURCES_VERSION_CODE);
+#ifdef LD_CORE_RESOURCES_EXTRACTOR
+    m_resExtractor->init(LD_EXAMPLE_PACKAGE_NAME, LD_EXAMPLE_RESOURCES_VERSION_CODE, -1);
     connect(m_resExtractor, &ldResourcesExtractor::finished, this, &ldCoreExample::startApp);
-    if(m_resExtractor->get_needExtraction())
+    if(m_resExtractor->get_fileCount() > 0)
         m_resExtractor->startExtraction();
     else
 #endif
@@ -85,7 +85,7 @@ void ldCoreExample::init()
 {
     // init qml
     m_qmlEngine->rootContext()->setContextObject(this);
-    m_qmlEngine->load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
+    m_qmlEngine->load(QUrl(QStringLiteral("qrc:/res/qml/main.qml")));
     if(m_qmlEngine->rootObjects().isEmpty()) {
         QTimer::singleShot(0, qApp, &QGuiApplication::quit);
         return;

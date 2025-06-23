@@ -7,6 +7,7 @@ if(LD_CORE_ENABLE_OPENMP)
     add_subdirectory(openmp)
 endif()
 
+add_subdirectory(abletonlink)
 add_subdirectory(aubio)
 add_subdirectory(kiss_fft130)
 add_subdirectory(lib-qt-qml-tricks)

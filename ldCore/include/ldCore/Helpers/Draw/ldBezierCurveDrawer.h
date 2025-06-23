@@ -32,7 +32,6 @@
 
 #include "ldCore/Helpers/Maths/ldMaths.h"
 
-class ldAbstractColorEffect;
 class ldBezierCurveObject;
 class ldBezierCurveFrame;
 class ldRendererOpenlase;
@@ -41,26 +40,11 @@ struct OLPoint;
 class LDCORESHARED_EXPORT ldBezierCurveDrawer
 {
 public:
-    enum class ColorEffect {
-        No,
-        One,
-        Two,
-        Three,
-        First = No,
-        Last = Three
-    };
-
     explicit ldBezierCurveDrawer();
     ~ldBezierCurveDrawer();
 
-    void setColorEffect(const ColorEffect &mode);
-    void setColorEffectBaseColorDecay(int baseColorDecay);
-
     void setMaxPoints(int maxPoints);
     void setBezierLengthCoeff(int bezierLengthCoeff);
-
-    void innerDraw(ldRendererOpenlase* renderer, const ldBezierCurveFrame &dataVect);
-    void innerDraw(ldRendererOpenlase* renderer, const ldBezierCurveObject &dataVect);
 
     // get bezier data using start & controls points, ignoring end point. It's weird but it's necessary in some cases.
     std::vector<std::vector<OLPoint>> getBezierData(const ldBezierCurveObject &object, bool isSafe = true) const;
@@ -70,11 +54,7 @@ public:
     std::vector<std::vector<OLPoint>> getDrawingData(const ldBezierCurveObject &object, bool isSafe = true) const;
 
 private:
-    void draw(ldRendererOpenlase* renderer, const ldBezierCurveObject &dataVect, const ldRect &dimInUnited);
     std::vector<std::vector<OLPoint> > makeSafeDrawing(const std::vector<std::vector<OLPoint> > &data) const;
-
-    std::unique_ptr<ldAbstractColorEffect> m_colorEffect;
-    int m_baseColorDecay = 223;
 
     int m_maxPoints = 30;
     int m_bezierLengthCoeff = 100;

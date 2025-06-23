@@ -34,7 +34,7 @@ ldHardware::~ldHardware()
 {
 }
 
-ldHardware::Status ldHardware::status()
+ldHardware::Status ldHardware::status() const
 {
     return m_status;
 }
@@ -46,7 +46,10 @@ bool ldHardware::isEnabled() const
 
 void ldHardware::setEnabled(bool en)
 {
-    m_enabled = en;
+    if (en!=m_enabled) {
+        m_enabled = en;
+        emit enabledChanged(en);
+    }
 }
 
 // device is only active if it is flagged as such, and it has not been disabled
@@ -90,9 +93,29 @@ ldHardwareFilter *ldHardware::filter() const
     return m_filter;
 }
 
+void ldHardware::setBatch(ldHardwareBatch *batch)
+{
+    if(m_batch == batch)
+        return;
+
+    m_batch = batch;
+
+    emit batchChanged(batch);
+}
+
+ldHardwareBatch *ldHardware::batch() const
+{
+    return m_batch;
+}
+
 ldHardwareInfo* ldHardware::info() const
 {
-   return m_info;
+    return m_info;
+}
+
+bool ldHardware::isActiveAndInitialized() const
+{
+    return isActive() && status() == ldHardware::Status::INITIALIZED;
 }
 
 ldHardware::ldHardware(QObject *parent)

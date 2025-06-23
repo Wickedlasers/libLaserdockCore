@@ -57,7 +57,7 @@ signals:
     void error(QString error);
 
 private:
-    QMutex m_mutex;
+    QRecursiveMutex m_mutex;
     bool m_stop = false;
 
     QAudioFormat m_format;

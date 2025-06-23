@@ -30,6 +30,7 @@
 #include <ldCore/Render/ldRendererOpenlase.h>
 #include "ldCore/Helpers/Maths/ldMaths.h"
 #include "ldCore/Helpers/Draw/ld3dBezierCurveDrawer.h"
+#include "ldCore/Helpers/Text/ldTextDirection.h"
 
 #include "ldAbstractText.h"
 
@@ -41,13 +42,21 @@ public:
 
     virtual void setText(const QString& text) override;
 
-    void innerDraw(ldRendererOpenlase* p_renderer);
+    bool innerDraw(ldRendererOpenlase* p_renderer);
 
     void setSpeedCoeff(float speedCoeff);
+    void setManualElapsedCorrection(qint64 correction_ms);
 
+    bool modeRotate() const;
     void setModeRotate(bool mode_rotate);
 
+    void setDirection(ldTextDirection::Direction direction);
+
     virtual void setPosition(const ldVec2 &p_p) override;
+
+    void restart();
+
+    ld3dTextLabelOne* clone() const;
 
 protected:
     virtual void initTextFrame(const QString &word) override;
@@ -60,6 +69,8 @@ private:
     int m_rotate_step = 0;
 
     std::unique_ptr<ld3dBezierCurveDrawer> m_drawer;
+
+    ldTextDirection::Direction m_direction = ldTextDirection::Direction::First;
 };
 
 #endif // ld3dTextLabelOne_H

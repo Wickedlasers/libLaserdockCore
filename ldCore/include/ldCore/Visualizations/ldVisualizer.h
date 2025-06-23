@@ -66,43 +66,96 @@ override getVisualizerName() for name used by the app.
 #include <QtCore/QMutex>
 #include <QtCore/QDebug>
 
+#include <QQmlHelpers>
+
 #include <ldCore/Sound/ldSoundData.h>
 #include <ldCore/Utilities/ldUtils.h>
 #include "ldCore/Shape/ldShape.h"
 
+class ldHardwareBatch;
 class ldVisualizationTask;
 class ldMusicManager;
 
+/*!
+ * \brief The ldVisualizer class - base class for any custom visualization you want to create. See notes for virtual functions for more details
+ */
 class LDCORESHARED_EXPORT ldVisualizer : public QObject, public ldShape
 {
     Q_OBJECT
+
+    QML_READONLY_PROPERTY(bool, isVisActive)
+    QML_READONLY_PROPERTY(bool, isVisPaused)
+    //! flag for renderer to refresh vis even if it's in a paused state but something is changed inside
+    QML_READONLY_PROPERTY(bool, isVisRefreshRequired)
 
 public:
     ldVisualizer(QObject *parent = nullptr);
     ~ldVisualizer();
 
-public:
+    /*!
+     * \brief visualizerName - vis name for debug in log
+     * \return
+     */
     virtual QString visualizerName() const;
-    virtual int targetFPS() const { return 30; }
+    /*!
+     * \brief targetFPS - FPS that renderer will use
+     * \return
+     */
+    virtual int targetFPS() const { return 45; }
 
+    /*!
+     * \brief isValid - is visualizer in a valid state and can be used
+     * \return
+     */
+    virtual bool isValid() const { return true; }
+
+    /*!
+     * \brief isMusicAware - flag just to show that visualizer is based on music and some internal optimisations can be used, not really important
+     * \return
+     */
+    Q_INVOKABLE virtual bool isMusicAware() const { return m_isMusicAware; }
+    /*!
+     * \brief is3d - is it a 3d visualizer and if it can be rotate in 3 axises, not really important flag as well
+     * \return
+     */
+    Q_INVOKABLE virtual bool is3d() const { return m_is3d; }
+
+    /*!
+     *  visualizers that can be seeked to a specific frame can override this method, and return true instead,
+     * then override the onshoudlstart and pause methods that also receive offset and duration
+     */
+    virtual bool canSeekPosition() const {return false;}
+
+    /*!
+     * \brief clone - clone the visualizer in the same state. should be overrided if you want to use it in timeline, etc. In general it always good to override it
+     * \return
+     */
+    virtual ldVisualizer* clone() const;
+
+    // need hwBatch only for dac rate, probaly it can be done in a better way
+    void setHwBatch(ldHardwareBatch *hwBatch);
+
+public slots:
     void start();
+    void start(double offset, quint64 durationMs);
     void pause();
+    void pause(double offset, quint64 durationMs);
     void stop();
 
     void updateWith(ldSoundData *pSoundData, float delta);
 
-    virtual bool isValid() const { return true; }
-
-    Q_INVOKABLE virtual bool isMusicAware() const { return m_isMusicAware; }
-    Q_INVOKABLE virtual bool is3d() const { return m_is3d; }
-
-    bool isVisActive() const;
-    bool isVisPaused() const;
-
 protected:
+    /*!
+     *  Functions that should be overrrided in a child class for a specific logic. You shouldn't block execution of the thread inside these funcions with any QEventLoops to prevent ambivalent state
+     */
     virtual void onShouldStart();
     virtual void onShouldPause();
     virtual void onShouldStop();
+
+    // visualizers that can be seeked to a specific frame can override these methods
+    virtual void onShouldPause(double /*offset*/, quint64 /*durationMs*/) {onShouldPause();}
+    virtual void onShouldStart(double /*offset*/, quint64 /*durationMs*/) {onShouldStart();}
+
 
     /*!
      * \brief clearBuffer
@@ -128,9 +181,10 @@ protected:
     int m_rate = 0;
 
     mutable QMutex m_mutex;
+    bool m_isUseMutex{false};
 
-    bool m_isVisActive = false;
-    bool m_isVisPaused = false;
+
+    ldHardwareBatch *m_hwBatch = nullptr;
 };
 
 Q_DECLARE_METATYPE(ldVisualizer*)

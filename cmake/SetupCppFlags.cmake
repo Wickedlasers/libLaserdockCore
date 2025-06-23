@@ -1,6 +1,6 @@
 macro(setup_cpp_flags TARGET)
 if(UNIX)
-    target_compile_options(${TARGET} PUBLIC -Wall -Wextra -Wuninitialized -Winit-self -Wno-unknown-pragmas -Wpedantic)
+    target_compile_options(${TARGET} PUBLIC -Wall -Wextra -Wuninitialized -Winit-self -Wno-unknown-pragmas -Wpedantic -Wno-gnu-zero-variadic-macro-arguments)
 
     # good to have some day...
 #    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -28,9 +28,6 @@ if(UNIX)
 
     if(NOT ANDROID)
         target_compile_options(${TARGET} PUBLIC -Wshadow)
-    endif()
-    if(LD_IOS_BUILD)
-        target_compile_options(${PROJECT_NAME} PRIVATE -fvisibility=hidden)
     endif()
 endif()
 

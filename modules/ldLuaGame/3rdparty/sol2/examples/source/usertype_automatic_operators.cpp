@@ -17,26 +17,33 @@ public:
 
 	// automatically bound to obj( args... ) [ __call ]
 	void operator()() {
-		data.push_back(static_cast<value_type>(data.size() + 1) / 3.0);
+		data.push_back(
+		     static_cast<value_type>(data.size() + 1) / 3.0);
 	}
 
 	// automatically used for pairs(obj) [ __pairs ], 5.2+
-	iterator begin() const { return data.begin(); }
-	iterator end() const { return data.end(); }
+	iterator begin() const {
+		return data.begin();
+	}
+	iterator end() const {
+		return data.end();
+	}
 
 	// automatically bound to #obj [ __len ]
-	size_type size() const { return data.size(); }
+	size_type size() const {
+		return data.size();
+	}
 
 	// automatically bound for obj == obj [ __eq ]
-	bool operator== (const automatic& right) const {
+	bool operator==(const automatic& right) const {
 		return data == right.data;
 	}
 	// automatically bound for obj < obj [ __lt ]
-	bool operator< (const automatic& right) const {
+	bool operator<(const automatic& right) const {
 		return data < right.data;
 	}
 	// automatically bound for obj <= obj [ __le ]
-	bool operator<= (const automatic& right) const {
+	bool operator<=(const automatic& right) const {
 		return data <= right.data;
 	}
 	// other comparison operators are based off the above in Lua
@@ -44,7 +51,8 @@ public:
 };
 
 // automatically bound to tostring(obj) [ __tostring ]
-std::ostream& operator<<(std::ostream& os, const automatic& right) {
+std::ostream& operator<<(
+     std::ostream& os, const automatic& right) {
 	if (right.size() == 0) {
 		os << "{ empty }";
 		return os;
@@ -63,7 +71,8 @@ std::ostream& operator<<(std::ostream& os, const automatic& right) {
 }
 
 int main(int, char*[]) {
-	std::cout << "=== usertype automatic operators ===" << std::endl;
+	std::cout << "=== usertype automatic operators ==="
+	          << std::endl;
 
 	sol::state lua;
 	lua.open_libraries(sol::lib::base);
@@ -97,7 +106,7 @@ print("#obj2:", #obj2)
 print("#obj3:", #obj3)
 
 	)");
-#if SOL_LUA_VERSION > 501
+#if SOL_LUA_VERSION_I_ > 501
 	lua.script(R"(
 for k, v in pairs(obj1) do
 	assert( (k / 3) == v )

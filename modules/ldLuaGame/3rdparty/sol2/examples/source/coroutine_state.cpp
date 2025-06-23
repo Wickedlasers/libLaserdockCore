@@ -1,21 +1,24 @@
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
-#include "assert.hpp"
 #include <iostream>
 
 int main(int, char*[]) {
-	std::cout << "=== coroutine state transfer ===" << std::endl;
+	std::cout << "=== coroutine state transfer ==="
+	          << std::endl;
 
 	sol::state lua;
 	lua.open_libraries();
 	sol::function transferred_into;
-	lua["f"] = [&lua, &transferred_into](sol::object t, sol::this_state this_L) {
-		std::cout << "state of main     : " << (void*)lua.lua_state() << std::endl;
-		std::cout << "state of function : " << (void*)this_L.lua_state() << std::endl;
-		// pass original lua_State* (or sol::state/sol::state_view)
-		// transfers ownership from the state of "t",
-		// to the "lua" sol::state
+	lua["f"] = [&lua, &transferred_into](
+	                sol::object t, sol::this_state this_L) {
+		std::cout << "state of main     : "
+		          << (void*)lua.lua_state() << std::endl;
+		std::cout << "state of function : "
+		          << (void*)this_L.lua_state() << std::endl;
+		// pass original lua_State* (or
+		// sol::state/sol::state_view) transfers ownership from
+		// the state of "t", to the "lua" sol::state
 		transferred_into = sol::function(lua, t);
 	};
 
@@ -42,7 +45,7 @@ int main(int, char*[]) {
 	transferred_into();
 	// check
 	int i = lua["i"];
-	c_assert(i == 1);
+	SOL_ASSERT(i == 1);
 
 	std::cout << std::endl;
 

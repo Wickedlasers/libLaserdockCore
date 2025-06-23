@@ -23,8 +23,6 @@
 
 #include "ldCore/Utilities/ldVertex.h"
 
-class QOpenGLShaderProgram;
-
 class ldSimulatorProcessor
 {
 public:
@@ -32,13 +30,15 @@ public:
     virtual ~ldSimulatorProcessor();
 
     // function for altering laser data to make points bigger before being sent to simulator
-    void bigger_dots(ldVertex *inData, ldVertex *outData, unsigned int size);
+    void bigger_dots(ldVertex *inData, ldVertex *outData, unsigned int size, bool isLastPortion);
+
+    void clear();
 
 private:
     ldVertex m_last;
     ldVertex m_lastOn;
-    float m_lastDeltaX = 1;
-    float m_lastDeltaY = 1;
+    float m_lastDeltaX = 0;
+    float m_lastDeltaY = 0;
     bool m_wasOn = false;
     float m_moveDist = 0;
 };

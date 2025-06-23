@@ -4,7 +4,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QTimer>
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_DARWIN
 #include <CoreMIDI/CoreMIDI.h>
 #endif
 #ifdef Q_OS_WIN
@@ -30,12 +30,6 @@ public:
 
     void init();
 
-#ifdef Q_OS_MAC
-    static ldMidiInfo getInfo(MIDIEndpointRef source);
-    static SInt32 getSourceId(MIDIEndpointRef source);
-    static QString getSourceName(MIDIEndpointRef source);
-#endif
-
 public slots:
     void start(const ldMidiInfo &info);
     void stop();
@@ -59,7 +53,7 @@ private:
     bool openMidi(const ldMidiInfo &info);
 
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_DARWIN
     MIDIClientRef m_midiClient = 0;
     MIDIPortRef m_inputPort = 0;
     MIDIEndpointRef m_sourceEndPoint = 0;

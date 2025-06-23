@@ -53,3 +53,8 @@ float ldSvgFont::interLetterSuffix() const
     return m_interLetterSuffix;
 }
 
+bool ldSvgFont::isInternalFont() const
+{
+    return !m_prefix.isEmpty();
+}
+

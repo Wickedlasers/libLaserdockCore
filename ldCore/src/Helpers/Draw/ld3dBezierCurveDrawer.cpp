@@ -44,7 +44,6 @@ static const float TIME_FOR_REMOVE_3DTO = 0.8f;
 
 
 ld3dBezierCurveDrawer::ld3dBezierCurveDrawer()
-    : _currentStep(Step::INTRO)
 {
 }
 
@@ -55,6 +54,14 @@ ld3dBezierCurveDrawer::~ld3dBezierCurveDrawer()
 void ld3dBezierCurveDrawer::setFrame(const ld3dBezierCurveFrame &frame)
 {
     _bezier3dSequence = frame;
+
+    // generate random delta so animation order is different for each frame
+    _randomDelta = ldRandomGenerator::instance()->generate(0, 8);
+}
+
+void ld3dBezierCurveDrawer::setPointObject(const ldOLPointObject &frame)
+{
+    _ol3dObject = frame;
 
     // generate random delta so animation order is different for each frame
     _randomDelta = ldRandomGenerator::instance()->generate(0, 8);
@@ -175,6 +182,57 @@ bool ld3dBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer)
         }
     }
 
+    //
+    for (uint objectIndex = 0; objectIndex < _ol3dObject.data().size(); objectIndex++) {
+        //
+        const PointVector &pointVector = _ol3dObject.data()[objectIndex];
+        Steps3dTState st = getStateByIndice(objectIndex, inputCoeff);
+        //
+        renderer->begin(OL_LINESTRIP);
+        for (const OLPoint &b : pointVector)
+        {
+            ldVec3 piv;
+            piv.x = _ol3dObject.dim().center().x;
+            piv.y = _ol3dObject.dim().center().y;
+            piv.z = 0;
+
+            ldVec3 p(b.x, b.y, b.z);
+
+            float base_y = p.y - _ol3dObject.dim().bottom();
+
+            // rotation
+            p.rotate(st.angleX, st.angleY, st.angleZ, piv);
+
+            // 3d effect
+            float dist = st.position.distance(piv);
+            ldVec3 t = st.position - piv;
+            t.norm();
+            t *= inputCoeff*dist;
+            p += t;
+
+            // detect which color step should be used depending on current state
+            int colorStep = 0;
+            switch (_currentStep) {
+            case Step::INTRO:
+                colorStep = _colorStep;
+                break;
+            case Step::SHOW:
+                colorStep = (colorBaseCoeff > base_y/ _ol3dObject.dim().height()) ? _colorNextStep : _colorStep;
+                break;
+            case Step::REMOVE:
+                colorStep = _colorNextStep;
+                break;
+            }
+            // convert color step to openlase format
+            uint32_t color = ldColorUtil::colorHSV(colorStep, 1.0f, 1.0f);
+            // color fade in/fade out
+            color = ldColorUtil::lerpInt(color, 0x000000, ldMaths::normLog(inputCoeff, 3.0f) );
+            // add point
+            renderer->vertex3(p.x, p.y, p.z, color);
+        }
+        renderer->end();
+    }
+
     renderer->popMatrix3();
     renderer->popMatrix3();
 
@@ -196,6 +254,14 @@ bool ld3dBezierCurveDrawer::innerDrawTwo(ldRendererOpenlase *renderer, int rotat
     float elapsedSec = this->elapsedSec();
     float colorBaseCoeff = 0.f;
     float inputCoeff = 0.f;
+
+    auto isLdVec3OutOfRange = [](const ldVec3& p){
+        if (p.z<-1.9f) return true;
+        else if (p.z>1.9f) return true;
+            else return false;
+    };
+
+
     switch(_currentStep) {
     case Step::INTRO:
         inputCoeff = 1.f - elapsedSec/TIME_FOR_INTRO_3DTO*m_speedCoeff;
@@ -227,25 +293,29 @@ bool ld3dBezierCurveDrawer::innerDrawTwo(ldRendererOpenlase *renderer, int rotat
     renderer->pushMatrix3();
 
     //
-    ldRect3 dimSequence = _bezier3dSequence.dim();
+    ldRect dimSequence = !_bezier3dSequence.data().empty() ? _bezier3dSequence.dim().to2d() : _ol3dObject.dim();
     ldVec3 pointRot;
     pointRot.x = dimSequence.left();
-    pointRot.y = dimSequence.top() - _bezier3dSequence.dim().bottom();
+    pointRot.y = dimSequence.top() - dimSequence.bottom();
 
     ldVec3 pivo = ldVec3::X_VECTOR;
 
     switch (rotate_step) {
     case 1:
         pivo = ldVec3::Y_VECTOR;
-        pointRot.x = ldMaths::unitedToLaserCoords(dimSequence.right());
+        if(!_bezier3dSequence.data().empty())
+            pointRot.x = ldMaths::unitedToLaserCoords(dimSequence.right());
         break;
     case 2:
-        pointRot.y = ldMaths::unitedToLaserCoords(dimSequence.bottom());
+        if(!_bezier3dSequence.data().empty())
+            pointRot.y = ldMaths::unitedToLaserCoords(dimSequence.bottom());
         break;
     case 3:
         pivo = ldVec3::Y_VECTOR;
-        pointRot.y = dimSequence.bottom() - _bezier3dSequence.dim().bottom();
-        pointRot.x = ldMaths::unitedToLaserCoords(dimSequence.left());
+        pointRot.y = dimSequence.bottom() - dimSequence.bottom();
+        if(!_bezier3dSequence.data().empty()) {
+            pointRot.x = ldMaths::unitedToLaserCoords(dimSequence.left());
+        }
         break;
     default:
         break;
@@ -276,6 +346,7 @@ bool ld3dBezierCurveDrawer::innerDrawTwo(ldRendererOpenlase *renderer, int rotat
                     // rotation
                     pointRot.z = p.z;
                     p = ldVec3::rotate3dAtPoint(p, M_PI_2*inputCoeff, pivo, pointRot);
+                    if (isLdVec3OutOfRange(p)) continue;
 
                     // detect which color step should be used depending on current state
                     int colorStep = 0;
@@ -302,6 +373,48 @@ bool ld3dBezierCurveDrawer::innerDrawTwo(ldRendererOpenlase *renderer, int rotat
         }
     }
 
+    //
+    for (uint objectIndex = 0; objectIndex < _ol3dObject.data().size(); objectIndex++) {
+        //
+        const PointVector &pointVector = _ol3dObject.data()[objectIndex];
+        //
+        renderer->begin(OL_LINESTRIP);
+        for (const OLPoint &b : pointVector)
+        {
+            ldVec3 p(b.x, b.y, b.z);
+
+            float base_y = p.y - _ol3dObject.dim().bottom();
+
+            // rotation
+            pointRot.z = p.z;
+            p = ldVec3::rotate3dAtPoint(p, M_PI_2*inputCoeff, pivo, pointRot);
+            if (isLdVec3OutOfRange(p)) continue;
+
+            // detect which color step should be used depending on current state
+            int colorStep = 0;
+            switch (_currentStep) {
+            case Step::INTRO:
+                colorStep = _colorStep;
+                break;
+            case Step::SHOW:
+                colorStep = (colorBaseCoeff > base_y/ _ol3dObject.dim().height()) ? _colorNextStep : _colorStep;
+                break;
+            case Step::REMOVE:
+                colorStep = _colorNextStep;
+                break;
+            }
+            // convert color step to openlase format
+            uint32_t color = ldColorUtil::colorHSV(colorStep, 1.0f, 1.0f);
+            // color fade in/fade out
+            color = ldColorUtil::lerpInt(color, 0x000000, ldMaths::normLog(inputCoeff, 3.0f) );
+            // add point
+            renderer->vertex3(p.x, p.y, p.z, color);
+
+        }
+        renderer->end();
+    }
+
+
     renderer->popMatrix3();
     renderer->popMatrix3();
 
@@ -315,6 +428,7 @@ void ld3dBezierCurveDrawer::reset()
     _colorNextStep = 170;
     _elapsedTimer.invalidate();
     _elapsedCorrection = 0;
+    _manualelapsedCorrection = 0;
 
     // generate random delta so animation order is different for each frame
     _randomDelta = ldRandomGenerator::instance()->generate(0, 8);
@@ -330,6 +444,12 @@ void ld3dBezierCurveDrawer::setSpeedCoeff(float speed)
         _elapsedCorrection += static_cast<qint64> (_elapsedTimer.elapsed() * coeffDiff);
 
     m_speedCoeff = speed;
+}
+
+void ld3dBezierCurveDrawer::setManualElapsedCorrection(qint64 correction_ms)
+{
+    if (correction_ms==0) _manualelapsedCorrection = 0;
+    _elapsedCorrection = correction_ms - _manualelapsedCorrection;
 }
 
 Steps3dTState ld3dBezierCurveDrawer::getStateByIndice(uint indice, float inputCoeff) const
@@ -393,6 +513,7 @@ Steps3dTState ld3dBezierCurveDrawer::getStateByIndice(uint indice, float inputCo
 void ld3dBezierCurveDrawer::nextStep()
 {
     _elapsedTimer.start();
+    _manualelapsedCorrection += _elapsedCorrection;
     _elapsedCorrection = 0;
 
     if(_currentStep == Step::REMOVE) {

@@ -36,10 +36,14 @@ QAudioFormat ldSoundInterface::getDefaultAudioFormat()
     QAudioFormat format;
     format.setSampleRate(SAMPLE_RATE); // 44100
     format.setChannelCount(2); // 2
+#if QT_VERSION >= 0x060000
+    format.setSampleFormat(QAudioFormat::Int16); // Qt6: or Int32?
+#else
     format.setSampleSize(16);
     format.setSampleType(QAudioFormat::SignedInt);
     format.setByteOrder(QAudioFormat::LittleEndian);
     format.setCodec("audio/pcm");
+#endif
     return format;
 }
 

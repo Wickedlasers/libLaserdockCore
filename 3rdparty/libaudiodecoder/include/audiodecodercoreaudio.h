@@ -3,7 +3,7 @@
  * libaudiodecoder API Header File
  * Latest version available at: http://www.oscillicious.com/libaudiodecoder
  *
- * Copyright (c) 2010-2012 Albert Santoni, Bill Good, RJ Ryan  
+ * Copyright (c) 2010-2012 Albert Santoni, Bill Good, RJ Ryan
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -26,25 +26,25 @@
  */
 
 /*
- * The text above constitutes the entire libaudiodecoder license; however, 
+ * The text above constitutes the entire libaudiodecoder license; however,
  * the Oscillicious community also makes the following non-binding requests:
  *
  * Any person wishing to distribute modifications to the Software is
  * requested to send the modifications to the original developer so that
- * they can be incorporated into the canonical version. It is also 
- * requested that these non-binding requests be included aint with the 
+ * they can be incorporated into the canonical version. It is also
+ * requested that these non-binding requests be included aint with the
  * license above.
  */
 
 /**
  * \file AudioDecoderCoreAudio.h
- * \class AudioDecoderCoreAudio 
+ * \class AudioDecoderCoreAudio
  * \brief Decodes M4As (etc) using the AudioToolbox framework included as
  *        part of Core Audio on OS X (and iOS).
  */
 
-#ifndef AUDIODECODERCOREAUDIO_H 
-#define AUDIODECODERCOREAUDIO_H 
+#ifndef AUDIODECODERCOREAUDIO_H
+#define AUDIODECODERCOREAUDIO_H
 
 #include "audiodecoderbase.h"
 
@@ -68,7 +68,7 @@ class AudioDecoderCoreAudio : public AudioDecoderBase {
 public:
     AudioDecoderCoreAudio(const std::string filename);
     ~AudioDecoderCoreAudio();
-    // Overriding AudioDecoderBase 
+    // Overriding AudioDecoderBase
     int open();
     int seek(int sampleIdx);
     int read(int size, const SAMPLE *buffer);
@@ -81,4 +81,4 @@ private:
 };
 
 
-#endif // ifndef AUDIODECODERCOREAUDIO_H 
+#endif // ifndef AUDIODECODERCOREAUDIO_H

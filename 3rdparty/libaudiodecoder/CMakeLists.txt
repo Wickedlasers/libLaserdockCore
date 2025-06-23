@@ -13,8 +13,8 @@ target_sources(libaudiodecoder PRIVATE
     )
 
 # qdebug only is used
-find_package(Qt5 CONFIG REQUIRED Core)
-target_link_libraries(libaudiodecoder PRIVATE  Qt5::Core)
+find_package(Qt${QT_VERSION_MAJOR} CONFIG REQUIRED Core)
+target_link_libraries(libaudiodecoder PRIVATE  Qt::Core)
 
 if(WIN32)
     target_sources(libaudiodecoder PRIVATE

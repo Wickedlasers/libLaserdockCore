@@ -1,7 +1,7 @@
-# # # # sol3
+# # # # sol2
 # The MIT License (MIT)
 #
-# Copyright (c) 2013-2019 Rapptz, ThePhD, and contributors
+# Copyright (c) 2013-2022 Rapptz, ThePhD, and contributors
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -20,7 +20,7 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# # # sol3 interop Examples - luabridge
+# # # sol2 interop Examples - luabridge
 
 find_package(LuaBridgeBuild)
 
@@ -30,8 +30,8 @@ function (make_luabridge_interop_example target_library example_suffix)
 	
 	add_executable(${example_name} source/LuaBridge.cpp)
 	target_link_libraries(${example_name} 
-		PRIVATE ${LUA_LIBRARIES} ${LUABRIDGE_LIBRARIES} 
-		${target_library} sol2::assert)
+		PRIVATE Lua::Lua ${LUABRIDGE_LIBRARIES} 
+		${target_library} ${CMAKE_DL_LIBS})
 
 	if (MSVC)
 		target_compile_options(${example_name}
@@ -49,10 +49,6 @@ function (make_luabridge_interop_example target_library example_suffix)
 			-Wno-unknown-warning -Wno-unknown-warning-option)
 	endif()
 
-	if (CMAKE_DL_LIBS)
-		target_link_libraries(${example_name} PRIVATE ${CMAKE_DL_LIBS})
-	endif()
-
 	if (SOL2_TESTS_INTEROP_EXAMPLES)
 		add_test(NAME ${example_name} COMMAND ${example_name})
 	endif()
@@ -62,8 +58,5 @@ if (SOL2_INTEROP_EXAMPLES)
 	make_luabridge_interop_example(sol2::sol2 "")
 endif()
 if (SOL2_INTEROP_EXAMPLES_SINGLE)
-	make_luabridge_interop_example(sol2::sol2_single ".single")
-endif()
-if (SOL2_INTEROP_EXAMPLES_SINGLE_GENERATED)
-	make_luabridge_interop_example(sol2::sol2_single_generated ".single.generated")
+	make_luabridge_interop_example(sol2::sol2::single ".single")
 endif()

@@ -1,12 +1,12 @@
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
-#include "assert.hpp"
 
 // NOTE:
 // There are TWO ways to retrieve the "this"
-// object from calls, when it comes to constructors and regular member functions
-// please pay attention to both: this is a low-level operation!
+// object from calls, when it comes to constructors and regular
+// member functions please pay attention to both: this is a
+// low-level operation!
 
 int main() {
 	struct thing {
@@ -19,7 +19,7 @@ int main() {
 
 			// definitely the same
 			thing& self = selfobj.as<thing>();
-			c_assert(&self == this);
+			SOL_ASSERT(&self == this);
 		}
 
 		void func(sol::this_state ts) const {
@@ -32,14 +32,17 @@ int main() {
 			thing& self = selfobj.as<thing>();
 
 			// definitely the same
-			c_assert(&self == this);
+			SOL_ASSERT(&self == this);
 		}
 	};
 
 	sol::state lua;
 	lua.open_libraries(sol::lib::base);
 
-	lua.new_usertype<thing>("thing", sol::constructors<thing(sol::this_state)>(), "func", &thing::func);
+	lua.new_usertype<thing>("thing",
+	     sol::constructors<thing(sol::this_state)>(),
+	     "func",
+	     &thing::func);
 
 	lua.script(R"(
 obj = thing.new()

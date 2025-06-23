@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,36 +24,33 @@
 #ifndef SOL_FORWARD_DETAIL_HPP
 #define SOL_FORWARD_DETAIL_HPP
 
-#include "feature_test.hpp"
-#include "forward.hpp"
-#include "traits.hpp"
+#include <sol/version.hpp>
+
+#include <sol/forward.hpp>
+#include <sol/traits.hpp>
 
 namespace sol {
 	namespace detail {
 		const bool default_safe_function_calls =
-#if defined(SOL_SAFE_FUNCTION_CALLS) && SOL_SAFE_FUNCTION_CALLS
-			true;
+#if SOL_IS_ON(SOL_SAFE_FUNCTION_CALLS)
+		     true;
 #else
-			false;
+		     false;
 #endif
 	} // namespace detail
 
 
-	namespace meta {
-	namespace meta_detail {
-	}
-	} // namespace meta::meta_detail
+	namespace meta { namespace meta_detail {
+	}} // namespace meta::meta_detail
 
-	namespace stack {
-	namespace stack_detail {
+	namespace stack { namespace stack_detail {
 		using undefined_method_func = void (*)(stack_reference);
 
 		template <typename T>
 		void set_undefined_methods_on(stack_reference);
 
 		struct undefined_metatable;
-	}
-	} // namespace stack::stack_detail
+	}} // namespace stack::stack_detail
 } // namespace sol
 
 #endif // SOL_FORWARD_DETAIL_HPP

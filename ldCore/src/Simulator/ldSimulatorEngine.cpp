@@ -20,18 +20,24 @@
 
 #include "ldCore/Simulator/ldSimulatorEngine.h"
 
-#include <cmath>
+#include <QtQuick/QSGGeometry>
 
-#include <QtGui/QOpenGLShaderProgram>
-
+#include <ldCore/Data/ldFrameBuffer.h>
 #include <ldCore/Simulator/ldSimulatorGrid.h>
 
 #include "ldSimulatorProcessor.h"
 
-#include <ldCore/Data/ldFrameBuffer.h>
+#ifdef LD_CORE_USE_OPENGL
+#if QT_VERSION >= 0x060000
+#include <QtOpenGL/QOpenGLShaderProgram>
+#else
+#include <QtGui/QOpenGLShaderProgram>
+#endif
+#endif
 
 ldSimulatorEngine::ldSimulatorEngine()
-    : m_buffer(ldFrameBuffer::FRAMEBUFFER_CAPACITY)
+    : QObject()
+    , m_buffer(ldFrameBuffer::FRAMEBUFFER_CAPACITY)
     , m_processor(new ldSimulatorProcessor)
     , m_grid(new ldSimulatorGrid())
 {
@@ -45,12 +51,18 @@ ldSimulatorEngine::~ldSimulatorEngine()
 
 void ldSimulatorEngine::addListener()
 {
+    if(!hasListeners())
+        init();
+
     m_listenerCount++;
 }
 
 void ldSimulatorEngine::removeListener()
 {
     m_listenerCount--;
+
+    if(!hasListeners())
+        uninit();
 }
 
 bool ldSimulatorEngine::hasListeners() const
@@ -60,44 +72,62 @@ bool ldSimulatorEngine::hasListeners() const
 
 void ldSimulatorEngine::init()
 {
+#ifdef LD_CORE_USE_OPENGL
     initializeOpenGLFunctions();
 
     glGenBuffers(1, vboIds);
+#endif
 }
 
 void ldSimulatorEngine::uninit()
 {
+#ifdef LD_CORE_USE_OPENGL
     glDeleteBuffers(1, vboIds);
+#endif
 }
 
+#ifdef LD_CORE_USE_OPENGL
 void ldSimulatorEngine::drawLaserGeometry(QOpenGLShaderProgram *program)
 {
     QMutexLocker lock(&m_mutex);
     drawBuffer(program, vbuffer,vbuffer_size);
     if(m_grid->isEnabled())
-            drawBuffer(program, m_grid->buffer());
+            drawBuffer(program, m_grid->buffer(), m_grid->buffer().size());
+
 }
 
-void ldSimulatorEngine::pushVertexData(ldVertex * data, unsigned int size) {
+#endif
+
+void ldSimulatorEngine::fillGeometry(QSGGeometry *geometry, const QSizeF &itemSize) const
+{
+    QMutexLocker lock(&m_mutex);
+    fillGeometryFromVertex(geometry, itemSize, vbuffer,vbuffer_size);
+    if(m_grid->isEnabled())
+            fillGeometryFromVertex(geometry, itemSize, m_grid->buffer(), m_grid->buffer().size());
+}
+
+void ldSimulatorEngine::pushVertexData(ldVertex * data, unsigned int size, bool isLastPortion) {
 
     QMutexLocker lock(&m_mutex);
 
     // create temp buffer for dots processing
     const int maxsize = 2048;
-    ldVertex data_processed[maxsize];
     if (size > maxsize) size = maxsize;
 
     // process dots
-    m_processor->bigger_dots(data, data_processed, size);
-
+    ldVertex data_processed[maxsize];
+    m_processor->bigger_dots(data, data_processed, size, isLastPortion);
+    data = data_processed;
 
     // buffer up partial frame points (until frame_complete() func is called).
-     m_buffer.Push(data_processed, size);
+    m_buffer.Push(data, size);
 }
 
 void ldSimulatorEngine::frame_complete()
 {
     QMutexLocker lock(&m_mutex);
+
+    m_processor->clear();
 
     vbuffer_size = m_buffer.GetLevel();
 
@@ -105,6 +135,8 @@ void ldSimulatorEngine::frame_complete()
         m_buffer.Get(&vbuffer[0], vbuffer_size );
         m_buffer.Reset();
     }
+
+    emit bufferUpdated();
 }
 
 ldSimulatorGrid *ldSimulatorEngine::grid() const
@@ -112,6 +144,17 @@ ldSimulatorGrid *ldSimulatorEngine::grid() const
     return m_grid.get();
 }
 
+const std::vector<ldVertex> &ldSimulatorEngine::buffer() const
+{
+    return vbuffer;
+}
+
+uint ldSimulatorEngine::bufferSize() const
+{
+    return vbuffer_size;
+}
+
+#ifdef LD_CORE_USE_OPENGL
 void ldSimulatorEngine::drawBuffer(QOpenGLShaderProgram *program, const std::vector<ldVertex> &buffer, unsigned length)
 {    
     //if (length==0) length = buffer.size(); // if length is specified use it, otherwise use buffer size
@@ -151,4 +194,24 @@ void ldSimulatorEngine::drawBuffer(QOpenGLShaderProgram *program, const std::vec
 
     // Draw
     glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(length));
+}
+#endif
+
+void ldSimulatorEngine::fillGeometryFromVertex(QSGGeometry *geometry, const QSizeF &itemSize, const std::vector<ldVertex> &buffer, unsigned int length) const
+{
+    Q_ASSERT(buffer.size() >= length);
+
+    if(length == 0)
+        return;
+
+    geometry->allocate(length);
+
+    QSGGeometry::ColoredPoint2D *vertices = geometry->vertexDataAsColoredPoint2D();
+    for (size_t i = 0; i < length; ++i) {
+        auto p = buffer[i];
+        float x = p.x() * itemSize.width()/2 + itemSize.width()/2;
+        float y = p.y() * itemSize.height()/2 * -1 + itemSize.height()/2;
+
+        vertices[i].set(x, y, p.r()*255, p.g() * 255, p.b() * 255, p.a() * 255);
+    }
 }

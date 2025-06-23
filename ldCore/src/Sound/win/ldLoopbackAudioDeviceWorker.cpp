@@ -11,7 +11,6 @@
 #include <QtDebug>
 
 #include <QtCore/QTimer>
-#include <QtMultimedia/QAudioDeviceInfo>
 
 
 #include <stdio.h>
@@ -179,7 +178,6 @@ HRESULT get_specific_device(QString deviceName, IMMDevice **ppMMDevice) {
 ldLoopbackAudioDeviceWorker::ldLoopbackAudioDeviceWorker(QString device, QObject *parent)
     : QObject(parent)
     , m_device(device)
-    , m_mutex(QMutex::Recursive)
 {
 }
 
@@ -193,6 +191,32 @@ void ldLoopbackAudioDeviceWorker::stop()
     m_stop = true;
 }
 
+
+inline uint32_t GetFormatTag( const WAVEFORMATEX* wfx )
+{
+    if ( wfx->wFormatTag == WAVE_FORMAT_EXTENSIBLE )
+    {
+        if ( wfx->cbSize < ( sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX) ) )
+            return 0;
+
+        static const GUID s_wfexBase = {0x00000000, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71};
+
+        auto wfex = reinterpret_cast<const WAVEFORMATEXTENSIBLE*>( wfx );
+        return wfex->Format.wFormatTag;
+
+        if ( memcmp( reinterpret_cast<const BYTE*>(&wfex->SubFormat) + sizeof(DWORD),
+                     reinterpret_cast<const BYTE*>(&s_wfexBase) + sizeof(DWORD), sizeof(GUID) - sizeof(DWORD) ) != 0 )
+        {
+            return 0;
+        }
+
+        return wfex->SubFormat.Data1;
+    }
+    else
+    {
+        return wfx->wFormatTag;
+    }
+}
 
 void ldLoopbackAudioDeviceWorker::process()
 {
@@ -308,12 +332,26 @@ void ldLoopbackAudioDeviceWorker::process()
 
     m_format.setSampleRate(pwfx->nSamplesPerSec); // 44100
     m_format.setChannelCount(pwfx->nChannels); // 2
+    qDebug() << __FUNCTION__ << pwfx->wFormatTag << pwfx->wBitsPerSample << GetFormatTag(pwfx);
+#if QT_VERSION >= 0x060000
+    m_format.setSampleFormat(QAudioFormat::SampleFormat::Int16);
+
+    if(pwfx->wBitsPerSample == 32)
+        m_format.setSampleFormat(QAudioFormat::SampleFormat::Int32);
+    else if(pwfx->wBitsPerSample == 16)
+        m_format.setSampleFormat(QAudioFormat::SampleFormat::Int16);
+    else if(pwfx->wBitsPerSample == 8)
+        m_format.setSampleFormat(QAudioFormat::SampleFormat::UInt8);
+
+#else
     m_format.setSampleSize(pwfx->wBitsPerSample);
-    if(pwfx->wFormatTag = WAVE_FORMAT_PCM) {
-        m_format.setSampleType(QAudioFormat::SignedInt);
-    }
+    m_format.setSampleType(QAudioFormat::SignedInt);
+#endif
+
+#if QT_VERSION < 0x060000
     m_format.setByteOrder(QAudioFormat::LittleEndian);
     m_format.setCodec("audio/pcm");
+#endif
 
     // Calculate the actual duration of the allocated buffer.
     hnsActualDuration = (double)REFTIMES_PER_SEC *

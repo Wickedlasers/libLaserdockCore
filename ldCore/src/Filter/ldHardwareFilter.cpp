@@ -23,7 +23,7 @@
 #include <cmath>
 
 #include <QtCore/QDebug>
-
+#include <QtCore/QTimer>
 #include "ldCore/ldCore.h"
 #include "ldCore/Filter/ldDeadzoneFilter.h"
 #include "ldCore/Filter/ldFilterManager.h"
@@ -64,8 +64,94 @@ class Moving_Average
     Total total_{0};
 };
 
+class ldLaserPowerLimiter : public QObject
+{
+ Q_OBJECT
+public:
+    ldLaserPowerLimiter(QObject *parent = nullptr) : QObject(parent)
+    , m_powerLimiterFilter(new ldPowerFilter)
+    , m_powerAverager(new Moving_Average<float,double,power_limiter_num_samples>)
+
+    {
+        connect(this,&ldLaserPowerLimiter::deviceActiveUpdate,this,&ldLaserPowerLimiter::onDeviceActiveUpdated);
+        connect(this,&ldLaserPowerLimiter::deviceTemperatureUpdate,this,&ldLaserPowerLimiter::onDeviceTemperatureUpdated);
+        connect(this,&QObject::destroyed,this,[&](){
+            if (m_timer) {
+                disconnect(m_timer.get(),&QTimer::timeout,this,&ldLaserPowerLimiter::onUpdateAverager);
+                m_timer->stop();
+                m_timer.reset();
+            }
+        });
+    }
+
+    ~ldLaserPowerLimiter() {
+    }
+
+    void process(ldVertex &input)
+    {
+        m_powerLimiterFilter->process(input);
+    }
+
+signals :
+    void deviceTemperatureUpdate(int tempDegC);
+    void deviceActiveUpdate(bool isActive);
+public slots:
+
+    void onDeviceTemperatureUpdated(int tempDegC) {
+        m_lastTemperatureDegC = tempDegC;
+        //qDebug() << "filter laser power, temp=" << tempDegC;
+    }
+
+    void onUpdateAverager() {
+        //qDebug() << __FUNCTION__ << "timer";
+        m_tempAveragedDegC =  m_powerAverager->operator ()(m_lastTemperatureDegC);
+        //qDebug() << "averaged temp =" << m_tempAveragedDegC;
+        if (m_tempAveragedDegC>=power_limit_start_temp) {
+            const float range = power_limit_end_temp - power_limit_start_temp;
+            float result = (m_tempAveragedDegC-power_limit_start_temp)/range;
+            float new_power_scale_factor = 1.0f - (std::min(result,1.0f) * (1.0f-power_limit_scale_factor));
+            //qDebug() << "laser power limit =" << new_power_scale_factor;
+            m_powerLimiterFilter.get()->m_brightness = new_power_scale_factor;
+        } else {
+            m_powerLimiterFilter.get()->m_brightness = 1.0f;
+        }
+    }
+
+    void onDeviceActiveUpdated(bool isActive) {
+        if (isActive==m_isActive) return;
+
+        m_isActive = isActive;
+        if (isActive) {
+            m_timer.reset(new QTimer());
+            connect(m_timer.get(),&QTimer::timeout,this,&ldLaserPowerLimiter::onUpdateAverager);
+            m_timer->setInterval(update_period_ms);
+            m_timer->start();
+        } else {
+            disconnect(m_timer.get(),&QTimer::timeout,this,&ldLaserPowerLimiter::onUpdateAverager);
+            m_timer->stop();
+            m_timer.reset();
+        }
+    }
+
+private:
+    const int update_period_ms = 100; // how often to pass current temperature into rolling averager
+    const float power_limit_scale_factor = 0.5f; // amount of laser power reduction when at the end temp
+    const float power_limit_start_temp = 60.0f; // laser power will start to be reduced from this temperature
+    const float power_limit_end_temp = 75.0f; // laser power will be reduced to its minimum when this temperature is reached (laser cut-off temp is 76 Deg C in firmware).
+    static const size_t power_limiter_num_samples = 150; // number of samples in rolling averager
+
+    std::unique_ptr<ldPowerFilter> m_powerLimiterFilter;
+    std::unique_ptr<Moving_Average<float,double,power_limiter_num_samples>> m_powerAverager;
+
+    std::unique_ptr<QTimer> m_timer;
+    int m_lastTemperatureDegC{0};
+    double m_tempAveragedDegC{0};
+    bool m_isActive{false};
+};
+
 ldHardwareFilter::ldHardwareFilter(ldScaleFilter *globalScaleFilter, QObject *parent)
     : QObject(parent)
+    , m_galvoAverager(new Moving_Average<float,double,galvo_limiter_num_samples>)
     , m_borderFilter(new ldDeadzoneFilter())
     , m_colorFilter(new ldColorFilter())
     , m_colorCurveFilter(new ldColorCurveFilter())
@@ -73,12 +159,18 @@ ldHardwareFilter::ldHardwareFilter(ldScaleFilter *globalScaleFilter, QObject *pa
     , m_flipFilter(new ldFlipFilter())
     , m_powerFilter(new ldPowerFilter)
     , m_projectionBasic(new ldProjectionBasic)
+    , m_rotateFilter(new ldRotateFilter)
     , m_scaleFilter(new ldScaleFilter())
     , m_shiftFilter(new ldShiftFilter(std::vector<ldScaleFilter*>{m_scaleFilter.get(), globalScaleFilter }))
     , m_ttlFilter(new ldTtlFilter())
-    , m_avg(new Moving_Average<float,double,num_samples>)
+    , m_laserPowerFilter(new ldLaserPowerLimiter())
 {
+    qRegisterMetaType<ldVertexFrame>("ldVertexFrame");
+
     m_colorCurveFilter->m_enabled = true;
+
+    connect(this,&ldHardwareFilter::deviceTemperatureUpdated,m_laserPowerFilter.get(),&ldLaserPowerLimiter::deviceTemperatureUpdate);
+    connect(this,&ldHardwareFilter::activeChanged,m_laserPowerFilter.get(),&ldLaserPowerLimiter::deviceActiveUpdate);
 
     // set up deadzone with default zone
     m_deadzoneFilter->resetToDefault();
@@ -110,6 +202,15 @@ ldHardwareFilter::~ldHardwareFilter()
 {
 }
 
+void ldHardwareFilter::setActive(bool isActive)
+{
+//    qDebug() << "######################### active = " << isActive;
+    if (isActive!=m_isActive) {
+        m_isActive = isActive;
+        emit activeChanged(isActive);
+    }
+}
+
 ldColorFilter *ldHardwareFilter::colorFilter() const
 {
     return m_colorFilter.get();
@@ -136,6 +237,7 @@ void ldHardwareFilter::processFrame(const ldVertexFrame &frame)
 
     m_deadzoneFilter->processFrame(m_lastFrame.frame());
 
+    emit frameProcessed(m_lastFrame);
 }
 
 void ldHardwareFilter::processVertex(ldVertex &v)
@@ -151,6 +253,7 @@ void ldHardwareFilter::processFrameV(ldVertex &v)
     if (!mode_disable_scale) {
         m_flipFilter->processFilter(v);
         m_scaleFilter->processFilter(v);
+        m_rotateFilter->processFilter(v);
         m_shiftFilter->processFilter(v);
     }
 
@@ -158,8 +261,8 @@ void ldHardwareFilter::processFrameV(ldVertex &v)
     if (!mode_disable_colorcorrection) {
         // ttl filter should be before color adjustments
         m_ttlFilter->processFilter(v);
-        m_colorCurveFilter->process(v);
-        m_colorFilter->process(v);
+        m_colorCurveFilter->processFilter(v);
+        m_colorFilter->processFilter(v);
     }
 
     // keystone
@@ -174,10 +277,17 @@ void ldHardwareFilter::processFrameV(ldVertex &v)
             y *= 1.0f/m_projectionBasic->maxdim();
             // transform
             m_projectionBasic->transform(x, y);
-
             v.x() = x;
             v.y() = y;
         }
+#ifdef LD_CORE_ENABLE_OPENCV
+        // keystone per corner
+        if (!m_projectionBasic->isNullKeystoneTransform()) {
+            ldVec2 pt = m_projectionBasic->applyCornerKeystone(v.x(), v.y());
+            v.x() = pt.x;
+            v.y() = pt.y;
+        }
+#endif
     }
 
     if(!mode_disable_colorcorrection)
@@ -215,6 +325,11 @@ ldPowerFilter *ldHardwareFilter::powerFilter() const
     return m_powerFilter.get();
 }
 
+ldRotateFilter *ldHardwareFilter::rotateFilter() const
+{
+    return m_rotateFilter.get();
+}
+
 
 ldScaleFilter *ldHardwareFilter::scaleFilter() const
 {
@@ -241,6 +356,44 @@ void ldHardwareFilter::setKeystoneY(float keystoneY)
     m_projectionBasic->setYaw(keystoneY);
 }
 
+#ifdef LD_CORE_KEYSTONE_CORRECTION
+void ldHardwareFilter::setTopLeftXKeystone(float topLeftXValue)
+{
+    m_projectionBasic->setTopLeftXKeystone(topLeftXValue);
+}
+void ldHardwareFilter::setTopLeftYKeystone(float topLeftYValue)
+{
+    m_projectionBasic->setTopLeftYKeystone(topLeftYValue);
+}
+
+void ldHardwareFilter::setTopRightXKeystone(float topRightXValue)
+{
+    m_projectionBasic->setTopRightXKeystone(topRightXValue);
+}
+void ldHardwareFilter::setTopRightYKeystone(float topRightYValue)
+{
+    m_projectionBasic->setTopRightYKeystone(topRightYValue);
+}
+
+void ldHardwareFilter::setBottomLeftXKeystone(float bottomLeftXValue)
+{
+    m_projectionBasic->setBottomLeftXKeystone(bottomLeftXValue);
+}
+void ldHardwareFilter::setBottomLeftYKeystone(float bottomLeftYValue)
+{
+    m_projectionBasic->setBottomLeftYKeystone(bottomLeftYValue);
+}
+
+void ldHardwareFilter::setBottomRightXKeystone(float bottomRightXValue)
+{
+    m_projectionBasic->setBottomRightXKeystone(bottomRightXValue);
+}
+void ldHardwareFilter::setBottomRightYKeystone(float bottomRightYValue)
+{
+    m_projectionBasic->setBottomRightYKeystone(bottomRightYValue);
+}
+#endif
+
 void ldHardwareFilter::setOffset(int offset)
 {
     m_offset = offset;
@@ -254,6 +407,8 @@ void ldHardwareFilter::processSafeLaserOutput(ldVertex &v)
     bool mode_disable_overscan = ldCore::instance()->filterManager()->dataFilter()->frameModes & FRAME_MODE_UNSAFE_OVERSCAN;
     bool mode_disable_underscan = ldCore::instance()->filterManager()->dataFilter()->frameModes & FRAME_MODE_UNSAFE_UNDERSCAN;
 
+    m_laserPowerFilter->process(v); // perform laser power limiting based on temperature
+
     // new overscan protection which will shrink the image in order to limit the galvo power.
     // This algorithm uses a rolling average and still allows fast transients, but overall averages the galvo power usage.
      if (!mode_disable_overscan) {
@@ -265,7 +420,7 @@ void ldHardwareFilter::processSafeLaserOutput(ldVertex &v)
          float ty = v.y() * m_scalelimiter;
          float dx = fabs(tx - m_lastX1);
          float dy = fabs(ty - m_lastY1);
-         float avg = m_avg->operator ()(dx+dy);
+         float avg = m_galvoAverager->operator ()(dx+dy);
          // The values in the statement below were obtained by imperical means, by adjusting until the
          // measured galvo power usage was within acceptable limits.
          if (avg>=average_threshold && m_scalelimiter>=minimum_scale_factor) m_scalelimiter-=correction_factor;
@@ -365,3 +520,5 @@ void ldHardwareFilter::processSafeLaserOutput(ldVertex &v)
     for (int i = 0; i < ldVertex::COLOR_COUNT; i++) v.color[i] = old[co].color[i];
     for (int i = 0; i < ldVertex::POS_COUNT; i++) v.position[i] = old[po].position[i];
 }
+
+#include "ldCore/Filter/ldHardwareFilter.moc"

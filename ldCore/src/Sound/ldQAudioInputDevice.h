@@ -21,9 +21,16 @@
 #ifndef LDQAUDIOINPUTDEVICE_H
 #define LDQAUDIOINPUTDEVICE_H
 
+#include <memory>
+
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>
+#if QT_VERSION >= 0x060000
+#include <QtMultimedia/QAudioDevice>
+#include <QtMultimedia/QAudioSource>
+#else
 #include <QtMultimedia/QAudioDeviceInfo>
+#endif
 
 #include <ldCore/Sound/ldSoundInterface.h>
 
@@ -38,8 +45,15 @@ class ldQAudioInputDevice : public ldSoundInterface
 {
     Q_OBJECT
 public:
+#if QT_VERSION >= 0x060000
+    static QList<QAudioDevice> getDevices();
+    static QAudioDevice getDefaultDevice();
+    static void printInfo(const QAudioDevice &inputAudioDevice);
+#else
     static QList<QAudioDeviceInfo> getDevices();
     static QAudioDeviceInfo getDefaultDevice();
+    static void printInfo(const QAudioDeviceInfo &inputAudioDevice);
+#endif
 
     explicit ldQAudioInputDevice(QObject *parent = nullptr);
     ~ldQAudioInputDevice();
@@ -51,7 +65,11 @@ public:
     QAudioFormat format() const;
 
 public slots:
+#if QT_VERSION >= 0x060000
+    bool activateInputDevice(const QAudioDevice &info);
+#else
     bool activateInputDevice(const QAudioDeviceInfo &info);
+#endif
     void stop();
 
 signals:
@@ -66,8 +84,12 @@ private:
 
     QAudioFormat m_format;
 
-    QScopedPointer<QAudioInput> m_audioInput;
-    QScopedPointer<QIODevice> m_input;
+#if QT_VERSION >= 0x060000
+    std::unique_ptr<QAudioSource> m_audioInput;
+#else
+    std::unique_ptr<QAudioInput> m_audioInput;
+#endif
+    std::unique_ptr<QIODevice> m_input;
 };
 
 #endif //LDQAUDIOINPUTDEVICE_H

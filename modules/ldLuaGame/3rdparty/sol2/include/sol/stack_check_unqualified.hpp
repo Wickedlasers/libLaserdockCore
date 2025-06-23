@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,44 +24,61 @@
 #ifndef SOL_STACK_CHECK_UNQUALIFIED_HPP
 #define SOL_STACK_CHECK_UNQUALIFIED_HPP
 
-#include "stack_core.hpp"
-#include "usertype_traits.hpp"
-#include "inheritance.hpp"
+#include <sol/stack_core.hpp>
+#include <sol/usertype_traits.hpp>
+#include <sol/inheritance.hpp>
 #include <memory>
 #include <functional>
 #include <utility>
 #include <cmath>
 #include <optional>
-#if defined(SOL_STD_VARIANT) && SOL_STD_VARIANT
+#if SOL_IS_ON(SOL_STD_VARIANT)
 #include <variant>
-#endif // SOL_STD_VARIANT
+#endif // variant shenanigans
 
 namespace sol { namespace stack {
+	template <typename Handler>
+	bool loose_table_check(lua_State* L_, int index, Handler&& handler, record& tracking) {
+		tracking.use(1);
+		type t = type_of(L_, index);
+		if (t == type::table) {
+			return true;
+		}
+		if (t != type::userdata) {
+			handler(L_, index, type::table, t, "value is not a table or a userdata that can behave like one");
+			return false;
+		}
+		return true;
+	}
+
 	namespace stack_detail {
-		template <typename T, bool poptable = true>
-		inline bool check_metatable(lua_State* L, int index = -2) {
-			const auto& metakey = usertype_traits<T>::metatable();
-			luaL_getmetatable(L, &metakey[0]);
-			const type expectedmetatabletype = static_cast<type>(lua_type(L, -1));
+		inline bool impl_check_metatable(lua_State* L_, int index, const std::string& metakey, bool poptable) {
+			luaL_getmetatable(L_, &metakey[0]);
+			const type expectedmetatabletype = static_cast<type>(lua_type(L_, -1));
 			if (expectedmetatabletype != type::lua_nil) {
-				if (lua_rawequal(L, -1, index) == 1) {
-					lua_pop(L, 1 + static_cast<int>(poptable));
+				if (lua_rawequal(L_, -1, index) == 1) {
+					lua_pop(L_, 1 + static_cast<int>(poptable));
 					return true;
 				}
 			}
-			lua_pop(L, 1);
+			lua_pop(L_, 1);
 			return false;
+		}
+
+		template <typename T, bool poptable = true>
+		inline bool check_metatable(lua_State* L_, int index = -2) {
+			return impl_check_metatable(L_, index, usertype_traits<T>::metatable(), poptable);
 		}
 
 		template <type expected, int (*check_func)(lua_State*, int)>
 		struct basic_check {
 			template <typename Handler>
-			static bool check(lua_State* L, int index, Handler&& handler, record& tracking) {
+			static bool check(lua_State* L_, int index, Handler&& handler, record& tracking) {
 				tracking.use(1);
-				bool success = check_func(L, index) == 1;
+				bool success = check_func(L_, index) == 1;
 				if (!success) {
 					// expected type, actual type
-					handler(L, index, expected, type_of(L, index), "");
+					handler(L_, index, expected, type_of(L_, index), "");
 				}
 				return success;
 			}
@@ -79,242 +96,252 @@ namespace sol { namespace stack {
 	template <typename T, typename>
 	struct qualified_interop_checker {
 		template <typename Handler>
-		static bool check(lua_State* L, int index, type index_type, Handler&& handler, record& tracking) {
-			return stack_detail::unqualified_interop_check<T>(L, index, index_type, std::forward<Handler>(handler), tracking);
+		static bool check(lua_State* L_, int index, type index_type, Handler&& handler, record& tracking) {
+			return stack_detail::unqualified_interop_check<T>(L_, index, index_type, std::forward<Handler>(handler), tracking);
 		}
 	};
 
 	template <typename T, type expected, typename>
 	struct unqualified_checker {
 		template <typename Handler>
-		static bool check(lua_State* L, int index, Handler&& handler, record& tracking) {
+		static bool check(lua_State* L_, int index, Handler&& handler, record& tracking) {
 			if constexpr (std::is_same_v<T, bool>) {
 				tracking.use(1);
-				bool success = lua_isboolean(L, index) == 1;
+				bool success = lua_isboolean(L_, index) == 1;
 				if (!success) {
 					// expected type, actual type
-					handler(L, index, expected, type_of(L, index), "");
+					handler(L_, index, expected, type_of(L_, index), "");
 				}
 				return success;
 			}
-			else if constexpr (meta::any_same_v<T, char /* , char8_t*/, char16_t, char32_t>) {
-				return stack::check<std::basic_string<T>>(L, index, std::forward<Handler>(handler), tracking);
+			else if constexpr (meta::any_same_v<T,
+				                   char
+#if SOL_IS_ON(SOL_CHAR8_T)
+				                   ,
+				                   char8_t
+#endif
+				                   ,
+				                   char16_t,
+				                   char32_t>) {
+				return stack::check<std::basic_string<T>>(L_, index, std::forward<Handler>(handler), tracking);
 			}
 			else if constexpr (std::is_integral_v<T> || std::is_same_v<T, lua_Integer>) {
 				tracking.use(1);
-#if SOL_LUA_VERSION >= 503
-#if defined(SOL_STRINGS_ARE_NUMBERS) && SOL_STRINGS_ARE_NUMBERS
+#if SOL_LUA_VERSION_I_ >= 503
+				// Lua 5.3 and greater checks for numeric precision
+#if SOL_IS_ON(SOL_STRINGS_ARE_NUMBERS)
+				// imprecise, sloppy conversions
 				int isnum = 0;
-				lua_tointegerx(L, index, &isnum);
+				lua_tointegerx(L_, index, &isnum);
 				const bool success = isnum != 0;
 				if (!success) {
 					// expected type, actual type
-					handler(L, index, type::number, type_of(L, index), detail::not_a_number_or_number_string_integral);
+					handler(L_, index, type::number, type_of(L_, index), detail::not_a_number_or_number_string_integral);
 				}
-#elif (defined(SOL_SAFE_NUMERICS) && SOL_SAFE_NUMERICS) && !(defined(SOL_NO_CHECK_NUMBER_PRECISION) && SOL_NO_CHECK_NUMBER_PRECISION)
-				// this check is precise, does not convert
-				if (lua_isinteger(L, index) == 1) {
+#elif SOL_IS_ON(SOL_NUMBER_PRECISION_CHECKS)
+				// this check is precise, do not convert
+				if (lua_isinteger(L_, index) == 1) {
 					return true;
 				}
 				const bool success = false;
 				if (!success) {
 					// expected type, actual type
-					handler(L, index, type::number, type_of(L, index), detail::not_a_number_integral);
+					handler(L_, index, type::number, type_of(L_, index), detail::not_a_number_integral);
 				}
 #else
-				type t = type_of(L, index);
+				// Numerics are neither safe nor string-convertible
+				type t = type_of(L_, index);
 				const bool success = t == type::number;
-#endif // If numbers are enabled, use the imprecise check
+#endif
 				if (!success) {
 					// expected type, actual type
-					handler(L, index, type::number, type_of(L, index), detail::not_a_number);
+					handler(L_, index, type::number, type_of(L_, index), detail::not_a_number);
 				}
 				return success;
 #else
-#if !defined(SOL_STRINGS_ARE_NUMBERS) || !SOL_STRINGS_ARE_NUMBERS
+				// Lua 5.2 and below checks
+#if SOL_IS_OFF(SOL_STRINGS_ARE_NUMBERS)
 				// must pre-check, because it will convert
-				type t = type_of(L, index);
+				type t = type_of(L_, index);
 				if (t != type::number) {
 					// expected type, actual type
-					handler(L, index, type::number, t, detail::not_a_number);
+					handler(L_, index, type::number, t, detail::not_a_number);
 					return false;
 				}
 #endif // Do not allow strings to be numbers
-#if (defined(SOL_SAFE_NUMERICS) && SOL_SAFE_NUMERICS) && !(defined(SOL_NO_CHECK_NUMBER_PRECISION) && SOL_NO_CHECK_NUMBER_PRECISION)
+
+#if SOL_IS_ON(SOL_NUMBER_PRECISION_CHECKS)
 				int isnum = 0;
-				const lua_Number v = lua_tonumberx(L, index, &isnum);
+				const lua_Number v = lua_tonumberx(L_, index, &isnum);
 				const bool success = isnum != 0 && static_cast<lua_Number>(llround(v)) == v;
 #else
 				const bool success = true;
 #endif // Safe numerics and number precision checking
 				if (!success) {
-					// expected type, actual type
-#if defined(SOL_STRINGS_ARE_NUMBERS) && SOL_STRINGS_ARE_NUMBERS
-					handler(L, index, type::number, type_of(L, index), detail::not_a_number_or_number_string);
-#elif (defined(SOL_SAFE_NUMERICS) && SOL_SAFE_NUMERICS)
-					handler(L, index, type::number, t, detail::not_a_number_or_number_string);
+					// Use defines to provide a better error message!
+#if SOL_IS_ON(SOL_STRINGS_ARE_NUMBERS)
+					handler(L_, index, type::number, type_of(L_, index), detail::not_a_number_or_number_string);
+#elif SOL_IS_ON(SOL_NUMBER_PRECISION_CHECKS)
+					handler(L_, index, type::number, t, detail::not_a_number_or_number_string);
 #else
-					handler(L, index, type::number, t, detail::not_a_number);
+					handler(L_, index, type::number, t, detail::not_a_number);
 #endif
 				}
 				return success;
-#endif // Lua Version 5.3 versus others
+#endif
 			}
 			else if constexpr (std::is_floating_point_v<T> || std::is_same_v<T, lua_Number>) {
 				tracking.use(1);
-#if defined(SOL_STRINGS_ARE_NUMBERS) && SOL_STRINGS_ARE_NUMBERS
-				bool success = lua_isnumber(L, index) == 1;
+#if SOL_IS_ON(SOL_STRINGS_ARE_NUMBERS)
+				bool success = lua_isnumber(L_, index) == 1;
 				if (!success) {
 					// expected type, actual type
-					handler(L, index, type::number, type_of(L, index), detail::not_a_number_or_number_string);
+					handler(L_, index, type::number, type_of(L_, index), detail::not_a_number_or_number_string);
 				}
 				return success;
 #else
-				type t = type_of(L, index);
+				type t = type_of(L_, index);
 				bool success = t == type::number;
 				if (!success) {
 					// expected type, actual type
-					handler(L, index, type::number, t, detail::not_a_number);
+					handler(L_, index, type::number, t, detail::not_a_number);
 				}
 				return success;
 #endif // Strings are Numbers
 			}
 			else if constexpr (meta::any_same_v<T, type, this_state, this_main_state, this_environment, variadic_args>) {
-				(void)L;
+				(void)L_;
 				(void)index;
 				(void)handler;
 				tracking.use(0);
 				return true;
 			}
 			else if constexpr (is_unique_usertype_v<T>) {
-				using proper_T = typename unique_usertype_traits<T>::type;
-				const type indextype = type_of(L, index);
+				using element = unique_usertype_element_t<T>;
+				using element_no_cv = meta::unqualified_t<element>;
+				using actual = unique_usertype_actual_t<T>;
+				const type indextype = type_of(L_, index);
 				tracking.use(1);
 				if (indextype != type::userdata) {
-					handler(L, index, type::userdata, indextype, "value is not a userdata");
+					handler(L_, index, type::userdata, indextype, "value is not a userdata");
 					return false;
 				}
-				if (lua_getmetatable(L, index) == 0) {
+				if (lua_getmetatable(L_, index) == 0) {
 					return true;
 				}
-				int metatableindex = lua_gettop(L);
-				if (stack_detail::check_metatable<detail::unique_usertype<proper_T>>(L, metatableindex)) {
-					void* memory = lua_touserdata(L, index);
+				int metatableindex = lua_gettop(L_);
+				if (stack_detail::check_metatable<d::u<element_no_cv>>(L_, metatableindex)) {
+					void* memory = lua_touserdata(L_, index);
 					memory = detail::align_usertype_unique_destructor(memory);
 					detail::unique_destructor& pdx = *static_cast<detail::unique_destructor*>(memory);
-					bool success = &detail::usertype_unique_alloc_destroy<proper_T, T> == pdx;
+					bool success = &detail::usertype_unique_alloc_destroy<element, actual> == pdx;
 					if (!success) {
 						memory = detail::align_usertype_unique_tag<true>(memory);
 #if 0
-						// New version
+						// New version, one day
 #else
 						const char*& name_tag = *static_cast<const char**>(memory);
 						success = usertype_traits<T>::qualified_name() == name_tag;
 #endif
 						if (!success) {
-							handler(L, index, type::userdata, indextype, "value is a userdata but is not the correct unique usertype");
+							handler(L_, index, type::userdata, indextype, "value is a userdata but is not the correct unique usertype");
 						}
 					}
 					return success;
 				}
-				lua_pop(L, 1);
-				handler(L, index, type::userdata, indextype, "unrecognized userdata (not pushed by sol?)");
+				lua_pop(L_, 1);
+				handler(L_, index, type::userdata, indextype, "unrecognized userdata (not pushed by sol?)");
 				return false;
 			}
-			else if constexpr (meta::any_same_v<T,
-				                   lua_nil_t,
-#if defined(SOL_CXX_17_FEATURES) && SOL_CXX_17_FEATURES
-				                   std::nullopt_t,
-#endif
-				                   nullopt_t>) {
-				bool success = lua_isnil(L, index);
+			else if constexpr (meta::any_same_v<T, lua_nil_t, std::nullopt_t, nullopt_t>) {
+				bool success = lua_isnil(L_, index);
 				if (success) {
 					tracking.use(1);
 					return success;
 				}
 				tracking.use(0);
-				success = lua_isnone(L, index);
+				success = lua_isnone(L_, index);
 				if (!success) {
 					// expected type, actual type
-					handler(L, index, expected, type_of(L, index), "");
+					handler(L_, index, expected, type_of(L_, index), "");
 				}
 				return success;
 			}
 			else if constexpr (std::is_same_v<T, env_key_t>) {
 				tracking.use(1);
-				type t = type_of(L, index);
+				type t = type_of(L_, index);
 				if (t == type::table || t == type::none || t == type::lua_nil || t == type::userdata) {
 					return true;
 				}
-				handler(L, index, type::table, t, "value cannot not have a valid environment");
+				handler(L_, index, type::table, t, "value cannot not have a valid environment");
 				return true;
 			}
 			else if constexpr (std::is_same_v<T, detail::non_lua_nil_t>) {
-				return !stack::unqualified_check<lua_nil_t>(L, index, std::forward<Handler>(handler), tracking);
+				return !stack::unqualified_check<lua_nil_t>(L_, index, std::forward<Handler>(handler), tracking);
 			}
 			else if constexpr (meta::is_specialization_of_v<T, basic_lua_table>) {
 				tracking.use(1);
-				type t = type_of(L, index);
+				type t = type_of(L_, index);
 				if (t != type::table) {
-					handler(L, index, type::table, t, "value is not a table");
+					handler(L_, index, type::table, t, "value is not a table");
 					return false;
 				}
 				return true;
 			}
 			else if constexpr (meta::is_specialization_of_v<T, basic_bytecode>) {
 				tracking.use(1);
-				type t = type_of(L, index);
+				type t = type_of(L_, index);
 				if (t != type::function) {
-					handler(L, index, type::function, t, "value is not a function that can be dumped");
+					handler(L_, index, type::function, t, "value is not a function that can be dumped");
 					return false;
 				}
 				return true;
 			}
 			else if constexpr (meta::is_specialization_of_v<T, basic_environment>) {
 				tracking.use(1);
-				if (lua_getmetatable(L, index) == 0) {
+				if (lua_getmetatable(L_, index) == 0) {
 					return true;
 				}
-				type t = type_of(L, -1);
+				type t = type_of(L_, -1);
 				if (t == type::table || t == type::none || t == type::lua_nil) {
-					lua_pop(L, 1);
+					lua_pop(L_, 1);
 					return true;
 				}
 				if (t != type::userdata) {
-					lua_pop(L, 1);
-					handler(L, index, type::table, t, "value does not have a valid metatable");
+					lua_pop(L_, 1);
+					handler(L_, index, type::table, t, "value does not have a valid metatable");
 					return false;
 				}
 				return true;
 			}
 			else if constexpr (std::is_same_v<T, metatable_key_t>) {
 				tracking.use(1);
-				if (lua_getmetatable(L, index) == 0) {
+				if (lua_getmetatable(L_, index) == 0) {
 					return true;
 				}
-				type t = type_of(L, -1);
+				type t = type_of(L_, -1);
 				if (t == type::table || t == type::none || t == type::lua_nil) {
-					lua_pop(L, 1);
+					lua_pop(L_, 1);
 					return true;
 				}
 				if (t != type::userdata) {
-					lua_pop(L, 1);
-					handler(L, index, expected, t, "value does not have a valid metatable");
+					lua_pop(L_, 1);
+					handler(L_, index, expected, t, "value does not have a valid metatable");
 					return false;
 				}
 				return true;
 			}
 			else if constexpr (std::is_same_v<T, luaL_Stream*> || std::is_same_v<T, luaL_Stream>) {
-				if (lua_getmetatable(L, index) == 0) {
-					type t = type_of(L, index);
-					handler(L, index, expected, t, "value is not a valid luaL_Stream (has no metatable/is not a valid value)");
+				if (lua_getmetatable(L_, index) == 0) {
+					type t = type_of(L_, index);
+					handler(L_, index, expected, t, "value is not a valid luaL_Stream (has no metatable/is not a valid value)");
 					return false;
 				}
-				luaL_getmetatable(L, LUA_FILEHANDLE);
-				if (type_of(L, index) != type::table) {
-					type t = type_of(L, index);
-					lua_pop(L, 1);
-					handler(L,
+				luaL_getmetatable(L_, LUA_FILEHANDLE);
+				if (type_of(L_, index) != type::table) {
+					type t = type_of(L_, index);
+					lua_pop(L_, 1);
+					handler(L_,
 						index,
 						expected,
 						t,
@@ -322,11 +349,11 @@ namespace sol { namespace stack {
 						"my_lua_state.open_libraries(sol::lib::state) or equivalent?)");
 					return false;
 				}
-				int is_stream_table = lua_compare(L, -1, -2, LUA_OPEQ);
-				lua_pop(L, 2);
+				int is_stream_table = lua_compare(L_, -1, -2, LUA_OPEQ);
+				lua_pop(L_, 2);
 				if (is_stream_table == 0) {
-					type t = type_of(L, index);
-					handler(L, index, expected, t, "value is not a valid luaL_Stream (incorrect metatable)");
+					type t = type_of(L_, index);
+					handler(L_, index, expected, t, "value is not a valid luaL_Stream (incorrect metatable)");
 					return false;
 				}
 				return true;
@@ -334,7 +361,7 @@ namespace sol { namespace stack {
 			else if constexpr (meta::is_optional_v<T>) {
 				using ValueType = typename T::value_type;
 				(void)handler;
-				type t = type_of(L, index);
+				type t = type_of(L_, index);
 				if (t == type::none) {
 					tracking.use(0);
 					return true;
@@ -343,119 +370,115 @@ namespace sol { namespace stack {
 					tracking.use(1);
 					return true;
 				}
-				return stack::unqualified_check<ValueType>(L, index, no_panic, tracking);
+				return stack::unqualified_check<ValueType>(L_, index, &no_panic, tracking);
 			}
+#if SOL_IS_ON(SOL_GET_FUNCTION_POINTER_UNSAFE)
+			else if constexpr (std::is_function_v<T> || (std::is_pointer_v<T> && std::is_function_v<std::remove_pointer_t<T>>)) {
+				return stack_detail::check_function_pointer<std::remove_pointer_t<T>>(L_, index, std::forward<Handler>(handler), tracking);
+			}
+#endif
 			else if constexpr (expected == type::userdata) {
 				if constexpr (meta::any_same_v<T, userdata_value> || meta::is_specialization_of_v<T, basic_userdata>) {
 					tracking.use(1);
-					type t = type_of(L, index);
+					type t = type_of(L_, index);
 					bool success = t == type::userdata;
 					if (!success) {
 						// expected type, actual type
-						handler(L, index, type::userdata, t, "");
+						handler(L_, index, type::userdata, t, "");
 					}
 					return success;
 				}
 				else if constexpr (meta::is_specialization_of_v<T, user>) {
 					unqualified_checker<lightuserdata_value, type::userdata> c;
 					(void)c;
-					return c.check(L, index, std::forward<Handler>(handler), tracking);
+					return c.check(L_, index, std::forward<Handler>(handler), tracking);
 				}
 				else {
 					if constexpr (std::is_pointer_v<T>) {
-						return check_usertype<T>(L, index, std::forward<Handler>(handler), tracking);
+						return check_usertype<T>(L_, index, std::forward<Handler>(handler), tracking);
 					}
 					else if constexpr (meta::is_specialization_of_v<T, std::reference_wrapper>) {
 						using T_internal = typename T::type;
-						return stack::check<T_internal>(L, index, std::forward<Handler>(handler), tracking);
+						return stack::check<T_internal>(L_, index, std::forward<Handler>(handler), tracking);
 					}
 					else {
-						return check_usertype<T>(L, index, std::forward<Handler>(handler), tracking);
+						return check_usertype<T>(L_, index, std::forward<Handler>(handler), tracking);
 					}
 				}
 			}
 			else if constexpr (expected == type::poly) {
 				tracking.use(1);
-				bool success = is_lua_reference_v<T> || !lua_isnone(L, index);
+				bool success = is_lua_reference_v<T> || !lua_isnone(L_, index);
 				if (!success) {
 					// expected type, actual type
-					handler(L, index, type::poly, type_of(L, index), "");
+					handler(L_, index, type::poly, type_of(L_, index), "");
 				}
 				return success;
 			}
 			else if constexpr (expected == type::lightuserdata) {
 				tracking.use(1);
-				type t = type_of(L, index);
+				type t = type_of(L_, index);
 				bool success = t == type::userdata || t == type::lightuserdata;
 				if (!success) {
 					// expected type, actual type
-					handler(L, index, type::lightuserdata, t, "");
+					handler(L_, index, type::lightuserdata, t, "");
 				}
 				return success;
 			}
 			else if constexpr (expected == type::function) {
 				if constexpr (meta::any_same_v<T, lua_CFunction, std::remove_pointer_t<lua_CFunction>, c_closure>) {
 					tracking.use(1);
-					bool success = lua_iscfunction(L, index) == 1;
+					bool success = lua_iscfunction(L_, index) == 1;
 					if (!success) {
 						// expected type, actual type
-						handler(L, index, expected, type_of(L, index), "");
+						handler(L_, index, expected, type_of(L_, index), "");
 					}
 					return success;
 				}
 				else {
 					tracking.use(1);
-					type t = type_of(L, index);
+					type t = type_of(L_, index);
 					if (t == type::lua_nil || t == type::none || t == type::function) {
 						// allow for lua_nil to be returned
 						return true;
 					}
 					if (t != type::userdata && t != type::table) {
-						handler(L, index, type::function, t, "must be a function or table or a userdata");
+						handler(L_, index, type::function, t, "must be a function or table or a userdata");
 						return false;
 					}
 					// Do advanced check for call-style userdata?
 					static const auto& callkey = to_string(meta_function::call);
-					if (lua_getmetatable(L, index) == 0) {
+					if (lua_getmetatable(L_, index) == 0) {
 						// No metatable, no __call key possible
-						handler(L, index, type::function, t, "value is not a function and does not have overriden metatable");
+						handler(L_, index, type::function, t, "value is not a function and does not have overriden metatable");
 						return false;
 					}
-					if (lua_isnoneornil(L, -1)) {
-						lua_pop(L, 1);
-						handler(L, index, type::function, t, "value is not a function and does not have valid metatable");
+					if (lua_isnoneornil(L_, -1)) {
+						lua_pop(L_, 1);
+						handler(L_, index, type::function, t, "value is not a function and does not have valid metatable");
 						return false;
 					}
-					lua_getfield(L, -1, &callkey[0]);
-					if (lua_isnoneornil(L, -1)) {
-						lua_pop(L, 2);
-						handler(L, index, type::function, t, "value's metatable does not have __call overridden in metatable, cannot call this type");
+					lua_getfield(L_, -1, &callkey[0]);
+					if (lua_isnoneornil(L_, -1)) {
+						lua_pop(L_, 2);
+						handler(L_, index, type::function, t, "value's metatable does not have __call overridden in metatable, cannot call this type");
 						return false;
 					}
 					// has call, is definitely a function
-					lua_pop(L, 2);
+					lua_pop(L_, 2);
 					return true;
 				}
 			}
 			else if constexpr (expected == type::table) {
-				tracking.use(1);
-				type t = type_of(L, index);
-				if (t == type::table) {
-					return true;
-				}
-				if (t != type::userdata) {
-					handler(L, index, type::table, t, "value is not a table or a userdata that can behave like one");
-					return false;
-				}
-				return true;
+				return stack::loose_table_check(L_, index, std::forward<Handler>(handler), tracking);
 			}
 			else {
 				tracking.use(1);
-				const type indextype = type_of(L, index);
+				const type indextype = type_of(L_, index);
 				bool success = expected == indextype;
 				if (!success) {
 					// expected type, actual type, message
-					handler(L, index, expected, indextype, "");
+					handler(L_, index, expected, indextype, "");
 				}
 				return success;
 			}
@@ -463,69 +486,75 @@ namespace sol { namespace stack {
 	};
 
 	template <typename T>
-	struct unqualified_checker<non_null<T>, type::userdata> : unqualified_checker<T, lua_type_of_v<T>> {};
+	struct unqualified_checker<non_null<T>, type::userdata> : unqualified_checker<T, lua_type_of_v<T>> { };
 
 	template <typename T>
 	struct unqualified_checker<detail::as_value_tag<T>, type::userdata> {
 		template <typename Handler>
-		static bool check(lua_State* L, int index, Handler&& handler, record& tracking) {
-			const type indextype = type_of(L, index);
-			return check(types<T>(), L, index, indextype, std::forward<Handler>(handler), tracking);
+		static bool check(lua_State* L_, int index, Handler&& handler, record& tracking) {
+			const type indextype = type_of(L_, index);
+			return check(types<T>(), L_, index, indextype, std::forward<Handler>(handler), tracking);
 		}
 
 		template <typename U, typename Handler>
-		static bool check(types<U>, lua_State* L, int index, type indextype, Handler&& handler, record& tracking) {
+		static bool check(types<U>, lua_State* L_, int index, type indextype, Handler&& handler, record& tracking) {
 			if constexpr (
 				std::is_same_v<T,
 				     lightuserdata_value> || std::is_same_v<T, userdata_value> || std::is_same_v<T, userdata> || std::is_same_v<T, lightuserdata>) {
 				tracking.use(1);
 				if (indextype != type::userdata) {
-					handler(L, index, type::userdata, indextype, "value is not a valid userdata");
+					handler(L_, index, type::userdata, indextype, "value is not a valid userdata");
 					return false;
 				}
 				return true;
 			}
 			else {
-#if defined(SOL_ENABLE_INTEROP) && SOL_ENABLE_INTEROP
-				if (stack_detail::interop_check<U>(L, index, indextype, handler, tracking)) {
+#if SOL_IS_ON(SOL_USE_INTEROP)
+				if (stack_detail::interop_check<U>(L_, index, indextype, handler, tracking)) {
 					return true;
 				}
 #endif // interop extensibility
 				tracking.use(1);
+#if SOL_IS_ON(SOL_GET_FUNCTION_POINTER_UNSAFE)
+				if (lua_iscfunction(L_, index) != 0) {
+					// a potential match...
+					return true;
+				}
+#endif
 				if (indextype != type::userdata) {
-					handler(L, index, type::userdata, indextype, "value is not a valid userdata");
+					handler(L_, index, type::userdata, indextype, "value is not a valid userdata");
 					return false;
 				}
-				if (lua_getmetatable(L, index) == 0) {
+				if (lua_getmetatable(L_, index) == 0) {
 					return true;
 				}
-				int metatableindex = lua_gettop(L);
-				if (stack_detail::check_metatable<U>(L, metatableindex))
+				int metatableindex = lua_gettop(L_);
+				if (stack_detail::check_metatable<U>(L_, metatableindex))
 					return true;
-				if (stack_detail::check_metatable<U*>(L, metatableindex))
+				if (stack_detail::check_metatable<U*>(L_, metatableindex))
 					return true;
-				if (stack_detail::check_metatable<detail::unique_usertype<U>>(L, metatableindex))
+				if (stack_detail::check_metatable<d::u<U>>(L_, metatableindex))
 					return true;
-				if (stack_detail::check_metatable<as_container_t<U>>(L, metatableindex))
+				if (stack_detail::check_metatable<as_container_t<U>>(L_, metatableindex))
 					return true;
 				bool success = false;
 				bool has_derived = derive<T>::value || weak_derive<T>::value;
 				if (has_derived) {
-#if defined(SOL_SAFE_STACK_CHECK) && SOL_SAFE_STACK_CHECK
-					luaL_checkstack(L, 1, detail::not_enough_stack_space_string);
+#if SOL_IS_ON(SOL_SAFE_STACK_CHECK)
+					luaL_checkstack(L_, 1, detail::not_enough_stack_space_string);
 #endif // make sure stack doesn't overflow
-					auto pn = stack::pop_n(L, 1);
-					lua_pushstring(L, &detail::base_class_check_key()[0]);
-					lua_rawget(L, metatableindex);
-					if (type_of(L, -1) != type::lua_nil) {
-						void* basecastdata = lua_touserdata(L, -1);
+					auto pn = stack::pop_n(L_, 1);
+					lua_pushstring(L_, &detail::base_class_check_key()[0]);
+					lua_rawget(L_, metatableindex);
+					if (type_of(L_, -1) != type::lua_nil) {
+						void* basecastdata = lua_touserdata(L_, -1);
 						detail::inheritance_check_function ic = reinterpret_cast<detail::inheritance_check_function>(basecastdata);
 						success = ic(usertype_traits<T>::qualified_name());
 					}
 				}
-				lua_pop(L, 1);
+				lua_pop(L_, 1);
 				if (!success) {
-					handler(L, index, type::userdata, indextype, "value at this index does not properly reflect the desired type");
+					handler(L_, index, type::userdata, indextype, "value at this index does not properly reflect the desired type");
 					return false;
 				}
 				return true;
@@ -536,38 +565,136 @@ namespace sol { namespace stack {
 	template <typename T>
 	struct unqualified_checker<detail::as_pointer_tag<T>, type::userdata> {
 		template <typename Handler>
-		static bool check(lua_State* L, int index, type indextype, Handler&& handler, record& tracking) {
+		static bool check(lua_State* L_, int index, type indextype, Handler&& handler, record& tracking) {
 			if (indextype == type::lua_nil) {
 				tracking.use(1);
 				return true;
 			}
-			return check_usertype<std::remove_pointer_t<T>>(L, index, std::forward<Handler>(handler), tracking);
+			return check_usertype<std::remove_pointer_t<T>>(L_, index, std::forward<Handler>(handler), tracking);
 		}
 
 		template <typename Handler>
-		static bool check(lua_State* L, int index, Handler&& handler, record& tracking) {
-			const type indextype = type_of(L, index);
-			return check(L, index, indextype, std::forward<Handler>(handler), tracking);
+		static bool check(lua_State* L_, int index, Handler&& handler, record& tracking) {
+			const type indextype = type_of(L_, index);
+			return check(L_, index, indextype, std::forward<Handler>(handler), tracking);
+		}
+	};
+
+	template <typename T, std::size_t N, type expect>
+	struct unqualified_checker<exhaustive_until<T, N>, expect> {
+		template <typename K, typename V, typename Handler>
+		static bool check_two(types<K, V>, lua_State* arg_L, int relindex, type, Handler&& handler, record& tracking) {
+			tracking.use(1);
+
+#if SOL_IS_ON(SOL_SAFE_STACK_CHECK)
+			luaL_checkstack(arg_L, 3, detail::not_enough_stack_space_generic);
+#endif // make sure stack doesn't overflow
+
+			int index = lua_absindex(arg_L, relindex);
+			lua_pushnil(arg_L);
+			while (lua_next(arg_L, index) != 0) {
+				const bool is_key_okay = stack::check<K>(arg_L, -2, std::forward<Handler>(handler), tracking);
+				if (!is_key_okay) {
+					lua_pop(arg_L, 2);
+					return false;
+				}
+				const bool is_value_okay = stack::check<V>(arg_L, -1, std::forward<Handler>(handler), tracking);
+				if (!is_value_okay) {
+					lua_pop(arg_L, 2);
+					return false;
+				}
+				lua_pop(arg_L, 1);
+			}
+			return true;
+		}
+
+		template <typename V, typename Handler>
+		static bool check_one(types<V>, lua_State* arg_L, int relindex, type, Handler&& handler, record& tracking) {
+			tracking.use(1);
+
+			size_t index = lua_absindex(arg_L, relindex);
+			// Zzzz slower but necessary thanks to the lower version API and missing functions qq
+			std::size_t idx = 0;
+			int vi = 0;
+			for (lua_Integer i = 0;; (void)(i += lua_size<V>::value), lua_pop(arg_L, static_cast<int>(vi))) {
+				vi = 0;
+				if (idx >= N) {
+					return true;
+				}
+#if SOL_IS_ON(SOL_SAFE_STACK_CHECK)
+				luaL_checkstack(arg_L, 2, detail::not_enough_stack_space_generic);
+#endif // make sure stack doesn't overflow
+				bool isnil = false;
+				for (; vi < static_cast<int>(lua_size<V>::value); ++vi) {
+					lua_pushinteger(arg_L, i);
+					lua_gettable(arg_L, static_cast<int>(index));
+					type vt = type_of(arg_L, -1);
+					isnil = vt == type::lua_nil;
+					if (isnil) {
+						if (i == 0) {
+							vi += 1;
+							goto loop_continue;
+						}
+						lua_pop(arg_L, static_cast<int>(vi + 1));
+						return true;
+					}
+				}
+				if (!stack::check<V>(arg_L, -lua_size<V>::value, std::forward<Handler>(handler), tracking)) {
+					lua_pop(arg_L, lua_size<V>::value);
+					return false;
+				}
+				++idx;
+			loop_continue:;
+			}
+		}
+
+		template <typename Handler>
+		static bool check(lua_State* arg_L, int index, Handler&& handler, record& tracking) {
+			using Tu = meta::unqualified_t<T>;
+			if constexpr (is_container_v<Tu>) {
+				if constexpr (meta::is_associative<Tu>::value) {
+					typedef typename Tu::value_type P;
+					typedef typename P::first_type K;
+					typedef typename P::second_type V;
+					return check_two(types<K, V>(), arg_L, index, expect, std::forward<Handler>(handler), tracking);
+				}
+				else {
+					typedef typename Tu::value_type V;
+					return check_one(types<V>(), arg_L, index, expect, std::forward<Handler>(handler), tracking);
+				}
+			}
+			else {
+				unqualified_checker<Tu, expect> c {};
+				return c.check(arg_L, index, std::forward<Handler>(handler), tracking);
+			}
+		}
+	};
+
+	template <typename T, type expect>
+	struct unqualified_checker<non_exhaustive<T>, expect> {
+		template <typename Handler>
+		static bool check(lua_State* arg_L, int index, Handler&& handler, record& tracking) {
+			return stack::check<T>(arg_L, index, std::forward<Handler>(handler), tracking);
 		}
 	};
 
 	template <typename... Args>
 	struct unqualified_checker<std::tuple<Args...>, type::poly> {
 		template <typename Handler>
-		static bool check(lua_State* L, int index, Handler&& handler, record& tracking) {
-			return stack::multi_check<Args...>(L, index, std::forward<Handler>(handler), tracking);
+		static bool check(lua_State* L_, int index, Handler&& handler, record& tracking) {
+			return stack::multi_check<Args...>(L_, index, std::forward<Handler>(handler), tracking);
 		}
 	};
 
 	template <typename A, typename B>
 	struct unqualified_checker<std::pair<A, B>, type::poly> {
 		template <typename Handler>
-		static bool check(lua_State* L, int index, Handler&& handler, record& tracking) {
-			return stack::multi_check<A, B>(L, index, std::forward<Handler>(handler), tracking);
+		static bool check(lua_State* L_, int index, Handler&& handler, record& tracking) {
+			return stack::multi_check<A, B>(L_, index, std::forward<Handler>(handler), tracking);
 		}
 	};
 
-#if defined(SOL_STD_VARIANT) && SOL_STD_VARIANT
+#if SOL_IS_ON(SOL_STD_VARIANT)
 
 	template <typename... Tn>
 	struct unqualified_checker<std::variant<Tn...>, type::poly> {
@@ -576,35 +703,35 @@ namespace sol { namespace stack {
 		typedef std::integral_constant<bool, V_size::value == 0> V_is_empty;
 
 		template <typename Handler>
-		static bool is_one(std::integral_constant<std::size_t, 0>, lua_State* L, int index, Handler&& handler, record& tracking) {
+		static bool is_one(std::integral_constant<std::size_t, 0>, lua_State* L_, int index, Handler&& handler, record& tracking) {
 			if constexpr (V_is_empty::value) {
-				if (lua_isnone(L, index)) {
+				if (lua_isnone(L_, index)) {
 					return true;
 				}
 			}
 			tracking.use(1);
-			handler(L, index, type::poly, type_of(L, index), "value does not fit any type present in the variant");
+			handler(L_, index, type::poly, type_of(L_, index), "value does not fit any type present in the variant");
 			return false;
 		}
 
 		template <std::size_t I, typename Handler>
-		static bool is_one(std::integral_constant<std::size_t, I>, lua_State* L, int index, Handler&& handler, record& tracking) {
+		static bool is_one(std::integral_constant<std::size_t, I>, lua_State* L_, int index, Handler&& handler, record& tracking) {
 			typedef std::variant_alternative_t<I - 1, V> T;
 			record temp_tracking = tracking;
-			if (stack::check<T>(L, index, no_panic, temp_tracking)) {
+			if (stack::check<T>(L_, index, &no_panic, temp_tracking)) {
 				tracking = temp_tracking;
 				return true;
 			}
-			return is_one(std::integral_constant<std::size_t, I - 1>(), L, index, std::forward<Handler>(handler), tracking);
+			return is_one(std::integral_constant<std::size_t, I - 1>(), L_, index, std::forward<Handler>(handler), tracking);
 		}
 
 		template <typename Handler>
-		static bool check(lua_State* L, int index, Handler&& handler, record& tracking) {
-			return is_one(std::integral_constant<std::size_t, V_size::value>(), L, index, std::forward<Handler>(handler), tracking);
+		static bool check(lua_State* L_, int index, Handler&& handler, record& tracking) {
+			return is_one(std::integral_constant<std::size_t, V_size::value>(), L_, index, std::forward<Handler>(handler), tracking);
 		}
 	};
 
-#endif // SOL_STD_VARIANT
+#endif // variant shenanigans
 
 }} // namespace sol::stack
 

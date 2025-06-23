@@ -41,30 +41,59 @@ class LDCORESHARED_EXPORT ldDeadzoneFilter: public ldFilter
 {
     Q_OBJECT
 public:
+
+    enum DeadZoneShapes {
+        MShapeRect,
+        MShapeCircle,
+        MShapeTriangle,
+        MShapeCornerTopLeft,
+        MShapeCornerTopRight,
+        MShapeCornerBotRight,
+        MShapeCornerBotLeft,
+        MShapeDiamond,
+        First = MShapeRect,
+        Last = MShapeDiamond
+    };
+    Q_ENUM(DeadZoneShapes)
+
     /** Zone class */
     class LDCORESHARED_EXPORT Deadzone
     {
     public:
-        Deadzone(QRectF rect = QRectF(), float attenuation = 1.f);
+
+        Deadzone(QRectF rect = QRectF(), float attenuation = 1.f, int shapeIndex = 0);
 
         QRectF rect() const;
         /** Get rect in Vertex coordinates */
         const QRectF &visRect() const; // rect in vis coordinates
+        const QList<QPointF> &shape() const; // shape in vis coordinates
 
         void moveLeft(float value);
         void moveTop(float value);
         void setWidth(float value);
         void setHeight(float value);
 
+        bool contains(float x, float y) const;
+
         void setAttenuation(float attenuation);
         float attenuation() const;
 
+        void setShapeIndex(int shapeIndex);
+        int shapeIndex() const;
+
     private:
         void updateVisRect();
+        void updateShapeRectangle();
+        void updateShapeCircle();
+        void updateShapeTriangle();
+        void updateShapeCorner(int p_cornerCase);
+        void updateShapeDiamond();
 
         float m_attenuation = 1.0f; // 1 - full block, 0 - no block
+        int m_shapeIndex = 0; // 0 rectangle 1 circle
         QRectF m_rect; // pos -1..1, size 0..1
         QRectF m_visRect;
+        QList<QPointF> m_shape; // in vis coordinates
     };
 
     /** Constructor */
@@ -83,12 +112,16 @@ public:
     void add(const Deadzone &deadzone);
     /** Remove all deadzones */
     void clear();
+    void removeCurrent();
 
     /** List of deadzones */
     const QList<Deadzone> &deadzones() const;
 
-    /** helper func to get pointer to the first deadzone. If there are no deadzones nullptr is returned */
-    Deadzone *firstDeadzone();
+    /** helper func to get pointer to the selected deadzone. If there are no deadzones nullptr is returned */
+    Deadzone *selectedDeadzone();
+
+    int selectedIndex() const;
+    void setSelectedIndex(int index);
 
     /** Creates default deadzone in the middle of screen */
     void resetToDefault();
@@ -100,6 +133,9 @@ public:
     void setEnabled(bool enabled);
     void setBlocked(bool blocked);
 
+    void lockMutex();
+    void unlockMutex();
+
 private:
     // for dead zone
     void attenuate(ldVertex &v) const;
@@ -110,6 +146,7 @@ private:
 
     // list of deadzones
     QList<Deadzone> m_deadzones;
+    int m_selectedIndex = 0;
 
     /** in/out filter control */
     bool m_reverse = false;
@@ -124,6 +161,8 @@ private:
     int m_borderCount = 0;
     int MAX_BORDER_COUNT = 2;
 
+
+    mutable QMutex m_mutex;
 };
 
 #endif // LDDEADZONEFILTER_H

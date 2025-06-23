@@ -35,11 +35,11 @@ class LDCORESHARED_EXPORT ldTextSvgHelper
 public:
     static ldTextSvgHelper* instance();
 
-    int indexForSvgValidChars(const QChar& p_str, int font);
+    int indexForSvgValidChars(const QChar& p_str, const QString &font);
     QChar replaceAccentAndSome(const QChar& p_str);
-    QString svgPathForChar(const QChar &p_str, int font);
+    QString svgPathForChar(const QChar &p_str, const QString &fontPrefix);
 
-    std::vector<ldSvgLetter> resizedSvgLetters(float p_scale, int font);
+    std::vector<ldSvgLetter> resizedSvgLetters(float p_scale, const QString &font);
 
 private:
     explicit ldTextSvgHelper();
@@ -50,7 +50,7 @@ private:
 
     bool isSvgChar(const QChar& p_str);
 
-    QMap<int, std::vector<ldSvgLetter>> m_laserdockSvgLetters;
+    QMap<QString, std::vector<ldSvgLetter>> m_laserdockSvgLetters;
 
     QList<QChar> m_svgValidChars;
 

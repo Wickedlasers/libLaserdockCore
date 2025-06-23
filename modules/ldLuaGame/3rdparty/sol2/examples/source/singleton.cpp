@@ -8,7 +8,9 @@
 
 struct SomeLib {
 private:
-	SomeLib() {}
+	SomeLib() {
+	}
+
 public:
 	static std::shared_ptr<SomeLib> getInstance();
 
@@ -16,12 +18,13 @@ public:
 		return 20;
 	}
 
-	// destructor must be public to work with 
+	// destructor must be public to work with
 	// std::shared_ptr and friends
 	// if you need it to be private, you must implement
 	// a custom deleter with access to the private members
 	// (e.g., a deleter struct defined in this class)
-	~SomeLib() {}
+	~SomeLib() {
+	}
 };
 
 std::shared_ptr<SomeLib> SomeLib::getInstance() {
@@ -46,10 +49,12 @@ int main(int, char*[]) {
 	lua.open_libraries(sol::lib::base);
 
 	lua.new_usertype<SomeLib>("SomeLib",
-		"new", sol::no_constructor,
-		"getInstance", &SomeLib::getInstance,
-		"doSomething", &SomeLib::doSomething
-		);
+	     "new",
+	     sol::no_constructor,
+	     "getInstance",
+	     &SomeLib::getInstance,
+	     "doSomething",
+	     &SomeLib::doSomething);
 
 	lua.script(R"(
 

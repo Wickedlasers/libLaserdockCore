@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 
 set(SIMPLECRYPT_XOR_KEY "0" CACHE STRING "Simplecrypt ")
 
@@ -15,9 +15,9 @@ target_sources(simplecrypt PRIVATE
     simplecrypt.h
     )
 
-find_package(Qt5 CONFIG REQUIRED Core)
+find_package(Qt${QT_VERSION_MAJOR} CONFIG REQUIRED Core)
 target_link_libraries(simplecrypt PRIVATE
-    Qt5::Core
+    Qt::Core
     )
 
 target_compile_definitions(simplecrypt PRIVATE SIMPLECRYPT_XOR_KEY=${SIMPLECRYPT_XOR_KEY})

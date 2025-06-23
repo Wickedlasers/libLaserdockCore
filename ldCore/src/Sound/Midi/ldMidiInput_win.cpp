@@ -2,9 +2,6 @@
 
 #include <QtCore/QDebug>
 #include <QtConcurrent/QtConcurrent>
-#include <QtMultimedia/QAudioProbe>
-#include <QtMultimedia/QAudioRecorder>
-#include <QtWidgets/QMessageBox>
 
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
 
@@ -20,8 +17,8 @@
 #include <qtimer.h>
 // midi input funcs and data
 
-static void CALLBACK midi_callback(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
-static void printmsg(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
+static void CALLBACK midi_callback(HMIDIIN hMidiIn, UINT wMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
+static void printmsg(HMIDIIN hMidiIn, UINT wMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 
 
 /////////////////////////
@@ -46,7 +43,7 @@ bool ldMidiInput::openMidi(const ldMidiInfo &info) {
        return false;
     }
 
-    DWORD nMidiPort = n;
+    UINT       nMidiPort = n;
     UINT nMidiDeviceNum;
     MMRESULT rv;
         
@@ -56,7 +53,7 @@ bool ldMidiInput::openMidi(const ldMidiInfo &info) {
         return false;
     }
 
-    rv = midiInOpen(&hMidiDevice, nMidiPort, (DWORD)(void*)midi_callback, (DWORD_PTR) this, CALLBACK_FUNCTION);
+    rv = midiInOpen(&hMidiDevice, nMidiPort, (DWORD_PTR)(void*)midi_callback, (DWORD_PTR) this, CALLBACK_FUNCTION);
     if (rv != MMSYSERR_NOERROR) {
         fprintf(stderr, "midiInOpen() failed...rv=%d", rv);
         return false;
@@ -74,7 +71,7 @@ bool ldMidiInput::openMidi(const ldMidiInfo &info) {
 }
 
 
-static void CALLBACK midi_callback(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2) {
+static void CALLBACK midi_callback(HMIDIIN hMidiIn, UINT wMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2) {
         
 //    printmsg(hMidiIn, wMsg, dwInstance, dwParam1, dwParam2);
 
@@ -126,6 +123,7 @@ static void CALLBACK midi_callback(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance,
             //qDebug() << "midi cc fader num:" << cnum << "value = " << (b3 & 0x7f);
             message.faderNumber = cnum;
             message.value = b3 & 0x7f; // 7 bit for value
+            message.channel = (b1 & 0x0F); // 4 bits for midi channel number
             isValidCCMessage = true;
         }
     }
@@ -144,7 +142,7 @@ static void CALLBACK midi_callback(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance,
 
 }
 
-static void printmsg(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2) {
+static void printmsg(HMIDIIN hMidiIn, UINT wMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2) {
 
     //qDebug() << wMsg << " " << dwParam1 << " " << dwParam2;
     switch (wMsg) {
@@ -156,7 +154,11 @@ static void printmsg(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwParam
         break;
     case MIM_DATA:
         printf("wMsg=MIM_DATA, dwInstance=%08x, dwParam1=%08x, dwParam2=%08x\n", dwInstance, dwParam1, dwParam2);
-        {QString s; s.sprintf("wMsg=MIM_DATA, dwInstance=%08x, dwParam1=%08x, dwParam2=%08x\n", dwInstance, dwParam1, dwParam2); qDebug() << s; }
+//        {
+//        QString s;
+//        s.sprintf("wMsg=MIM_DATA, dwInstance=%08x, dwParam1=%08x, dwParam2=%08x\n", dwInstance, dwParam1, dwParam2);
+//        qDebug() << s;
+//    }
         break;
     case MIM_LONGDATA:
         printf("wMsg=MIM_LONGDATA\n");
@@ -178,10 +180,6 @@ static void printmsg(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwParam
 
 
 /////////////////
-
-QList<ldMidiInfo> ldMidiInput::getDevices() {
-    return m_infos;
-}
 
 ldMidiInput::~ldMidiInput()
 {
@@ -257,8 +255,11 @@ QList<ldMidiInfo> ldMidiInput::getCurrentDevices()
     UINT nMidiDeviceNum = midiInGetNumDevs();
     for (unsigned int i = 0; i < nMidiDeviceNum; ++i) {
         midiInGetDevCaps(i, &caps, sizeof(MIDIINCAPS));
-        QString name;
-        name = name.sprintf("%s", caps.szPname);
+#ifdef UNICODE
+        QString name = QString::fromWCharArray(caps.szPname);
+#else
+        QString name(caps.szPname);
+#endif
 
         // name is unique on Windows
         ldMidiInfo info(i, name);

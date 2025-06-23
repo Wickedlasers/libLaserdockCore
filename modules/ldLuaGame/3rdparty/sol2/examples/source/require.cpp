@@ -1,7 +1,6 @@
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
-#include "assert.hpp"
 #include <iostream>
 
 struct some_class {
@@ -12,16 +11,15 @@ sol::table open_mylib(sol::this_state s) {
 	sol::state_view lua(s);
 
 	sol::table module = lua.create_table();
-	module["func"] = []() { 
+	module["func"] = []() {
 		/* super cool function here */
 		return 2;
 	};
 	// register a class too
-	module.new_usertype<some_class>("some_class",
-		"bark", &some_class::bark
-	);
+	module.new_usertype<some_class>(
+	     "some_class", "bark", &some_class::bark);
 
- 	return module;
+	return module;
 }
 
 int main() {
@@ -31,9 +29,12 @@ int main() {
 	lua.open_libraries(sol::lib::package, sol::lib::base);
 	// sol::c_call takes functions at the template level
 	// and turns it into a lua_CFunction
-	// alternatively, one can use sol::c_call<sol::wrap<callable_struct, callable_struct{}>> to make the call
-	// if it's a constexpr struct
-	lua.require("my_lib", sol::c_call<decltype(&open_mylib), &open_mylib>);
+	// alternatively, one can use
+	// sol::c_call<sol::wrap<callable_struct,
+	// callable_struct{}>> to make the call if it's a constexpr
+	// struct
+	lua.require("my_lib",
+	     sol::c_call<decltype(&open_mylib), &open_mylib>);
 
 	// run some code against your require'd library
 	lua.safe_script(R"(
@@ -43,7 +44,7 @@ s.bark = 20
 )");
 
 	some_class& s = lua["s"];
-	c_assert(s.bark == 20);
+	SOL_ASSERT(s.bark == 20);
 	std::cout << "s.bark = " << s.bark << std::endl;
 
 	std::cout << std::endl;

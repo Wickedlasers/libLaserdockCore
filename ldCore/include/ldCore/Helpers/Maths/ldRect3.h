@@ -24,6 +24,7 @@
 #include "ldCore/ldCore_global.h"
 
 #include "ldVec3.h"
+#include "ldRect.h"
 
 #ifdef _MSC_VER
 // we want to use words far and near in our code
@@ -50,6 +51,8 @@ struct LDCORESHARED_EXPORT ldRect3 {
     float near() const;
 
     ldVec3 center() const;
+
+    ldRect to2d() const;
 };
 
 #endif // LDRECT3_H

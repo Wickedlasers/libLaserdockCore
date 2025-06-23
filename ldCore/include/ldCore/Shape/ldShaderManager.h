@@ -29,6 +29,7 @@
 #ifndef LDSHADERMANAGER_H
 #define LDSHADERMANAGER_H
 
+#include "openlase/ldLibol.h"
 #include <QtCore/QStack>
 
 #include <ldCore/Shape/ldShader.h>
@@ -48,6 +49,8 @@ public:
 private:
     ldShaderManager();
     ~ldShaderManager();
+
+    ldLibol* m_libol{nullptr};
     
 public:
     /// push/pop into shader stack functions.
@@ -63,6 +66,8 @@ public:
     void apply_vertex_pre_shader(float *x, float *y, uint32_t *color);
     void apply_vertex_shader(float *x, float *y, uint32_t *color);
     void apply_pixel_shader(float *x, float *y, uint32_t *color);
+
+    void setLibol(ldLibol* libol);
 
 protected:
     QStack<ldShader*> m_VtxPreStack;

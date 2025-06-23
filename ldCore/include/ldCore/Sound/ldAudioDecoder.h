@@ -24,10 +24,12 @@
 #include <memory>
 
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QTimer>
 #include <QtCore/QMutex>
 #include <QtCore/QObject>
 
 #include <ldCore/Sound/ldSoundInterface.h>
+#include <ldCore/Utilities/ldCircularBuffer.h>
 
 #include <QQmlHelpers>
 
@@ -65,17 +67,20 @@ public slots:
 
     void setElapsedTime(qint64 time);
 
+signals:
+    void bufferUpdated(float *convertedBuffer, int framesm, int sampleRate);
+
 protected slots:
     void timerSlot();
 
 private:
     void reset();
 
-    static const int IS_PRELOAD_FILE;
+    static const int LD_IS_BUFFERING_ENABLED;
 
     static const int SAMPLE_SIZE_TO_SEND;
-    static const int MAX_PRELOADED_BLOCKS = 3;
-    static const int BLOCK_SIZE;
+    static const int MAX_SAMPLE_SIZE_TO_SEND;
+    static const int SAMPLE_BUFFER_SIZE;
     static const int STUBFPS = 30*2;
     static const int DECODE_INTERVAL;
 
@@ -85,12 +90,14 @@ private:
 
     qint64 m_elapsedTime = 0;
     QElapsedTimer m_elapsedTimer;
+    QTimer m_timer;
     qint64 m_duration = -1;
 
 #ifdef AUIDIO_DECODER_SUPPORTED
     std::unique_ptr<AudioDecoder> m_audioDecoder;
 #endif
 
+    ldCircularBuffer<float> m_sampleDataBuffer;
     std::vector<float> m_sampleData;
 
     int m_fileSamplePos = 0;

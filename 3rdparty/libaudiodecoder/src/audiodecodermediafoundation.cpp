@@ -322,12 +322,12 @@ int AudioDecoderMediaFoundation::read(int size, const SAMPLE *destination)
         // I know this does at least a memcopy and maybe a malloc, if we have
         // xrun issues with this we might want to look into using
         // IMFSample::GetBufferByIndex (although MS doesn't recommend this)
+        short *buffer(NULL);
+        size_t bufferLength(0);
         if (FAILED(hr = pSample->ConvertToContiguousBuffer(&pMBuffer))) {
             error = true;
             goto releaseSample;
         }
-        short *buffer(NULL);
-        size_t bufferLength(0);
         hr = pMBuffer->Lock(reinterpret_cast<unsigned __int8**>(&buffer), NULL,
             reinterpret_cast<DWORD*>(&bufferLength));
         if (FAILED(hr)) {

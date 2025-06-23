@@ -24,6 +24,7 @@ namespace cmds {
     const uint8_t LASERCUBE_CMD_SET_NV_MODEL_INFO =                 0x97;
     const uint8_t LASERCUBE_SECURITY_CMD_REQUEST =                  0xb0;
     const uint8_t LASERCUBE_SECURITY_CMD_RESPONSE =                 0xb1;
+    const uint8_t LASERCUBE_CMD_SET_DAC_BUF_THOLD_LVL =             0xa0;
 
     // These legacy get commands below have been replaced by
     // the get full info command (x077)
@@ -82,9 +83,9 @@ LaserdockNetworkDevice::LaserdockNetworkDevice(QString ip_address,QObject *paren
     m_cmdsocket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption,5250000);
 
     connect(m_cmdsocket, &QUdpSocket::readyRead,this, &LaserdockNetworkDevice::readPendingCommandResponses);
-//    connect(m_cmdsocket, &QUdpSocket::stateChanged,this, [&](QAbstractSocket::SocketState socketState) {
-//        qDebug() << "CMD" << m_hostaddr << socketState;
-//    });
+   connect(m_cmdsocket, &QUdpSocket::stateChanged,this, [&](QAbstractSocket::SocketState socketState) {
+       qDebug() << "socketState" << m_hostaddr << socketState;
+   });
 
 
     m_datasocket = new QUdpSocket(this);
@@ -179,6 +180,22 @@ LaserdockNetworkDevice::~LaserdockNetworkDevice()
     skt.writeDatagram(reinterpret_cast<const char*>(en_pkt), sizeof(en_pkt), m_hostaddr, constants::cmd_port);
 }
 
+bool LaserdockNetworkDevice::get_interlock_enabled() const
+{
+    return m_interlock_enabled;
+}
+
+bool LaserdockNetworkDevice::get_over_temperature() const
+{
+   return m_over_temperature;
+}
+
+bool LaserdockNetworkDevice::get_temperature_warning() const
+{
+    return m_temperature_warn;
+}
+
+
 // returns true if we have disconnected from the device this instance is handling
 bool LaserdockNetworkDevice::get_disconnected()
 {
@@ -193,17 +210,18 @@ bool LaserdockNetworkDevice::get_disconnected()
 // lasercube devices.
 bool LaserdockNetworkDevice::RequestDeviceAlive(QUdpSocket& skt)
 {
+
     uint8_t info_pkt[]={cmds::LASERCUBE_GET_ALIVE};
      const QList<QNetworkInterface> allInterfaces = QNetworkInterface::allInterfaces();
      const QHostAddress &localhost = QHostAddress(QHostAddress::LocalHost);
 
      // we scan for valid network interfaces every time this func is called , so any new interfaces are picked up on after laseros has started
      for (const auto& eth : allInterfaces) {
-         if((eth.flags() & QNetworkInterface::IsUp) && (eth.flags() & QNetworkInterface::IsRunning) && !(eth.flags() & QNetworkInterface::IsPointToPoint)) {
+         if(eth.flags().testFlag(QNetworkInterface::IsUp) && eth.flags().testFlag(QNetworkInterface::IsRunning) && !eth.flags().testFlag(QNetworkInterface::IsPointToPoint)) {
              const QList<QNetworkAddressEntry> allEntries = eth.addressEntries();
              for (const auto& entry : allEntries) {
-                 if (entry.ip().protocol() == QAbstractSocket::IPv4Protocol  && entry.ip() != localhost){
-                    //qDebug() <<"ip:" << entry.ip().toString() << "netmask" << entry.netmask().toString() << "broadcast" << entry.broadcast().toString();
+                 if (entry.ip().protocol() == QAbstractSocket::IPv4Protocol  && (entry.ip() != localhost)){
+                   // qDebug() <<"ip:" << entry.ip().toString() << "netmask" << entry.netmask().toString() << "broadcast" << entry.broadcast().toString() << "local" << localhost.toString();
                     skt.writeDatagram(reinterpret_cast<const char*>(info_pkt), sizeof(info_pkt), entry.broadcast(), constants::alive_port);
                  }
              }
@@ -717,6 +735,26 @@ bool LaserdockNetworkDevice::set_dac_rate(uint32_t rate) {
     return true;
 }
 
+bool LaserdockNetworkDevice::set_dac_buffer_thold_lvl(uint32_t level)
+{
+    if (level >= m_buffer_size) return false; // can't exceed available buffer space
+
+    // model 10 (ultra mk2) onwards now support this command
+    // Also going forward, mk1 cube with firmware > 1.23 will have this
+    if (m_model_number >= 10 || m_fw_major > 1 || m_fw_minor > 23) {
+        qDebug() << "################## Network Cube Buffer Level THold:" << level << "##################";
+    //
+        uint8_t dac_pkt[5];
+        dac_pkt[0] = cmds::LASERCUBE_CMD_SET_DAC_BUF_THOLD_LVL;
+        dac_pkt[1] = level & 0xff;
+        dac_pkt[2] = (level >> 8) & 0xff;
+        dac_pkt[3] = (level >> 16) & 0xff;
+        dac_pkt[4] = (level >> 24) & 0xff;
+
+        send_command(dac_pkt,sizeof(dac_pkt),true);
+    }
+    return true;
+}
 
 bool LaserdockNetworkDevice::max_dac_rate(uint32_t *rate) {
     if (rate!=nullptr){

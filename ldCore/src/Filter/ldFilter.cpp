@@ -23,10 +23,26 @@
 #include <ldCore/Filter/ldFilterProcessor.h>
 #include <ldCore/Helpers/Color/ldColorUtil.h>
 
+ldFilter::~ldFilter()
+{
+
+}
+
 void ldFilter::processFilter(ldVertex &input)
 {
     if(m_processorFilter)  {
         m_processorFilter->processFilter(this, input);
+    } else {
+        processFilterWithoutProcessor(input);
+    }
+}
+
+void ldFilter::processFilterWithoutProcessor(ldVertex &input)
+{
+    if(!cmpf(m_intensity, 1.f)) {
+        ldVertex source = input;
+        process(input);
+        input.normalize(source, m_intensity);
     } else {
         process(input);
     }
@@ -37,6 +53,11 @@ void ldFilter::setProcessorFilter(ldFilterProcessor *processorFilter)
     m_processorFilter = processorFilter;
 }
 
+ldFilter::ldFilter()
+    : LD_INIT_MIN_MAX_PROPERTY(intensity, 1, 0, 1)
+{
+}
+
 void ldFilter::ShaderFunc(float *x, float *y, uint32_t *color) {
     ldVertex input;
     input.x() = *x;
@@ -45,7 +66,7 @@ void ldFilter::ShaderFunc(float *x, float *y, uint32_t *color) {
     input.g() = ((*color & 0x00FF00) >> 8) / 255.0f;
     input.b() = ((*color & 0x0000FF) >> 0) / 255.0f;
 
-    process(input);
+    processFilterWithoutProcessor(input);
 
     *x = input.x();
     *y = input.y();

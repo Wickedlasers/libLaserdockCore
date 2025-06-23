@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,7 +24,7 @@
 #ifndef SOL_ERROR_HPP
 #define SOL_ERROR_HPP
 
-#include "compatibility.hpp"
+#include <sol/compatibility.hpp>
 
 #include <stdexcept>
 #include <string>
@@ -32,22 +32,22 @@
 
 namespace sol {
 	namespace detail {
-		struct direct_error_tag {};
-		const auto direct_error = direct_error_tag{};
+		struct direct_error_tag { };
+		const auto direct_error = direct_error_tag {};
 
 		struct error_result {
 			int results;
 			const char* format_string;
-			std::array<const char*, 4> args_strings;
+			std::array<const char*, 4> argument_strings;
 
 			error_result() : results(0), format_string(nullptr) {
 			}
 
-			error_result(int results) : results(results), format_string(nullptr) {
+			error_result(int results_) : results(results_), format_string(nullptr) {
 			}
 
-			error_result(const char* fmt, const char* msg) : results(0), format_string(fmt) {
-				args_strings[0] = msg;
+			error_result(const char* format_string_, const char* first_message_) : results(0), format_string(format_string_), argument_strings() {
+				argument_strings[0] = first_message_;
 			}
 		};
 
@@ -55,8 +55,25 @@ namespace sol {
 			if (er.format_string == nullptr) {
 				return er.results;
 			}
-			return luaL_error(L, er.format_string, er.args_strings[0], er.args_strings[1], er.args_strings[2], er.args_strings[3]);
+			return luaL_error(L, er.format_string, er.argument_strings[0], er.argument_strings[1], er.argument_strings[2], er.argument_strings[3]);
 		}
+
+		class error_exception : public std::runtime_error {
+		public:
+			error_exception(const std::string& str) : error_exception(detail::direct_error, "lua: error: " + str) {
+			}
+			error_exception(std::string&& str) : error_exception(detail::direct_error, "lua: error: " + std::move(str)) {
+			}
+			error_exception(detail::direct_error_tag, const std::string& str) : std::runtime_error(str) {
+			}
+			error_exception(detail::direct_error_tag, std::string&& str) : std::runtime_error(str) {
+			}
+
+			error_exception(const error_exception& e) = default;
+			error_exception(error_exception&& e) = default;
+			error_exception& operator=(const error_exception& e) = default;
+			error_exception& operator=(error_exception&& e) = default;
+		};
 	} // namespace detail
 
 	class error : public std::runtime_error {
@@ -69,19 +86,15 @@ namespace sol {
 		}
 		error(std::string&& str) : error(detail::direct_error, "lua: error: " + std::move(str)) {
 		}
-		error(detail::direct_error_tag, const std::string& str) : std::runtime_error(""), what_reason(str) {
+		error(detail::direct_error_tag, const std::string& str) : std::runtime_error(str) {
 		}
-		error(detail::direct_error_tag, std::string&& str) : std::runtime_error(""), what_reason(std::move(str)) {
+		error(detail::direct_error_tag, std::string&& str) : std::runtime_error(str) {
 		}
 
 		error(const error& e) = default;
 		error(error&& e) = default;
 		error& operator=(const error& e) = default;
 		error& operator=(error&& e) = default;
-
-		virtual const char* what() const noexcept override {
-			return what_reason.c_str();
-		}
 	};
 
 } // namespace sol

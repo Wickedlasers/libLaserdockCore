@@ -5,10 +5,17 @@ add_library(libusb SHARED IMPORTED GLOBAL)
 set_property(TARGET libusb PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/include)
 
 if(WIN32)
-    set_target_properties(libusb PROPERTIES
-        IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/lib/win/libusb-1.0.dll"
-        IMPORTED_IMPLIB "${CMAKE_CURRENT_LIST_DIR}/lib/win/libusb-1.0.lib"
-        )
+    if(LD_WINX64_BUILD)
+        set_target_properties(libusb PROPERTIES
+            IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/lib/win_64/libusb-1.0.dll"
+            IMPORTED_IMPLIB "${CMAKE_CURRENT_LIST_DIR}/lib/win_64/libusb-1.0.lib"
+            )
+    else()
+        set_target_properties(libusb PROPERTIES
+            IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/lib/win/libusb-1.0.dll"
+            IMPORTED_IMPLIB "${CMAKE_CURRENT_LIST_DIR}/lib/win/libusb-1.0.lib"
+            )
+    endif()
 endif()
 
 if(APPLE)

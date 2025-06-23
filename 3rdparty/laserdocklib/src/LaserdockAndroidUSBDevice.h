@@ -5,8 +5,7 @@
 #ifndef LASERDOCKLIB_LASERDOCKANDROIDUSBDEVICE_H
 #define LASERDOCKLIB_LASERDOCKANDROIDUSBDEVICE_H
 
-#include <QAndroidJniObject>
-
+#include <laserdocklib/ldAndroidGlobals.h>
 #include <laserdocklib/LaserdockDevice.h>
 
 struct LaserdockAndroidUSBDevicePrivate;
@@ -14,7 +13,7 @@ struct LaserdockAndroidUSBDevicePrivate;
 class LaserdockAndroidDevice : public LaserdockDevice {
 
 public:
-    explicit LaserdockAndroidDevice(QAndroidJniObject usbdevice);
+    explicit LaserdockAndroidDevice(QJniObject usbdevice);
 
     virtual Status status() const;
 

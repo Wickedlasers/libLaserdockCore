@@ -14,10 +14,13 @@ class ldZipExtractorPrivate : public QObject
 public:
     explicit ldZipExtractorPrivate(QObject *parent = nullptr);
 
-    void init(const QString &filePath, const QString &targetDir);
+    void init(const QString &zipFilePath, const QString &dirPath);
+    void compressDir();
     void extractDir();
 
     QString zipFilePath() const;
+
+    void setRemoveDir(bool isRemoveDir);
 
 signals:
     void progress(int progress); // 0..1
@@ -25,7 +28,9 @@ signals:
 
 private:
     QString m_zipFilePath;
-    QString m_targetDir;
+    QString m_dirPath;
+
+    bool m_isRemoveDir = true;
 };
 
 ldZipExtractorPrivate::ldZipExtractorPrivate(QObject *parent)
@@ -33,18 +38,48 @@ ldZipExtractorPrivate::ldZipExtractorPrivate(QObject *parent)
 {
 }
 
-void ldZipExtractorPrivate::init(const QString &filePath, const QString &targetDir)
+void ldZipExtractorPrivate::init(const QString &zipFilePath, const QString &dirPath)
 {
-    m_zipFilePath = filePath;
-    m_targetDir = targetDir;
+    m_zipFilePath = zipFilePath;
+    m_dirPath = dirPath;
+}
+
+void ldZipExtractorPrivate::compressDir()
+{
+    qDebug() << __FUNCTION__ << m_zipFilePath << m_dirPath;
+
+    if(m_zipFilePath.isEmpty() || m_dirPath.isEmpty()) {
+        qWarning() << "Zip extractor is not inited" << m_zipFilePath << m_dirPath;
+        emit finished(false, tr("Zip file %1 doesn't exist").arg(m_zipFilePath));
+        return;
+    }
+
+    if(!QFile::exists(m_dirPath)) {
+        qWarning() << "Target dir file doesn't exist" << m_dirPath;
+        emit finished(false, tr("Target dir %1 doesn't exist").arg(m_dirPath));
+        return;
+    }
+
+
+    if(QFile::exists(m_zipFilePath)) {
+        if(!QFile::remove(m_zipFilePath)) {
+            qWarning() << "Can't remove zip file" << m_zipFilePath;
+            emit finished(false, tr("Can't remove zip file %1").arg(m_zipFilePath));
+            return;
+        }
+    }
+
+    JlCompress::compressDir(m_zipFilePath, m_dirPath, true);
+
+    emit finished(true);
 }
 
 void ldZipExtractorPrivate::extractDir()
 {
-    qDebug() << __FUNCTION__ << m_zipFilePath << m_targetDir;
+    qDebug() << __FUNCTION__ << m_zipFilePath << m_dirPath;
 
-    if(m_zipFilePath.isEmpty() || m_targetDir.isEmpty()) {
-        qWarning() << "Zip extractor is not inited" << m_zipFilePath << m_targetDir;
+    if(m_zipFilePath.isEmpty() || m_dirPath.isEmpty()) {
+        qWarning() << "Zip extractor is not inited" << m_zipFilePath << m_dirPath;
         emit finished(false, tr("Zip file %1 doesn't exist").arg(m_zipFilePath));
         return;
     }
@@ -57,14 +92,14 @@ void ldZipExtractorPrivate::extractDir()
 
     QStringList fileList = JlCompress::getFileList(m_zipFilePath);
 
-    if(!QDir(m_targetDir).removeRecursively()) {
-        qWarning() << "Can't remove target dir" << m_targetDir;
-        emit finished(false, tr("Can't remove target dir %1").arg(m_targetDir));
+    if(m_isRemoveDir && !QDir(m_dirPath).removeRecursively()) {
+        qWarning() << "Can't remove target dir" << m_dirPath;
+        emit finished(false, tr("Can't remove target dir %1").arg(m_dirPath));
         return;
     }
-    if(!QDir().mkpath(m_targetDir)) {
-        qWarning() << "Can't create target dir" << m_targetDir;
-        emit finished(false, tr("Can't create target dir %1").arg(m_targetDir));
+    if(!QDir().mkpath(m_dirPath)) {
+        qWarning() << "Can't create target dir" << m_dirPath;
+        emit finished(false, tr("Can't create target dir %1").arg(m_dirPath));
         return;
     }
 
@@ -75,7 +110,7 @@ void ldZipExtractorPrivate::extractDir()
         return;
     }
 
-    QDir directory(m_targetDir);
+    QDir directory(m_dirPath);
     QStringList extracted;
     if (!zip.goToFirstFile()) {
         qWarning() << "Zip file is empty";
@@ -116,7 +151,17 @@ QString ldZipExtractorPrivate::zipFilePath() const
     return m_zipFilePath;
 }
 
+void ldZipExtractorPrivate::setRemoveDir(bool isRemoveDir)
+{
+    m_isRemoveDir = isRemoveDir;
+}
+
 // ------------------------- ldZipExtractor ----------------------
+
+void ldZipExtractor::staticInit()
+{
+    QuaZip::setDefaultFileNameCodec(QTextCodec::codecForName("UTF-8"));
+}
 
 ldZipExtractor::ldZipExtractor(QObject *parent)
     : QObject(parent)
@@ -138,14 +183,24 @@ ldZipExtractor::~ldZipExtractor()
     }
 }
 
-void ldZipExtractor::init(const QString &filePath, const QString &targetDir)
+void ldZipExtractor::init(const QString &zipFilePath, const QString &dirPath)
 {
-    m_private->init(filePath, targetDir);
+    m_private->init(zipFilePath, dirPath);
 }
 
-QString ldZipExtractor::filePath() const
+QString ldZipExtractor::zipFilePath() const
 {
     return m_private->zipFilePath();
+}
+
+void ldZipExtractor::setRemoveDir(bool isRemoveDir)
+{
+    m_private->setRemoveDir(isRemoveDir);
+}
+
+void ldZipExtractor::startCompression()
+{
+    QTimer::singleShot(0, m_private.data(), &ldZipExtractorPrivate::compressDir);
 }
 
 void ldZipExtractor::startExtraction()

@@ -33,9 +33,9 @@ ldSimulatorProcessor::~ldSimulatorProcessor()
 //    qDebug() << "~ldSimulatorProcessor()";
 }
 
-void ldSimulatorProcessor::bigger_dots(ldVertex* inData, ldVertex* outData, unsigned int size) {
+void ldSimulatorProcessor::bigger_dots(ldVertex* inData, ldVertex* outData, unsigned int size, bool isLastPortion) {
 
-    const float mindist = 0.005f; // force lines to have this min length
+    const float mindist = 0.01f; // force lines to have this min length
 
     for (uint i = 0; i < size; i++) {
 
@@ -72,6 +72,10 @@ void ldSimulatorProcessor::bigger_dots(ldVertex* inData, ldVertex* outData, unsi
 
             // force line length to be a minimum
             if (m_moveDist < mindist) {
+                // if it's the first dot and there is no more content we should move it at least a bit
+                if(m_lastDeltaX == 0 && m_lastDeltaY == 0)
+                    m_lastDeltaX = mindist;
+
                 outData[i].x() += m_lastDeltaX;
                 outData[i].y() += m_lastDeltaY;
             }
@@ -82,12 +86,37 @@ void ldSimulatorProcessor::bigger_dots(ldVertex* inData, ldVertex* outData, unsi
             m_moveDist = 0;
         }
 
-        // save static values for next point's delta calcs
+        // save values for next point's delta calcs
         if(isOn)
             m_last = inData[i];
 
         m_wasOn = isOn;
-
     }
+
+    // in the end of frame if the last is on we should make it visible anyway
+    if(isLastPortion
+        && m_wasOn
+        && m_moveDist < mindist
+        && size > 0
+        ) {
+        // check just in case, should never happen, see the previous similar block
+        if(m_lastDeltaX == 0 && m_lastDeltaY == 0)
+            m_lastDeltaX = mindist;
+
+        // ok, make last point big dot
+        uint i = size - 1;
+        outData[i].x() += m_lastDeltaX;
+        outData[i].y() += m_lastDeltaY;
+    }
+}
+
+void ldSimulatorProcessor::clear()
+{
+    m_last.clear();
+    m_lastOn.clear();
+    m_lastDeltaX = 0;
+    m_lastDeltaY = 0;
+    m_wasOn = false;
+    m_moveDist = 0;
 }
 

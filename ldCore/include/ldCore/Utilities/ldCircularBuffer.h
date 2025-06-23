@@ -60,6 +60,7 @@ public:
             else
             {
                 m_head = 0;
+                m_isFull = true;
             }
         }
         else
@@ -71,6 +72,8 @@ public:
             memcpy(ptr, data, (size - remained) * sizeof(T));
 
             m_head = size - remained;
+
+            m_isFull = true;
         }
     }
     /*--------------------------------------------------//
@@ -85,16 +88,20 @@ public:
         if (m_head == ldBuffer<T>::GetSize())
         {
             m_head = 0;
+            m_isFull = true;
         }
     }
     /*--------------------------------------------------//
-     Get data from the buffer
+     Get last data from the buffer
      [parameters]
      data       - pointer to the data array
      size       - size of data array (in items)
      //--------------------------------------------------*/
     void Get(T* data, unsigned size)
     {
+        if(size >= ldBuffer<T>::GetSize())
+            size == ldBuffer<T>::GetSize();
+
         if (size <= m_head)
         {
             T* ptr = ldBuffer<T>::GetData() + m_head - size;
@@ -103,27 +110,73 @@ public:
         else
         {
             T* ptr = ldBuffer<T>::GetData() + ldBuffer<T>::GetSize() - (size - m_head);
-            memcpy(data, ptr, (size - m_head) * sizeof(T));
+            if(m_isFull)
+                memcpy(data, ptr, (size - m_head) * sizeof(T));
 
             ptr = ldBuffer<T>::GetData();
-            data += size - m_head;
+            if(m_isFull)
+                data += size - m_head;
+
             memcpy(data, ptr, m_head * sizeof(T));
+        }
+    }
+
+    /*--------------------------------------------------//
+     Get first data from the buffer
+     [parameters]
+     data       - pointer to the data array
+     size       - size of data array (in items)
+     //--------------------------------------------------*/
+    void GetFirst(T* data, unsigned size)
+    {
+        if(size >= ldBuffer<T>::GetSize())
+            size == ldBuffer<T>::GetSize();
+
+        if(m_isFull) {
+            int remainingSpace = ldBuffer<T>::GetSize() - m_head;
+            if (size <= remainingSpace)
+            {
+                T* ptr = ldBuffer<T>::GetData() + m_head;
+                memcpy(data, ptr, size * sizeof(T));
+            }
+            else
+            {
+                T* ptr = ldBuffer<T>::GetData() + m_head;
+                memcpy(data, ptr, remainingSpace * sizeof(T));
+
+                ptr = ldBuffer<T>::GetData();
+                data += remainingSpace;
+                memcpy(data, ptr, (size - remainingSpace) * sizeof(T));
+            }
+        } else {
+            if (size <= m_head)
+            {
+                T* ptr = ldBuffer<T>::GetData() ;
+                memcpy(data, ptr, size * sizeof(T));
+            }
+            else
+            {
+                T* ptr = ldBuffer<T>::GetData();
+                memcpy(data, ptr, m_head * sizeof(T));
+            }
         }
     }
 
     unsigned GetLevel()
     {
-        return m_head;
+        return m_isFull ? ldBuffer<T>::GetSize() : m_head;
     }
 
     void Reset()
     {
         memset(ldBuffer<T>::GetData(), 0, ldBuffer<T>::GetSize() * sizeof(T));
         m_head = 0;
+        m_isFull = false;
     }
 
 private:
     unsigned    m_head;
+    bool    m_isFull{false};
 };
 
 typedef ldCircularBuffer<ldVertex> ldVertexCircularBuffer;

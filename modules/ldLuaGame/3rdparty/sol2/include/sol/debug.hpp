@@ -1,8 +1,8 @@
-// sol3 
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,12 +24,10 @@
 #ifndef SOL_DEBUG_HPP
 #define SOL_DEBUG_HPP
 
-#include "stack.hpp"
+#include <sol/stack.hpp>
 #include <iostream>
 
-namespace sol {
-namespace detail {
-namespace debug {
+namespace sol { namespace detail { namespace debug {
 	inline std::string dump_types(lua_State* L) {
 		std::string visual;
 		std::size_t size = lua_gettop(L) + 1;
@@ -49,8 +47,17 @@ namespace debug {
 	inline void print_section(const std::string& message, lua_State* L) {
 		std::cout << "-- " << message << " -- [ " << dump_types(L) << " ]" << std::endl;
 	}
-}
-}
-} // namespace sol::detail::debug
+
+	inline void print_lua_information(lua_State* L) {
+		std::cout << "Lua Version: " << SOL_USE(SOL_LUA_VERSION) << std::endl;
+		std::cout << "Lua (C++): " << SOL_IS_ON(SOL_USING_CXX_LUA) << std::endl;
+		std::cout << "Trampoline Propagate Exceptions?: " << SOL_IS_ON(SOL_PROPAGATE_EXCEPTIONS) << std::endl;
+		std::cout << "Catch-all Exceptions?: " << SOL_IS_ON(SOL_EXCEPTIONS_CATCH_ALL) << std::endl;
+		std::cout << "LuaJIT: " << SOL_IS_ON(SOL_USE_LUAJIT) << std::endl;
+		std::cout << "LuaJIT Version: " << SOL_USE(SOL_LUAJIT_VERSION) << std::endl;
+		std::cout << "LuaJIT (C++): " << SOL_IS_ON(SOL_USING_CXX_LUAJIT) << std::endl;
+		std::cout << "LuaJIT Exception Trampoline: " << SOL_IS_ON(SOL_USE_LUAJIT_EXCEPTION_TRAMPOLINE) << std::endl;
+	}
+}}} // namespace sol::detail::debug
 
 #endif // SOL_DEBUG_HPP

@@ -23,7 +23,7 @@
 
 #include <jni.h>
 
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <laserdocklib/ldAndroidGlobals.h>
 
 #include <ldCore/Sound/ldSoundInterface.h>
 
@@ -53,7 +53,7 @@ signals:
 private:
     explicit ldLoopbackAudioDevice(QObject *parent = nullptr);
 
-    QAndroidJniObject m_visualizer;
+    QJniObject m_visualizer;
 };
 
 extern "C" {

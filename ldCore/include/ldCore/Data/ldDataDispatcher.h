@@ -27,16 +27,10 @@
 
 #include <ldCore/Helpers/ldPropertyObject.h>
 
-class ldBufferManager;
-class ldAbstractDataWorker;
-class ldHardwareManager;
+class ldFrameBuffer;
+class ldHardwareBatch;
 class ldSimulatorEngine;
 class ldHardwareDataWorker;
-class ldFilterManager;
-class ldNetworkHardwareManager;
-#ifdef LASERDOCKLIB_USB_SUPPORT
-class ldUsbHardwareManager;
-#endif
 
 /** Laserdock data transfer control class. Supports OpenGL simulator and additional custom worker for internal usage */
 class LDCORESHARED_EXPORT ldDataDispatcher : public ldPropertyObject
@@ -45,16 +39,13 @@ class LDCORESHARED_EXPORT ldDataDispatcher : public ldPropertyObject
 
 public:
     /** Constructor/destructor */
-    explicit ldDataDispatcher(ldBufferManager *bufferManager,
-                              ldHardwareManager *hardwareManager,
-                              ldFilterManager* filterManager,
+    explicit ldDataDispatcher(ldFrameBuffer *frameBuffer,
+                              ldHardwareBatch *hardwareBatch,
                               QObject *parent = nullptr);
     ~ldDataDispatcher();
 
     /** If any worker is active */
     bool isActiveTransfer() const;
-
-    ldNetworkHardwareManager* networkDataManager() const;
 
     /** Simulator core engine class */
     ldSimulatorEngine* simulatorEngine() const;
@@ -62,17 +53,15 @@ public:
 public slots:
     /** Activate/deactivate data workers */
     void setActiveTransfer(bool active);
-
+    void setActive(bool active);
 signals:
     /** Emitted when data workers state changed */
+    void activeXferChanged(bool active);
     void activeChanged(bool active);
 
 private:
     std::unique_ptr<ldSimulatorEngine> m_simulatorEngine;
-
     std::unique_ptr<ldHardwareDataWorker> m_dataWorker;
-
-    ldHardwareDataWorker* m_activeDataWorker=nullptr;
 };
 
 #endif // LDDATADISPATCHER_H

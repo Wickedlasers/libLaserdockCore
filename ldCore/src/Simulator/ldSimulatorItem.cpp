@@ -39,12 +39,13 @@ void ldSimulatorItem::registerMetatypes()
 
 ldSimulatorItem::ldSimulatorItem(QQuickItem *parent)
     : QQuickItem(parent)
-    , m_autostart(false)
-    , m_clearColor(QColor("#131823"))
+    , m_clearColor(Qt::black)
     , m_isActive(false)
+    , m_isActiveRendering(true)
 {
-    connect(this, &QQuickItem::visibleChanged, this, &ldSimulatorItem::onVisibleChanged);
+    connect(this, &ldSimulatorItem::isActiveChanged, this, &ldSimulatorItem::onIsActiveChanged);
     connect(this, &QQuickItem::windowChanged, this, &ldSimulatorItem::handleWindowChanged);
+    connect(this, &ldSimulatorItem::isActiveRenderingChanged, this, &ldSimulatorItem::onActiveRenderingChanged);
 }
 
 ldSimulatorItem::~ldSimulatorItem()
@@ -53,16 +54,11 @@ ldSimulatorItem::~ldSimulatorItem()
 
 void ldSimulatorItem::start()
 {
-    if(m_isActive)
-        return;
-
-    update_isActive(true);
-
 //    qDebug() << "Simulator started" << this;
 
     if(m_renderer) {
-        connect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::paint, Qt::DirectConnection);
-        connect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::update, Qt::QueuedConnection);
+        if(m_isActiveRendering)
+            activateRendering();
         // delay in order to skip previous visualizer
         QTimer::singleShot(100, m_renderer.data(), &ldSimulatorRenderer::loadEngine);
     }
@@ -70,20 +66,15 @@ void ldSimulatorItem::start()
 
 void ldSimulatorItem::stop()
 {
-    if(!m_isActive)
-        return;
-
-    update_isActive(false);
-
 //    qDebug() << "Simulator stopped" << this;
 
-    disconnect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::paint);
-    disconnect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::update);
-    if(m_renderer) {
+    deactivateRendering();
+    if(m_renderer)
         m_renderer->unloadEngine();
-    }
+
 }
 
+#if QT_VERSION < 0x060000
 void ldSimulatorItem::update()
 {
     window()->update();
@@ -104,41 +95,46 @@ void ldSimulatorItem::paint()
 
    // window()->update();
 }
+#endif
 
 void ldSimulatorItem::sync()
 {
     // sometimes init is not called (on Linux if extraction is done)
     // it is safe to call it from sync() as well
     if(!m_renderer) {
+#if QT_VERSION < 0x060000
         init();
     }
 
-    QPointF pos = mapToScene(position());
-    // OpenGL coordinates are started from bottom, not from top
-    pos.ry() = window()->height() - pos.y() - height();
+    if(!m_isActive)
+        return;
 
-    m_renderer->setViewportPos((pos * m_devicePixelRatio).toPoint());
-    m_renderer->setViewportSize((QSizeF(width(), height()) * m_devicePixelRatio).toSize());
-    m_renderer->resizeGL();
+    setGlViewport();
 }
 
 void ldSimulatorItem::init()
 {
     if (!m_renderer) {
+#endif
         m_renderer.reset(new ldSimulatorRenderer(ldCore::instance()->get_dataDispatcher()));
         m_renderer->init();
         m_renderer->setClearColor(m_clearColor);
 
         if(m_isActive) {
-            connect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::paint, Qt::DirectConnection);
-            connect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::update, Qt::QueuedConnection);
+            if(m_isActiveRendering)
+                activateRendering();
             // delay in order to skip previous visualizer
             QTimer::singleShot(100, m_renderer.data(), &ldSimulatorRenderer::loadEngine);
         }
-        if(m_autostart && isVisible()) {
-            start();
-        }
     }
+
+#if QT_VERSION >= 0x060000
+    if(!m_isActive)
+        return;
+
+    setGlViewport();
+    m_renderer->setWindow(window());
+#endif
 }
 
 void ldSimulatorItem::cleanup()
@@ -149,27 +145,83 @@ void ldSimulatorItem::cleanup()
 void ldSimulatorItem::handleWindowChanged(QQuickWindow *win)
 {
     if (win) {
-        m_devicePixelRatio = win->devicePixelRatio(); // warning in mac cocoa that should be used from main thread only
-        
+#if QT_VERSION >= 0x060000
+        qDebug() << "graphicsApi" << win->graphicsApi();
+#endif
         connect(win, &QQuickWindow::beforeSynchronizing, this, &ldSimulatorItem::sync, Qt::DirectConnection);
+#if QT_VERSION < 0x060000
         connect(win, &QQuickWindow::sceneGraphInitialized, this, &ldSimulatorItem::init, Qt::DirectConnection);
+#endif
         connect(win, &QQuickWindow::sceneGraphInvalidated, this, &ldSimulatorItem::cleanup, Qt::DirectConnection);
 
+#if QT_VERSION >= 0x060000
+        win->setColor(Qt::black);
+#else
         // If we allow QML to do the clearing, they would clear what we paint
         // and nothing would show.
         win->setClearBeforeRendering(false);
+#endif
     }
 }
 
-void ldSimulatorItem::onVisibleChanged()
+void ldSimulatorItem::onActiveRenderingChanged(bool isActiveRendering)
 {
-    if(!m_autostart)
-        return;
+    if(isActiveRendering)
+        activateRendering();
+    else
+        deactivateRendering();
+}
 
-    if(isVisible())
+void ldSimulatorItem::onIsActiveChanged(bool isActive)
+{
+    // qDebug() << this << __FUNCTION__ << isActive;
+
+    if(isActive)
         start();
     else
         stop();
+}
+
+void ldSimulatorItem::activateRendering()
+{
+    if(!m_renderer)
+        return;
+
+#if QT_VERSION >= 0x060000
+    connect(window(), &QQuickWindow::beforeRenderPassRecording, m_renderer.get(), &ldSimulatorRenderer::paint, Qt::DirectConnection);
+    connect(window(), &QQuickWindow::beforeRenderPassRecording, window(), &QQuickWindow::update, Qt::QueuedConnection);
+#else
+    connect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::paint, Qt::DirectConnection);
+    connect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::update, Qt::QueuedConnection);
+#endif
+}
+
+void ldSimulatorItem::deactivateRendering()
+{
+    if(!m_renderer)
+        return;
+
+#if QT_VERSION < 0x060000
+    disconnect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::paint);
+    disconnect(window(), &QQuickWindow::beforeRendering, this, &ldSimulatorItem::update);
+#endif
+
+#if QT_VERSION >= 0x060000
+    disconnect(window(), &QQuickWindow::beforeRenderPassRecording, m_renderer.get(), &ldSimulatorRenderer::paint);
+    disconnect(window(), &QQuickWindow::beforeRenderPassRecording, window(), &QQuickWindow::update);
+#endif
+}
+
+void ldSimulatorItem::setGlViewport()
+{
+    QPointF pos = mapToScene(position());
+    // OpenGL coordinates are started from bottom, not from top
+    pos.ry() = window()->height() - pos.y() - height();
+
+    qreal devicePixelRatio = window()->devicePixelRatio();
+    m_renderer->setViewportPos((pos * devicePixelRatio).toPoint());
+    m_renderer->setViewportSize((QSizeF(width(), height()) * devicePixelRatio).toSize());
+    m_renderer->resizeGL();
 }
 
 

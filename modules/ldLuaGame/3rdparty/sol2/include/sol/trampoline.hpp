@@ -1,8 +1,8 @@
-// sol3 
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,12 +24,12 @@
 #ifndef SOL_TRAMPOLINE_HPP
 #define SOL_TRAMPOLINE_HPP
 
-#include "types.hpp"
-#include "traits.hpp"
+#include <sol/types.hpp>
+#include <sol/traits.hpp>
 #include <exception>
 #include <cstring>
 
-#if defined(SOL_PRINT_ERRORS) && SOL_PRINT_ERRORS
+#if SOL_IS_ON(SOL_PRINT_ERRORS)
 #include <iostream>
 #endif
 
@@ -37,19 +37,19 @@ namespace sol {
 	// must push a single object to be the error object
 	// NOTE: the VAST MAJORITY of all Lua libraries -- C or otherwise -- expect a string for the type of error
 	// break this convention at your own risk
-	using exception_handler_function = int(*)(lua_State*, optional<const std::exception&>, string_view);
+	using exception_handler_function = int (*)(lua_State*, optional<const std::exception&>, string_view);
 
 	namespace detail {
-		inline const char(&default_exception_handler_name())[11]{
+		inline const char (&default_exception_handler_name())[11] {
 			static const char name[11] = "sol.\xE2\x98\xA2\xE2\x98\xA2";
 			return name;
 		}
 
 		// must push at least 1 object on the stack
 		inline int default_exception_handler(lua_State* L, optional<const std::exception&>, string_view what) {
-#if defined(SOL_PRINT_ERRORS) && SOL_PRINT_ERRORS
-			std::cerr << "[sol3] An exception occurred: ";
-			std::cerr.write(what.data(), what.size());
+#if SOL_IS_ON(SOL_PRINT_ERRORS)
+			std::cerr << "[sol2] An exception occurred: ";
+			std::cerr.write(what.data(), static_cast<std::streamsize>(what.size()));
 			std::cerr << std::endl;
 #endif
 			lua_pushlstring(L, what.data(), what.size());
@@ -72,13 +72,13 @@ namespace sol {
 			return exfunc(L, std::move(maybe_ex), std::move(what));
 		}
 
-#ifdef SOL_NO_EXCEPTIONS
+#if SOL_IS_OFF(SOL_EXCEPTIONS)
 		template <lua_CFunction f>
 		int static_trampoline(lua_State* L) noexcept {
 			return f(L);
 		}
 
-#ifdef SOL_NOEXCEPT_FUNCTION_TYPE
+#if SOL_IS_ON(SOL_USE_NOEXCEPT_FUNCTION_TYPE)
 		template <lua_CFunction_noexcept f>
 		int static_trampoline_noexcept(lua_State* L) noexcept {
 			return f(L);
@@ -99,11 +99,10 @@ namespace sol {
 			return trampoline(L, f);
 		}
 #else
-		template <lua_CFunction f>
-		int static_trampoline(lua_State* L) {
-#if defined(SOL_EXCEPTIONS_SAFE_PROPAGATION) && !defined(SOL_LUAJIT)
-			return f(L);
 
+		inline int lua_cfunction_trampoline(lua_State* L, lua_CFunction f) {
+#if SOL_IS_ON(SOL_PROPAGATE_EXCEPTIONS)
+			return f(L);
 #else
 			try {
 				return f(L);
@@ -117,70 +116,67 @@ namespace sol {
 			catch (const std::exception& e) {
 				call_exception_handler(L, optional<const std::exception&>(e), e.what());
 			}
-#if !defined(SOL_EXCEPTIONS_SAFE_PROPAGATION)
+#if SOL_IS_ON(SOL_EXCEPTIONS_CATCH_ALL)
 			// LuaJIT cannot have the catchall when the safe propagation is on
-			// but LuaJIT will swallow all C++ errors 
+			// but LuaJIT will swallow all C++ errors
 			// if we don't at least catch std::exception ones
 			catch (...) {
 				call_exception_handler(L, optional<const std::exception&>(nullopt), "caught (...) exception");
 			}
-#endif // LuaJIT cannot have the catchall, but we must catch std::exceps for it
+#endif
 			return lua_error(L);
 #endif // Safe exceptions
 		}
 
-#ifdef SOL_NOEXCEPT_FUNCTION_TYPE
-#if 0 
-		// impossible: g++/clang++ choke as they think this function is ambiguous:
-		// to fix, wait for template <auto X> and then switch on no-exceptness of the function
-		template <lua_CFunction_noexcept f>
-		int static_trampoline(lua_State* L) noexcept {
-			return f(L);
+		template <lua_CFunction f>
+		int static_trampoline(lua_State* L) {
+			return lua_cfunction_trampoline(L, f);
 		}
-#else
+
+#if SOL_IS_ON(SOL_USE_NOEXCEPT_FUNCTION_TYPE)
 		template <lua_CFunction_noexcept f>
 		int static_trampoline_noexcept(lua_State* L) noexcept {
 			return f(L);
 		}
-#endif // impossible
-
 #else
 		template <lua_CFunction f>
 		int static_trampoline_noexcept(lua_State* L) noexcept {
 			return f(L);
 		}
-#endif // noexcept lua_CFunction type
+#endif
 
 		template <typename Fx, typename... Args>
 		int trampoline(lua_State* L, Fx&& f, Args&&... args) {
-			if (meta::bind_traits<meta::unqualified_t<Fx>>::is_noexcept) {
+			if constexpr (meta::bind_traits<meta::unqualified_t<Fx>>::is_noexcept) {
 				return f(L, std::forward<Args>(args)...);
 			}
-#if defined(SOL_EXCEPTIONS_SAFE_PROPAGATION) && !defined(SOL_LUAJIT)
-			return f(L, std::forward<Args>(args)...);
+			else {
+#if SOL_IS_ON(SOL_PROPAGATE_EXCEPTIONS)
+				return f(L, std::forward<Args>(args)...);
 #else
-			try {
-				return f(L, std::forward<Args>(args)...);
-			}
-			catch (const char* cs) {
-				call_exception_handler(L, optional<const std::exception&>(nullopt), string_view(cs));
-			}
-			catch (const std::string& s) {
-				call_exception_handler(L, optional<const std::exception&>(nullopt), string_view(s.c_str(), s.size()));
-			}
-			catch (const std::exception& e) {
-				call_exception_handler(L, optional<const std::exception&>(e), e.what());
-			}
-#if !defined(SOL_EXCEPTIONS_SAFE_PROPAGATION)
-			// LuaJIT cannot have the catchall when the safe propagation is on
-			// but LuaJIT will swallow all C++ errors 
-			// if we don't at least catch std::exception ones
-			catch (...) {
-				call_exception_handler(L, optional<const std::exception&>(nullopt), "caught (...) exception");
-			}
+				try {
+					return f(L, std::forward<Args>(args)...);
+				}
+				catch (const char* cs) {
+					call_exception_handler(L, optional<const std::exception&>(nullopt), string_view(cs));
+				}
+				catch (const std::string& s) {
+					call_exception_handler(L, optional<const std::exception&>(nullopt), string_view(s.c_str(), s.size()));
+				}
+				catch (const std::exception& e) {
+					call_exception_handler(L, optional<const std::exception&>(e), e.what());
+				}
+#if SOL_IS_ON(SOL_EXCEPTIONS_CATCH_ALL)
+				// LuaJIT cannot have the catchall when the safe propagation is on
+				// but LuaJIT will swallow all C++ errors
+				// if we don't at least catch std::exception ones
+				catch (...) {
+					call_exception_handler(L, optional<const std::exception&>(nullopt), "caught (...) exception");
+				}
 #endif
-			return lua_error(L);
+				return lua_error(L);
 #endif
+			}
 		}
 
 		inline int c_trampoline(lua_State* L, lua_CFunction f) {
@@ -189,28 +185,31 @@ namespace sol {
 #endif // Exceptions vs. No Exceptions
 
 		template <typename F, F fx>
-		inline int typed_static_trampoline_raw(std::true_type, lua_State* L) {
-			return static_trampoline_noexcept<fx>(L);
-		}
-
-		template <typename F, F fx>
-		inline int typed_static_trampoline_raw(std::false_type, lua_State* L) {
-			return static_trampoline<fx>(L);
-		}
-
-		template <typename F, F fx>
 		inline int typed_static_trampoline(lua_State* L) {
-			return typed_static_trampoline_raw<F, fx>(std::integral_constant<bool, meta::bind_traits<F>::is_noexcept>(), L);
+#if 0
+			// NOTE: you must evaluate the get/check_get of every
+			// argument, to ensure it doesn't throw
+			// (e.g., for the sol_lua_check_access extension point!)
+			// This incluudes properly noexcept-ing all the above
+			// trampolines / safety nets
+			// This is currently not done properly because it's an enormous pain in the ass to attempt to accomplish.
+			if constexpr (meta::bind_traits<F>::is_noexcept) {
+				return static_trampoline_noexcept<fx>(L);
+			}
+			else
+#endif
+			{ return static_trampoline<fx>(L); }
 		}
 	} // namespace detail
 
 	inline void set_default_exception_handler(lua_State* L, exception_handler_function exf = &detail::default_exception_handler) {
-		static_assert(sizeof(void*) >= sizeof(exception_handler_function), "void* storage is too small to transport the exception handler: please file a bug on the issue tracker");
+		static_assert(sizeof(void*) >= sizeof(exception_handler_function),
+		     "void* storage is too small to transport the exception handler: please file a bug on the sol2 issue tracker to get this looked at!");
 		void* storage;
 		std::memcpy(&storage, &exf, sizeof(exception_handler_function));
 		lua_pushlightuserdata(L, storage);
 		lua_setglobal(L, detail::default_exception_handler_name());
 	}
-} // sol
+} // namespace sol
 
 #endif // SOL_TRAMPOLINE_HPP

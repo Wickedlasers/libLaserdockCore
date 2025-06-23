@@ -35,7 +35,9 @@
 
 #include <QtCore/QObject>
 #include <QtMultimedia/QAudio>
+#if QT_VERSION < 0x060000
 #include <QtMultimedia/QAudioDeviceInfo>
+#endif
 #include <QtMultimedia/qaudioinput.h>
 
 #include <ldCore/Utilities/ldAudioBuffer.h>
@@ -101,6 +103,7 @@ public:
 
 
 public:
+    void setVolumeCorrectionEnabled(bool enabled);
 
     /// Update sound data for current playing data    
     void Update(const AudioBlock& block);
@@ -301,6 +304,9 @@ public:
 
     int GetSoundLevel() const; // 1..100
 
+    float GetVolumePowerPre() const;
+    float GetVolumePowerPost() const;
+
 protected:
 
     QScopedPointer<LDFFT>                   m_fft;
@@ -321,10 +327,14 @@ protected:
 
 
 
-    // volume correction    
-    void volumeCorrectionInit();    
+    // volume correction
+    void powerCalculate();
+    void volumeCorrectionInit();
+    void volumeCorrectionCalculate();
     void volumeCorrectionApply();
-public:    
+private:
+    bool volumeCorrectionEnabled {true};
+    bool volumeClipped{false};
     float volumePowerPre;
     float volumePowerPost;    
     float volumePowerLast;

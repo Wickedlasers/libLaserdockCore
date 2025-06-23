@@ -30,8 +30,12 @@ ldDeadzoneFilter::ldDeadzoneFilter()
 }
 
 void ldDeadzoneFilter::processFrame(std::vector<ldVertex> &frame) {
+    QMutexLocker lock(&m_mutex);
+
     if(!m_enabled || m_blocked)
         return;
+
+    m_isLastOn = false;
 
     for(uint i = 0; i < frame.size(); i++) {
         // see if we're on
@@ -132,6 +136,8 @@ void ldDeadzoneFilter::processFrame(std::vector<ldVertex> &frame) {
 }
 
 void ldDeadzoneFilter::process(ldVertex &v) {
+    QMutexLocker lock(&m_mutex);
+
     if(!m_enabled || m_blocked)
         return;
 
@@ -175,43 +181,92 @@ void ldDeadzoneFilter::resetFilter()
 
 void ldDeadzoneFilter::add(const ldDeadzoneFilter::Deadzone &deadzone)
 {
+    QMutexLocker lock(&m_mutex);
     m_deadzones.push_back(deadzone);
 }
 
 void ldDeadzoneFilter::clear()
 {
+    QMutexLocker lock(&m_mutex);
     m_deadzones.clear();
+}
+
+void ldDeadzoneFilter::removeCurrent()
+{
+    QMutexLocker lock(&m_mutex);
+    // do not allow to remove the last deadzone
+    if(m_deadzones.size() == 1)
+        return;
+
+    m_deadzones.removeAt(m_selectedIndex);
+    if(m_selectedIndex >= m_deadzones.size())
+        m_selectedIndex = m_deadzones.size() - 1;
 }
 
 const QList<ldDeadzoneFilter::Deadzone> &ldDeadzoneFilter::deadzones() const
 {
+    // QMutexLocker lock(&m_mutex);
     return m_deadzones;
 }
 
-ldDeadzoneFilter::Deadzone *ldDeadzoneFilter::firstDeadzone()
+ldDeadzoneFilter::Deadzone *ldDeadzoneFilter::selectedDeadzone()
 {
-    return !m_deadzones.isEmpty() ? &m_deadzones.first() : nullptr;
+    QMutexLocker lock(&m_mutex);
+    return !m_deadzones.isEmpty() && m_deadzones.size() > m_selectedIndex ? &m_deadzones[m_selectedIndex] : nullptr;
 }
+
+int ldDeadzoneFilter::selectedIndex() const
+{
+    // QMutexLocker lock(&m_mutex);
+    return m_selectedIndex;
+}
+
+void ldDeadzoneFilter::setSelectedIndex(int index)
+{
+    QMutexLocker lock(&m_mutex);
+    if(index < 0 || index >= m_deadzones.size()) {
+        m_selectedIndex = 0;
+        return;
+    }
+
+    m_selectedIndex = index;
+}
+
 
 void ldDeadzoneFilter::resetToDefault()
 {
-    clear();
-    add(ldDeadzoneFilter::Deadzone(QRectF(0, 0, 0.5, 0.5)));
+    QMutexLocker lock(&m_mutex);
+    m_deadzones.clear();
+    m_deadzones.push_back(ldDeadzoneFilter::Deadzone(QRectF(0, 0, 0.5, 0.5)));
+    m_selectedIndex = 0;
 }
 
 void ldDeadzoneFilter::setReverse(bool reverse)
 {
+    QMutexLocker lock(&m_mutex);
     m_reverse = reverse;
 }
 
 void ldDeadzoneFilter::setEnabled(bool enabled)
 {
+    QMutexLocker lock(&m_mutex);
     m_enabled = enabled;
 }
 
 void ldDeadzoneFilter::setBlocked(bool blocked)
 {
+    QMutexLocker lock(&m_mutex);
     m_blocked = blocked;
+}
+
+void ldDeadzoneFilter::lockMutex()
+{
+    m_mutex.lock();
+}
+
+void ldDeadzoneFilter::unlockMutex()
+{
+    m_mutex.unlock();
 }
 
 void ldDeadzoneFilter::attenuate(ldVertex& v) const {
@@ -224,11 +279,18 @@ void ldDeadzoneFilter::attenuate(ldVertex& v) const {
 bool ldDeadzoneFilter::isOn(float x, float y) const
 {
     bool isOut = true;
-
     for(const Deadzone &dz : m_deadzones) {
-        if(dz.visRect().contains(x, y)) {
-            isOut = false;
-            break;
+        if (dz.shapeIndex() == 0) {
+            // could call dz.contains but surely a bit quicker like this
+            if(dz.visRect().contains(x, y)) {
+                isOut = false;
+                break;
+            }
+        } else {
+            if(dz.contains(x, y)) {
+                isOut = false;
+                break;
+            }
         }
     }
     if(m_reverse) isOut = !isOut;
@@ -301,10 +363,9 @@ void ldDeadzoneFilter::pinToBorder(ldVertex &v)
     }
 }
 
-
-
-ldDeadzoneFilter::Deadzone::Deadzone(QRectF rect, float attenuation)
+ldDeadzoneFilter::Deadzone::Deadzone(QRectF rect, float attenuation, int shapeIndex)
     : m_attenuation(attenuation)
+    , m_shapeIndex(shapeIndex)
     , m_rect(rect)
 {
     updateVisRect();
@@ -319,6 +380,12 @@ const QRectF &ldDeadzoneFilter::Deadzone::visRect() const
 {
     return  m_visRect;
 }
+
+const QList<QPointF>  &ldDeadzoneFilter::Deadzone::shape() const
+{
+    return  m_shape;
+}
+
 
 void ldDeadzoneFilter::Deadzone::moveLeft(float value)
 {
@@ -354,6 +421,18 @@ float ldDeadzoneFilter::Deadzone::attenuation() const
     return m_attenuation;
 }
 
+void ldDeadzoneFilter::Deadzone::setShapeIndex(int shapeIndex)
+{
+    m_shapeIndex = shapeIndex;
+    updateVisRect();
+}
+
+
+int ldDeadzoneFilter::Deadzone::shapeIndex() const
+{
+    return m_shapeIndex;
+}
+
 void ldDeadzoneFilter::Deadzone::updateVisRect()
 {
     float dpx = m_rect.x();
@@ -367,5 +446,160 @@ void ldDeadzoneFilter::Deadzone::updateVisRect()
     float y2 = dpy*(1-dzy)+dzy;
 
     m_visRect = QRectF(QPointF(x1, y1), QPointF(x2, y2));
+
+    //
+    switch (DeadZoneShapes(m_shapeIndex)) {
+    case MShapeCircle:
+        updateShapeCircle();
+        break;
+    case MShapeTriangle:
+        updateShapeTriangle();
+        break;
+    case MShapeCornerTopLeft:
+        updateShapeCorner(0);
+        break;
+    case MShapeCornerTopRight:
+        updateShapeCorner(1);
+        break;
+    case MShapeCornerBotRight:
+        updateShapeCorner(2);
+        break;
+    case MShapeCornerBotLeft:
+        updateShapeCorner(3);
+        break;
+    case MShapeDiamond:
+        updateShapeDiamond();
+        break;
+    case MShapeRect:
+    default:
+        updateShapeRectangle();
+        break;
+    }
 }
 
+//
+void ldDeadzoneFilter::Deadzone::updateShapeRectangle()
+{
+    m_shape.clear();
+    //
+    m_shape.push_back(m_visRect.topLeft());
+    m_shape.push_back(m_visRect.topRight());
+    m_shape.push_back(m_visRect.bottomRight());
+    m_shape.push_back(m_visRect.bottomLeft());
+    m_shape.push_back(m_visRect.topLeft());
+}
+
+//
+void ldDeadzoneFilter::Deadzone::updateShapeCircle()
+{
+    m_shape.clear();
+    // maybe set 64 .. but can be rapidly heavy as we compute on each points in contains(x,y)..
+    int maxPoints = 32;
+    for (int i=0; i<maxPoints; i++) {
+        float slope = (1.0f*i)/(maxPoints-1.0f);
+        float x = 0.5f*m_visRect.width()*cosf(slope*M_2PIf) + m_visRect.center().x();
+        float y = 0.5f*m_visRect.height()*sinf(slope*M_2PIf) +  m_visRect.center().y();
+        m_shape.push_back(QPointF(x,y));
+    }
+}
+
+//
+void ldDeadzoneFilter::Deadzone::updateShapeTriangle()
+{
+    m_shape.clear();
+    // y is inversed
+    const QPointF& top_center = (m_visRect.bottomLeft() + m_visRect.bottomRight())/2;
+    //
+    m_shape.push_back(top_center);
+    m_shape.push_back(m_visRect.topRight());
+    m_shape.push_back(m_visRect.topLeft());
+    m_shape.push_back(top_center);
+}
+
+//
+void ldDeadzoneFilter::Deadzone::updateShapeCorner(int p_cornerCase)
+{
+    m_shape.clear();
+
+    // case 0 default
+    // y is inversed
+    QPointF ptA = m_visRect.bottomLeft();
+    QPointF ptB = m_visRect.bottomRight();
+    QPointF ptC = m_visRect.topLeft();
+
+    switch (p_cornerCase) {
+    case 1: // TR
+    {
+        ptA = m_visRect.bottomRight();
+        ptB = m_visRect.topRight();
+        ptC = m_visRect.bottomLeft();
+    }
+        break;
+    case 2: // BR
+    {
+        ptA = m_visRect.topRight();
+        ptB = m_visRect.topLeft();
+        ptC = m_visRect.bottomRight();
+    }
+    break;
+    case 3: // BL
+    {
+        ptA = m_visRect.topLeft();
+        ptB = m_visRect.bottomLeft();
+        ptC = m_visRect.topRight();
+    }
+    break;
+    default:
+        break;
+    }
+    //
+    m_shape.push_back(ptA);
+    m_shape.push_back(ptB);
+    m_shape.push_back(ptC);
+    m_shape.push_back(ptA);
+}
+
+//
+void ldDeadzoneFilter::Deadzone::updateShapeDiamond()
+{
+    m_shape.clear();
+    const QPointF& top_center = (m_visRect.topLeft() + m_visRect.topRight())/2;
+    const QPointF& right_center = (m_visRect.topRight() + m_visRect.bottomRight())/2;
+    const QPointF& bot_center = (m_visRect.bottomLeft() + m_visRect.bottomRight())/2;
+    const QPointF& left_center = (m_visRect.topLeft() + m_visRect.bottomLeft())/2;
+    //
+    m_shape.push_back(top_center);
+    m_shape.push_back(right_center);
+    m_shape.push_back(bot_center);
+    m_shape.push_back(left_center);
+    m_shape.push_back(top_center);
+}
+
+//
+bool ldDeadzoneFilter::Deadzone::contains(float p_x, float p_y) const
+{
+    //
+    if (m_shape.size() < 1) return false;
+    int crossings = 0;
+    size_t numPoints = m_shape.size();
+    //
+    for (size_t i = 0; i < numPoints; ++i) {
+        size_t next = (i + 1) % numPoints;
+        //
+        if ((m_shape[i].y() <= p_y && p_y < m_shape[next].y()) ||
+            (m_shape[next].y() <= p_y && p_y < m_shape[i].y())) {
+            if (m_shape[i].y() != m_shape[next].y()) {
+                    if (p_x < m_shape[i].x() + (m_shape[next].x() - m_shape[i].x()) * (p_y - m_shape[i].y()) / (m_shape[next].y() - m_shape[i].y())) {
+                        crossings++;
+                    }
+            } else if (p_y == m_shape[i].y()
+                       && p_x <= std::max(m_shape[i].x(), m_shape[next].x())
+                       && p_x >= std::min(m_shape[i].x(), m_shape[next].x())) {
+                    // point lies on the horizontal line segment
+                    return true;
+            }
+        }
+    }
+    // if crossings is odd, the point is inside the polygon
+    return (crossings % 2 == 1);
+}

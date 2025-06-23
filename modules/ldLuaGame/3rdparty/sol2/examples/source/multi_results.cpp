@@ -2,7 +2,6 @@
 #include <sol/sol.hpp>
 
 #include <tuple>
-#include "assert.hpp"
 #include <iostream>
 
 int main() {
@@ -15,9 +14,8 @@ int main() {
 	// std::tuple as the transfer type,
 	// sol::as_returns for containers,
 	// and sol::variadic_results for more special things
-	lua.set_function("multi_tuple", [] { 
-		return std::make_tuple(10, "goodbye"); 
-	});
+	lua.set_function("multi_tuple",
+	     [] { return std::make_tuple(10, "goodbye"); });
 	lua.script("print('calling multi_tuple')");
 	lua.script("print(multi_tuple())");
 	lua.script("x, y = multi_tuple()");
@@ -30,18 +28,18 @@ int main() {
 	sol::tie(first, second) = multi();
 
 	// use the values
-	c_assert(first == 10);
-	c_assert(second == "goodbye");
+	SOL_ASSERT(first == 10);
+	SOL_ASSERT(second == "goodbye");
 
 	// sol::as_returns
-	// works with any iterable, 
+	// works with any iterable,
 	// but we show off std::vector here
-	lua.set_function("multi_containers", [] (bool add_extra) { 
-		std::vector<int> values{55, 66};
+	lua.set_function("multi_containers", [](bool add_extra) {
+		std::vector<int> values { 55, 66 };
 		if (add_extra) {
 			values.push_back(77);
 		}
-		return sol::as_returns(std::move(values)); 
+		return sol::as_returns(std::move(values));
 	});
 	lua.script("print('calling multi_containers')");
 	lua.script("print(multi_containers(false))");
@@ -50,22 +48,25 @@ int main() {
 	int b = lua["b"];
 	int c = lua["c"];
 
-	c_assert(a == 55);
-	c_assert(b == 66);
-	c_assert(c == 77);
+	SOL_ASSERT(a == 55);
+	SOL_ASSERT(b == 66);
+	SOL_ASSERT(c == 77);
 
 	// sol::variadic_results
 	// you can push objects of different types
 	// note that sol::this_state is a transparent
 	// argument: you don't need to pass
 	// that state through Lua
-	lua.set_function("multi_vars", [](int a, bool b, sol::this_state L) {
-		sol::variadic_results values;
-		values.push_back({ L, sol::in_place_type<int>, a });
-		values.push_back({ L, sol::in_place_type<bool>, b });
-		values.push_back({ L, sol::in_place, "awoo" });
-		return values;
-	});
+	lua.set_function(
+	     "multi_vars", [](int a, bool b, sol::this_state L) {
+		     sol::variadic_results values;
+		     values.push_back(
+		          { L, sol::in_place_type<int>, a });
+		     values.push_back(
+		          { L, sol::in_place_type<bool>, b });
+		     values.push_back({ L, sol::in_place, "awoo" });
+		     return values;
+	     });
 	lua.script("print('calling multi_vars')");
 	lua.script("print(multi_vars(2, false))");
 	lua.script("t, u, v = multi_vars(42, true)");
@@ -73,9 +74,9 @@ int main() {
 	bool u = lua["u"];
 	std::string v = lua["v"];
 
-	c_assert(t == 42);
-	c_assert(u);
-	c_assert(v == "awoo");
+	SOL_ASSERT(t == 42);
+	SOL_ASSERT(u);
+	SOL_ASSERT(v == "awoo");
 
 	return 0;
 }

@@ -28,45 +28,32 @@
 #include "ldCore/Data/ldBufferManager.h"
 #include "ldCore/Data/ldHardwareDataWorker.h"
 #include "ldCore/Hardware/ldHardware.h"
-#include "ldCore/Hardware/ldHardwareManager.h"
-#include "ldCore/Hardware/ldNetworkHardwareManager.h"
+#include "ldCore/Hardware/ldHardwareBatch.h"
 #include "ldCore/Settings/ldSettings.h"
 #include "ldCore/Simulator/ldSimulatorEngine.h"
 
-#ifdef LASERDOCKLIB_USB_SUPPORT
-#include "ldCore/Hardware/ldUSBHardwareManager.h"
-#endif
 
-ldDataDispatcher::ldDataDispatcher(ldBufferManager *bufferManager, ldHardwareManager *hardwareManager, ldFilterManager* filterManager, QObject *parent)
+ldDataDispatcher::ldDataDispatcher(ldFrameBuffer *frameBuffer, ldHardwareBatch *hardwareBatch, QObject *parent)
     : ldPropertyObject(parent)
     , m_simulatorEngine(new ldSimulatorEngine())    
     , m_dataWorker(new ldHardwareDataWorker(
-        bufferManager,
-        hardwareManager,
-        std::vector<ldAbstractHardwareManager*>{
-            static_cast<ldAbstractHardwareManager*>(new ldNetworkHardwareManager(filterManager)),
-            #ifdef LASERDOCKLIB_USB_SUPPORT
-                static_cast<ldAbstractHardwareManager*>(new ldUsbHardwareManager(filterManager, this))
-            #endif
-        },
+        frameBuffer,
+        hardwareBatch,
         m_simulatorEngine.get()))
-    , m_activeDataWorker(m_dataWorker.get())
 {
     qDebug() << __FUNCTION__;
 
 
-    connect(m_dataWorker.get(), &ldHardwareDataWorker::isActiveTransferChanged, this, [&]() {
-        emit activeChanged(m_dataWorker->isActiveTransfer());
+    connect(m_dataWorker.get(), &ldHardwareDataWorker::isActiveTransferChanged, this, [&](bool active) {
+        emit activeXferChanged(active);
     });
 
-    // auto stop when hardware connects
-    connect(hardwareManager, &ldHardwareManager::deviceCountChanged, this, [&](uint count) {
-        if(count == 0) {
-            setActiveTransfer(false);
-        }
+    connect(m_dataWorker.get(), &ldHardwareDataWorker::isActiveChanged, this, [&](bool active) {
+        emit activeChanged(active);
     });
 
-    m_activeDataWorker->setActive(true);
+
+    m_dataWorker->setActive(true);
 
 }
 
@@ -87,6 +74,10 @@ ldSimulatorEngine *ldDataDispatcher::simulatorEngine() const
 
 void ldDataDispatcher::setActiveTransfer(bool active)
 {
-    m_activeDataWorker->setActiveTransfer(active);
+    m_dataWorker->setActiveTransfer(active);
 }
 
+void ldDataDispatcher::setActive(bool active)
+{
+    m_dataWorker->setActive(active);
+}

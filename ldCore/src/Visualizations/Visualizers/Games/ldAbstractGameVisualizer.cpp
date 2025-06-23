@@ -109,8 +109,12 @@ QList<QList<ldVec2> > ldAbstractGameVisualizer::lineListToVertexShapes(const QLi
     return shapes;
 }
 
-QList<QList<ldVec2> > ldAbstractGameVisualizer::optimizeShapesToLaser(const QList<QList<ldVec2>> &linePathParts, int repeat)
+QList<QList<ldVec2> > ldAbstractGameVisualizer::optimizeShapesToLaser(const QList<QList<ldVec2>> &linePathParts, int /*repeat*/)
 {
+    // the following code has some issue in Qt6 and lines are not closed properly... so just comment out it for now and later we can check it
+    return linePathParts;
+
+    /*
     QList<QList<ldVec2>> laserLinePathParts;
 
     //  current path direction - x or y
@@ -168,6 +172,7 @@ QList<QList<ldVec2> > ldAbstractGameVisualizer::optimizeShapesToLaser(const QLis
     }
 
     return laserLinePathParts;
+    */
 }
 
 
@@ -267,6 +272,16 @@ void ldAbstractGameVisualizer::previousLevel()
         nextLevelIndex = (levelCount > 0) ? (levelCount - 1) : 0;
 
     setLevelIndex(nextLevelIndex);
+}
+
+void ldAbstractGameVisualizer::moveRightX(double x)
+{
+    moveX(x);
+}
+
+void ldAbstractGameVisualizer::moveRightY(double y)
+{
+    moveY(y);
 }
 
 ldAbstractGameVisualizer::ldGameState ldAbstractGameVisualizer::state() const

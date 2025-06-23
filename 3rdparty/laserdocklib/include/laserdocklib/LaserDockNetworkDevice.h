@@ -58,6 +58,9 @@ public:
     virtual int8_t get_device_address() const;
     virtual std::string get_device_name() const;
     virtual QString get_ip_address() const;
+    virtual bool get_interlock_enabled() const;
+    virtual bool get_over_temperature() const;
+    virtual bool get_temperature_warning() const;
 
     virtual bool get_disconnected();
     virtual bool enable_buffer_state_replies();
@@ -68,6 +71,7 @@ public:
 
     virtual bool dac_rate(uint32_t *rate);
     virtual bool set_dac_rate(uint32_t rate);
+    virtual bool set_dac_buffer_thold_lvl(uint32_t level);
     virtual bool max_dac_rate(uint32_t *rate);
     virtual bool min_dac_value(uint32_t *value);
     virtual bool max_dac_value(uint32_t *value);
@@ -175,8 +179,8 @@ private:
     std::string                         m_serialnumber{""};
     QString                             m_ip_address{""};
     QString                             m_model_name{""};
-    uint8_t                             m_model_number{0};
-    uint8_t                             m_model_region{0};
+    uint8_t                             m_model_number{255};
+    uint8_t                             m_model_region{255};
     bool                                m_outputenabled{false};
     bool                                m_interlock_enabled{false};
     bool                                m_temperature_warn{false};
@@ -186,8 +190,8 @@ private:
     uint32_t                            m_max_dac_rate{0};
     uint8_t                             m_fw_major{255};
     uint8_t                             m_fw_minor{255};
-    uint16_t                            m_min_dac_value{0};
-    uint16_t                            m_max_dac_value{0};
+    uint16_t                            m_min_dac_value{65535};
+    uint16_t                            m_max_dac_value{65535};
     uint8_t                             m_battery_pct{0};
     int8_t                              m_temperature_degc{0};
 

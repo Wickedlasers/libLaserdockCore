@@ -67,5 +67,13 @@ ldVec2 ldRect::size() const
     return ldVec2(width(), height());
 }
 
+QRectF ldRect::toRect() const
+{
+    return QRectF(bottom_left.x,
+                  top_right.y,
+                  top_right.x - bottom_left.x,
+                  bottom_left.y - top_right.y);
+}
+
 
 

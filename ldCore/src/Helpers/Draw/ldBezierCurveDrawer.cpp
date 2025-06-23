@@ -30,6 +30,7 @@
 #include <QtCore/QtDebug>
 #include <QtCore/QTime>
 
+#include <ldCore/Helpers/ldEnumHelper.h>
 #include <ldCore/Helpers/BezierCurve/ldBezierCurveFrame.h>
 #include <ldCore/Helpers/Color/ldColorEffects.h>
 #include <ldCore/Render/ldRendererOpenlase.h>
@@ -42,40 +43,6 @@ ldBezierCurveDrawer::~ldBezierCurveDrawer()
 {
 }
 
-void ldBezierCurveDrawer::setColorEffect(const ldBezierCurveDrawer::ColorEffect &mode)
-{
-    switch(mode) {
-    case ColorEffect::No:
-        m_colorEffect.reset();
-        break;
-    case ColorEffect::One:
-        m_colorEffect.reset(new ldColorEffectOne);
-        break;
-    case ColorEffect::Two:
-        m_colorEffect.reset(new ldColorEffectTwo);
-        break;
-    case ColorEffect::Three:
-        m_colorEffect.reset(new ldColorEffectThree);
-        break;
-    }
-
-    if(m_colorEffect) {
-        m_colorEffect->setBaseColorDecay(m_baseColorDecay);
-    }
-}
-
-
-void ldBezierCurveDrawer::setColorEffectBaseColorDecay(int baseColorDecay)
-{
-    if(m_baseColorDecay == baseColorDecay) {
-        return;
-    }
-
-    m_baseColorDecay = baseColorDecay;
-
-    if(m_colorEffect) m_colorEffect->setBaseColorDecay(m_baseColorDecay);
-}
-
 void ldBezierCurveDrawer::setMaxPoints(int maxPoints)
 {
     m_maxPoints = maxPoints;
@@ -84,36 +51,6 @@ void ldBezierCurveDrawer::setMaxPoints(int maxPoints)
 void ldBezierCurveDrawer::setBezierLengthCoeff(int bezierLengthCoeff)
 {
     m_bezierLengthCoeff = bezierLengthCoeff;
-}
-
-void ldBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer, const ldBezierCurveFrame &dataVect)
-{
-    if(m_colorEffect) m_colorEffect->updateColor();
-
-    // calculate dim in united coords for later usage
-    ldRect dimInUnited = dataVect.dim();
-    if(!dataVect.data().empty() && !dataVect.data()[0].isUnitedCoordinates()) {
-        dimInUnited = ldMaths::laserToUnitedCoords(dataVect.dim());
-    }
-
-    for(const ldBezierCurveObject &object : dataVect.data()) {
-//        qDebug() << "dim" << dVect.data().size() << object.isUnitedCoordinates() << object.isValidForLaserOutput() << object.dim().left() << object.dim().bottom() << object.dim().right() << object.dim().top();
-        if(object.isValidForLaserOutput())
-            draw(renderer, object, dimInUnited);
-    }
-}
-
-void ldBezierCurveDrawer::innerDraw(ldRendererOpenlase *renderer, const ldBezierCurveObject &dataVect)
-{
-    if(m_colorEffect) m_colorEffect->updateColor();
-
-    // calculate dim in united coords for later usage
-    ldRect dimInUnited = dataVect.dim();
-    if(!dataVect.isUnitedCoordinates()) {
-        dimInUnited = ldMaths::laserToUnitedCoords(dataVect.dim());
-    }
-
-    draw(renderer, dataVect, dimInUnited);
 }
 
 std::vector<std::vector<OLPoint> > ldBezierCurveDrawer::getBezierData(const ldBezierCurveObject &object, bool isSafe) const
@@ -153,6 +90,9 @@ std::vector<std::vector<OLPoint> > ldBezierCurveDrawer::getDrawingData(const ldB
     std::vector<std::vector<OLPoint> > data;
 
     for(const ldBezierCurveObject &object : frame.data()) {
+        if(!object.isValidForLaserOutput())
+            continue;
+
         std::vector<std::vector<OLPoint> > objData = getDrawingData(object, false);
         data.insert(std::end(data), std::begin(objData), std::end(objData));
     }
@@ -205,58 +145,6 @@ std::vector<std::vector<OLPoint> > ldBezierCurveDrawer::getDrawingData(const ldB
     return data;
 }
 
-
-void ldBezierCurveDrawer::draw(ldRendererOpenlase *renderer, const ldBezierCurveObject &dataVect, const ldRect &dimInUnited)
-{
-    std::vector<std::vector<OLPoint> > drawingData = getDrawingData(dataVect);
-    for(const std::vector<OLPoint> &pointVector : drawingData) {
-        renderer->begin(OL_LINESTRIP);
-        for(const OLPoint &p: pointVector) {
-            uint32_t color = m_colorEffect ? m_colorEffect->getColor(ldVec2(p.x, p.y), dimInUnited) :  p.color;
-            renderer->vertex(p.x, p.y, color, 1);
-        }
-        renderer->end();
-   }
-
-
-// ------------- old drawing, check for regressions ------------------
-
-    //
-//    int drawingMaxPoints = 1000;
-//    if (m_safeDrawing>drawingMaxPoints) return;
-//    // qDebug()<<"safeDrawing::"<<safeDrawing;
-//    for (const std::vector<BezierCurve> &bezierTab : dataVect.data())
-//    {
-//        renderer->begin(OL_LINESTRIP);
-//        for (const BezierCurve &b : bezierTab)
-//        {
-//            int bezierLengthPoints = (int) (m_bezierLengthCoeff*b.length());
-//            if (bezierLengthPoints<3) bezierLengthPoints = 3;
-//            if (bezierLengthPoints>m_maxPoints) bezierLengthPoints = m_maxPoints;
-//            // if (_firstFrame)  qDebug()<<(int) (100*b.length())<<"maxPoints"<<maxPoints;
-//            for (int j=0; j<bezierLengthPoints; j++)
-//            {
-//                //qDebug()<<"safeDrawing"<<safeDrawing;
-//                float slope = 1.0f*j/(bezierLengthPoints-1);
-//                Vec2 p;
-//                p.x = ldMaths::cubicBezier(slope, b.start.x, b.control1.x, b.control2.x, b.end.x);
-//                p.y = ldMaths::cubicBezier(slope, b.start.y, b.control1.y, b.control2.y, b.end.y);
-//                // if (_firstFrame) qDebug()<<"p "<<p.x << "x" <<p.y;
-//                if(dataVect.isUnitedCoordinates()) {
-//                    p = ldMaths::unitedToLaserCoords(p);
-//                }
-//                //
-//                if (m_safeDrawing <= drawingMaxPoints && p.isValidLaserPoint()) {
-//                    uint32_t color = m_colorEffect ? m_colorEffect->getColor(p, dimInUnited) :  b.color;
-//                    renderer->vertex(p.x, p.y, color);
-//                    m_safeDrawing++;
-//                }
-
-//            }
-//        }
-//        renderer->end();
-//    }
-}
 
 std::vector<std::vector<OLPoint> > ldBezierCurveDrawer::makeSafeDrawing(const std::vector<std::vector<OLPoint> > &data) const
 {

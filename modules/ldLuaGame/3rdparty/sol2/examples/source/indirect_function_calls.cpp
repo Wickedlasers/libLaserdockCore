@@ -1,10 +1,11 @@
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
-#include "assert.hpp"
 #include <iostream>
 
-sol::variadic_results call_it(sol::object function_name, sol::variadic_args args, sol::this_environment env, sol::this_state L) {
+sol::variadic_results call_it(sol::object function_name,
+     sol::variadic_args args, sol::this_environment env,
+     sol::this_state L) {
 	sol::state_view lua = L;
 	// default to global table as environment
 	sol::environment function_environment = lua.globals();
@@ -14,7 +15,8 @@ sol::variadic_results call_it(sol::object function_name, sol::variadic_args args
 	}
 
 	// get and call the function
-	sol::protected_function pf = function_environment[function_name];
+	sol::protected_function pf
+	     = function_environment[function_name];
 	sol::protected_function_result res = pf(args);
 
 	//
@@ -33,7 +35,7 @@ sol::variadic_results call_it(sol::object function_name, sol::variadic_args args
 	return results;
 }
 
-int main(int, char* []) {
+int main(int, char*[]) {
 	std::cout << "=== indirect function calls ===" << std::endl;
 
 	sol::state lua;
@@ -67,8 +69,8 @@ end
 	int subtract_result = lua["subtract_result"];
 	int add_result = lua["add_result"];
 
-	c_assert(add_result == 6);
-	c_assert(subtract_result == 4);
+	SOL_ASSERT(add_result == 6);
+	SOL_ASSERT(subtract_result == 4);
 
 	std::cout << std::endl;
 	return 0;

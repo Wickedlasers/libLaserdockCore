@@ -10,23 +10,23 @@
 #include <jni.h>
 #include <string>
 
-class QAndroidJniObject;
+#include <laserdocklib/ldAndroidGlobals.h>
 
 class ldUsbDeviceHelper {
 
 public:
     static ldUsbDeviceHelper *getInstance();
 
-    QAndroidJniObject getLaserdockDevices();
-    QAndroidJniObject *openDevice(jobject usbDevice);
+    QJniObject getLaserdockDevices();
+    QJniObject *openDevice(jobject usbDevice);
 
-    int setupDevice(const QAndroidJniObject &usbdevice);
+    int setupDevice(const QJniObject &usbdevice);
 
-    QAndroidJniObject getCmdConnection() const;
-    QAndroidJniObject getDataConnection() const;
+    QJniObject getCmdConnection() const;
+    QJniObject getDataConnection() const;
 
 private:
-    QAndroidJniObject getField(const std::string &fieldName, const std::string &fieldType) const;
+    QJniObject getField(const std::string &fieldName, const std::string &fieldType) const;
 
     explicit ldUsbDeviceHelper();
     virtual ~ldUsbDeviceHelper();
@@ -38,7 +38,7 @@ struct JavaUsbConnectionPrivate;
 class JavaUsbConnection {
 public :
     explicit JavaUsbConnection();
-    explicit JavaUsbConnection(QAndroidJniObject *);
+    explicit JavaUsbConnection(QJniObject *);
     ~JavaUsbConnection();
 
     int getfd() const;

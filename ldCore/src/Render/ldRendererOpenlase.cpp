@@ -24,6 +24,7 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QCoreApplication>
+#include <QtCore/QTimer>
 
 #include <ldCore/ldCore.h>
 #include <ldCore/Data/ldFrameBuffer.h>
@@ -31,7 +32,18 @@
 
 void logCallbackFunc(const char *msg)
 {
-    qDebug().nospace() << msg;
+    // timer to stop flooding of log with
+    // Point buffer overflow (temp): need 30001 points, have 30000
+    static QTimer s_logIntervalTimer;
+
+    if(s_logIntervalTimer.isActive())
+        return;
+
+    qWarning().nospace() << msg;
+
+    s_logIntervalTimer.setSingleShot(true);
+    s_logIntervalTimer.setInterval(5000);
+    s_logIntervalTimer.start();
 }
 
 
@@ -44,31 +56,30 @@ void logCallbackFunc(const char *msg)
 ldRendererOpenlase::ldRendererOpenlase(QObject *parent) :
     ldAbstractRenderer(parent)
     , m_filterManager(ldCore::instance()->filterManager())
+    , m_libol(new ldLibol())
 {
-    olSetLogCallback(&logCallbackFunc);
-
-    // Increased to 30000 to avoid RenderedFrame buffer overflow error.
-    if(olInit(0, 30000) != 0) {
-        qFatal("Error initializing openlase!!!");
-//        exit(1);
-    }
-
-    // reserve some space to avoid allocations
-//    m_frame.reserve(30000);
-//    m_cachedFrame.reserve(30000);
+    m_libol->olSetLogCallback(&logCallbackFunc);
 }
 
+ldRendererOpenlase::~ldRendererOpenlase()
+{
+}
+
+ldLibol* ldRendererOpenlase::getLibol() const
+{
+    return m_libol.get();
+}
 
 /////////////////////////////////////////////////////////////////////////
 //                         Libol Module Functions
 /////////////////////////////////////////////////////////////////////////
 
 void ldRendererOpenlase::setRenderParams(OLRenderParams * params){
-    olSetRenderParams(params);
+    m_libol->olSetRenderParams(params);
 }
 
 void ldRendererOpenlase::getRenderParams(OLRenderParams *params){
-    olGetRenderParams(params);
+    m_libol->olGetRenderParams(params);
 }
 
 void ldRendererOpenlase::setFrameModes(int flags) {
@@ -79,47 +90,39 @@ const std::vector<ldVertex> &ldRendererOpenlase::getCachedFrame() const {
     return m_frame.frame();
 }
 
-float ldRendererOpenlase::renderFrame(ldFrameBuffer * buffer, int max_fps, bool is3d){
+size_t ldRendererOpenlase::getCachedFrameSize() const {
+    return m_frame.frame().size();
+}
 
-    const float result = olRenderFrame(max_fps);
-    OLRenderedFrame * rendered_frame = olGetRenderedFrames();
-    m_lastFramePointCount = rendered_frame->pnext;
+bool ldRendererOpenlase::isRendererPaused() const
+{
+    return m_isRendererPaused;
+}
 
-//    {static int s; s=(s+1)%100; int z=olGetRenderedFrames()->pnext; if (!s || z > 30001) qDebug() << "frames point count:" << z;}
+void ldRendererOpenlase::renderFrame(ldFrameBuffer * buffer, int max_fps, bool is3d, bool isVisPaused)
+{
+    ldCore::instance()->filterManager()->lock();
+    // clear last frame
+    if(!isVisPaused && !m_lastFrame.empty())
+        m_lastFrame.clear();
 
-    m_frame.reserve(static_cast<uint>(rendered_frame->pnext));
-    m_frame.clear();
+    if(!isVisPaused || m_lastFrame.empty())
+        createNewFrame(max_fps, is3d);
 
-    ldVertex v = {{0, 0}, {0, 0, 0}};
-    for(uint i = 0; i < static_cast<uint>(rendered_frame->pnext); i++ ){
-        OLPoint *p = rendered_frame->points+i;
-        v.x() = p->x;
-        v.y() = p->y;
-        v.r() =((p->color & 0xFF0000) >> 16) / 255.0f;
-        v.g() =((p->color & 0x00FF00) >> 8) / 255.0f;
-        v.b() =((p->color & 0x0000FF) >> 0) / 255.0f;
-
-        m_frame.push_back(std::move(v));
+    if(isVisPaused) {
+        if(m_lastFrame.empty())
+            m_lastFrame = m_frame;
+        else
+            m_frame = m_lastFrame;
     }
-
-    // filter openlase result
-    m_filterManager->lock();
-    m_filterManager->resetFilters();
-    m_filterManager->setFrameModes(m_frameModes);
-
-    bool mode_disable_rotate = m_filterManager->dataFilter()->frameModes & FRAME_MODE_DISABLE_ROTATION;
-    if(!mode_disable_rotate && !is3d) {
-        for(ldVertex &frameV : m_frame.frame())
-            m_filterManager->rotate3dFilter()->processFilter(frameV);
-    }
-
-    m_filterManager->processFrame(m_frame);
-    m_filterManager->unlock();
 
     // apply data filter
     buffer->pushFrame(m_frame);
 
-    return result;
+    // make sure not to pause renderer before it fills last frame
+    m_isRendererPaused = isVisPaused;
+    ldCore::instance()->filterManager()->unlock();
+
 }
 
 
@@ -128,143 +131,143 @@ float ldRendererOpenlase::renderFrame(ldFrameBuffer * buffer, int max_fps, bool 
 /////////////////////////////////////////////////////////////////////////
 
 void ldRendererOpenlase::loadIdentity(void){
-    olLoadIdentity();
+    m_libol->olLoadIdentity();
 }
 
 void ldRendererOpenlase::pushMatrix(void){
-    olPushMatrix();
+    m_libol->olPushMatrix();
 }
 
 void ldRendererOpenlase::popMatrix(void){
-    olPopMatrix();
+    m_libol->olPopMatrix();
 }
 
 void ldRendererOpenlase::multMatrix(float m[9]){
-    olMultMatrix(m);
+    m_libol->olMultMatrix(m);
 }
 
 void ldRendererOpenlase::rotate(float theta){
-    olRotate(theta);
+    m_libol->olRotate(theta);
 }
 
 void ldRendererOpenlase::translate(float x, float y){
-    olTranslate(x, y);
+    m_libol->olTranslate(x, y);
 }
 
 void ldRendererOpenlase::scale(float sx, float sy){
-    olScale(sx, sy);
+    m_libol->olScale(sx, sy);
 }
 
 
 void ldRendererOpenlase::loadIdentity3(void){
-    olLoadIdentity3();
+    m_libol->olLoadIdentity3();
 }
 
 void ldRendererOpenlase::pushMatrix3(void){
-    olPushMatrix3();
+    m_libol->olPushMatrix3();
 }
 
 void ldRendererOpenlase::popMatrix3(void){
-    olPopMatrix3();
+    m_libol->olPopMatrix3();
 }
 
 
 void ldRendererOpenlase::multMatrix3(float m[16]){
-    olMultMatrix3(m);
+    m_libol->olMultMatrix3(m);
 }
 
 void ldRendererOpenlase::rotate3X(float theta){
-    olRotate3X(theta);
+    m_libol->olRotate3X(theta);
 }
 
 void ldRendererOpenlase::rotate3Y(float theta){
-    olRotate3Y(theta);
+    m_libol->olRotate3Y(theta);
 }
 
 void ldRendererOpenlase::rotate3Z(float theta){
-    olRotate3Z(theta);
+    m_libol->olRotate3Z(theta);
 }
 
 void ldRendererOpenlase::translate3(float x, float y, float z){
-    olTranslate3(x, y, z);
+    m_libol->olTranslate3(x, y, z);
 }
 
 void ldRendererOpenlase::scale3(float sx, float sy, float sz){
-    olScale3(sx, sy, sz);
+    m_libol->olScale3(sx, sy, sz);
 }
 
 
 void ldRendererOpenlase::frustum (float left, float right, float bot, float top, float near, float far){
-    olFrustum(left, right, bot, top, near, far);
+    m_libol->olFrustum(left, right, bot, top, near, far);
 }
 
 void ldRendererOpenlase::perspective(float fovy, float aspect, float zNear, float zFar){
-    olPerspective(fovy, aspect, zNear, zFar);
+    m_libol->olPerspective(fovy, aspect, zNear, zFar);
 }
 
 
 void ldRendererOpenlase::resetColor(void){
-    olResetColor();
+    m_libol->olResetColor();
 }
 
 void ldRendererOpenlase::multColor(uint32_t color){
-    olMultColor(color);
+    m_libol->olMultColor(color);
 }
 
 void ldRendererOpenlase::pushColor(void){
-    olPushColor();
+    m_libol->olPushColor();
 }
 
 void ldRendererOpenlase::popColor(void){
-    olPopColor();
+    m_libol->olPopColor();
 }
 
 
 void ldRendererOpenlase::begin(int prim){
-    olBegin(prim);
+    m_libol->olBegin(prim);
 }
 
 void ldRendererOpenlase::vertex(float x, float y, uint32_t color, int repeat)
 {
     for(int i = 0; i < repeat; i++) {
-        olVertex(x, y, color);
+        m_libol->olVertex(x, y, color);
     }
 }
 
 void ldRendererOpenlase::vertex3(float x, float y, float z, uint32_t color, int repeat){
-    olVertex3(x, y, z, color, repeat);
+    m_libol->olVertex3(x, y, z, color, repeat);
 }
 
 void ldRendererOpenlase::end(void){
-    olEnd();
+    m_libol->olEnd();
 }
 
 
 void ldRendererOpenlase::transformVertex3(float *x, float *y, float *z){
-    olTransformVertex3(x, y, z);
+    m_libol->olTransformVertex3(x, y, z);
 }
 
 void ldRendererOpenlase::rect(float x1, float y1, float x2, float y2, uint32_t color){
 //    olRect(x1, y1, x2, y2, color);
-    olBegin(OL_LINESTRIP);
+    m_libol->olBegin(OL_LINESTRIP);
     vertex(x1,y1,color, 2);
     vertex(x1,y2,color, 5);
     vertex(x2,y2,color, 5);
     vertex(x2,y1,color, 5);
     vertex(x1,y1,color, 3);
-    olEnd();
+    m_libol->olEnd();
 }
 
 void ldRendererOpenlase::line(float x1, float y1, float x2, float y2, uint32_t color){
-    olLine(x1, y1, x2, y2, color);
+    m_libol->olLine(x1, y1, x2, y2, color);
 }
 
 void ldRendererOpenlase::dot(float x, float y, int points, uint32_t color){
-    olDot(x, y, points, color);
+    m_libol->olDot(x, y, points, color);
 }
 
 
-void ldRendererOpenlase::setRenderParamsQuality() {
+void ldRendererOpenlase::setRenderParamsQuality(int min_fps) {
     OLRenderParams params;
     memset(&params, 0, sizeof(params));
     params.rate = rate();
@@ -281,10 +284,11 @@ void ldRendererOpenlase::setRenderParamsQuality() {
     params.min_length = 0;
     params.snap = 0;
     params.render_flags = 0;
+    if (min_fps>0) params.max_framelen = params.rate/min_fps;
     setRenderParams(&params);
 }
 
-void ldRendererOpenlase::setRenderParamsSpeed() {
+void ldRendererOpenlase::setRenderParamsSpeed(int min_fps) {
     OLRenderParams params;
     memset(&params, 0, sizeof(params));
     params.rate = rate();
@@ -301,6 +305,7 @@ void ldRendererOpenlase::setRenderParamsSpeed() {
     params.min_length = 0;
     params.snap = 0;
     params.render_flags = RENDER_NOREVERSE | RENDER_NOREORDER;
+    if (min_fps>0) params.max_framelen = params.rate/min_fps;
     setRenderParams(&params);
 }
 
@@ -315,7 +320,7 @@ void ldRendererOpenlase::setRenderParamsRaw() {
     setRenderParams(&params);
 }
 
-void ldRendererOpenlase::setRenderParamsStandard()
+void ldRendererOpenlase::setRenderParamsStandard(int min_fps)
 {
     //
     OLRenderParams params;
@@ -334,11 +339,11 @@ void ldRendererOpenlase::setRenderParamsStandard()
     params.render_flags = RENDER_GRAYSCALE | RENDER_NOREVERSE | RENDER_NOREORDER;
     params.flatness = 0;
     params.min_length = 0;
-    params.max_framelen = params.rate/30;
+    if (min_fps>0) params.max_framelen = params.rate/min_fps;
     setRenderParams(&params);
 }
 
-void ldRendererOpenlase::setRenderParamsBezier()
+void ldRendererOpenlase::setRenderParamsBezier(int min_fps)
 {
     //
     OLRenderParams params;
@@ -356,12 +361,12 @@ void ldRendererOpenlase::setRenderParamsBezier()
     params.snap = 1/1000.0f;
     params.render_flags = RENDER_GRAYSCALE | RENDER_NOREVERSE | RENDER_NOREORDER;
     params.min_length = 0;
-    params.max_framelen = params.rate/30;
+    if (min_fps>0) params.max_framelen = params.rate/min_fps;
     params.flatness = 0.00001f; //for beziers to work (thanks Alec!)
     setRenderParams(&params);
 }
 
-void ldRendererOpenlase::setRenderParamsLower()
+void ldRendererOpenlase::setRenderParamsLower(int min_fps)
 {
     //
     OLRenderParams params;
@@ -384,11 +389,11 @@ void ldRendererOpenlase::setRenderParamsLower()
     params.render_flags = RENDER_GRAYSCALE | RENDER_NOREVERSE | RENDER_NOREORDER;
     params.flatness = 0;
     params.min_length = 0;
-    params.max_framelen = params.rate/30;
+    if (min_fps>0) params.max_framelen = params.rate/min_fps;
     setRenderParams(&params);
 }
 
-void ldRendererOpenlase::setRenderParamsBeam() {
+void ldRendererOpenlase::setRenderParamsBeam(int min_fps) {
     OLRenderParams params;
     memset(&params, 0, sizeof(params));
     params.rate =rate();
@@ -405,6 +410,7 @@ void ldRendererOpenlase::setRenderParamsBeam() {
     params.min_length = 0;
     params.snap = 0;//1.0f / 40.0f;
     params.render_flags = RENDER_NOREVERSE | RENDER_NOREORDER;
+    if (min_fps>0) params.max_framelen = params.rate/min_fps;
     setRenderParams(&params);
 }
 
@@ -440,3 +446,43 @@ float ldRendererOpenlase::getLastFrameDeltaSeconds() {
     return static_cast<float>(m_lastFramePointCount) / rate();
 }
 
+void ldRendererOpenlase::createNewFrame(int max_fps, bool is3d,bool skipFilters)
+{
+    float result = m_libol->olRenderFrame(max_fps);
+    if(result == -1.f)
+        return;
+
+    ldLibol::OLRenderedFrame * rendered_frame = m_libol->olGetRenderedFrames();
+    m_lastFramePointCount = rendered_frame->pnext;
+
+//    {static int s; s=(s+1)%100; int z=olGetRenderedFrames()->pnext; if (!s || z > 30001) qDebug() << "frames point count:" << z;}
+
+    m_frame.reserve(static_cast<uint>(rendered_frame->pnext));
+    m_frame.clear();
+
+    ldVertex v = {{0, 0}, {0, 0, 0}};
+    for(uint i = 0; i < static_cast<uint>(rendered_frame->pnext); i++ ){
+        OLPoint *p = rendered_frame->points+i;
+        v.x() = p->x;
+        v.y() = p->y;
+        v.r() =((p->color & 0xFF0000) >> 16) / 255.0f;
+        v.g() =((p->color & 0x00FF00) >> 8) / 255.0f;
+        v.b() =((p->color & 0x0000FF) >> 0) / 255.0f;
+
+        m_frame.push_back(std::move(v));
+    }
+
+    if (!skipFilters) {
+        // filter openlase result
+        m_filterManager->resetFilters();
+        m_filterManager->setFrameModes(m_frameModes);
+
+        bool mode_disable_rotate = m_filterManager->dataFilter()->frameModes & FRAME_MODE_DISABLE_ROTATION;
+        if(!mode_disable_rotate && !is3d) {
+            for(ldVertex &frameV : m_frame.frame())
+                m_filterManager->rotate3dFilter()->processFilter(frameV);
+        }
+
+        m_filterManager->processFrame(m_frame);
+    }
+}

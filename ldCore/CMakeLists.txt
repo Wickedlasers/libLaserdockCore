@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.11)
 # enable features
 option(LD_CORE_ENABLE_MIDI "Enable midi" OFF)
 option(LD_CORE_ENABLE_OPENCV "Enable opencv support" OFF)
+option(LD_CORE_USE_OPENGL "Enable OpenGL support" ON)
 option(LD_CORE_ENABLE_QT_QUICK "Enable Qt Quick module" OFF) # required for example
 # some helpful flags
 option(LD_CORE_GAMES_ALWAYS_PLAY_STATE "Games play after pause automatically" OFF)
@@ -11,12 +12,18 @@ include(CMakeDependentOption)
 CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_QT_QUICK "Enable Qt Quick module" OFF
     "NOT LD_CORE_BUILD_EXAMPLE" ON)
 
-CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_MIDI "Enable midi" OFF
-    "NOT LD_ANDROID_BUILD" OFF)
+message(STATUS "LD_CORE_ENABLE_MIDI: ${LD_CORE_ENABLE_MIDI}")
+message(STATUS "LD_CORE_ENABLE_OPENCV: ${LD_CORE_ENABLE_OPENCV}")
+message(STATUS "LD_CORE_USE_OPENGL: ${LD_CORE_USE_OPENGL}")
+message(STATUS "LD_CORE_ENABLE_QT_QUICK: ${LD_CORE_ENABLE_QT_QUICK}")
+message(STATUS "LD_CORE_GAMES_ALWAYS_PLAY_STATE: ${LD_CORE_GAMES_ALWAYS_PLAY_STATE}")
 
 project(ldCore)
 
-if(LD_IOS_BUILD)
+CMAKE_DEPENDENT_OPTION(LD_CORE_ENABLE_MIDI "Enable midi" OFF
+    "NOT ANDROID" OFF)
+
+if(IOS)
     add_library(${PROJECT_NAME})
 else()
     add_library(${PROJECT_NAME} SHARED )
@@ -46,6 +53,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/ldPropertyObject.h
         ${SRCDIR}/Helpers/ldRandomGenerator.cpp
         ${INCDIR}/Helpers/ldRandomGenerator.h
+        ${SRCDIR}/Helpers/ldWorkerThreadTimer.cpp
+        ${INCDIR}/Helpers/ldWorkerThreadTimer.h
         #Data/
         ${SRCDIR}/Data/ldAbstractDataWorker.cpp
         ${INCDIR}/Data/ldAbstractDataWorker.h
@@ -53,6 +62,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Data/ldBufferManager.h
         ${SRCDIR}/Data/ldDataDispatcher.cpp
         ${INCDIR}/Data/ldDataDispatcher.h
+        ${SRCDIR}/Data/ldDataDispatcherManager.cpp
+        ${INCDIR}/Data/ldDataDispatcherManager.h
         ${SRCDIR}/Data/ldFrameBuffer.cpp
         ${INCDIR}/Data/ldFrameBuffer.h
         ${SRCDIR}/Data/ldThreadedDataWorker.cpp
@@ -74,6 +85,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Filter/ldFilterColorize.h
         ${SRCDIR}/Filter/ldFilterManager.cpp
         ${INCDIR}/Filter/ldFilterManager.h
+        ${SRCDIR}/Filter/ldFilterMovement.cpp
+        ${INCDIR}/Filter/ldFilterMovement.h
         ${SRCDIR}/Filter/ldFilterProcessor.cpp
         ${INCDIR}/Filter/ldFilterProcessor.h
         ${SRCDIR}/Filter/ldHardwareFilter.cpp
@@ -92,16 +105,25 @@ target_sources(${PROJECT_NAME} PRIVATE
         #Hardware
         ${SRCDIR}/Hardware/ldAbstractHardwareManager.cpp
         ${INCDIR}/Hardware/ldAbstractHardwareManager.h
+        ${SRCDIR}/Hardware/ldDeviceBufferConfigDelegator.cpp
+        ${INCDIR}/Hardware/ldDeviceBufferConfigDelegator.h
         ${SRCDIR}/Hardware/ldHardware.cpp
         ${INCDIR}/Hardware/ldHardware.h
         ${INCDIR}/Hardware/ldHardwareInfo.h
         ${SRCDIR}/Hardware/ldHardwareInfo.cpp
+        ${SRCDIR}/Hardware/ldHardwareBatch.cpp
+        ${INCDIR}/Hardware/ldHardwareBatch.h
         ${SRCDIR}/Hardware/ldHardwareManager.cpp
         ${INCDIR}/Hardware/ldHardwareManager.h
         ${SRCDIR}/Hardware/ldNetworkHardware.cpp
         ${INCDIR}/Hardware/ldNetworkHardware.h
         ${SRCDIR}/Hardware/ldNetworkHardwareManager.cpp
         ${INCDIR}/Hardware/ldNetworkHardwareManager.h
+        #Openlase
+        ${SRCDIR}/Helpers/Openlase/ldOLDrawer.cpp
+        ${INCDIR}/Helpers/Openlase/ldOLDrawer.h
+        ${SRCDIR}/Helpers/Openlase/ldOLPointObject.cpp
+        ${INCDIR}/Helpers/Openlase/ldOLPointObject.h
         #Render
         ${SRCDIR}/Render/ldAbstractRenderer.cpp
         ${INCDIR}/Render/ldAbstractRenderer.h
@@ -117,8 +139,6 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Simulator/ldSimulatorGrid.h
         ${SRCDIR}/Simulator/ldSimulatorProcessor.cpp
         ${SRCDIR}/Simulator/ldSimulatorProcessor.h
-        ${SRCDIR}/Simulator/ldSimulatorRenderer.cpp
-        ${INCDIR}/Simulator/ldSimulatorRenderer.h
         #Shape
         ${SRCDIR}/Shape/ldList.cpp
         ${INCDIR}/Shape/ldList.h
@@ -142,6 +162,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Sound/ldSoundAnalyzer.h
         ${SRCDIR}/Sound/ldSoundData.cpp
         ${INCDIR}/Sound/ldSoundData.h
+        ${SRCDIR}/Sound/ldSoundDataProvider.cpp
+        ${INCDIR}/Sound/ldSoundDataProvider.h
         ${SRCDIR}/Sound/ldSoundDeviceInfo.cpp
         ${INCDIR}/Sound/ldSoundDeviceInfo.h
         ${SRCDIR}/Sound/ldSoundDeviceManager.cpp
@@ -185,6 +207,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${SRCDIR}/Visualizations/MusicManager/ldMusicManager.cpp
         ${INCDIR}/Visualizations/MusicManager/ldMusicManager.h
         #Helpers/Audio
+        ${SRCDIR}/Helpers/Audio/ldAbletonLink.cpp
+        ${INCDIR}/Helpers/Audio/ldAbletonLink.h
         ${SRCDIR}/Helpers/Audio/ldAppakaBeat.cpp
         ${INCDIR}/Helpers/Audio/ldAppakaBeat.h
         ${SRCDIR}/Helpers/Audio/ldAppakBpmSelector.cpp
@@ -310,6 +334,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/Text/ldSvgLetter.h
         ${SRCDIR}/Helpers/Text/ldTextCounterOne.cpp
         ${INCDIR}/Helpers/Text/ldTextCounterOne.h
+        ${SRCDIR}/Helpers/Text/ldTextDirection.cpp
+        ${INCDIR}/Helpers/Text/ldTextDirection.h
         ${SRCDIR}/Helpers/Text/ldTextLabel.cpp
         ${INCDIR}/Helpers/Text/ldTextLabel.h
         ${SRCDIR}/Helpers/Text/ldTextSvgHelper.cpp
@@ -346,7 +372,7 @@ target_sources(${PROJECT_NAME} PRIVATE
         )
 
 # loopback audio support on Windows
-if(WIN32 OR LD_ANDROID_BUILD)
+if(WIN32 OR ANDROID)
     target_compile_definitions(${PROJECT_NAME} PRIVATE LD_LOOPBACK_DEVICE_ENABLED)
 
     if(WIN32)
@@ -358,7 +384,7 @@ if(WIN32 OR LD_ANDROID_BUILD)
             )
     endif()
 
-    if(LD_ANDROID_BUILD)
+    if(ANDROID)
         target_sources(${PROJECT_NAME} PRIVATE
             ${SRCDIR}/Sound/android/ldLoopbackAudioDevice.cpp
             ${SRCDIR}/Sound/android/ldLoopbackAudioDevice.h
@@ -385,17 +411,60 @@ endif()
 
 # -------------  Qt -----------
 
-set(CMAKE_PREFIX_PATH "${QTDIR}/lib/cmake")
+if(QT_VERSION_MAJOR EQUAL 6)
+    set(QT_MIN_VERSION 6.6)
+else()
+    set(QT_MIN_VERSION 5.15)
+endif()
 
-set(QT5_MIN_VERSION 5.14)
-find_package(Qt5 ${QT5_MIN_VERSION} COMPONENTS Core Gui Multimedia Gamepad REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Multimedia Qt5::Gamepad)
+find_package(Qt${QT_VERSION_MAJOR} ${QT_MIN_VERSION} COMPONENTS Core Gui Multimedia REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC Qt::Core Qt::Gui Qt::Multimedia)
+
+if(LD_CORE_USE_OPENGL)
+    find_package(Qt${QT_VERSION_MAJOR} ${QT_MIN_VERSION} COMPONENTS OpenGL REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Qt::OpenGL)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC LD_CORE_USE_OPENGL)
+endif()
+
+set(QT_GAMEPAD_MODULE_NAME Gamepad)
+if(QT_VERSION_MAJOR EQUAL 6)
+    set(QT_GAMEPAD_MODULE_NAME GamepadLegacy)
+endif()
+
+find_package(Qt${QT_VERSION_MAJOR} ${QT_MIN_VERSION} QUIET COMPONENTS ${QT_GAMEPAD_MODULE_NAME})
+if(Qt${QT_VERSION_MAJOR}_FOUND)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Qt${QT_VERSION_MAJOR}::${QT_GAMEPAD_MODULE_NAME}) # should be private but otherwise androiddeployqt doesn't work propely
+    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_ENABLE_QGAMEPAD)
+    message(STATUS "LD_CORE_ENABLE_QGAMEPAD: ${LD_CORE_ENABLE_QGAMEPAD}")
+
+    # for Qt6 on mac we need to link SDL2 is loaded for prod builds
+    if(QT_VERSION_MAJOR EQUAL 6)
+        if(APPLE AND NOT LD_IOS_BUILD)
+            if(LD_CORE_FORCE_QGAMEPAD)
+                set(SDL2_FIND_PARAMS REQUIRED)
+            else()
+                set(SDL2_FIND_PARAMS QUIET)
+            endif()
+
+            find_package(SDL2 ${SDL2_FIND_PARAMS})
+            if(SDL2_FOUND)
+                message(STATUS "SDL2_FOUND: ${SDL2_LIBRARIES}")
+                target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
+            endif()
+        endif()
+    endif()
+elseif(LD_CORE_FORCE_QGAMEPAD)
+    message(FATAL_ERROR "LaserOS is a public build and no QtGamepad moduse is found ${QT_VERSION_MAJOR} ${QT_MIN_VERSION} ${QT_GAMEPAD_MODULE_NAME}")
+else()
+    message(WARNING "QGamepad support is disabled ${QT_VERSION_MAJOR} ${QT_MIN_VERSION} ${QT_GAMEPAD_MODULE_NAME}")
+endif()
 
 
 # -------------  3RDPARTY -----------
 
 # public
 target_link_libraries(${PROJECT_NAME} PUBLIC
+    3rdparty::abletonlink
     3rdparty::aubio
     3rdparty::laserdocklib
     3rdparty::libqtqmltricks
@@ -423,6 +492,8 @@ if(LASERDOCKLIB_USB_SUPPORT)
 # ------------  LD_CORE_ENABLE_LIBLZR -------------
 
 if(LD_CORE_ENABLE_LIBLZR)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC LD_CORE_ENABLE_LIBLZR)
+
     target_sources(${PROJECT_NAME} PRIVATE
         ${SRCDIR}/Helpers/ldLzrHelper.cpp
         ${INCDIR}/Helpers/ldLzrHelper.h
@@ -472,6 +543,12 @@ endif()
 # -----------  LD_CORE_ENABLE_OPENCV -----------
 
 if(LD_CORE_ENABLE_OPENCV)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC
+        LD_CORE_ENABLE_OPENCV
+        LD_CORE_KEYSTONE_CORRECTION
+    )
+
+
     target_sources(${PROJECT_NAME} PRIVATE
         #Helpers/Image
         ${SRCDIR}/Helpers/Image/ldImageHelper.cpp
@@ -481,7 +558,7 @@ if(LD_CORE_ENABLE_OPENCV)
 
     # lib
     include(${CMAKE_CURRENT_LIST_DIR}/../3rdparty/opencv/CMakeLists.txt)
-    if(LD_IOS_BUILD)
+    if(IOS)
         target_include_directories(${PROJECT_NAME} PUBLIC ${OPENCV_FRAMEWORK}/Headers)
         target_link_libraries(${PROJECT_NAME}  PUBLIC ${OPENCV_FRAMEWORK}/opencv2)
     else()
@@ -506,6 +583,13 @@ if(LD_CORE_ENABLE_QUAZIP)
         ${INCDIR}/Android/ldZipExtractor.h
         )
 
+    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_ENABLE_QUAZIP)
+
+    if(QT_VERSION_MAJOR EQUAL 6)
+        find_package(Qt${QT_VERSION_MAJOR} ${QT_MIN_VERSION} COMPONENTS Core5Compat REQUIRED)
+        target_link_libraries(${PROJECT_NAME} PUBLIC Qt6::Core5Compat)
+    endif()
+
     target_link_libraries(${PROJECT_NAME} PRIVATE 3rdparty::quazip)
 endif()
 
@@ -513,14 +597,24 @@ endif()
 
 if(LD_CORE_ENABLE_QT_QUICK)
     target_sources(${PROJECT_NAME} PRIVATE
-        ${SRCDIR}/Simulator/ldSimulatorItem.cpp
-        ${INCDIR}/Simulator/ldSimulatorItem.h
+        ${SRCDIR}/Simulator/ldQSGSimulatorItem.cpp
+        ${INCDIR}/Simulator/ldQSGSimulatorItem.h
         )
 
     target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_ENABLE_QT_QUICK)
 
-    find_package(Qt5 ${QT5_MIN_VERSION} COMPONENTS Quick REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Quick)
+    find_package(Qt${QT_VERSION_MAJOR} ${QT_MIN_VERSION} COMPONENTS Quick REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Qt::Quick)
+
+    if(LD_CORE_USE_OPENGL)
+        target_sources(${PROJECT_NAME} PRIVATE
+            ${SRCDIR}/Simulator/ldSimulatorItem.cpp
+            ${INCDIR}/Simulator/ldSimulatorItem.h
+            ${SRCDIR}/Simulator/ldSimulatorRenderer.cpp
+            ${INCDIR}/Simulator/ldSimulatorRenderer.h
+            )
+        target_compile_definitions(${PROJECT_NAME} PUBLIC LD_CORE_ENABLE_OPENGL_SIMULATOR)
+    endif()
 endif()
 
 # ------------  LD_CORE_RESOURCES_EXTRACTOR -----------
@@ -537,13 +631,18 @@ endif()
 # -------------  Android ----------
 
 if(ANDROID)
-    find_package(Qt5 ${QT5_MIN_VERSION} COMPONENTS AndroidExtras REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::AndroidExtras)
+    if(QT_VERSION_MAJOR EQUAL 6)
+        target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::CorePrivate)
+    else()
+        set(Qt5AndroidExtras_DIR "${QTDIR}/lib/cmake/Qt${QT_VERSION_MAJOR}AndroidExtras")
+        find_package(Qt5 ${QT_MIN_VERSION} COMPONENTS AndroidExtras REQUIRED)
+        target_link_libraries(${PROJECT_NAME} PRIVATE Qt::AndroidExtras)
+    endif()
 
     target_link_libraries(${PROJECT_NAME} PRIVATE GLESv2)
 endif()
 
-if(LD_IOS_BUILD)
+if(IOS AND QT_VERSION_MAJOR EQUAL 5)
     target_link_libraries(${PROJECT_NAME} PRIVATE z)
 endif()
 

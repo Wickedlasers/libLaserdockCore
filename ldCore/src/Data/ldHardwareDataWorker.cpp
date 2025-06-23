@@ -24,70 +24,38 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QTimer>
 
-#include "ldCore/Hardware/ldHardwareManager.h"
-#include "ldCore/Hardware/ldUSBHardwareManager.h"
+#include <ldCore/Hardware/ldHardwareBatch.h>
 
 #include "ldThreadedDataWorker.h"
 
-ldHardwareDataWorker::ldHardwareDataWorker(ldBufferManager *bufferManager,
-                                   ldHardwareManager *hardwareManager,
-                                   std::vector<ldAbstractHardwareManager*> deviceHardwareManagers,
+ldHardwareDataWorker::ldHardwareDataWorker(ldFrameBuffer *frameBuffer,
+                                   ldHardwareBatch *hardwareBatch,
                                    ldSimulatorEngine *simulatorEngine,
                                    QObject *parent)
     : ldAbstractDataWorker(parent)
-    , m_thread_worker(new ldThreadedDataWorker(bufferManager, simulatorEngine))
-    , m_bufferManager(bufferManager)
-    , m_hardwareManager(hardwareManager)
+    , m_thread_worker(new ldThreadedDataWorker(frameBuffer, simulatorEngine, hardwareBatch))
+    , m_hwBatch(hardwareBatch)
     , m_simulatorEngine(simulatorEngine)
-    , m_deviceHardwareManagers(deviceHardwareManagers)
-{    
-
-   for (const auto &devman : qAsConst(m_deviceHardwareManagers)) {
-        m_hardwareManager->addHardwareManager(devman);
-    }
-
-    m_thread_worker->setHardwareDeviceManagers(m_deviceHardwareManagers);
-
+{
     m_thread_worker->moveToThread(&m_worker_thread);
     m_worker_thread.start();
 
     QObject::connect(m_thread_worker.data(), &ldThreadedDataWorker::activeChanged, this, &ldHardwareDataWorker::isActiveTransferChanged);
-
-    for (const auto &devman : qAsConst(m_deviceHardwareManagers)) {
-        connect(this,&ldHardwareDataWorker::isActiveTransferChanged,devman,&ldAbstractHardwareManager::setActiveTransfer);
-    }
-
-    connect(qApp, &QCoreApplication::aboutToQuit, [&]() {
-        setActive(false);
-        m_thread_worker.data()->stopProcess();
-        m_worker_thread.quit();
-        if(!m_worker_thread.wait(5000)) {
-            qWarning() << "ldThreadedDataWorker worker_thread wasn't finished";
-        }
-    });
 }
 
 ldHardwareDataWorker::~ldHardwareDataWorker()
 {
+    stop();
+}
+
+bool ldHardwareDataWorker::isActive() const
+{
+    return m_isActive;
 }
 
 bool ldHardwareDataWorker::isActiveTransfer() const
 {
     return m_thread_worker->isActiveTransfer();
-}
-
-bool ldHardwareDataWorker::hasActiveDevices() const
-{
-    for (const auto &devman : qAsConst(m_deviceHardwareManagers)) {
-        if (devman->hasActiveDevices()) return true;
-    }
-
-    return false;
-}
-
-ldAbstractHardwareManager *ldHardwareDataWorker::deviceManager() const
-{
-    return m_deviceHardwareManagers.at(0);
 }
 
 void ldHardwareDataWorker::setActive(bool active)
@@ -104,9 +72,7 @@ void ldHardwareDataWorker::setActive(bool active)
         m_thread_worker->stopProcess();
     }
 
-    for (const auto &devman : qAsConst(m_deviceHardwareManagers)) {
-        devman->set_isActive(active);
-    }
+    emit isActiveChanged(active);
 }
 
 void ldHardwareDataWorker::setActiveTransfer(bool active)
@@ -117,4 +83,20 @@ void ldHardwareDataWorker::setActiveTransfer(bool active)
 void ldHardwareDataWorker::setSimulatorEnabled(bool enabled)
 {
     m_thread_worker->setSimulatorEnabled(enabled);
+}
+
+void ldHardwareDataWorker::stop()
+{
+    qDebug() << "ldHardwareDataWorker" << __FUNCTION__;
+
+    m_thread_worker->stopProcess();
+
+    m_worker_thread.quit();
+    if(!m_worker_thread.wait(5000)) {
+        qWarning() << "ldThreadedDataWorker worker_thread wasn't finished";
+        //     m_worker_thread.terminate();
+        if(!m_worker_thread.wait(5000)) {
+            qWarning() << "ldThreadedDataWorker worker_thread wasn't finished 2";
+        }
+    }
 }

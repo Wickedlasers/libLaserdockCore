@@ -29,8 +29,6 @@
 
 #include "ldCore/ldCore_global.h"
 
-class QGamepad;
-
 class ldAbstractGame;
 
 /** Virtual gamepad controller for game */
@@ -77,10 +75,18 @@ signals:
     void axisRightYChanged(double axisX);
     void buttonPressed(ldGamepad::Button button, bool pressed);
 
+private slots:
+    void gamepadPressedEvent(int deviceId, int button, double value);
+    void gamepadReleasedEvent(int deviceId, int button);
+    void gamepadAxisEvent(int deviceId, int axis, double value);
+
 private:
     void updateGamepadState();
+    void connectGamepadEvents();
+    void disconnectGamepadEvents();
+    void buttonEvent(int button, bool state);
 
-    std::unique_ptr<QGamepad> m_gamepad;
+    int m_gamepadId{-1};
 };
 
 #endif // LDGAMEPAD_H

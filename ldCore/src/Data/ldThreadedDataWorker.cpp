@@ -29,32 +29,29 @@
 #include <QtGui/QGuiApplication>
 
 #include "ldCore/Hardware/ldHardware.h"
-#include "ldCore/Hardware/ldHardwareManager.h"
-#include "ldCore/Hardware/ldAbstractHardwareManager.h"
+#include "ldCore/Hardware/ldHardwareBatch.h"
 #include "ldCore/Simulator/ldSimulatorEngine.h"
-#include "ldCore/Data/ldBufferManager.h"
 #include "ldCore/Data/ldFrameBuffer.h"
 
 
 
 namespace  {
-    const int MAX_SAMPLES_PER_PACKET = 1500;
+//    const int MAX_SAMPLES_PER_PACKET = 1500;
     const int SAMPLES_PER_PACKET = 768;
     const int REMOTE_BUFFER_CUTOFF = 768;
     const int SLEEP_PERIOD_MS = 4;
 }
 
 
-ldThreadedDataWorker::ldThreadedDataWorker(ldBufferManager *bufferManager,
-                                         ldSimulatorEngine *simulatorEngine
+ldThreadedDataWorker::ldThreadedDataWorker(ldFrameBuffer *frameBuffer,
+                                           ldSimulatorEngine *simulatorEngine,
+                                           ldHardwareBatch *hardwareBatch
                                          )
-    : m_bufferManager(bufferManager)
+    : QObject()
     , m_simulatorEngine(simulatorEngine)
-    , m_frameBuffer(new ldFrameBuffer(this))
+    , m_hardwareBatch(hardwareBatch)
+    , m_frameBuffer(frameBuffer)
 {
-
-    bufferManager->registerBuffer(m_frameBuffer);
-
     connect(this, &ldThreadedDataWorker::startRun, this, &ldThreadedDataWorker::run);
 }
 
@@ -63,17 +60,21 @@ ldThreadedDataWorker::~ldThreadedDataWorker()
 }
 
 void ldThreadedDataWorker::startProcess() {
+    qDebug() << this <<__FUNCTION__;
     if (m_isRunning) return;
     m_isRunning = true;
     emit startRun();
 }
 
 void ldThreadedDataWorker::stopProcess() {
+    qDebug() << this << __FUNCTION__;
     m_isRunning = false;
 }
 
+
 void ldThreadedDataWorker::run()
 {
+    qDebug() << this <<__FUNCTION__;
     // buffers
     std::vector<ldVertex> vertexVec(ldFrameBuffer::FRAMEBUFFER_CAPACITY);
 
@@ -86,25 +87,18 @@ void ldThreadedDataWorker::run()
         // get the buffering config from hardware device manager
         // This must be done continuously, as the buffering strategy may change as different hardware devices
         // are added / removed (e.g. adding network wifi cube + network ethernet cube will change strategy)
-        ldAbstractHardwareManager::DeviceBufferConfig cfg = m_hardwareDeviceManagers.at(0)->getBufferConfig();
+        ldDeviceBufferConfigDelegator::DeviceBufferConfig cfg = m_hardwareBatch->getBufferConfig();
 
         // check remote buffer status and take appropriate action
         // (eg fill local buffer, send to device, or sleep)
-        const bool isSimulatorActive = m_simulatorEngine->hasListeners() && m_isSimulatorEnabled;
+//        const bool isSimulatorActive = m_simulatorEngine->hasListeners() && m_isSimulatorEnabled;
+        const bool isSimulatorActive = m_isSimulatorEnabled;
         int remoteBuffer = -1;
 
 
-        if (m_isActive) {
-            for (const auto &devman : qAsConst(m_hardwareDeviceManagers)) {
-                if (devman->hasActiveDevices()) {
-                    int level = devman->getSmallestBufferCount(); // get lowest buffer level from each manager
-                    if(level!=-1) {
-                        if (remoteBuffer==-1) remoteBuffer = level;
-                        else if (level<remoteBuffer) remoteBuffer = level; // take lowest level of all device managers
-                    }
-                }
-            }
-        }
+        if (m_isActive)
+            remoteBuffer = m_hardwareBatch->getSmallestBufferCount();
+
 
         bool isRemoteBufferAvailable = (remoteBuffer != -1);
 
@@ -115,7 +109,7 @@ void ldThreadedDataWorker::run()
         qint64 curms = m_simTimer.elapsed();
         qint64 elapsed = curms - m_lastMs;
         m_lastMs = curms;
-        const int simulatedDeviceSamplesPerSec = 30000;
+        int simulatedDeviceSamplesPerSec = m_hardwareBatch->getCommonDACRate();
         int points = static_cast<int> ((simulatedDeviceSamplesPerSec/1000) * elapsed);
 
         // timer for simulated points
@@ -135,7 +129,7 @@ void ldThreadedDataWorker::run()
             isRemoteBufferAvailable = true;
         }
 
-        bool hasActiveUSBDevices = ( (m_hardwareDeviceManagers.size()>1) && m_hardwareDeviceManagers.at(1)->hasActiveDevices() ) ? true : false;
+        bool hasActiveUSBDevices = m_hardwareBatch->hasActiveUSBDevices();
 
         // if remote buffer is not available and there is no active simulator we sleep and wait for device
         if (!isRemoteBufferAvailable && !isSimulatorActive) {
@@ -168,7 +162,8 @@ void ldThreadedDataWorker::run()
                 if (remoteBuffer!=-1) {
                     if (remoteBuffer>=cfg.remote_buffer_cutoff)  {
                         // once remote buffer is at our cutoff threshold, only send points at the expected DAC rate
-                        if (samples_to_send>points) samples_to_send = points;
+                        if (samples_to_send>static_cast<uint>(points))
+                            samples_to_send = points;
                     } else {
                          uint fill =(cfg.remote_buffer_cutoff-remoteBuffer);
                         samples_to_send = std::min(samples_to_send,fill);
@@ -190,11 +185,10 @@ void ldThreadedDataWorker::run()
                     // send
                     if (m_isActive) {
                         //qDebug() << "s:" << actualSamplesToSend;
-                        for (const auto &devman : qAsConst(m_hardwareDeviceManagers)) {
-                            if (devman->hasActiveDevices()) devman->sendData(exhaustedIndex, actualSamplesToSend);
-                        }
+                        m_hardwareBatch->sendData(exhaustedIndex, actualSamplesToSend);
                     }
-                    if (simulatorBuffer) m_simulatorEngine->pushVertexData(simulatorBuffer, actualSamplesToSend);
+                    bool isLastPortion = (localBuffer - actualSamplesToSend == 0);
+                    if (simulatorBuffer) m_simulatorEngine->pushVertexData(simulatorBuffer, actualSamplesToSend, isLastPortion);
                     if (isSimulatorOnlyMode) {
                         //qDebug() << "3434asdf" << simulatedBufferFullCount << ", " << actual;
                         m_simulatedBufferFullCount += actualSamplesToSend;
@@ -223,6 +217,9 @@ void ldThreadedDataWorker::run()
     }
     // end of loop
 //    qDebug() << "ldThreadedDataWorker: End of loop";
+    qDebug() << this <<__FUNCTION__ << "FINISH";
+
+    emit finished();
 }
 
 bool ldThreadedDataWorker::isActiveTransfer() const
@@ -244,9 +241,4 @@ void ldThreadedDataWorker::setActiveTransfer(bool active)
 void ldThreadedDataWorker::setSimulatorEnabled(bool enabled)
 {
     m_isSimulatorEnabled = enabled;
-}
-
-void ldThreadedDataWorker::setHardwareDeviceManagers(std::vector<ldAbstractHardwareManager*> hardwareDeviceManagers)
-{
-    m_hardwareDeviceManagers = hardwareDeviceManagers;
 }

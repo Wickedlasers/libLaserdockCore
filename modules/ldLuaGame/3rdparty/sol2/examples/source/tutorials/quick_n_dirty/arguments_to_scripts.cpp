@@ -2,10 +2,10 @@
 #include <sol/sol.hpp>
 
 #include <iostream>
-#include <assert.hpp>
 
-int main(int, char* []) {
-	std::cout << "=== passing arguments to scripts ===" << std::endl;
+int main(int, char*[]) {
+	std::cout << "=== passing arguments to scripts ==="
+	          << std::endl;
 
 	sol::state lua;
 	lua.open_libraries(sol::lib::base);
@@ -18,9 +18,11 @@ print(a,b,c)
 	sol::load_result fx = lua.load(my_script);
 	if (!fx.valid()) {
 		sol::error err = fx;
-		std::cerr << "failde to load string-based script in the program" << err.what() << std::endl;
+		std::cerr << "failed to load string-based script into "
+		             "the program"
+		          << err.what() << std::endl;
 	}
-	
+
 	// prints "your arguments here"
 	fx("your", "arguments", "here");
 

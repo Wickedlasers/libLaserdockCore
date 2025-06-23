@@ -22,12 +22,5 @@
 
 ldAbstractHardwareManager::ldAbstractHardwareManager(QObject *parent)
     : QObject(parent)
-    , m_isActive(false)
 {
 }
-
-void ldAbstractHardwareManager::setExplicitActiveDevice(int index)
-{
-    m_explicitHardwareIndex = index;
-}
-

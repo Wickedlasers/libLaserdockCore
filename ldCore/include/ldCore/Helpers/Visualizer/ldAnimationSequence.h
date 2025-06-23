@@ -55,8 +55,13 @@ public:
     // load ldva2 or ldva4 format
     void load(const QString &filePath);
     // save
+    bool save(const QString &filePath);
     bool save2(const QString &filePath);
     bool save4(const QString &filePath);
+
+#ifdef LD_CORE_ENABLE_LIBLZR
+    bool saveIld(const QString &filePath);
+#endif
 
     bool isGradient() const;
 

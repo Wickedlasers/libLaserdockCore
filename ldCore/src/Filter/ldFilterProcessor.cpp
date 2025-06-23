@@ -30,5 +30,5 @@ ldFilterProcessor::ldFilterProcessor(QObject *parent)
 
 void ldFilterProcessor::processFilter(ldFilter *filter, ldVertex &input)
 {
-    filter->process(input);
+    filter->processFilterWithoutProcessor(input);
 }

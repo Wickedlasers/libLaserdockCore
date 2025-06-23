@@ -30,8 +30,8 @@ class LDCORESHARED_EXPORT ldAbstractDataWorker : public QObject
 {
     Q_OBJECT
 public:
+    virtual bool isActive() const = 0;
     virtual bool isActiveTransfer() const = 0;
-    virtual bool hasActiveDevices() const = 0;
 
 public slots:
     virtual void setActive(bool active) = 0;
@@ -39,6 +39,7 @@ public slots:
 
 signals:
     void isActiveTransferChanged(bool active);
+    void isActiveChanged(bool active);
 
 protected:
     explicit ldAbstractDataWorker(QObject *parent = nullptr);

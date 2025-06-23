@@ -19,12 +19,17 @@
 **/
 
 #include "ldCore/Hardware/ldUSBHardware.h"
-
+#include "ldCore/Hardware/ldHardwareInfo.h"
 #include <QtDebug>
 
 #ifdef LASERDOCKLIB_USB_SUPPORT
 #include <laserdocklib/LaserdockDevice.h>
 #endif
+
+namespace cmds {
+    const uint8_t LASERCUBE_SECURITY_CMD_REQUEST =                  0xb0;
+    const uint8_t LASERCUBE_SECURITY_CMD_RESPONSE =                 0xb1;
+}
 
 class ldUSBHardwarePrivate {
 public:
@@ -221,6 +226,21 @@ ldUSBHardware::ldUSBHardware(LaserdockDevice *device, QObject *parent)
     Q_UNUSED(device)
 #endif
     d->initialize();
+
+    // update hardware info with what we can get from the USB devices
+    m_info->update_dacRate(d->params.ilda_rate);
+    m_info->update_maxDacRate(m_info->get_dacRate());
+    m_info->update_modelNumber(0);
+    m_info->update_connectionType(0);
+    m_info->update_modelName("USB LaserCube");
+    m_info->update_fwMajor(d->params.version_major_number);
+    m_info->update_fwMinor(d->params.version_minor_number);
+    uint32_t bufsize;
+    if (d->params.device->ringbuffer_empty_sample_count(&bufsize)) {
+        m_info->update_bufferSize(bufsize);
+    }
+
+    m_info->update_hasValidInfo(true);
 }
 
 ldUSBHardware::~ldUSBHardware(){
@@ -247,7 +267,7 @@ QString ldUSBHardware::hwType() const
 
 QString ldUSBHardware::address() const
 {
-     Q_D(const ldUSBHardware);
+    //Q_D(const ldUSBHardware);
     //return QString::fromStdString(d->params.device->get_device_path());
     return QString();
 }
@@ -279,15 +299,19 @@ bool ldUSBHardware::send_samples(uint startIndex, uint count){
 }
 
 
-void ldUSBHardware::send_security_requst(QByteArray request){
+bool ldUSBHardware::send_security_requst(QByteArray request){
     Q_D(ldUSBHardware);
-    d->usb_send(request);
-    
+    request.prepend(static_cast<int8_t>(cmds::LASERCUBE_SECURITY_CMD_REQUEST));
+    return d->usb_send(request);
 }
 
-void ldUSBHardware::get_security_response(QByteArray &response){
+bool ldUSBHardware::get_security_response(QByteArray &response){
     Q_D(ldUSBHardware);
-    d->usb_get(response);
+    response.append(static_cast<int8_t>(cmds::LASERCUBE_SECURITY_CMD_RESPONSE));
+    bool ok = d->usb_get(response);
+    if(ok)
+        response.remove(0,3); // remove 0xb1 command and success bytes
+    return ok;
 }
 
 int ldUSBHardware::get_full_count() {
@@ -308,4 +332,31 @@ int ldUSBHardware::get_full_count() {
 #else
     return -1;
 #endif
+}
+
+int ldUSBHardware::getDacRate() const
+{
+   Q_D(const ldUSBHardware);
+   uint32_t tmp = 0;
+   d->params.device->dac_rate(&tmp);
+   return tmp;
+}
+
+int ldUSBHardware::getMaximumDacRate() const
+{
+    Q_D(const ldUSBHardware);
+    return static_cast<int>(d->params.ilda_rate);
+}
+
+void ldUSBHardware::setDacRate(int rate) const
+{
+    if (rate>0) {
+        Q_D(const ldUSBHardware);
+        d->params.device->set_dac_rate(rate);
+    }
+}
+
+void ldUSBHardware::setDacBufferTHold(int level) const
+{
+
 }

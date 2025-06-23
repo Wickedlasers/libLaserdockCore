@@ -3,9 +3,10 @@
 
 #include <iostream>
 
-int main () {
-	
-	std::cout << "=== variadic_args shifting constructor ===" << std::endl;
+int main() {
+
+	std::cout << "=== variadic_args shifting constructor ==="
+	          << std::endl;
 
 	sol::state lua;
 	lua.open_libraries(sol::lib::base);
@@ -19,12 +20,12 @@ int main () {
 		}
 		return r;
 	});
-    
+
 	lua.script("x = f(1, 2, 3, 4)");
 	lua.script("x2 = f(8, 200, 3, 4)");
 	lua.script("x3 = f(1, 2, 3, 4, 5, 6)");
-	
-	lua.script("print(x)"); // 7
+
+	lua.script("print(x)");  // 7
 	lua.script("print(x2)"); // 7
 	lua.script("print(x3)"); // 18
 

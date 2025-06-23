@@ -30,10 +30,10 @@ ldSvgDir::ldSvgDir(const QString &dirPath, const QString filePrefix, int maskSiz
     , m_maskSize(maskSize)
 {
     if(filePrefix.isEmpty() || maskSize == -1) {
-        QStringList fileList = QDir(m_dirPath).entryList(QStringList{"*.svg", "*.svg.lds" }, QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
+        QStringList fileList = QDir(m_dirPath).entryList(QStringList{"*.svg" }, QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
         if(fileList.length() > 0) {
             QFileInfo fileInfo(fileList.first());
-            QString baseName = fileInfo.baseName(); // except .svg
+            QString baseName = fileInfo.completeBaseName(); // except .svg
             for(int i = baseName.length() - 1; i >= 0; i--) {
                 QChar currentChar = baseName[i];
                 if(!currentChar.isDigit()) {

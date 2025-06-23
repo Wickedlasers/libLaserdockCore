@@ -33,9 +33,9 @@
 #include <QtCore/QElapsedTimer>
 
 #include <ldCore/Helpers/BezierCurve/ldBezierCurveFrame.h>
+#include <ldCore/Helpers/Openlase/ldOLPointObject.h>
 #include <ldCore/Helpers/Maths/ldMaths.h>
 
-class ldAbstractColorEffect;
 class ldRendererOpenlase;
 class ld3dBezierCurveObject;
 class ldBezierCurveObject;
@@ -66,6 +66,12 @@ public:
     void setFrame(const ld3dBezierCurveFrame &frame);
 
     /**
+     * Set bezierCurve-based objects to draw
+     * @param objects
+     */
+    void setPointObject(const ldOLPointObject &frame);
+
+    /**
      * Perform 3D drawing of objects from setObjectsToDraw
      * @param renderer
      * @return true if drawing was performed well. false if 3d cycle was finished and you can set new data
@@ -85,6 +91,12 @@ public:
      * @param speed - coeff, applied to original speed
      */
     void setSpeedCoeff(float speed);
+
+    /**
+     * @brief setManualElapsedCorrection - manually set animation elapsed time correction
+     * @param correction_ms - correction to apply to the current animation period in milliseconds
+     */
+    void setManualElapsedCorrection(qint64 correction_ms);
 
 private:
     enum class Step {
@@ -106,8 +118,10 @@ private:
 
     QElapsedTimer _elapsedTimer;
     qint64 _elapsedCorrection = 0;
-
+    qint64 _manualelapsedCorrection = 0;
     ld3dBezierCurveFrame _bezier3dSequence;
+    ldOLPointObject _ol3dObject;
+
 
     int _randomDelta = 0;
 

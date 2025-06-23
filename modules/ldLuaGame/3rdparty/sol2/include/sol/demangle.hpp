@@ -1,8 +1,8 @@
-// sol3 
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,20 +24,19 @@
 #ifndef SOL_DEMANGLE_HPP
 #define SOL_DEMANGLE_HPP
 
-#include "string_view.hpp"
+#include <sol/string_view.hpp>
 #include <string>
 #include <array>
 #include <cctype>
-#if defined(__GNUC__) && defined(__MINGW32__) && (__GNUC__ < 6)
+#if SOL_IS_ON(SOL_MINGW_CCTYPE_IS_POISONED)
 extern "C" {
 #include <ctype.h>
 }
 #endif // MinGW is on some stuff
 #include <locale>
 
-namespace sol {
-namespace detail {
-	inline constexpr std::array<string_view, 9> removals{ { "{anonymous}",
+namespace sol { namespace detail {
+	inline constexpr std::array<string_view, 9> removals { { "{anonymous}",
 		"(anonymous namespace)",
 		"public:",
 		"private:",
@@ -48,12 +47,10 @@ namespace detail {
 		"`anonymous namespace'" } };
 
 
-#if defined(__GNUC__) || defined(__clang__)
-	template <typename T, class seperator_mark = int>
-	inline std::string ctti_get_type_name() {
+#if SOL_IS_ON(SOL_COMPILER_GCC) || SOL_IS_ON(SOL_COMPILER_CLANG)
+	inline std::string ctti_get_type_name_from_sig(std::string name) {
 		// cardinal sins from MINGW
 		using namespace std;
-		std::string name = __PRETTY_FUNCTION__;
 		std::size_t start = name.find_first_of('[');
 		start = name.find_first_of('=', start);
 		std::size_t end = name.find_last_of(']');
@@ -83,10 +80,13 @@ namespace detail {
 
 		return name;
 	}
-#elif defined(_MSC_VER)
-	template <typename T>
-	std::string ctti_get_type_name() {
-		std::string name = __FUNCSIG__;
+
+	template <typename T, class seperator_mark = int>
+	inline std::string ctti_get_type_name() {
+		return ctti_get_type_name_from_sig(__PRETTY_FUNCTION__);
+	}
+#elif SOL_IS_ON(SOL_COMPILER_VCXX)
+	inline std::string ctti_get_type_name_from_sig(std::string name) {
 		std::size_t start = name.find("get_type_name");
 		if (start == std::string::npos)
 			start = 0;
@@ -117,6 +117,11 @@ namespace detail {
 
 		return name;
 	}
+
+	template <typename T>
+	std::string ctti_get_type_name() {
+		return ctti_get_type_name_from_sig(__FUNCSIG__);
+	}
 #else
 #error Compiler not supported for demangling
 #endif // compilers
@@ -127,14 +132,14 @@ namespace detail {
 		return realname;
 	}
 
-	template <typename T>
-	std::string short_demangle_once() {
-		std::string realname = ctti_get_type_name<T>();
+	inline std::string short_demangle_from_type_name(std::string realname) {
 		// This isn't the most complete but it'll do for now...?
-		static const std::array<std::string, 10> ops = {{"operator<", "operator<<", "operator<<=", "operator<=", "operator>", "operator>>", "operator>>=", "operator>=", "operator->", "operator->*"}};
+		static const std::array<std::string, 10> ops = {
+			{ "operator<", "operator<<", "operator<<=", "operator<=", "operator>", "operator>>", "operator>>=", "operator>=", "operator->", "operator->*" }
+		};
 		int level = 0;
-		std::ptrdiff_t idx = 0;
-		for (idx = static_cast<std::ptrdiff_t>(realname.empty() ? 0 : realname.size() - 1); idx > 0; --idx) {
+		std::size_t idx = 0;
+		for (idx = static_cast<std::size_t>(realname.empty() ? 0 : realname.size() - 1); idx > 0; --idx) {
 			if (level == 0 && realname[idx] == ':') {
 				break;
 			}
@@ -149,7 +154,7 @@ namespace detail {
 					continue;
 				std::size_t nisopidx = idx - op.size() + 1;
 				if (nisop == nisopidx) {
-					idx = static_cast<std::ptrdiff_t>(nisopidx);
+					idx = static_cast<std::size_t>(nisopidx);
 					earlybreak = true;
 				}
 				break;
@@ -166,6 +171,12 @@ namespace detail {
 	}
 
 	template <typename T>
+	std::string short_demangle_once() {
+		std::string realname = ctti_get_type_name<T>();
+		return short_demangle_from_type_name(realname);
+	}
+
+	template <typename T>
 	const std::string& demangle() {
 		static const std::string d = demangle_once<T>();
 		return d;
@@ -176,7 +187,6 @@ namespace detail {
 		static const std::string d = short_demangle_once<T>();
 		return d;
 	}
-}
-} // namespace sol::detail
+}} // namespace sol::detail
 
 #endif // SOL_DEMANGLE_HPP

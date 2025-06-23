@@ -28,6 +28,7 @@
 
 #include "ldFilterBasicGlobal.h"
 #include "ldFilterBasicData.h"
+#include "ldFilterMovement.h"
 
 class ldFilter;
 
@@ -65,6 +66,7 @@ public:
     ldStrobeFilter *strobeFilter() const;
     ldHueFilter *hueFilter() const;
     ldHueShiftFilter *hueShiftFilter() const;
+    ldFilterMovement *movementFilter() const;
     ld3dRotateFilter *rotate3dFilter() const;
     ldScaleFilter *globalScaleFilter() const;
     ldPowerFilter *globalPowerFilter() const;
@@ -85,6 +87,7 @@ private:
     QMap<QString,QSharedPointer<ldHardwareFilter>> m_filtermap;
 
     std::unique_ptr<ld3dRotateFilter> m_3dRotateFilter;
+    std::unique_ptr<ldFilterMovement> m_movementFilter;
 
     QMutex m_mutex;
 };

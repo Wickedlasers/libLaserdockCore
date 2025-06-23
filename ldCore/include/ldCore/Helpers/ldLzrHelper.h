@@ -22,7 +22,7 @@ namespace ldLzrHelper
     LDCORESHARED_EXPORT std::vector<std::vector<OLPoint> > convertLzrToOpenlase(const lzr::FrameList &lzrFrameList);
 
     LDCORESHARED_EXPORT lzr::FrameList readIldaFile(const QString &fileName);
-    LDCORESHARED_EXPORT bool writeIldaFile(const QString &filePath, lzr::FrameList &frameList, const QString &name);
+    LDCORESHARED_EXPORT bool writeIldaFile(const QString &filePath, lzr::FrameList &frameList, const QString &name, bool isSilent = false);
 }
 
 #endif // LDLZRHELPER_H

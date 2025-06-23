@@ -41,7 +41,11 @@ public:
 
     ldSoundDeviceInfo();
 
+#if QT_VERSION >= 0x060000
+    ldSoundDeviceInfo(Type type, const QString &name, QVariant id, QVariant data = QVariant());
+#else
     ldSoundDeviceInfo(Type type, const QString &name, QVariant id = QVariant(), QVariant data = QVariant());
+#endif
 
     Type type() const;
     QString name() const;
@@ -58,12 +62,12 @@ private:
     QVariant m_id;
     QVariant m_data;
 
-    friend QDataStream &operator>>(QDataStream &in, ldSoundDeviceInfo &myObj);
+    friend LDCORESHARED_EXPORT QDataStream &operator>>(QDataStream &in, ldSoundDeviceInfo &myObj);
 };
 
 // required for QVariant conversion
-QDataStream &operator<<(QDataStream &out, const ldSoundDeviceInfo &myObj);
-QDataStream &operator>>(QDataStream &in, ldSoundDeviceInfo &myObj);
+LDCORESHARED_EXPORT QDataStream &operator<<(QDataStream &out, const ldSoundDeviceInfo &myObj);
+LDCORESHARED_EXPORT QDataStream &operator>>(QDataStream &in, ldSoundDeviceInfo &myObj);
 
 Q_DECLARE_METATYPE(ldSoundDeviceInfo)
 

@@ -103,6 +103,10 @@ public:
         m_size = size;
     }
 
+    void Clear() {
+        memset(m_data, 0, m_size * sizeof(T));
+    }
+
     void operator = (const ldBuffer& other)
     {
         if(this == &other)

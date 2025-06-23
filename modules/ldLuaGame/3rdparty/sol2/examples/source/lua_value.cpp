@@ -1,7 +1,6 @@
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
-#include "assert.hpp"
 #include <iostream>
 #include <string>
 
@@ -14,7 +13,7 @@ struct int_entry {
 	int_entry(int v) : value(v) {
 	}
 
-	std::string to_string () const {
+	std::string to_string() const {
 		return "int_entry(" + std::to_string(value) + ")";
 	}
 
@@ -23,18 +22,29 @@ struct int_entry {
 	}
 };
 
-int main(int, char* []) {
+int main(int, char*[]) {
 
-	std::cout << "=== sol::lua_value/sol::array_value ===" << std::endl;
+	std::cout << "=== sol::lua_value/sol::array_value ==="
+	          << std::endl;
 
 	sol::state lua;
 	lua.open_libraries(sol::lib::base, sol::lib::io);
 
 	sol::lua_value lv_int(lua, 56);
 	sol::lua_value lv_int_table(lua, { 1, 2, 3, 4, 5 });
-	sol::lua_value lv_map(lua, { { "bark bark", "meow hiss!" }, { 3, 4 }, { ":D", 6 } });
-	sol::lua_value lv_mixed_table(lua, sol::array_value{ 1, int_entry(2), 3, int_entry(4), 5 });
-	sol::lua_value lv_mixed_nested_table(lua, sol::array_value{ 1, int_entry(2), 3, int_entry(4), sol::array_value{ 5, 6, int_entry(7), "8" } });
+	sol::lua_value lv_map(lua,
+	     { { "bark bark", "meow hiss!" },
+	          { 3, 4 },
+	          { ":D", 6 } });
+	sol::lua_value lv_mixed_table(lua,
+	     sol::array_value {
+	          1, int_entry(2), 3, int_entry(4), 5 });
+	sol::lua_value lv_mixed_nested_table(lua,
+	     sol::array_value { 1,
+	          int_entry(2),
+	          3,
+	          int_entry(4),
+	          sol::array_value { 5, 6, int_entry(7), "8" } });
 
 	const auto& code = R"(
 		function real_print_recursive (e, level)
@@ -69,7 +79,8 @@ int main(int, char* []) {
 		end
 	)";
 
-	sol::optional<sol::error> maybe_error = lua.safe_script(code, sol::script_pass_on_error);
+	sol::optional<sol::error> maybe_error
+	     = lua.safe_script(code, sol::script_pass_on_error);
 	if (maybe_error) {
 		std::cerr << maybe_error->what() << std::endl;
 		return 1;

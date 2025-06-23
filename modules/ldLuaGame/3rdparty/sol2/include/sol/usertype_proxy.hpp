@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,10 +24,10 @@
 #ifndef SOL_USERTYPE_PROXY_HPP
 #define SOL_USERTYPE_PROXY_HPP
 
-#include "traits.hpp"
-#include "function.hpp"
-#include "protected_function.hpp"
-#include "proxy_base.hpp"
+#include <sol/traits.hpp>
+#include <sol/function.hpp>
+#include <sol/protected_function.hpp>
+#include <sol/proxy_base.hpp>
 
 namespace sol {
 	template <typename Table, typename Key>
@@ -36,7 +36,7 @@ namespace sol {
 		using key_type = detail::proxy_key_t<Key>;
 
 		template <typename T, std::size_t... I>
-		decltype(auto) tuple_get(std::index_sequence<I...>) const & {
+		decltype(auto) tuple_get(std::index_sequence<I...>) const& {
 			return tbl.template traverse_get<T>(std::get<I>(key)...);
 		}
 
@@ -70,8 +70,7 @@ namespace sol {
 		key_type key;
 
 		template <typename T>
-		usertype_proxy(Table table, T&& k)
-		: tbl(table), key(std::forward<T>(k)) {
+		usertype_proxy(Table table, T&& k) : tbl(table), key(std::forward<T>(k)) {
 		}
 
 		template <typename T>

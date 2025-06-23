@@ -730,7 +730,7 @@ bool ldSvgReader::isSvgExists(const QString &filePath)
 
 QByteArray ldSvgReader::readFile(const QString &filePath)
 {
-    if(filePath.endsWith(ldSimpleCrypt::LDS_EXTENSION)) {
+    if(filePath.endsWith(ldSimpleCrypt::LDS_EXTENSION, Qt::CaseInsensitive)) {
         if(QFile::exists(filePath)) {
             return ldSimpleCrypt::instance()->decrypt(filePath);
         } else {

@@ -17,6 +17,12 @@ ldMidiInput::ldMidiInput(QObject *parent) :
 }
 
 
+QList<ldMidiInfo> ldMidiInput::getDevices()
+{
+    return m_infos;
+}
+
+
 bool ldMidiInput::isActive() const
 {
     return m_isActive;

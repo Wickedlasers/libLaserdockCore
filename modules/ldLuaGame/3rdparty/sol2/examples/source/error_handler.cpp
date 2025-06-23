@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-int main () {
+int main() {
 
 	const auto& code = R"(
 	bark_power = 11;
@@ -29,26 +29,27 @@ int main () {
 
 	sol::state lua;
 	lua.open_libraries(sol::lib::base);
-	
+
 	lua.script(code);
 
 	sol::protected_function problematic_woof = lua["woof"];
-	problematic_woof.error_handler = lua["got_problems"];
+	problematic_woof.set_error_handler(lua["got_problems"]);
 
 	auto firstwoof = problematic_woof(20);
-	if ( firstwoof.valid() ) {
+	if (firstwoof.valid()) {
 		// Can work with contents
 		double numwoof = firstwoof;
 		std::cout << "Got value: " << numwoof << std::endl;
 	}
-	else{
+	else {
 		// An error has occured
 		sol::error err = firstwoof;
 		std::string what = err.what();
 		std::cout << what << std::endl;
 	}
 
-	// errors, calls handler and then returns a string error from Lua at the top of the stack
+	// errors, calls handler and then returns a string error
+	// from Lua at the top of the stack
 	auto secondwoof = problematic_woof(19);
 	if (secondwoof.valid()) {
 		// Call succeeded
@@ -57,9 +58,9 @@ int main () {
 	}
 	else {
 		// Call failed
-		// Note that if the handler was successfully called, this will include
-		// the additional appended error message information of
-		// "got_problems handler: " ...
+		// Note that if the handler was successfully called,
+		// this will include the additional appended error
+		// message information of "got_problems handler: " ...
 		sol::error err = secondwoof;
 		std::string what = err.what();
 		std::cout << what << std::endl;

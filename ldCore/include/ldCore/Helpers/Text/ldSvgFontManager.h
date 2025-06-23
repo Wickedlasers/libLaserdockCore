@@ -31,16 +31,24 @@ public:
     explicit ldSvgFontManager(QObject *parent = nullptr);
     ~ldSvgFontManager();
 
-    void addFont(const ldSvgFont &font);
+    void addFont(const ldSvgFont &font, bool isDefaultFont=false);
+    void insertFont(const ldSvgFont &font, int index);
     const std::vector<ldSvgFont> &fonts() const;
     const ldSvgFont &font(int index) const;
-
-    QStringList titles(bool excludeCounter = true);
+    ldSvgFont font(const QString &fontFamily) const;
+    ldSvgFont defaultFont() const;
+    QStringList titles(bool excludeCounter = false);
 
     int counterFontIndex() const;
 
+    size_t internalFontsCount();
+    void endInternalFonts();
+
 private:
     std::vector<ldSvgFont> m_fonts;
+    QString m_defaultFont;
+
+    size_t m_internalFontsCount = 0;
 };
 
 

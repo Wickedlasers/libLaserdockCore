@@ -25,9 +25,8 @@
 #include <QtCore/QMutex>
 #include <QtCore/QObject>
 
-class ldBufferManager;
 class ldFrameBuffer;
-class ldHardwareManager;
+class ldHardwareBatch;
 class ldSimulatorEngine;
 class ldAbstractHardwareManager;
 
@@ -37,8 +36,9 @@ class ldThreadedDataWorker : public QObject
     Q_OBJECT
 
 public:
-    explicit ldThreadedDataWorker(ldBufferManager *bufferManager,
-                                    ldSimulatorEngine *simulatorEngine
+    explicit ldThreadedDataWorker(ldFrameBuffer *frameBuffer,
+                                  ldSimulatorEngine *simulatorEngine,
+                                  ldHardwareBatch *hardwareBatch
                         );
     ~ldThreadedDataWorker();
 
@@ -52,11 +52,10 @@ public slots:
     void setActiveTransfer(bool active);
     void setSimulatorEnabled(bool enabled);
 
-    void setHardwareDeviceManagers(std::vector<ldAbstractHardwareManager*> hardwareDeviceManagers);
-
 signals:
     void startRun();
     void activeChanged(bool active);
+    void finished();
 
 private:
     // thread safe
@@ -68,10 +67,9 @@ private:
     QElapsedTimer m_simTimer;
     qint64 m_lastMs = 0;
 
-    ldBufferManager* m_bufferManager;
     ldSimulatorEngine* m_simulatorEngine;
 
-    std::vector<ldAbstractHardwareManager*> m_hardwareDeviceManagers;
+    ldHardwareBatch * m_hardwareBatch = nullptr;
 
     ldFrameBuffer *m_frameBuffer;
 };

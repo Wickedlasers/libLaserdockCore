@@ -1,4 +1,4 @@
-cmake_minimum_required ( VERSION 2.8 )
+cmake_minimum_required ( VERSION 3.11 )
 
 project ( lua C )
 
@@ -35,10 +35,12 @@ if(LINUX)
     target_compile_definitions(liblua PRIVATE LUA_USE_LINUX)
 endif()
 
-if(LD_ANDROID_BUILD)
+if(ANDROID)
     target_compile_definitions(liblua PRIVATE LUA_USE_LINUX)
 endif()
 
 if(APPLE)
     target_compile_definitions(liblua PRIVATE LUA_USE_MACOSX)
+
+    target_compile_options(liblua PRIVATE -Wno-unused-private-field -Wno-implicit-function-declaration -Wno-unused-parameter -Wno-string-plus-int)
 endif()

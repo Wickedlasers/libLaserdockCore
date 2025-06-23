@@ -77,4 +77,12 @@ ldVec3 ldRect3::center() const
     return ldVec3(left() + width()/2.f, bottom() + height()/2.f, near() + depth()/2.f);
 }
 
+ldRect ldRect3::to2d() const
+{
+    ldRect res;
+    res.bottom_left = ldVec2(bottom_left.x, bottom_left.y);
+    res.top_right = ldVec2(top_right.x, top_right.y);
+    return res;
+}
+
 

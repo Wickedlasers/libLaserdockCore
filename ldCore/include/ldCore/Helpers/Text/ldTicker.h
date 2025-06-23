@@ -24,8 +24,9 @@
 #include <memory>
 
 #include <ldCore/ldCore.h>
+#include <ldCore/Helpers/Text/ldTextDirection.h>
 
-class ldBezierCurveDrawer;
+class ldOLDrawer;
 class ldRendererOpenlase;
 class ldTextLabel;
 
@@ -43,38 +44,55 @@ public:
     void setSpeed(float speed);
     float speed() const;
 
+    void setDirection(ldTextDirection::Direction direction);
+    ldTextDirection::Direction direction() const;
+
     // text style
     void setFontSize(float fontSize);
     float getFontSize() const;
 
-    void setFont(int font);
-    int font() const;
+    void setFont(const QString &fontFamily);
+    QString font() const;
 
-    double letterSpace() const;
-    void setLetterSpace(double letterSpace);
+    float letterSpace() const;
+    void setLetterSpace(float letterSpace);
 
     float getHeight() const;
 
     void setCenterY(float y); // 0..2
 
-    ldBezierCurveDrawer *drawer() const;
+    ldOLDrawer *drawer() const;
 
     // ticker
-    void draw(ldRendererOpenlase* p_renderer);
+    bool draw(ldRendererOpenlase* p_renderer);
     void restart();
 
+    ldTicker* clone() const;
+
 private:
+    float calcTextX();
     float calcTextY();
-    void updateCurrentMessage();
+    bool updateCurrentMessage();
     void updateXPos();
+
+    bool drawHorizontal();
+    bool drawVertical();
+
+    float getLeftBorderPos() const;
+    float getRightBorderPos() const;
+    float getUpBorderPos() const;
+    float getDownBorderPos() const;
 
     std::unique_ptr<ldTextLabel> m_textLabel;
 
     float m_speed = 0.025f;
 
+    ldTextDirection::Direction m_direction = ldTextDirection::Direction::First;
+
     QStringList m_messages;
     int m_currentMessageIndex = 0;
 
+    float m_centerX = 1.;
     float m_centerY = 1.;
 };
 

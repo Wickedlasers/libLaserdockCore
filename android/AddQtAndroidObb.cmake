@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 
 include(CMakeParseArguments)
 
@@ -16,7 +16,7 @@ include(CMakeParseArguments)
 
 macro(add_qt_android_obb TARGET SOURCE_TARGET)
     # parse the macro arguments
-    cmake_parse_arguments(ARG "DEPLOY_OBB" "RESOURCES_VERSION_CODE;PACKAGE_NAME;ANDROID_OBB_TARGET_DIR" "RES_DIRS"  ${ARGN})
+    cmake_parse_arguments(ARG "DEPLOY_OBB" "OBB_TYPE;RESOURCES_VERSION_CODE;PACKAGE_NAME;ANDROID_OBB_TARGET_DIR" "RES_DIRS"  ${ARGN})
 
     if(ARG_ANDROID_OBB_TARGET_DIR)
         set(ANDROID_OBB_DIR ${ARG_ANDROID_OBB_TARGET_DIR})
@@ -24,11 +24,12 @@ macro(add_qt_android_obb TARGET SOURCE_TARGET)
         set(ANDROID_OBB_DIR ${CMAKE_BINARY_DIR})
     endif()
 
-    set(ANDROID_OBB_FILE main.${ARG_RESOURCES_VERSION_CODE}.${ARG_PACKAGE_NAME}.obb)
+    set(ANDROID_OBB_FILE ${ARG_OBB_TYPE}.${ARG_RESOURCES_VERSION_CODE}.${ARG_PACKAGE_NAME}.obb)
     set(ANDROID_OBB_FILE_PATH ${ANDROID_OBB_DIR}/${ANDROID_OBB_FILE})
+    set(TARGET_ANDROID_OBB_FILE_PATH /sdcard/Android/obb/${ARG_PACKAGE_NAME}/${ANDROID_OBB_FILE})
 
     message(STATUS "ANDROID_OBB_FILE_PATH ${ANDROID_OBB_FILE_PATH}")
-    set(ANDROID_RESOURCES_TEMP_DIR ${CMAKE_BINARY_DIR}/android_resExt)
+    set(ANDROID_RESOURCES_TEMP_DIR ${CMAKE_BINARY_DIR}/android_resExt_${ARG_OBB_TYPE})
 
     message(STATUS "CMAKE_HOST_SYSTEM ${CMAKE_HOST_SYSTEM}")
 
@@ -37,10 +38,11 @@ macro(add_qt_android_obb TARGET SOURCE_TARGET)
         if(ZIP_EXECUTABLE)
             set(ZIP_COMMAND "\"${ZIP_EXECUTABLE}\" a -r -tzip")
         else()
-            message(FATAL_ERROR "7z is not found, please install")
+            message(FATAL_ERROR "7z is not found, please install it from https://www.7-zip.org/download.html")
         endif(ZIP_EXECUTABLE)
     else()
         set(ZIP_COMMAND zip -r -X)
+        # set(ZIP_COMMAND 7z a -r -tzip)
     endif()
 
     # Create obb file command
@@ -56,7 +58,7 @@ macro(add_qt_android_obb TARGET SOURCE_TARGET)
         )
 
     # create_obb target
-    add_custom_target(create_obb ALL
+    add_custom_target(create_obb_${ARG_OBB_TYPE} ALL
         DEPENDS ${ANDROID_OBB_FILE_PATH}
         )
 
@@ -67,7 +69,13 @@ macro(add_qt_android_obb TARGET SOURCE_TARGET)
         if(NOT QT_ANDROID_SDK_ROOT)
             set(QT_ANDROID_SDK_ROOT $ENV{ANDROID_SDK})
             if(NOT QT_ANDROID_SDK_ROOT)
-                message(FATAL_ERROR "Could not find the Android SDK. Please set either the ANDROID_SDK environment variable, or the QT_ANDROID_SDK_ROOT CMake variable to the root directory of the Android SDK")
+                set(QT_ANDROID_SDK_ROOT ${ANDROID_SDK})
+                if(NOT QT_ANDROID_SDK_ROOT)
+                    set(QT_ANDROID_SDK_ROOT ${ANDROID_SDK_ROOT})
+                    if(NOT QT_ANDROID_SDK_ROOT)
+                        message(FATAL_ERROR "Could not find the Android SDK. Please set either the ANDROID_SDK environment variable, or the QT_ANDROID_SDK_ROOT CMake variable to the root directory of the Android SDK")
+                    endif()
+                endif()
             endif()
         endif()
         string(REPLACE "\\" "/" QT_ANDROID_SDK_ROOT ${QT_ANDROID_SDK_ROOT}) # androiddeployqt doesn't like backslashes in paths
@@ -79,9 +87,9 @@ macro(add_qt_android_obb TARGET SOURCE_TARGET)
         else()
             set(DEPLOY_OBB_ARG "")
         endif()
-        add_custom_target(deploy_obb ${DEPLOY_OBB_ARG}
-            COMMAND ${QT_ANDROID_SDK_ROOT}/platform-tools/adb push --sync ${ANDROID_OBB_FILE_PATH} /storage/emulated/0/Android/obb/${ARG_PACKAGE_NAME}/${ANDROID_OBB_FILE}
-            DEPENDS create_obb
+        add_custom_target(deploy_obb_${ARG_OBB_TYPE} ${DEPLOY_OBB_ARG}
+            COMMAND ${QT_ANDROID_SDK_ROOT}/platform-tools/adb push --sync ${ANDROID_OBB_FILE_PATH} ${TARGET_ANDROID_OBB_FILE_PATH}
+            DEPENDS create_obb_${ARG_OBB_TYPE}
             COMMENT "Deploy obb")
     endif()
 

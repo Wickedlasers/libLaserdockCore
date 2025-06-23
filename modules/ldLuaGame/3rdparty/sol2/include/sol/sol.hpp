@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -22,54 +22,58 @@
 #ifndef SOL_HPP
 #define SOL_HPP
 
-#if defined(UE_BUILD_DEBUG) || defined(UE_BUILD_DEVELOPMENT) || defined(UE_BUILD_TEST) || defined(UE_BUILD_SHIPPING) || defined(UE_SERVER)
-#define SOL_INSIDE_UNREAL
+#include <sol/version.hpp>
+
+#if SOL_IS_ON(SOL_INSIDE_UNREAL_ENGINE)
 #ifdef check
 #pragma push_macro("check")
 #undef check
 #endif
 #endif // Unreal Engine 4 Bullshit
 
-#if defined(__GNUC__)
+#if SOL_IS_ON(SOL_COMPILER_GCC)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #pragma GCC diagnostic ignored "-Wconversion"
 #if __GNUC__ > 6
 #pragma GCC diagnostic ignored "-Wnoexcept-type"
 #endif
-#elif defined(__clang__)
+#elif SOL_IS_ON(SOL_COMPILER_CLANG)
 // we'll just let this alone for now
-#elif defined _MSC_VER
+#elif SOL_IS_ON(SOL_COMPILER_VCXX)
 #pragma warning(push)
 #pragma warning(disable : 4505) // unreferenced local function has been removed GEE THANKS
-#endif					  // clang++ vs. g++ vs. VC++
+#endif                          // clang++ vs. g++ vs. VC++
 
-#include "forward.hpp"
-#include "forward_detail.hpp"
-#include "bytecode.hpp"
-#include "stack.hpp"
-#include "object.hpp"
-#include "function.hpp"
-#include "protected_function.hpp"
-#include "usertype.hpp"
-#include "table.hpp"
-#include "state.hpp"
-#include "coroutine.hpp"
-#include "thread.hpp"
-#include "userdata.hpp"
-#include "metatable.hpp"
-#include "as_args.hpp"
-#include "variadic_args.hpp"
-#include "variadic_results.hpp"
-#include "lua_value.hpp"
+#include <sol/forward.hpp>
+#include <sol/forward_detail.hpp>
+#include <sol/assert.hpp>
+#include <sol/bytecode.hpp>
+#include <sol/stack.hpp>
+#include <sol/object.hpp>
+#include <sol/function.hpp>
+#include <sol/protected_function.hpp>
+#include <sol/usertype.hpp>
+#include <sol/table.hpp>
+#include <sol/state.hpp>
+#include <sol/coroutine.hpp>
+#include <sol/thread.hpp>
+#include <sol/userdata.hpp>
+#include <sol/metatable.hpp>
+#include <sol/as_args.hpp>
+#include <sol/variadic_args.hpp>
+#include <sol/variadic_results.hpp>
+#include <sol/lua_value.hpp>
 
-#if defined(__GNUC__)
+#if SOL_IS_ON(SOL_COMPILER_GCC)
 #pragma GCC diagnostic pop
-#elif defined _MSC_VER
+#elif SOL_IS_ON(SOL_COMPILER_CLANG)
+// we'll just let this alone for now
+#elif SOL_IS_ON(SOL_COMPILER_VCXX)
 #pragma warning(pop)
 #endif // g++
 
-#if defined(SOL_INSIDE_UNREAL)
+#if SOL_IS_ON(SOL_INSIDE_UNREAL_ENGINE)
 #undef check
 #pragma pop_macro("check")
 #endif // Unreal Engine 4 Bullshit

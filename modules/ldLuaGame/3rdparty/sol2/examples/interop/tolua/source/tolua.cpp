@@ -1,5 +1,6 @@
 #define SOL_ALL_SAFETIES_ON 1
-#define SOL_ENABLE_INTEROP 1 // MUST be defined to use interop features
+#define SOL_ENABLE_INTEROP \
+	1 // MUST be defined to use interop features
 #include <sol/sol.hpp>
 
 #include "Player.h"
@@ -9,7 +10,6 @@
 #include "tolua_Player.h"
 
 #include <iostream>
-#include <assert.hpp>
 
 // tolua code lifted from some blog, if the link dies
 // I don't know where else you're gonna find the reference,
@@ -19,18 +19,21 @@
 /* NOTE: there is no sol_lua_interop_get here,
  because tolua types are -- thankfully -- memory-compatible
  in most cases with sol.
- Please check other examples like kaguya or LuaBribe for an example
- of how to also write the getter for your type*/
+ Please check other examples like kaguya or LuaBribe for an
+ example of how to also write the getter for your type*/
 template <typename T, typename Handler>
-inline bool sol_lua_interop_check(sol::types<T>, lua_State* L, int relindex, sol::type index_type, Handler&& handler, sol::stack::record& tracking) {
+inline bool sol_lua_interop_check(sol::types<T>, lua_State* L,
+     int relindex, sol::type index_type, Handler&& handler,
+     sol::stack::record& tracking) {
 	tracking.use(1);
 	// just marking unused parameters for no compiler warnings
 	(void)index_type;
 	(void)handler;
 	int index = lua_absindex(L, relindex);
 	std::string name = sol::detail::short_demangle<T>();
-	tolua_Error tolua_err{};
-	int r = tolua_isusertype(L, index, name.c_str(), 0, &tolua_err);
+	tolua_Error tolua_err {};
+	int r = tolua_isusertype(
+	     L, index, name.c_str(), 0, &tolua_err);
 	if (r == 0) {
 		// tolua seems to leave garbage on the stack
 		// when the check fails
@@ -45,36 +48,49 @@ void register_sol_stuff(lua_State* L) {
 	// grab raw state and put into state_view
 	// state_view is cheap to construct
 	sol::state_view lua(L);
-	// bind and set up your things: everything is entirely self-contained
+	// bind and set up your things: everything is entirely
+	// self-contained
 	lua["f"] = sol::overload(
-		[](Player& from_tolua) {
-			std::cout << "calling 1-argument version with tolua-created Player { health:" << from_tolua.getHealth() << " }" << std::endl;
-			c_assert(from_tolua.getHealth() == 4);
-		},
-		[](Player& from_tolua, int second_arg) {
-			std::cout << "calling 2-argument version with tolua-created Player { health: " << from_tolua.getHealth() << " } and integer argument of " << second_arg << std::endl;
-			c_assert(from_tolua.getHealth() == 4);
-			c_assert(second_arg == 5);
-		});
+	     [](Player& from_tolua) {
+		     std::cout << "calling 1-argument version with "
+		                  "tolua-created Player { health:"
+		               << from_tolua.getHealth() << " }"
+		               << std::endl;
+		     SOL_ASSERT(from_tolua.getHealth() == 4);
+	     },
+	     [](Player& from_tolua, int second_arg) {
+		     std::cout << "calling 2-argument version with "
+		                  "tolua-created Player { health: "
+		               << from_tolua.getHealth()
+		               << " } and integer argument of "
+		               << second_arg << std::endl;
+		     SOL_ASSERT(from_tolua.getHealth() == 4);
+		     SOL_ASSERT(second_arg == 5);
+	     });
 }
 
 void check_with_sol(lua_State* L) {
 	sol::state_view lua(L);
 	Player& obj = lua["obj"];
 	(void)obj;
-	c_assert(obj.getHealth() == 4);
+	SOL_ASSERT(obj.getHealth() == 4);
 }
 
-int main(int, char* []) {
+int main(int, char*[]) {
 
 	std::cout << "=== interop example (tolua) ===" << std::endl;
-	std::cout << "(code lifted from a sol2 user's use case: https://github.com/ThePhD/sol2/issues/511#issuecomment-331729884)" << std::endl;
+	std::cout << "(code lifted from a sol2 user's use case: "
+	             "https://github.com/ThePhD/sol2/issues/"
+	             "511#issuecomment-331729884)"
+	          << std::endl;
 
 	lua_State* L = luaL_newstate();
 
-	luaL_openlibs(L);	// initalize all lua standard library functions
-	tolua_open(L);		  // initalize tolua
-	tolua_Player_open(L); // make Player class accessible from LUA
+	luaL_openlibs(
+	     L); // initalize all lua standard library functions
+	tolua_open(L); // initalize tolua
+	tolua_Player_open(
+	     L); // make Player class accessible from LUA
 
 
 	register_sol_stuff(L);

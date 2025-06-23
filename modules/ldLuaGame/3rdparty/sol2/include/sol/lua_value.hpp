@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,9 +24,9 @@
 #ifndef SOL_LUA_VALUE_HPP
 #define SOL_LUA_VALUE_HPP
 
-#include "stack.hpp"
-#include "reference.hpp"
-#include "make_reference.hpp"
+#include <sol/stack.hpp>
+#include <sol/reference.hpp>
+#include <sol/make_reference.hpp>
 
 namespace sol {
 	struct lua_value {
@@ -34,7 +34,8 @@ namespace sol {
 		struct arr : detail::ebco<std::initializer_list<lua_value>> {
 		private:
 			using base_t = detail::ebco<std::initializer_list<lua_value>>;
-		public: 
+
+		public:
 			using base_t::base_t;
 		};
 
@@ -45,9 +46,13 @@ namespace sol {
 
 		template <typename T>
 		using is_lua_value_single_constructible = meta::any<std::is_same<T, lua_value>, is_reference_or_lua_value_init_list<T>>;
-	
+
 		static lua_State*& thread_local_lua_state() {
+#if SOL_IS_ON(SOL_USE_THREAD_LOCAL)
 			static thread_local lua_State* L = nullptr;
+#else
+			static lua_State* L = nullptr;
+#endif
 			return L;
 		}
 
@@ -127,7 +132,7 @@ namespace sol {
 			if (r == LUA_NOREF)
 				return false;
 			auto pp = stack::push_pop(ref_value);
-			return stack::check<T>(ref_value.lua_state(), -1, no_panic);
+			return stack::check<T>(ref_value.lua_state(), -1, &no_panic);
 		}
 	};
 
@@ -151,7 +156,7 @@ namespace sol {
 				return lua_value(L, stack::get<reference>(L, index, tracking));
 			}
 		};
-	}
+	} // namespace stack
 } // namespace sol
 
 #endif // SOL_LUA_VALUE_HPP

@@ -31,7 +31,7 @@ class LDCORESHARED_EXPORT ldSvgFont {
 
 public:
     explicit ldSvgFont(const QString &title,
-                    const QString &prefix,
+                    const QString &prefix = "",
                     bool isCounterOnly = false,
                     float interLetterSuffix = 0.36f
             );
@@ -41,6 +41,8 @@ public:
 
     bool isCounterOnly() const;
     float interLetterSuffix() const;
+
+    bool isInternalFont() const;
 
 private:
     QString m_title;

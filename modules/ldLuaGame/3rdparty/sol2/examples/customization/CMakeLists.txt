@@ -1,7 +1,7 @@
-# # # # sol3
+# # # # sol2
 # The MIT License (MIT)
 # 
-# Copyright (c) 2013-2019 Rapptz, ThePhD, and contributors
+# Copyright (c) 2013-2022 Rapptz, ThePhD, and contributors
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -20,7 +20,7 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# # # sol3 Customization Examples
+# # # sol2 Customization Examples
 
 function (MAKE_CUSTOMIZATION_EXAMPLE example_suffix target_sol)
 	set(customization_example_name customization_to_table${example_suffix})
@@ -50,7 +50,7 @@ function (MAKE_CUSTOMIZATION_EXAMPLE example_suffix target_sol)
 	endif()
 
 	target_link_libraries(${customization_example_name}
-		PRIVATE Threads::Threads ${target_sol} ${LUA_LIBRARIES})
+		PRIVATE Threads::Threads ${target_sol} Lua::Lua)
 	target_include_directories(${customization_example_name}
 		PRIVATE include)
 endfunction()
@@ -60,9 +60,5 @@ if (SOL2_EXAMPLES)
 endif()
 
 if (SOL2_EXAMPLES_SINGLE)
-	MAKE_CUSTOMIZATION_EXAMPLE(".single" sol2::sol2_single)
-endif()
-
-if (SOL2_EXAMPLES_SINGLE_GENERATED)
-	MAKE_CUSTOMIZATION_EXAMPLE(".single.generated" sol2::sol2_single_generated)
+	MAKE_CUSTOMIZATION_EXAMPLE(".single" sol2::sol2::single)
 endif()

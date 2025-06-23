@@ -1,8 +1,8 @@
-// sol3 
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,14 +24,14 @@
 #ifndef SOL_STACK_GUARD_HPP
 #define SOL_STACK_GUARD_HPP
 
-#include "compatibility/version.hpp"
-#include "error.hpp"
+#include <sol/compatibility/lua_version.hpp>
+#include <sol/error.hpp>
 #include <functional>
 
 namespace sol {
 	namespace detail {
 		inline void stack_fail(int, int) {
-#if !(defined(SOL_NO_EXCEPTIONS) && SOL_NO_EXCEPTIONS)
+#if SOL_IS_ON(SOL_EXCEPTIONS)
 			throw error(detail::direct_error, "imbalanced stack after operation finish");
 #else
 			// Lol, what do you want, an error printout? :3c
@@ -46,11 +46,9 @@ namespace sol {
 		int top;
 		std::function<void(int, int)> on_mismatch;
 
-		stack_guard(lua_State* L)
-		: stack_guard(L, lua_gettop(L)) {
+		stack_guard(lua_State* L) : stack_guard(L, lua_gettop(L)) {
 		}
-		stack_guard(lua_State* L, int top, std::function<void(int, int)> fx = detail::stack_fail)
-		: L(L), top(top), on_mismatch(std::move(fx)) {
+		stack_guard(lua_State* L, int top, std::function<void(int, int)> fx = detail::stack_fail) : L(L), top(top), on_mismatch(std::move(fx)) {
 		}
 		bool check_stack(int modification = 0) const {
 			int bottom = lua_gettop(L) + modification;

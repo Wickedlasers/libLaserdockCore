@@ -30,7 +30,20 @@ ldQSound::ldQSound(const QString &filename)
     : QObject()
     , m_filename(filename)
 {
+#if !defined(Q_OS_IOS) && !defined(Q_OS_ANDROID)
     setVolumeCoeff(0.5); // decrease game volume
+#endif
+
+    // FIXME
+    // uncomment these lines to debug missing sounds
+    // QSoundEffect *soundEffect = new QSoundEffect(this);
+    // soundEffect->setSource(QUrl::fromLocalFile(m_filename));
+
+    // sound/wickedDungeon/win2.wav
+    // sound/bubbleLase/gameOver.wav
+    // sound/astbonusm_ship.wav
+    // sound/robotron/enforcerDie.wav
+    // sound/laserPeg/gameOver.wav
 }
 
 ldQSound::~ldQSound()
@@ -40,7 +53,7 @@ ldQSound::~ldQSound()
 
 bool ldQSound::isPlaying() const
 {
-    for (const std::unique_ptr<QSoundEffect> &sound : m_sounds) {
+    for (QSoundEffect *sound : m_sounds) {
         if (sound->isPlaying())
             return true;
     }
@@ -50,13 +63,15 @@ bool ldQSound::isPlaying() const
 
 void ldQSound::play()
 {
-    QMutexLocker lock(&m_mutex);
+    // no need for mutex here
+    // QMutexLocker lock(&m_mutex);
     QMetaObject::invokeMethod(this, "playImpl", Qt::QueuedConnection);
 }
 
 void ldQSound::stop()
 {
-    QMutexLocker lock(&m_mutex);
+    // no need for mutex here
+    // QMutexLocker lock(&m_mutex);
     QMetaObject::invokeMethod(this, "stopImpl", Qt::QueuedConnection);
 }
 
@@ -70,13 +85,16 @@ void ldQSound::setLoops(int loops)
 {
     QMutexLocker lock(&m_mutex);
     m_loops = loops;
+    for (QSoundEffect *sound : m_sounds) {
+        sound->setLoopCount(m_loops);
+    }
 }
 
 void ldQSound::setVolumeCoeff(qreal volume)
 {
     QMutexLocker lock(&m_mutex);
     m_volumeCoeff = volume;
-    for(std::unique_ptr<QSoundEffect> &soundEffect : m_sounds) {
+    for(QSoundEffect *soundEffect : m_sounds) {
         soundEffect->setVolume(m_volumeCoeff * ((double) m_volumeLevel / 100.0));
     }
 }
@@ -86,7 +104,7 @@ void ldQSound::setVolumeLevel(int level)
     QMutexLocker lock(&m_mutex);
     m_volumeLevel = level;
 
-    for(std::unique_ptr<QSoundEffect> &soundEffect : m_sounds) {
+    for(QSoundEffect *soundEffect : m_sounds) {
         soundEffect->setVolume(m_volumeCoeff * ((double) m_volumeLevel / 100.0));
     }
 }
@@ -95,37 +113,43 @@ void ldQSound::playImpl()
 {
     QMutexLocker lock(&m_mutex);
 
-    // clear finished sounds
-    auto soundIt = m_sounds.begin();
-    while (soundIt != m_sounds.end()) {
-        if (!(*soundIt)->isPlaying())
-            soundIt = m_sounds.erase(soundIt);
-        else
-            ++soundIt;
+    // create new sound cache
+    if(m_sounds.empty()) {
+        // Qt:
+        // Since QSoundEffect requires slightly more resources to achieve lower latency playback,
+        // the platform may limit the number of simultaneously playing sound effects.
+        for(int i = 0; i < 5; i++) {
+            QSoundEffect *soundEffect = new QSoundEffect(this);
+            soundEffect->setSource(QUrl::fromLocalFile(m_filename));
+            soundEffect->setLoopCount(m_loops);
+            soundEffect->setVolume(m_volumeCoeff * ((double) m_volumeLevel / 100.0));
+            m_sounds.push_back(soundEffect);
+        }
     }
 
     // allow only one sound
-    if(!m_force && !m_sounds.empty()) {
+    if(!m_force
+        && isPlaying()
+        ) {
         return;
     }
 
-    // create new sound
-    std::unique_ptr<QSoundEffect> soundEffect(new QSoundEffect());
-    soundEffect->setSource(QUrl::fromLocalFile(m_filename));
-    soundEffect->setLoopCount(m_loops);
-    soundEffect->setVolume(m_volumeCoeff * ((double) m_volumeLevel / 100.0));
-    // thread safety play
-    soundEffect->play();
-    //    QTimer::singleShot(0, soundEffect.get(), static_cast<void (QSound::*)()>(&QSound::play));
-    // add to list
-    m_sounds.push_back(std::move(soundEffect));
+    // play
+    for(QSoundEffect *soundEffect : m_sounds) {
+        if(!soundEffect->isPlaying()) {
+            soundEffect->play();
+            break;
+        }
+    }
 }
 
 void ldQSound::stopImpl()
 {
     QMutexLocker lock(&m_mutex);
-    for(std::unique_ptr<QSoundEffect> &sound : m_sounds) {
-        QCoreApplication::removePostedEvents(sound.get());
+
+    for(QSoundEffect *sound : m_sounds) {
+        if(sound->isPlaying()) {
+            sound->stop();
+        }
     }
-    m_sounds.clear();
 }

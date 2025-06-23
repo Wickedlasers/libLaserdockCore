@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<manifest android:versionName="@QT_ANDROID_APP_VERSION@" package="@QT_ANDROID_APP_PACKAGE_NAME@" android:installLocation="auto" xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="@QT_ANDROID_APP_VERSION_CODE@">
+    <application android:requestLegacyExternalStorage="true" android:hardwareAccelerated="true" android:allowNativeHeapPointerTagging="false" android:label="@QT_ANDROID_APP_NAME@" android:name="org.qtproject.qt.android.bindings.QtApplication" android:allowBackup="true"
+        android:fullBackupOnly="false" android:icon="@QT_ANDROID_ICON@" >
+        <activity android:launchMode="singleTop"
+                  android:label="@QT_ANDROID_APP_NAME@"
+                  android:name="@QT_ANDROID_APP_ACTIVITY_NAME@"
+                  android:screenOrientation="portrait"
+                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+                  android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
+                  android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            
+            <meta-data android:name="android.app.lib_name" android:value="-- %%INSERT_APP_LIB_NAME%% --"/>
+            <meta-data android:name="android.app.arguments" android:value=""/>
+            <meta-data android:name="android.app.splash_screen_drawable" android:resource="@QT_ANDROID_SPLASH_SCREEN@"/>
+            <meta-data android:name="android.app.extract_android_style" android:value="minimal"/>
+            
+            <meta-data android:name="android.app.background_running" android:value="false"/>
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+            <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" android:resource="@xml/device_filter" />
+            
+        </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.qtprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/providerpaths"/>
+        </provider>
+
+    </application>
+    <supports-screens android:anyDensity="true" android:normalScreens="true" android:smallScreens="true" android:largeScreens="true"/>
+    <uses-sdk android:minSdkVersion="@QT_ANDROID_MIN_API@" android:targetSdkVersion="@QT_ANDROID_TARGET_API@"/>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+  	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+	<uses-feature android:name="android.hardware.location.gps" android:required="false" />	
+    <uses-feature android:name="android.hardware.usb.host" />
+</manifest>

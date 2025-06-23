@@ -40,9 +40,9 @@ Q_DECLARE_METATYPE(ldMidiNote)
 class LDCORESHARED_EXPORT ldMidiCCMessage {
 public:
     static const uint8_t MAX_VALUE = 127;
-
     uint8_t faderNumber = 0;
     uint8_t value = 0;
+    int channel = -1;
 };
 Q_DECLARE_METATYPE(ldMidiCCMessage)
 

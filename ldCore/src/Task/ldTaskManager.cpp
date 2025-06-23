@@ -41,26 +41,49 @@
 */
 
 
-ldTaskManager::ldTaskManager(ldBufferManager *bufferManager, QObject *parent) :
-    QObject(parent),
-    m_taskworker(new ldTaskWorker(bufferManager))
+ldTaskManager::ldTaskManager(QObject *parent) :
+    QObject(parent)
 {
     qDebug() << __FUNCTION__;
-    m_taskworker->moveToThread(&m_worker_thread);
-    m_worker_thread.start();
-    //m_worker_thread.setPriority(QThread::Priority::HighPriority);
 }
 
 ldTaskManager::~ldTaskManager()
 {
-    m_worker_thread.quit();
-    if(!m_worker_thread.wait(500)) {
-        qWarning() << "ldTaskManager m_worker_thread wasn't finished correctly";
-    }
-
-    m_taskworker.reset();
+    // create copy
+    auto taskWorkers = m_taskWorkers;
+    for(auto taskWorker : taskWorkers)
+        deleteTaskWorker(taskWorker);
 }
 
-ldTaskWorker *ldTaskManager::taskWorker() const{
-    return m_taskworker.data();
+ldTaskWorker *ldTaskManager::createTaskWorker(ldFrameBuffer *frameBuffer)
+{
+    QThread *m_worker_thread2 = new QThread();
+
+    ldTaskWorker *newTaskWorker = new ldTaskWorker(frameBuffer);
+    newTaskWorker->moveToThread(m_worker_thread2);
+    m_worker_thread2->start();
+
+    m_taskWorkers.push_back(newTaskWorker);
+
+    return newTaskWorker;
+}
+
+void ldTaskManager::deleteTaskWorker(ldTaskWorker *taskWorker)
+{
+    auto it = std::find(m_taskWorkers.begin(), m_taskWorkers.end(), taskWorker);
+    if(it == m_taskWorkers.end()) {
+        qWarning() << __FUNCTION__ << "Can't find" << taskWorker;
+        return;
+    }
+
+    auto taskWorkerThread = taskWorker->thread();
+    taskWorkerThread->quit();
+    if(!taskWorkerThread->wait(500)) {
+        qWarning() << "ldTaskManager m_worker_thread wasn't finished correctly" << taskWorker;
+    }
+
+    delete taskWorker;
+    delete taskWorkerThread;
+
+    m_taskWorkers.erase(it);
 }

@@ -33,6 +33,7 @@
 #include <QtCore/QObject>
 
 #include "ldCore/Helpers/BezierCurve/ldBezierCurveFrame.h"
+#include "ldCore/Helpers/Openlase/ldOLPointObject.h"
 #include "ldSvgFont.h"
 #include "ldSvgLetter.h"
 
@@ -51,11 +52,14 @@ public:
     void setFontSize(float fontSize);
     float getFontSize() const;
 
-    void setFont(int font);
-    int font() const;
+    void setFont(const QString &fontFamily);
+    QString font() const;
 
-    double letterSpace() const;
-    void setLetterSpace(double letterSpace);
+    float letterSpace() const;
+    void setLetterSpace(float letterSpace);
+
+    void setVertical(bool isVertical);
+    bool isVertical() const;
 
     // working in [0,1]x[0,1]
     virtual void setPosition(const ldVec2 &p_p);
@@ -66,17 +70,23 @@ public:
      * @return
      */
     const ldBezierCurveFrame &getFrame() const;
+    ldOLPointObject getOLObject() const;
 
     float getWidth() const;
     float getHeight() const;
+
+    ldVec2 getFirstLetterSize();
+
+    void cloneProperties(ldAbstractText *other) const;
 
 protected:
     virtual void initTextFrame(const QString &word);
 
     ldBezierCurveFrame m_textFrame;
+    ldOLPointObject m_textPointObject;
 
 private:
-    float getLetterAWidth();
+    ldVec2 getLetterSize(const QChar &ch);
     float getInterLetterWidth();
     float getSpaceWidth();
 
@@ -84,12 +94,15 @@ private:
 
     QString m_text;
     float m_fontSize = 1.0f/16.f;
-    int m_fontFamily = 0;
-    double m_letterSpaceScale = 1.;
+    QString m_fontFamily;
+    float m_letterSpaceScale = 1.f;
+    bool m_isVertical = false;
+
 
     ldVec2 m_position;
 
     std::vector<ldSvgLetter> m_allSvgLetters;
+    ldOLPointObject generatePointObject(const QString &text, const QString &fontFamily, float fontSize, float letterSpace = 0.f, bool isVertical = false);
 };
 
 #endif // LDABSTRACTTEXT_H

@@ -1,74 +1,97 @@
 #include <ldCore/Android/ldResourcesExtractor.h>
 
-#ifdef Q_OS_ANDROID
-#include <QtAndroidExtras/QAndroidJniObject>
-#endif
-
 #include <QtCore/QDebug>
 #include <QtCore/QFile>
 #include <QtCore/QStandardPaths>
 #include <QtCore/QTimer>
+
+#ifdef Q_OS_ANDROID
+#include <laserdocklib/ldAndroidGlobals.h>
+#endif
 
 #include <ldCore/ldCore.h>
 #include <ldCore/Android/ldZipExtractor.h>
 
 ldResourcesExtractor::ldResourcesExtractor(QObject *parent)
     : QObject(parent)
-    , m_needExtraction(false)
+    , m_currentFileIndex(0)
+    , m_fileCount(0)
     , m_progress(0)
-    , m_zipExtractor(new ldZipExtractor(this))
 {
-    connect(m_zipExtractor, &ldZipExtractor::progressChanged, this, &ldResourcesExtractor::update_progress);
-    connect(m_zipExtractor, &ldZipExtractor::finished, this, &ldResourcesExtractor::finished);
 }
 
 ldResourcesExtractor::~ldResourcesExtractor()
 {
 }
 
-void ldResourcesExtractor::init(const QString &packageName, int resourcesVersionCode)
+void ldResourcesExtractor::init(const QString &packageName, int mainVersionCode, int patchVersionCode)
 {
-    QString zipFilePath = findObbFilePath(packageName, resourcesVersionCode);
-    if(!zipFilePath.isEmpty())
-        m_zipExtractor->init(zipFilePath, ldCore::instance()->resourceDir());
+    int resVersionCode = getExistingResVersionCode();
 
-    // check if we need to extract new resources
-    checkNeedExtraction(resourcesVersionCode);
+    auto createZipExtractor = [&](const QString &zipFilePath, bool isRemoveDir) {
+        std::unique_ptr<ldZipExtractor> zipExtractor(new ldZipExtractor());
+        zipExtractor->setRemoveDir(isRemoveDir);
+        connect(zipExtractor.get(), &ldZipExtractor::progressChanged, this, &ldResourcesExtractor::update_progress);
+        connect(zipExtractor.get(), &ldZipExtractor::finished, this, &ldResourcesExtractor::onZipExtractorFinished);
+        zipExtractor->init(zipFilePath, ldCore::instance()->resourceDir());
+        m_zipExtractors.emplace_back(zipExtractor.release());
+    };
+
+    if(resVersionCode < mainVersionCode) {
+        QString mainZipFilePath = findObbFilePath("main", packageName, mainVersionCode);
+        if(mainZipFilePath.isEmpty())
+            return;
+
+        createZipExtractor(mainZipFilePath, true);
+    }
+
+    if(resVersionCode < patchVersionCode) {
+        QString patchZipFilePath = findObbFilePath("patch", packageName, patchVersionCode);
+        if(patchZipFilePath.isEmpty())
+            return;
+
+        createZipExtractor(patchZipFilePath, false);
+    }
+
+    update_fileCount(m_zipExtractors.size());
 }
 
 void ldResourcesExtractor::startExtraction()
 {
     qDebug() << __FUNCTION__;
 
-    m_zipExtractor->startExtraction();
+    if(m_zipExtractors.empty()) {
+        emit finished(false, tr("Nothing to extract"));
+        return;
+    }
+
+    m_zipExtractors[0]->startExtraction();
 }
 
 
-void ldResourcesExtractor::checkNeedExtraction(int resourcesVersionCode)
+void ldResourcesExtractor::onZipExtractorFinished(bool isOk, const QString &errorMesssage)
 {
-    int resVersionCode = -1;
-    QString resVersionPath = ldCore::instance()->resourceDir() + "/version";
-    if(QFile::exists(resVersionPath)) {
-        QFile resVersionFile(resVersionPath);
-        resVersionFile.open(QIODevice::ReadOnly);
-        QByteArray resVersionData = resVersionFile.readAll();
-        bool ok;
-        int resFileVersionCode = resVersionData.toInt(&ok);
-        if(ok) {
-            resVersionCode = resFileVersionCode;
-        }
+    if(!isOk) {
+        emit finished(isOk, errorMesssage);
+        return;
     }
-    if(resVersionCode == -1
-        || resVersionCode < resourcesVersionCode) {
-        update_needExtraction(true);
+
+    update_currentFileIndex(m_currentFileIndex+1);
+
+    if(m_currentFileIndex >= m_zipExtractors.size()) {
+        emit finished(isOk, errorMesssage);
+        return;
     }
+
+    update_progress(0);
+    m_zipExtractors[m_currentFileIndex]->startExtraction();
 }
 
-QString ldResourcesExtractor::findObbFilePath(const QString &packageName, int resourcesVersionCode)
+QString ldResourcesExtractor::findObbFilePath(const QString &obbType, const QString &packageName, int resourcesVersionCode)
 {
     QString resourcesFilePath;
 
-    QString resourcesFileName = "main." + QString::number(resourcesVersionCode) + "." + packageName + ".obb";
+    QString resourcesFileName = obbType + "." + QString::number(resourcesVersionCode) + "." + packageName + ".obb";
 
     // 1st try
     // get path to resources file
@@ -96,12 +119,19 @@ QString ldResourcesExtractor::findObbFilePath(const QString &packageName, int re
 #ifdef Q_OS_ANDROID
         // 3rd try
         if(!exists) {
-            QAndroidJniObject mediaDir = QAndroidJniObject::callStaticObjectMethod("android/os/Environment", "getExternalStorageDirectory", "()Ljava/io/File;");
-            QAndroidJniObject mediaPath = mediaDir.callObjectMethod( "getAbsolutePath", "()Ljava/lang/String;" );
-            QAndroidJniObject activity = QAndroidJniObject::callStaticObjectMethod("org/qtproject/qt5/android/QtNative", "activity", "()Landroid/app/Activity;");
-            QAndroidJniObject package = activity.callObjectMethod("getPackageName", "()Ljava/lang/String;");
+            QJniObject mediaDir = QJniObject::callStaticObjectMethod("android/os/Environment", "getExternalStorageDirectory", "()Ljava/io/File;");
+            QJniObject mediaPath = mediaDir.callObjectMethod( "getAbsolutePath", "()Ljava/lang/String;" );
+#if QT_VERSION >= 0x060000
+            QJniObject activity = ldAndroidActivityObject;
+            QJniObject package = activity.callObjectMethod("getPackageName", "()Ljava/lang/String;");
+            QString androidPackageName = package.toString();
+#else
+            QJniObject activity = QJniObject::callStaticObjectMethod("org/qtproject/qt5/android/QtNative", "activity", "()Landroid/app/Activity;");
+            QJniObject package = activity.callObjectMethod("getPackageName", "()Ljava/lang/String;");
+            QString androidPackageName = package.toString();
+#endif
 
-            QString dataAbsPath = mediaPath.toString() + "/Android/obb/" + package.toString() + "/" + resourcesFileName;
+            QString dataAbsPath = mediaPath.toString() + "/Android/obb/" + androidPackageName + "/" + resourcesFileName;
 
             exists = QFile::exists(dataAbsPath);
             qWarning() << "expected file pathes doesn't exist, checking the last one path..." << dataAbsPath << exists;
@@ -115,3 +145,22 @@ QString ldResourcesExtractor::findObbFilePath(const QString &packageName, int re
 
     return resourcesFilePath;
 }
+
+int ldResourcesExtractor::getExistingResVersionCode()
+{
+    int resVersionCode = -1;
+    QString resVersionPath = ldCore::instance()->resourceDir() + "/version";
+    if(QFile::exists(resVersionPath)) {
+        QFile resVersionFile(resVersionPath);
+        resVersionFile.open(QIODevice::ReadOnly);
+        QByteArray resVersionData = resVersionFile.readAll();
+        bool ok;
+        int resFileVersionCode = resVersionData.toInt(&ok);
+        if(ok) {
+            resVersionCode = resFileVersionCode;
+        }
+    }
+
+    return resVersionCode;
+}
+

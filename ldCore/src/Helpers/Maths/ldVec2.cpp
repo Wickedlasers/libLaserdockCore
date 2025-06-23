@@ -22,10 +22,11 @@
 
 #include <cmath>
 
+#include <QtCore/QDataStream>
 #include <QtCore/QMetaType>
 #include <QtCore/QtDebug>
 
-#include "ldCore/Helpers/Maths/ldMaths.h"
+#include <ldCore/Helpers/Maths/ldMaths.h>
 
 const ldVec2 ldVec2::zero = ldVec2(0.0f, 0.0f);
 const ldVec2 ldVec2::one = ldVec2(1.0f, 1.0f);
@@ -37,10 +38,21 @@ const ldVec2 ldVec2::right = ldVec2(1.0f, 0.0f);
 
 void ldVec2::registerMetaTypes()
 {
+#if QT_VERSION >= 0x060000
+    qRegisterMetaType<ldVec2>("ldVec2");
+#else
     QMetaType::registerDebugStreamOperator<ldVec2>();
+    qRegisterMetaTypeStreamOperators<ldVec2>("ldVec2");
+#endif
 }
 
 ldVec2::ldVec2()
+{
+}
+
+ldVec2::ldVec2(const QPointF &pointF)
+    : x(pointF.x())
+    , y(pointF.y())
 {
 }
 
@@ -124,11 +136,25 @@ ldVec2& ldVec2::operator-=(const ldVec2 &other)
     return *this;
 }
 
+ldVec2 ldVec2::operator*(float s)
+{
+    ldVec2 res = *this;
+    res *= s;
+    return res;
+}
+
 ldVec2 &ldVec2::operator*=(float s)
 {
     x *= s;
     y *= s;
     return *this;
+}
+
+ldVec2 ldVec2::operator*(const ldVec2 &other)
+{
+    ldVec2 res = *this;
+    res *= other;
+    return res;
 }
 
 ldVec2 &ldVec2::operator*=(const ldVec2 &other)
@@ -138,11 +164,25 @@ ldVec2 &ldVec2::operator*=(const ldVec2 &other)
     return *this;
 }
 
+ldVec2 ldVec2::operator/(float s)
+{
+    ldVec2 res = *this;
+    res /= s;
+    return res;
+}
+
 ldVec2 &ldVec2::operator/=(float s)
 {
     x /= s;
     y /= s;
     return *this;
+}
+
+ldVec2 ldVec2::operator/(const ldVec2 &other)
+{
+    ldVec2 res = *this;
+    res /= other;
+    return res;
 }
 
 ldVec2 &ldVec2::operator/=(const ldVec2 &other)
@@ -162,6 +202,11 @@ bool ldVec2::operator !=(const ldVec2 &other) const
     return !(*this == other);
 }
 
+QPointF ldVec2::toPointF() const
+{
+    return QPointF(x, y);
+}
+
 QDebug operator <<(QDebug debug, const ldVec2 &v)
 {
     QDebugStateSaver saver(debug);
@@ -170,3 +215,18 @@ QDebug operator <<(QDebug debug, const ldVec2 &v)
 
     return debug;
 }
+
+QDataStream &operator<<(QDataStream &out, const ldVec2 &myObj)
+{
+    out << myObj.x << myObj.y;
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, ldVec2 &myObj)
+{
+    in >> myObj.x >> myObj.y;
+    return in;
+}
+
+
+

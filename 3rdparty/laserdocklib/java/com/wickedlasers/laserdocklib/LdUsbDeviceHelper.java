@@ -68,10 +68,11 @@ public class LdUsbDeviceHelper {
         // filter for laserdock only
         for (UsbDevice device : deviceMap.values()) {
             if(isLaserdockDevice(device)) {
-                devices.add(device);
                 if(!manager.hasPermission(device)) {
-                    PendingIntent permission_intent = PendingIntent.getBroadcast(context, 0, new Intent(ACTION_USB_PERMISSION), 0);
+                    PendingIntent permission_intent = PendingIntent.getBroadcast(context, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
                     manager.requestPermission(device, permission_intent);
+                } else {
+                    devices.add(device);
                 }
             }
         }
@@ -92,7 +93,7 @@ public class LdUsbDeviceHelper {
 
             // request permission
             PendingIntent pi = PendingIntent.getBroadcast(context, 0, new Intent(
-                    ACTION_USB_PERMISSION), 0);
+                    ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
             manager.requestPermission(device, pi);
             m_isRequestingPermission = true;
             return null;
@@ -124,8 +125,16 @@ public class LdUsbDeviceHelper {
 
     public static int setupDevice(Context context, UsbDevice device){
         UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
-        UsbDeviceConnection connection0 = manager.openDevice(device);
-        UsbDeviceConnection connection1 = manager.openDevice(device);
+
+        UsbDeviceConnection connection0 = null;
+        UsbDeviceConnection connection1 = null;
+        try {
+            connection0 = manager.openDevice(device);
+            connection1 = manager.openDevice(device);
+        } catch (SecurityException exc) {
+            // should never happen because we should have access at this point
+            exc.printStackTrace();
+        }
 
         if(connection0 == null || connection1 == null) {
             return -1;

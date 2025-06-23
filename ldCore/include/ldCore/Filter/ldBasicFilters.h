@@ -110,6 +110,7 @@ public:
 /** Empty filter, does nothing */
 class LDCORESHARED_EXPORT ldEmptyFilter : public ldFilter {
 public:
+    virtual bool isShowProperties() const override { return false; }
     virtual void process(ldVertex & /*v*/) override {}
     virtual QString name() override { return tr("No Effect"); }
 };
@@ -188,21 +189,19 @@ public:
 /** Strobe filter */
 class LDCORESHARED_EXPORT ldStrobeFilter : public ldFilter
 {
+    Q_OBJECT
+    LD_WRITABLE_MIN_MAX_PROPERTY(int, timeOn)
+    LD_WRITABLE_MIN_MAX_PROPERTY(int, timeOff)
+    QML_WRITABLE_PROPERTY(bool, enabled)
+
 public:
-    ldStrobeFilter();
+    ldStrobeFilter(bool enabled = false);
+
+    virtual QString name() override { return "Strobe"; }
     virtual void process(ldVertex &input) override;
 
-    bool m_enabled = false;
-
-    // frame count (### temporary)
-    int m_frame = 0;
+private:
     QElapsedTimer etimer;
-
-    // time on
-    int m_timeOn = 10;
-
-    // time off
-    int m_timeOff = 2;
 };
 
 // ---------- ldRotateFilter ----------
@@ -248,6 +247,8 @@ public:
     bool m_enabled = false;
 private:
     bool m_dash = true;
+    float m_prevX{0};
+    float m_prevY{0};
 };
 
 // ---------- ldScaleFilter ----------

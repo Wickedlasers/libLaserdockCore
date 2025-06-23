@@ -6,15 +6,16 @@
 
 #include <ldCore/Helpers/SimpleCrypt/ldSimpleCrypt.h>
 #include <ldCore/Render/ldRendererOpenlase.h>
+#include <src/ilda.hpp>
 
 lzr::FrameList ldLzrHelper::convertOpenlaseToLzr(const std::vector<std::vector<OLPoint> > &data)
 {
     const int EMPTY_POINT_COUNT = 5;
 
     lzr::FrameList result;
-    lzr::Frame frame;
 
     for(const std::vector<OLPoint> &pointVec : data) {
+        lzr::Frame frame;
         // add empty points on line start
         lzr::Point emptyPoint(0.0, 0,0, 0, 0, 0);
         if(!pointVec.empty()) {
@@ -34,7 +35,7 @@ lzr::FrameList ldLzrHelper::convertOpenlaseToLzr(const std::vector<std::vector<O
             lzrPoint.r = static_cast<uint8_t>(color.red());
             lzrPoint.g = static_cast<uint8_t>(color.green());
             lzrPoint.b = static_cast<uint8_t>(color.blue());
-            lzrPoint.i = (p.color == 0) ? 0 : 1;
+            lzrPoint.i = (p.color == 0) ? 0 : UINT8_MAX;
 
             frame.push_back(lzrPoint);
         }
@@ -47,9 +48,10 @@ lzr::FrameList ldLzrHelper::convertOpenlaseToLzr(const std::vector<std::vector<O
         for(int i = 0; i < EMPTY_POINT_COUNT; i++) {
             frame.push_back(emptyPoint);
         }
+
+        result.push_back(frame);
     }
 
-    result.push_back(frame);
     return result;
 }
 
@@ -104,7 +106,7 @@ lzr::FrameList ldLzrHelper::readIldaFile(const QString &fileName)
 
 //    qDebug() << filePath;
     QByteArray data;
-    if(filePath.endsWith(ldSimpleCrypt::LDS_EXTENSION)) {
+    if(filePath.endsWith(ldSimpleCrypt::LDS_EXTENSION, Qt::CaseInsensitive)) {
         data = ldSimpleCrypt::instance()->decrypt(filePath);
     } else {
         QFile file(filePath);
@@ -131,17 +133,29 @@ lzr::FrameList ldLzrHelper::readIldaFile(const QString &fileName)
         lzr::ilda_close(ilda);
         return frameList;
     }
+    // qDebug() << pCount;
 
-    // read from first project
-    int res = lzr::ilda_read(ilda, 0, frameList);
-    if(res != 0) {
-        QString ilda_error = QString::fromLatin1(lzr::ilda_error(ilda));
-        // empty error can be in case if file has no end header with 0 number of records
-        // example - immigrant_song-LD.ILD
-        if(ilda_error != "") {
-            qWarning() << "Warning loading ILD file: " << fileName << res << frameList.size() << ilda_error;
+    // read from the header projector id
+    size_t pd = ilda->h.projector_id;
+    do {
+        int res = lzr::ilda_read(ilda, pd, frameList);
+        if(res != 0) {
+            QString ilda_error = QString::fromLatin1(lzr::ilda_error(ilda));
+            // empty error can be in case if file has no end header with 0 number of records
+            // example - immigrant_song-LD.ILD
+            if(ilda_error != "") {
+                qWarning() << "Warning loading ILD file: " << fileName << res << frameList.size() << ilda_error;
+            }
         }
-    }
+
+        // fallback: read from the first projector
+        if(frameList.empty() && pd != 0) {
+            pd = 0;
+            continue;
+        }
+
+        break;
+    } while(true);
 
     // close
     lzr::ilda_close(ilda);
@@ -149,7 +163,7 @@ lzr::FrameList ldLzrHelper::readIldaFile(const QString &fileName)
     return frameList;
 }
 
-bool ldLzrHelper::writeIldaFile(const QString &filePath, lzr::FrameList &frameList, const QString &name)
+bool ldLzrHelper::writeIldaFile(const QString &filePath, lzr::FrameList &frameList, const QString &name, bool isSilent)
 {
     lzr::ILDA* ilda = lzr::ilda_open(qPrintable(filePath), "w");
     if(ilda == nullptr) {
@@ -160,10 +174,10 @@ bool ldLzrHelper::writeIldaFile(const QString &filePath, lzr::FrameList &frameLi
     bool isOk = false;
     int res = lzr::ilda_write(ilda, 0, frameList, qPrintable(name), qPrintable("Wicked Lasers Inc."));
     if(res == LZR_SUCCESS)  {
-        qDebug() << "ILDA file was saved " << filePath;
+        if (!isSilent) qDebug() << "ILDA file was saved " << filePath;
         isOk = true;
     } else {
-        qWarning() << "WARNING: ILDA file was not saved " << res << filePath << frameList.size();
+        if (!isSilent) qWarning() << "WARNING: ILDA file was not saved " << res << filePath << frameList.size();
     }
     lzr::ilda_close(ilda);
 

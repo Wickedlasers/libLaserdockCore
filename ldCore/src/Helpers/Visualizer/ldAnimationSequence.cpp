@@ -22,18 +22,23 @@
 
 #include <QtCore/QDataStream>
 #include <QtCore/QFile>
+#include <QtCore/QFileInfo>
 
 #include "ldCore/ldCore.h"
+#ifdef LD_CORE_ENABLE_LIBLZR
+#include <ldCore/Helpers/ldLzrHelper.h>
+#endif
+#include "ldCore/Helpers/Audio/ldTempoAC.h"
+#include "ldCore/Helpers/Audio/ldTempoTracker.h"
 #include <ldCore/Helpers/Color/ldColorUtil.h>
+#include <ldCore/Helpers/Draw/ldBezierCurveDrawer.h>
+#include "ldCore/Helpers/Maths/ldMaths.h"
+#include "ldCore/Helpers/SimpleCrypt/ldSimpleCrypt.h"
+#include "ldCore/Helpers/SVG/ldSvgReader.h"
 #include <ldCore/Render/ldRendererOpenlase.h>
 #include "ldCore/Shape/ldShader.h"
 #include "ldCore/Visualizations/ldVisualizer.h"
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
-#include "ldCore/Helpers/Audio/ldTempoAC.h"
-#include "ldCore/Helpers/Audio/ldTempoTracker.h"
-#include "ldCore/Helpers/Maths/ldMaths.h"
-#include "ldCore/Helpers/SimpleCrypt/ldSimpleCrypt.h"
-#include "ldCore/Helpers/SVG/ldSvgReader.h"
 
 
 ldAnimationSequenceBezier::ldAnimationSequenceBezier() {
@@ -292,6 +297,14 @@ void ldAnimationSequenceBezier::load(const QString &filePath)
     }
 }
 
+bool ldAnimationSequenceBezier::save(const QString &filePath)
+{
+    if(filePath.endsWith("ldva2", Qt::CaseInsensitive))
+        return save2(filePath);
+    else
+        return save4(filePath);
+}
+
 bool ldAnimationSequenceBezier::save2(const QString &filePath) {
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -442,6 +455,47 @@ bool ldAnimationSequenceBezier::save4(const QString &filePath)
 
     return true;
 }
+
+#ifdef LD_CORE_ENABLE_LIBLZR
+
+bool ldAnimationSequenceBezier::saveIld(const QString &filePath)
+{
+    ldBezierCurveDrawer drawer;
+
+    const int EMPTY_POINT_COUNT = 3;
+
+    std::vector<std::vector<OLPoint> > olFrameList;
+    for (const std::vector<ldBezierPath> &frame : m_frames) {
+        std::vector<std::vector<OLPoint> > data = drawer.getDrawingData(ldBezierCurveObject(frame), false);
+
+        std::vector<OLPoint> olFrame;
+        for(const std::vector<OLPoint> &dataPoints : data) {
+
+            // empty start point is required for laser
+            if(!olFrame.empty() && !dataPoints.empty()) {
+                const OLPoint &startPoint = dataPoints[0];
+                for(int i = 0; i < EMPTY_POINT_COUNT; i++)
+                    olFrame.push_back(OLPoint{startPoint.x, startPoint.y, startPoint.z, C_BLACK});
+            }
+
+            olFrame.insert(olFrame.end(), dataPoints.begin(), dataPoints.end());
+
+            // empty end point is required for laser
+            if(!olFrame.empty()) {
+                const OLPoint &endPoint = dataPoints[dataPoints.size() - 1];
+                for(int i = 0; i < EMPTY_POINT_COUNT; i++)
+                    olFrame.push_back(OLPoint{endPoint.x, endPoint.y, endPoint.z, C_BLACK});
+            }
+        }
+
+        olFrameList.push_back(olFrame);
+    }
+
+    lzr::FrameList lzrFrameList = ldLzrHelper::convertOpenlaseToLzr(olFrameList);
+    return ldLzrHelper::writeIldaFile(filePath, lzrFrameList, QFileInfo(filePath).completeBaseName());
+}
+
+#endif
 
 bool ldAnimationSequenceBezier::isGradient() const
 {

@@ -394,16 +394,6 @@ int ldMaths::totalPointsIn3dSequence(const ld3dBezierCurvesSequence &sequence)
     return pointCounter;
 }
 
-QTime ldMaths::timeFromMs(int millis)
-{
-    int ms = millis % 1000;
-    int sec = (millis / 1000) % 60;
-    int min = (millis / 1000 / 60) % 60;
-    int h = (millis / 1000 / 60 / 60) % 24;
-
-    return QTime(h, min, sec, ms);;
-}
-
 //MEO 2016-03-14 - maps value from input range to output range
 float ldMaths::map(float value, float inputMin, float inputMax, float outputMin, float outputMax, bool clamp) {
     if (fabs(inputMin - inputMax) < FLT_EPSILON){
@@ -441,3 +431,25 @@ bool ldMaths::isPointInPolygon(const std::vector<ldVec2> &polygon, const ldVec2 
 
     return contains;
 }
+
+
+QTime ldMaths::timeFromMs(int millis)
+{
+    int ms = millis % 1000;
+    int sec = (millis / 1000) % 60;
+    int min = (millis / 1000 / 60) % 60;
+    int h = (millis / 1000 / 60 / 60) % 24;
+
+    return QTime(h, min, sec, ms);;
+}
+
+float ldMaths::radToDeg(float rad)
+{
+    return rad*180.f/M_PIf;
+}
+
+float ldMaths::degToRad(float deg)
+{
+    return deg*M_PIf/180.f;
+}
+

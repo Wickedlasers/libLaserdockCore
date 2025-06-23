@@ -77,6 +77,9 @@ public:
     static bool isPointInPolygon(const std::vector<ldVec2> &polygon, const ldVec2 &pointToCheck);
 
     static QTime timeFromMs(int millis);
+
+    static float radToDeg(float rad);
+    static float degToRad(float deg);
 };
 
 

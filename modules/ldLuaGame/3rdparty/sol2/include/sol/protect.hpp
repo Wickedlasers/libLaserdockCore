@@ -1,8 +1,8 @@
-// sol3 
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,7 +24,7 @@
 #ifndef SOL_PROTECT_HPP
 #define SOL_PROTECT_HPP
 
-#include "traits.hpp"
+#include <sol/traits.hpp>
 #include <utility>
 
 namespace sol {
@@ -34,8 +34,7 @@ namespace sol {
 		T value;
 
 		template <typename Arg, typename... Args, meta::disable<std::is_same<protect_t, meta::unqualified_t<Arg>>> = meta::enabler>
-		protect_t(Arg&& arg, Args&&... args)
-		: value(std::forward<Arg>(arg), std::forward<Args>(args)...) {
+		protect_t(Arg&& arg, Args&&... args) : value(std::forward<Arg>(arg), std::forward<Args>(args)...) {
 		}
 
 		protect_t(const protect_t&) = default;

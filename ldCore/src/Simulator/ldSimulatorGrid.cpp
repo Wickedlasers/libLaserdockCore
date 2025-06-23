@@ -22,8 +22,6 @@
 
 #include <cmath>
 
-#include <QtGui/QOpenGLShaderProgram>
-
 #include <ldCore/Filter/ldBasicFilters.h>
 #include "ldSimulatorProcessor.h"
 

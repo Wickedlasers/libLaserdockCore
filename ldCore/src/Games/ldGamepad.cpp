@@ -22,14 +22,25 @@
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QtDebug>
-#include <QtGamepad/QGamepad>
+#include <QtCore/QLoggingCategory>
+
+#ifdef LD_CORE_ENABLE_QGAMEPAD
+#if QT_VERSION >= 0x060000
+#include <QtGamepadLegacy/QGamepadManager>
+#else
 #include <QtGamepad/QGamepadManager>
+#endif
+#endif
 #include <QtGui/QtEvents>
 #include <QtQml/QQmlEngine>
 
 #include "ldCore/ldCore.h"
 #include "ldCore/Visualizations/ldVisualizationTask.h"
 #include "ldCore/Games/ldAbstractGame.h"
+
+namespace {
+    Q_LOGGING_CATEGORY(ldg, "ld.gamepad")
+}
 
 void ldGamepad::registerMetaTypes()
 {
@@ -43,11 +54,110 @@ ldGamepad::ldGamepad(QObject *parent)
     , m_isActive(false)
 {
     connect(this, &ldGamepad::isActiveChanged, this, &ldGamepad::updateGamepadState);
+#ifdef LD_CORE_ENABLE_QGAMEPAD
     connect(QGamepadManager::instance(), &QGamepadManager::connectedGamepadsChanged, this, &ldGamepad::updateGamepadState);
+#else
+    qWarning() << "QGamepad support is disabled";
+#endif
 }
 
 ldGamepad::~ldGamepad()
 {
+    disconnectGamepadEvents();
+}
+
+void ldGamepad::buttonEvent(int button, bool state)
+{
+#ifdef LD_CORE_ENABLE_QGAMEPAD
+    switch(button)
+    {
+        case QGamepadManager::GamepadButton::ButtonStart :
+            pressButton(ldGamepad::Start,state);
+        break;
+        case QGamepadManager::GamepadButton::ButtonSelect :
+            pressButton(ldGamepad::Select,state);
+        break;
+        case QGamepadManager::GamepadButton::ButtonLeft :
+            pressButton(ldGamepad::Left,state);
+        break;
+        case QGamepadManager::GamepadButton::ButtonRight :
+            pressButton(ldGamepad::Right,state);
+        break;
+        case QGamepadManager::GamepadButton::ButtonUp :
+            pressButton(ldGamepad::Up,state);
+        break;
+        case QGamepadManager::GamepadButton::ButtonDown :
+            pressButton(ldGamepad::Down,state);
+        break;
+        case QGamepadManager::GamepadButton::ButtonA :
+            pressButton(ldGamepad::A,state);
+        break;
+        case QGamepadManager::GamepadButton::ButtonB :
+            pressButton(ldGamepad::B,state);
+        break;
+        case QGamepadManager::GamepadButton::ButtonX :
+            pressButton(ldGamepad::X,state);
+        break;
+        case QGamepadManager::GamepadButton::ButtonY :
+            pressButton(ldGamepad::Y,state);
+        break;
+        default:
+        break;
+    }
+#endif
+}
+
+void ldGamepad::gamepadAxisEvent(int deviceId, int axis, double value)
+{
+#ifdef LD_CORE_ENABLE_QGAMEPAD
+    if (get_isActive() && deviceId == m_gamepadId) {
+        qCDebug(ldg) << "GamePad axis event:" << deviceId << axis << value;
+
+        if(fabs(value) < 0.1)
+            value = 0;
+
+        switch (axis) {
+         case QGamepadManager::AxisLeftX:
+             emit axisLeftXChanged(value);
+             break;
+         case QGamepadManager::AxisLeftY:
+             emit axisLeftYChanged(-1.0 * value);
+             break;
+         case QGamepadManager::AxisRightX:
+             emit axisRightXChanged(value);
+             break;
+         case QGamepadManager::AxisRightY:
+             emit axisRightYChanged(-1.0 * value);
+             break;
+         default:
+             break;
+        }
+    }
+#endif
+}
+
+void ldGamepad::gamepadPressedEvent(int deviceId, int button, double value)
+{
+    Q_UNUSED(value)
+
+#ifdef LD_CORE_ENABLE_QGAMEPAD
+    if (get_isActive() && deviceId == m_gamepadId) {
+        qCDebug(ldg) << "GamePad press event:" << deviceId << button << value;
+
+        buttonEvent(button,true);
+    }
+#endif
+}
+
+void ldGamepad::gamepadReleasedEvent(int deviceId, int button)
+{
+#ifdef LD_CORE_ENABLE_QGAMEPAD
+    if (get_isActive() && deviceId == m_gamepadId) {
+        qCDebug(ldg) << "GamePad release event:" << deviceId << button;
+
+        buttonEvent(button,false);
+    }
+#endif
 }
 
 void ldGamepad::moveAxis(double x, double y)
@@ -61,78 +171,63 @@ void ldGamepad::pressButton(int button, bool isPressed)
     emit buttonPressed(Button(button), isPressed);
 }
 
+void ldGamepad::connectGamepadEvents()
+{
+#ifdef LD_CORE_ENABLE_QGAMEPAD
+    connect(QGamepadManager::instance(), &QGamepadManager::gamepadButtonPressEvent, this, &ldGamepad::gamepadPressedEvent);
+    connect(QGamepadManager::instance(), &QGamepadManager::gamepadButtonReleaseEvent, this,&ldGamepad::gamepadReleasedEvent);
+    connect(QGamepadManager::instance(), &QGamepadManager::gamepadAxisEvent,this,&ldGamepad::gamepadAxisEvent);
+#endif
+}
+
+void ldGamepad::disconnectGamepadEvents()
+{
+#ifdef LD_CORE_ENABLE_QGAMEPAD
+    if (m_gamepadId!=-1) {
+        m_gamepadId = -1;
+        disconnect(QGamepadManager::instance(), &QGamepadManager::gamepadButtonPressEvent, this, &ldGamepad::gamepadPressedEvent);
+        disconnect(QGamepadManager::instance(), &QGamepadManager::gamepadButtonReleaseEvent, this,&ldGamepad::gamepadReleasedEvent);
+        disconnect(QGamepadManager::instance(), &QGamepadManager::gamepadAxisEvent,this,&ldGamepad::gamepadAxisEvent);
+    }
+#endif
+}
+
+
 void ldGamepad::updateGamepadState()
 {
-    if(m_gamepad) {
-        m_gamepad.reset();
+#ifdef LD_CORE_ENABLE_QGAMEPAD
+    if(!get_isActive()) {
+        qCDebug(ldg) << __FUNCTION__ << get_isActive() << m_gamepadId;
+        if (m_gamepadId!=-1) { // disconnect from gamepad events if we were previously connected to them
+            disconnectGamepadEvents();
+        }
+        return;
     }
 
-    if(!get_isActive())
-        return;
-
     QList<int> connectedGamepads = QGamepadManager::instance()->connectedGamepads();
-    if(connectedGamepads.empty())
+    qCDebug(ldg) << __FUNCTION__ << get_isActive() << connectedGamepads.size() << m_gamepadId;
+
+    if(connectedGamepads.empty()) { // if all gamepads are disconnected, stop all gamepad events
+        if (m_gamepadId!=-1) { // disconnect from gamepad events if we were previously connected to them
+            disconnectGamepadEvents();
+        }
         return;
+    }
 
-    m_gamepad.reset(new QGamepad(connectedGamepads.first()));
-    qDebug() << "Gamepad detected:" << m_gamepad->name() << m_gamepad->deviceId();
+    // always use the last gamepad
+    // on android there is some issue that if you disconnect/connect gamepads it can detect a lot of ghost gamepads
+    // the last id is valid though
+    int id = connectedGamepads.last();
 
-    // control buttons
-    connect(m_gamepad.get(), &QGamepad::buttonStartChanged, this, [&](bool value) {
-        pressButton(Button::Start, value);
-    });
-    connect(m_gamepad.get(), &QGamepad::buttonSelectChanged, this, [&](bool value) {
-        pressButton(Button::Select, value);
-    });
+    qCDebug(ldg) << __FUNCTION__ << get_isActive() << connectedGamepads.size() << id << m_gamepadId;
 
-    // left axis
-    connect(m_gamepad.get(), &QGamepad::axisLeftXChanged, this, [&](double value) {
-        if(fabs(value) < 0.1)
-            value = 0;
-        emit axisLeftXChanged(value);
-    });
-    connect(m_gamepad.get(), &QGamepad::axisLeftYChanged, this, [&](double value) {
-        if(fabs(value) < 0.1)
-            value = 0;
-        emit axisLeftYChanged(-1.0 * value);
-    });
+    if (id != m_gamepadId) { // new gamepad to connect to?
+        int oldId = m_gamepadId;
+        m_gamepadId = id;
 
-    // right axis
-    connect(m_gamepad.get(), &QGamepad::axisRightXChanged, this, [&](double value) {
-        if(fabs(value) < 0.1)
-            value = 0;
-        emit axisRightXChanged(value);
-    });
-    connect(m_gamepad.get(), &QGamepad::axisRightYChanged, this, [&](double value) {
-        if(fabs(value) < 0.1)
-            value = 0;
-        emit axisRightYChanged(-1.0 * value);
-    });
-
-    // arrows
-    connect(m_gamepad.get(), &QGamepad::buttonLeftChanged, this, [&](bool value) {
-       pressButton(Button::Left, value);
-    });
-    connect(m_gamepad.get(), &QGamepad::buttonRightChanged, this, [&](bool value) {
-       pressButton(Button::Right, value);
-    });
-    connect(m_gamepad.get(), &QGamepad::buttonUpChanged, this, [&](bool value) {
-       pressButton(Button::Up, value);
-    });
-    connect(m_gamepad.get(), &QGamepad::buttonDownChanged, this, [&](bool value) {
-       pressButton(Button::Down, value);
-    });
-    // action buttons
-    connect(m_gamepad.get(), &QGamepad::buttonAChanged, this, [&](bool value) {
-       pressButton(Button::A, value);
-    });
-    connect(m_gamepad.get(), &QGamepad::buttonBChanged, this, [&](bool value) {
-       pressButton(Button::B, value);
-    });
-    connect(m_gamepad.get(), &QGamepad::buttonXChanged, this, [&](bool value) {
-       pressButton(Button::X, value);
-    });
-    connect(m_gamepad.get(), &QGamepad::buttonYChanged, this, [&](bool value) {
-       pressButton(Button::Y, value);
-    });
+        if (oldId == -1) { // previously disconnected from gamepad events?
+            connectGamepadEvents(); // connect to gamepad events
+        }
+    }
+#endif
 }

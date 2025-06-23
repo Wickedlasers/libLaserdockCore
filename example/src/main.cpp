@@ -28,6 +28,11 @@
 
 #include "ldCoreExample.h"
 
+#if QT_VERSION >= 0x060000
+#include <QQuickWindow>
+#endif // QT_VERSION >= 0x060000
+
+#if QT_VERSION < 0x060000
 #ifdef Q_OS_IOS
 #include <QtPlugin>
 
@@ -36,17 +41,25 @@ Q_IMPORT_PLUGIN(QtQuickControls2Plugin)
 Q_IMPORT_PLUGIN(QtQuickLayoutsPlugin)
 Q_IMPORT_PLUGIN(QtQuick2WindowPlugin)
 Q_IMPORT_PLUGIN(QtQuickTemplates2Plugin)
-#endif
-
+#endif // Q_OS_IOS
+#endif // QT_VERSION < 0x060000
 
 int main(int argc, char *argv[]) {
     ldCore::initResources();
     ldLuaGameVisualizer::initBaseResources();
 
+#if QT_VERSION >= 0x060000
+#ifdef LD_CORE_USE_OPENGL
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi);
+#endif
+#endif
+
+#if QT_VERSION < 0x060000
 #ifdef Q_OS_WIN
     QGuiApplication::setAttribute(Qt::AA_UseOpenGLES, true);
 #endif
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
 
     QGuiApplication app(argc, argv);
 

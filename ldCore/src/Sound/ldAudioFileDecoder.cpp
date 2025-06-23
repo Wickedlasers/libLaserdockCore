@@ -22,10 +22,14 @@
 
 #include <QtCore/QtDebug>
 #include <QtCore/QThread>
+#include <QtCore/QCoreApplication>
 
 #ifdef Q_OS_ANDROID
-#include <QAndroidJniEnvironment>
-#include <QAndroidJniObject>
+#if QT_VERSION >= 0x060000
+#include <QtCore/QJniEnvironment>
+#else
+#include <QtAndroidExtras/QAndroidJniEnvironment>
+#endif
 #endif
 
 #pragma warning(push, 0)
@@ -34,21 +38,27 @@
 
 #include <ldCore/Sound/ldSoundData.h>
 
-class ldAudioFileDecoderThread : public QThread
+class ldAudioFileDecoderWorker : public QObject
 {
     Q_OBJECT
 
 public:
-    ldAudioFileDecoderThread(const QString &filePath) {
+    ldAudioFileDecoderWorker(const QString &filePath) {
 #ifdef AUIDIO_DECODER_SUPPORTED
         m_filePath = filePath;
 
         m_audioDecoder.reset(new AudioDecoder(filePath.toStdString()));
 #ifdef Q_OS_ANDROID
+#if QT_VERSION >= 0x060000
+        QJniEnvironment qjniEnv;
+#else
         QAndroidJniEnvironment qjniEnv;
+#endif
         m_audioDecoder->initAndroidEnv(&(*qjniEnv));
 #endif
+        qDebug() << " open" << filePath;
         int error = m_audioDecoder->open();
+        qDebug() << " open2" << filePath;
         if(error != AUDIODECODER_OK) {
             qDebug() << "Error open" << filePath;
             return;
@@ -70,20 +80,25 @@ public:
         m_isStop = true;
     }
 
-    std::vector<float> m_data;
+    // std::vector<float> m_data;
 
-protected:
-    virtual void run() override {
+signals:
+    void progress(float value);
+    void resultReady(const std::vector<float> &data);
+
+public slots:
+    void doWork() {
 #ifdef AUIDIO_DECODER_SUPPORTED
         bool isAudioDecoder = m_audioDecoder.get();
         if(!isAudioDecoder
-            || (m_audioDecoder->duration() == -1))
+            || (m_audioDecoder->duration() == -1)
+            || m_audioDecoder->sampleRate() == 0)
             return;
 
         // prepare block for reading
         int fileSamplePos = 0;
         std::vector<float> blockData;
-        int blockSize = m_audioDecoder->sampleRate() / 30;
+        int blockSize = m_audioDecoder->sampleRate() / 1000;
         blockData.resize(blockSize);
 
         std::vector<float> data;
@@ -91,9 +106,26 @@ protected:
         int numsamples = m_audioDecoder->numSamples();
 
         // read from file
+        int progressIndex = 0;
+
+        // how often we want to emit progress block. each 0.33% is enough here
+        int numberOfReads = numsamples/blockSize;
+        int progressEmitBlock = numberOfReads/300;
+        if(progressEmitBlock < 1)
+            progressEmitBlock = 1;
+
         while(fileSamplePos < numsamples ) {
+            // qApp->processEvents();
+
+            // do not emit signal too often
+            // qDebug() << (float) fileSamplePos / numsamples;
+            if(progressIndex % progressEmitBlock == 0)
+                emit progress((float) fileSamplePos / numsamples);
+            progressIndex++;
+
             if(m_isStop)
                 break;
+
             int readed = m_audioDecoder->read(blockSize, blockData.data());
             if(!readed)
                 break;
@@ -116,8 +148,10 @@ protected:
             data.push_back((tMaxL + tMaxR)/2);
         }
 
-        if(!m_isStop)
-            m_data = data;
+        if(!m_isStop) {
+            // m_data = data;
+            emit resultReady(data);
+        }
 #endif
     }
 private:
@@ -132,28 +166,16 @@ private:
 
 ldAudioFileDecoder::ldAudioFileDecoder(QObject *parent)
     : QObject(parent)
-    , m_isActive(false)
 {
 }
 
 ldAudioFileDecoder::~ldAudioFileDecoder()
 {
-    if(m_currentThread) {
-        m_currentThread->stop();
-        if(m_currentThread->wait(500))
-            delete m_currentThread;
-    }
-}
-
-qint64 ldAudioFileDecoder::duration() const
-{
-    return m_duration;
+    reset();
 }
 
 void ldAudioFileDecoder::start(const QString &filePath)
 {
-    QMutexLocker lock(&m_mutex);
-
     qDebug() << "ldAudioFileDecoder" << __FUNCTION__ << filePath;
 
     if(filePath.isEmpty()) {
@@ -162,47 +184,35 @@ void ldAudioFileDecoder::start(const QString &filePath)
 
     reset();
 
-    m_currentThread = new ldAudioFileDecoderThread(filePath);
-    m_duration = m_currentThread->duration();
-    connect(m_currentThread, &ldAudioFileDecoderThread::finished, this, &ldAudioFileDecoder::onThreadFinished, Qt::QueuedConnection);
-    m_currentThread->start();
-    update_isActive(true);
+    emit progress(0);
+
+    m_workerThread = new QThread();
+    m_worker = new ldAudioFileDecoderWorker(filePath);
+    m_worker->moveToThread(m_workerThread);
+
+    connect(m_worker, &ldAudioFileDecoderWorker::progress, this, &ldAudioFileDecoder::progress);
+    connect(m_worker, &ldAudioFileDecoderWorker::resultReady, this, &ldAudioFileDecoder::finished);
+
+    connect(m_workerThread, &QThread::started, m_worker, &ldAudioFileDecoderWorker::doWork);
+    connect(m_workerThread, &QThread::finished, m_worker, &ldAudioFileDecoderWorker::deleteLater);
+
+    m_workerThread->start();
 }
 
 void ldAudioFileDecoder::reset()
 {
-    m_duration = -1;
-    if(m_currentThread) {
-        m_currentThread->stop();
-//        m_thread->quit();
-        if(m_currentThread->wait(500))
-            m_currentThread->deleteLater();
-        m_currentThread = nullptr;
-    }
-    update_isActive(false);
-
-    emit finished(std::vector<float>{});
-}
-
-
-void ldAudioFileDecoder::onThreadFinished()
-{
-    QMutexLocker lock(&m_mutex);
-
-    ldAudioFileDecoderThread *thread = qobject_cast<ldAudioFileDecoderThread*>(sender());
-    if(m_currentThread != thread) {
-        thread->deleteLater();
+    if(!m_workerThread)
         return;
-    }
 
-    qDebug() << "ldAudioFileDecoder" << __FUNCTION__;
+    disconnect(m_worker, &ldAudioFileDecoderWorker::progress, this, &ldAudioFileDecoder::progress);
+    disconnect(m_worker, &ldAudioFileDecoderWorker::resultReady, this, &ldAudioFileDecoder::finished);
 
-    update_isActive(false);
+    m_workerThread->quit();
+    m_workerThread->wait();
+    m_workerThread = nullptr;
 
-    // TODO: std::move here for optimisation
-    emit finished(thread->m_data);
-    thread->deleteLater();
-    m_currentThread = 0;
+    m_worker = nullptr;
 }
+
 
 #include "ldAudioFileDecoder.moc"

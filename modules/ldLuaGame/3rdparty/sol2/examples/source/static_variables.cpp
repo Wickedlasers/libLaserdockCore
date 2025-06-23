@@ -2,7 +2,6 @@
 #include <sol/sol.hpp>
 
 #include <iostream>
-#include "assert.hpp"
 
 struct test {
 	static int muh_variable;
@@ -16,22 +15,24 @@ int main() {
 	sol::state lua;
 	lua.open_libraries();
 	lua.new_usertype<test>("test",
-		"direct", sol::var(2),
-		"global", sol::var(test::muh_variable),
-		"ref_global", sol::var(std::ref(test::muh_variable))
-	);
+	     "direct",
+	     sol::var(2),
+	     "global",
+	     sol::var(test::muh_variable),
+	     "ref_global",
+	     sol::var(std::ref(test::muh_variable)));
 
 	int direct_value = lua["test"]["direct"];
 	// direct_value == 2
-	c_assert(direct_value == 2);
+	SOL_ASSERT(direct_value == 2);
 	std::cout << "direct_value: " << direct_value << std::endl;
 
 	int global = lua["test"]["global"];
 	int global2 = lua["test"]["ref_global"];
 	// global == 25
 	// global2 == 25
-	c_assert(global == 25);
-	c_assert(global2 == 25);
+	SOL_ASSERT(global == 25);
+	SOL_ASSERT(global2 == 25);
 
 	std::cout << "First round of values --" << std::endl;
 	std::cout << global << std::endl;
@@ -50,8 +51,8 @@ int main() {
 	// if muh_variable goes out of scope or is deleted
 	// problems could arise, so be careful!
 
-	c_assert(global == 25);
-	c_assert(global2 == 542);
+	SOL_ASSERT(global == 25);
+	SOL_ASSERT(global2 == 542);
 
 	std::cout << "Second round of values --" << std::endl;
 	std::cout << "global : " << global << std::endl;

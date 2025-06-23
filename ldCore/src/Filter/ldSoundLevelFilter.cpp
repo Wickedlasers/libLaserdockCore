@@ -33,7 +33,7 @@ void ldSoundLevelFilter::process(ldVertex &input)
     if(!m_enabled)
         return;
 
-    bool isBorder = ldCore::instance()->musicManager()->soundLevel() < m_borderValue;
+    bool isBorder = ldCore::instance()->musicManager()->soundLevel() <= m_borderValue;
     if(isBorder) {
         input.clear();
     }

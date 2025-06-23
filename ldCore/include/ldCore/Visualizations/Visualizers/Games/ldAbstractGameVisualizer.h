@@ -85,11 +85,13 @@ public slots:
     void nextLevel();
     void previousLevel();
 
+    /** Handle joystick left axis control */
     virtual void moveX(double /*x*/) {}
     virtual void moveY(double /*y*/) {}
 
-    virtual void moveRightX(double /*x*/) {}
-    virtual void moveRightY(double /*y*/) {}
+    /** Handle joystick right axis control. By default just duplicates left axis control */
+    virtual void moveRightX(double x);
+    virtual void moveRightY(double y);
 
     ldGameState state() const;
     ldPlayingState playingState() const;

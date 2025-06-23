@@ -23,19 +23,22 @@
 #include <QtCore/QDebug>
 #include <QtCore/QCoreApplication>
 #include <QtQml/QtQml>
-
-#include "ldCore/Data/ldBufferManager.h"
 #include "ldCore/Data/ldDataDispatcher.h"
+#include "ldCore/Data/ldDataDispatcherManager.h"
+#include <ldCore/Data/ldFrameBuffer.h>
 #include "ldCore/Filter/ldFilterManager.h"
 #include <ldCore/Games/ldAbstractGame.h>
+#include "ldCore/Hardware/ldHardwareBatch.h"
 #include "ldCore/Hardware/ldHardwareManager.h"
 #include "ldCore/Hardware/ldNetworkHardwareManager.h"
 #include "ldCore/Hardware/ldUSBHardwareManager.h"
 #include "ldCore/Helpers/Maths/ldVec2.h"
+#include "ldCore/Helpers/Text/ldTextDirection.h"
 #include "ldCore/Helpers/Text/ldSvgFontManager.h"
 #include "ldCore/Helpers/ldLaserController.h"
 #include "ldCore/Simulator/ldSimulatorEngine.h"
 #include "ldCore/Sound/ldAudioDecoder.h"
+#include "ldCore/Sound/ldSoundDataProvider.h"
 #include "ldCore/Sound/ldSoundDeviceManager.h"
 #include "ldCore/Task/ldTaskManager.h"
 #include "ldCore/Task/ldTaskWorker.h"
@@ -44,7 +47,15 @@
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
 
 #ifdef LD_CORE_ENABLE_QT_QUICK
+#include <ldCore/Simulator/ldQSGSimulatorItem.h>
+#endif
+
+#ifdef LD_CORE_ENABLE_OPENGL_SIMULATOR
 #include "ldCore/Simulator/ldSimulatorItem.h"
+#endif
+
+#ifdef LD_CORE_ENABLE_QUAZIP
+#include <ldCore/Android/ldZipExtractor.h>
 #endif
 
 #ifdef LD_CORE_RESOURCES_EXTRACTOR
@@ -118,9 +129,16 @@ void ldCore::initResources()
     ldAbstractGame::registerMetaTypes();
     ldVec2::registerMetaTypes();
     ldVertex::registerMetaTypes();
-
+    ldMusicManager::registerMetaTypes();
 #ifdef LD_CORE_ENABLE_QT_QUICK
+    ldQSGSimulatorItem::registerMetatypes();
+#endif
+#ifdef LD_CORE_ENABLE_OPENGL_SIMULATOR
     ldSimulatorItem::registerMetatypes();
+#endif
+
+#ifdef LD_CORE_ENABLE_QUAZIP
+    ldZipExtractor::staticInit();
 #endif
 }
 
@@ -153,27 +171,34 @@ void ldCore::initialize()
     m_svgFontManager->addFont(ldSvgFont("Roboto", "roboto"));
 
     m_filterManager = new ldFilterManager();
-    m_bufferManager = new ldBufferManager(this);
 
-    m_hardwareManager = new ldHardwareManager(m_filterManager, this);
-
-    update_dataDispatcher(new ldDataDispatcher(m_bufferManager, m_hardwareManager, m_filterManager, this));
-
-    // create and load task
-    m_taskManager = new ldTaskManager(m_bufferManager, this);
-     // filter manager should be on same thread, because task/buffer uses pointers that are owned by filter manager
-    m_filterManager->moveToThread(m_taskManager->taskWorker()->thread());
+    m_hardwareManager = new ldHardwareManager(this);
+    m_hardwareManager->addHardwareManager(new ldNetworkHardwareManager(m_filterManager));
+#ifdef LASERDOCKLIB_USB_SUPPORT
+    m_hardwareManager->addHardwareManager(new ldUsbHardwareManager(m_filterManager, this));
+#endif
+    m_hardwareManager->set_isActive(true);
 
     // music manager
     m_musicManager = new ldMusicManager(this);
-
     m_soundDeviceManager = new ldSoundDeviceManager(this);
+    m_soundDataProvider = new ldSoundDataProvider(m_musicManager, m_audioDecoder, this);
+    m_soundDataProvider->start();
 
-    // load task
-    m_task = new ldVisualizationTask(m_musicManager, m_audioDecoder);
-    m_task->moveToThread(m_taskManager->taskWorker()->thread());
-    m_taskManager->taskWorker()->loadTask(m_task);
-    m_taskManager->taskWorker()->startTask();
+    m_taskManager = new ldTaskManager(this);
+
+    m_dataDispatcherManager = new ldDataDispatcherManager(this);
+    m_dataDispatcherInstance.reset(m_dataDispatcherManager->createNew());
+    m_dataDispatcherInstance->hwBatch->setDefaultMode(true);
+    connect(qApp, &QCoreApplication::aboutToQuit, [&]() {
+        m_dataDispatcherManager->deleteDataDispatcher(m_dataDispatcherInstance.get());
+    });
+
+    // filter manager should be on same thread, because task/buffer uses pointers that are owned by filter manager
+    // NOTE: do we really need it? all calls are done from various threads
+//    m_filterManager->moveToThread(taskWorker->thread());
+
+    update_dataDispatcher(m_dataDispatcherInstance->dataDispatcher);
 
     update_laserController(new ldLaserController(this));
 
@@ -209,14 +234,14 @@ ldAudioDecoder *ldCore::audioDecoder() const
     return m_audioDecoder;
 }
 
-ldBufferManager *ldCore::bufferManager() const
-{
-    return m_bufferManager;
-}
-
 ldFilterManager *ldCore::filterManager() const
 {
     return m_filterManager;
+}
+
+ldHardwareBatch *ldCore::hwBatch() const
+{
+    return m_dataDispatcherInstance->hwBatch;
 }
 
 ldHardwareManager *ldCore::hardwareManager() const
@@ -227,6 +252,11 @@ ldHardwareManager *ldCore::hardwareManager() const
 ldMusicManager *ldCore::musicManager() const
 {
     return m_musicManager;
+}
+
+ldSoundDataProvider *ldCore::soundDataProvider() const
+{
+    return m_soundDataProvider;
 }
 
 ldSoundDeviceManager *ldCore::soundDeviceManager() const
@@ -241,7 +271,7 @@ ldSvgFontManager *ldCore::svgFontManager() const
 
 ldVisualizationTask *ldCore::task() const
 {
-    return m_task;
+    return m_dataDispatcherInstance->task;
 }
 
 ldTaskManager *ldCore::taskManager() const
@@ -256,6 +286,7 @@ ldCore::ldCore(QObject *parent)
 {
 #ifdef LD_CORE_ENABLE_QT_QUICK
     qmlRegisterAnonymousType<ldDataDispatcher>("WickedLasers", 1);
+    qmlRegisterAnonymousType<ldDataDispatcherManager>("WickedLasers", 1);
     qmlRegisterAnonymousType<ldLaserController>("WickedLasers", 1);
 #endif
 
@@ -290,7 +321,7 @@ void ldCore::initStorageDir()
 
 void ldCore::initResourceDir()
 {
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
         m_resourceDir = QDir(qApp->applicationDirPath() + "/../Resources").absolutePath();
 #elif defined(Q_OS_WIN32)
         m_resourceDir = qApp->applicationDirPath() + "/Resources";

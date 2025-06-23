@@ -25,9 +25,18 @@
 
 #include "ldCore/ldCore_global.h"
 
+#ifndef M_PIf
 constexpr float M_PIf = static_cast<float> (M_PI);
+#endif
+
+#ifndef M_PI_2f
 constexpr float M_PI_2f = static_cast<float> (M_PI_2);
+#endif
+
+#ifndef M_PI_4f
 constexpr float M_PI_4f = static_cast<float> (M_PI_4);
+#endif
+
 constexpr double M_2PI  = 2.0*M_PI;
 constexpr float M_2PIf = static_cast<float> (M_2PI);
 

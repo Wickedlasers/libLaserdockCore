@@ -40,7 +40,7 @@ ldAbstractRenderer::ldAbstractRenderer(QObject *parent) :
 
 void ldAbstractRenderer::setRate(int rate)
 {
-    if(!(rate == 20000 || rate == 30000)) {
+    if(!(rate == 20000 || rate == 30000 || rate == 35000 || rate == 40000)) {
         qWarning() << "Wrong rate value " << rate;
         return;
     }

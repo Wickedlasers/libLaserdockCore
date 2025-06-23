@@ -29,6 +29,7 @@
 ldFilterManager::ldFilterManager(QObject *parent)
     : QObject(parent)
     , m_3dRotateFilter(new ld3dRotateFilter())
+    , m_movementFilter(new ldFilterMovement())
 {
     qDebug() << __FUNCTION__;
 }
@@ -41,23 +42,20 @@ ldFilterManager::~ldFilterManager()
 // if no id is provided, return a default hardware filter
 ldHardwareFilter *ldFilterManager::getFilterById(QString device_id)
 {
-    lock();
     if (device_id=="") { // default id?
        qDebug() << "get hardware filter for unknown device";
-       unlock();
        return nullptr;
     } else
     if (m_filtermap.contains(device_id)) { // filter already created for this device id?
         qDebug() << "get existing filter for device:" << device_id;
-        unlock();
         return m_filtermap[device_id].get();
     } else { // allocate a filter for this device id
         qDebug() << "allocating hardware filter for device:" << device_id;
         QSharedPointer<ldHardwareFilter> hw(new ldHardwareFilter(m_dataFilter.scaleFilter()));
+        //qDebug() << "hardware filter allocated";
         //m_hardwareFilters.push_back(std::move(hw));
        // m_filtermap[device_id] = hw.get();
         m_filtermap[device_id] = hw;
-        unlock();
         return m_filtermap[device_id].get();
     }
 
@@ -117,6 +115,8 @@ void ldFilterManager::processFrame(ldVertexFrame &frame)
         if(m_preGlobalFilter)
             m_preGlobalFilter->processFilter(frame[i]);
 
+        m_movementFilter->processFilter(frame[i]);
+
         if (m_globalFilter)
             m_globalFilter->processFilter(frame[i]);
 
@@ -155,6 +155,11 @@ ldHueFilter *ldFilterManager::hueFilter() const
 ldHueShiftFilter *ldFilterManager::hueShiftFilter() const
 {
     return m_basicGlobalFilter.hueShiftFilter();
+}
+
+ldFilterMovement *ldFilterManager::movementFilter() const
+{
+    return m_movementFilter.get();
 }
 
 ld3dRotateFilter *ldFilterManager::rotate3dFilter() const

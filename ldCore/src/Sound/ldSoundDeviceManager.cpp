@@ -76,7 +76,11 @@ ldSoundDeviceManager::ldSoundDeviceManager(QObject *parent)
 
     QString debugStr = "Sound input devices: ";
     for(const ldSoundDeviceInfo &device : m_devices) {
+#if QT_VERSION >= 0x060000
+        debugStr += QString::number(device.type()) + " " + device.name() + " " + device.id().toString() + "; ";
+#else
         debugStr += QString::number(device.type()) + " " + device.name() + "; ";
+#endif
     }
     qDebug().noquote() << debugStr;
 
@@ -98,15 +102,25 @@ void ldSoundDeviceManager::refreshAvailableDevices()
 {
     m_devices.clear();
 
+#if QT_VERSION >= 0x060000
+    QList<QAudioDevice> inputAudioDevices = ldQAudioInputDevice::getDevices();
+    for(const QAudioDevice &inputAudioDevice : inputAudioDevices) {
+        ldQAudioInputDevice::printInfo(inputAudioDevice);
+        m_devices.append(ldSoundDeviceInfo(ldSoundDeviceInfo::Type::QAudioInput, inputAudioDevice.description(), inputAudioDevice.id()));
+    }
+#else
     QList<QAudioDeviceInfo> inputAudioDevices = ldQAudioInputDevice::getDevices();
     for(const QAudioDeviceInfo &inputAudioDevice : inputAudioDevices) {
+        ldQAudioInputDevice::printInfo(inputAudioDevice);
         m_devices.append(ldSoundDeviceInfo(ldSoundDeviceInfo::Type::QAudioInput, inputAudioDevice.deviceName()));
     }
+#endif
 
 #ifdef LD_LOOPBACK_DEVICE_ENABLED
     QStringList loopbackDevices = ldLoopbackAudioDevice::getAvailableOutputDevices();
     for(const QString &loopbackDevice : loopbackDevices) {
         m_devices.append(ldSoundDeviceInfo(ldSoundDeviceInfo::Type::Loopback,
+                                           loopbackDevice,
                                            loopbackDevice));
     }
 #endif
@@ -120,7 +134,11 @@ void ldSoundDeviceManager::refreshAvailableDevices()
 #endif
 
     m_devices.append(ldSoundDeviceInfo(ldSoundDeviceInfo::Type::Stub,
+#if QT_VERSION >= 0x060000
+                                       tr("Stub"), "stubId")
+#else
                                        tr("Stub"))
+#endif
                      );
 }
 
@@ -140,7 +158,11 @@ ldSoundDeviceInfo ldSoundDeviceManager::getDefaultDevice(const ldSoundDeviceInfo
     ldSoundDeviceInfo result;
 
     if(type == ldSoundDeviceInfo::Type::QAudioInput) {
-        result = ldSoundDeviceInfo(type, m_qaudioInputDevice->getDefaultDevice().deviceName());
+#if QT_VERSION >= 0x060000
+        result = ldSoundDeviceInfo(type, m_qaudioInputDevice->getDefaultDevice().description(), m_qaudioInputDevice->getDefaultDevice().id());
+#else
+        result = ldSoundDeviceInfo(type, m_qaudioInputDevice->getDefaultDevice().deviceName(), m_qaudioInputDevice->getDefaultDevice().deviceName());
+#endif
     } else {
         QList<ldSoundDeviceInfo> devices = getAvailableDevices(type);
         if(!devices.empty())
@@ -294,7 +316,11 @@ bool ldSoundDeviceManager::initializeAudio(const ldSoundDeviceInfo &info)
 	if (!isSuccess) {
 		// show error - nothing found
         qWarning() << "show error - nothing found";
+#if QT_VERSION >= 0x060000
+        emit error(tr("Error, can't open: %1, %2").arg(info.name()).arg(info.id().toString()));
+#else
         emit error(tr("Error, can't open: %1").arg(info.name()));
+#endif
 
         // try to activate last device if exists
         if(m_info.isValid()) {
@@ -304,7 +330,11 @@ bool ldSoundDeviceManager::initializeAudio(const ldSoundDeviceInfo &info)
             initializeAudio(oldInfo);
         }
     } else {
+#if QT_VERSION >= 0x060000
+        qDebug() << __FUNCTION__ << info.name() << info.id() << info.type();
+#else
         qDebug() << __FUNCTION__ << info.name() << info.type();
+#endif
     }
 
     if(isSuccess && m_activateCallbackFunc) {
@@ -316,11 +346,19 @@ bool ldSoundDeviceManager::initializeAudio(const ldSoundDeviceInfo &info)
 
 bool ldSoundDeviceManager::activateQAudioInputDevice(const ldSoundDeviceInfo &info)
 {
+#if QT_VERSION >= 0x060000
+    QList<QAudioDevice> inputDevices = ldQAudioInputDevice::getDevices();
+
+    auto it = std::find_if(inputDevices.begin(), inputDevices.end(), [&](const QAudioDevice &inputDevice) {
+        return inputDevice.id() == info.id();
+    });
+#else
     QList<QAudioDeviceInfo> inputDevices = ldQAudioInputDevice::getDevices();
 
     auto it = std::find_if(inputDevices.begin(), inputDevices.end(), [&](const QAudioDeviceInfo &inputDevice) {
         return inputDevice.deviceName() == info.name();
     });
+#endif
 
     if (it != inputDevices.end()) {
         bool isOk = m_qaudioInputDevice->activateInputDevice(*it);

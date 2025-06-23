@@ -37,7 +37,7 @@ class LDCORESHARED_EXPORT ldTaskWorker : public QObject
     Q_OBJECT
 
 public:
-    explicit ldTaskWorker(ldBufferManager *bufferManager, QObject *parent = 0);
+    explicit ldTaskWorker(ldFrameBuffer *frameBuffer);
     ~ldTaskWorker();
 
     bool isRunning() const;

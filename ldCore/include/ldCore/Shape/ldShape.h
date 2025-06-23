@@ -21,7 +21,7 @@
 #ifndef LDSHAPE_H
 #define LDSHAPE_H
 
-#include <openlase/libol.h>
+#include <openlase/ldLibol.h>
 
 #include <ldCore/ldCore_global.h>
 #include <ldCore/Render/ldRendererOpenlase.h>
@@ -39,12 +39,11 @@ public:
 
 public:
     static void setGlobalRenderer(ldRendererOpenlase* renderer);
-
     virtual void setRenderer(ldRendererOpenlase* renderer);
     ldRendererOpenlase* getRenderer();
 
 protected:
-    ldRendererOpenlase* m_renderer;
+    ldRendererOpenlase* m_renderer = nullptr;
 
 public:
     void setScaleX(float fScaleX);
@@ -83,9 +82,9 @@ public:
     //
     // Shader functions, shouldn't be set in draw() func!
     //
-    ldShader* getVertexPreShader();
-    ldShader* getVertextShader();
-    ldShader* getPixelShader();
+    ldShader* getVertexPreShader() const;
+    ldShader* getVertextShader() const;
+    ldShader* getPixelShader() const;
 
     void setVertexPreShader(ldShader* pShader);
     void setVertextShader(ldShader* pShader);

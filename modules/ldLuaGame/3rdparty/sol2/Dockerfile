@@ -1,4 +1,4 @@
-# # # # sol3
+# # # # sol2
 # The MIT License (MIT)
 # 
 # Copyright (c) 2013-2017 Rapptz, ThePhD, and contributors
@@ -50,7 +50,7 @@ VOLUME /root/sol2
 # Command line arguments, with default values
 ARG SOL2_PLATFORM=x64
 ARG SOL2_LUA_VERSION=x64
-ARG SOL2_LUA_VERSION=5.3.5
+ARG SOL2_LUA_VERSION=5.4.4
 ARG SOL2_TEST_SINGLE=false
 ARG SOL2_TEST_INTEROP=false
 ARG SOL2_CI=true

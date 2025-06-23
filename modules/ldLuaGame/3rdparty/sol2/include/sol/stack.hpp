@@ -1,8 +1,8 @@
-// sol3 
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,23 +24,26 @@
 #ifndef SOL_STACK_HPP
 #define SOL_STACK_HPP
 
-#include "trampoline.hpp"
-#include "stack_core.hpp"
-#include "stack_reference.hpp"
-#include "stack_check.hpp"
-#include "stack_get.hpp"
-#include "stack_check_get.hpp"
-#include "stack_push.hpp"
-#include "stack_pop.hpp"
-#include "stack_field.hpp"
-#include "stack_probe.hpp"
+#include <sol/trampoline.hpp>
+#include <sol/stack_core.hpp>
+#include <sol/stack_reference.hpp>
+#include <sol/stack_check.hpp>
+#include <sol/stack_get.hpp>
+#include <sol/stack_check_get.hpp>
+#include <sol/stack_push.hpp>
+#include <sol/stack_pop.hpp>
+#include <sol/stack_field.hpp>
+#include <sol/stack_probe.hpp>
+#include <sol/error.hpp>
+#include <sol/assert.hpp>
 
 #include <cstring>
 #include <array>
 
 namespace sol {
 	namespace detail {
-		using typical_chunk_name_t = char[32];
+		using typical_chunk_name_t = char[SOL_ID_SIZE_I_];
+		using typical_file_chunk_name_t = char[SOL_FILE_ID_SIZE_I_];
 
 		inline const std::string& default_chunk_name() {
 			static const std::string name = "";
@@ -97,11 +100,12 @@ namespace sol {
 				static const std::size_t data_t_count = (sizeof(TValue) + voidsizem1) / voidsize;
 				typedef std::array<void*, data_t_count> data_t;
 
-				data_t data{ {} };
+				data_t data { {} };
 				std::memcpy(&data[0], std::addressof(item), itemsize);
 				int pushcount = 0;
-				for (auto&& v : data) {
-					pushcount += push(L, lightuserdata_value(v));
+				for (const auto& v : data) {
+					lua_pushlightuserdata(L, v);
+					pushcount += 1;
 				}
 				return pushcount;
 			}
@@ -110,43 +114,112 @@ namespace sol {
 			inline std::pair<T, int> get_as_upvalues(lua_State* L, int index = 2) {
 				static const std::size_t data_t_count = (sizeof(T) + (sizeof(void*) - 1)) / sizeof(void*);
 				typedef std::array<void*, data_t_count> data_t;
-				data_t voiddata{ {} };
+				data_t voiddata { {} };
 				for (std::size_t i = 0, d = 0; d < sizeof(T); ++i, d += sizeof(void*)) {
-					voiddata[i] = get<lightuserdata_value>(L, upvalue_index(index++));
+					voiddata[i] = lua_touserdata(L, upvalue_index(index++));
 				}
 				return std::pair<T, int>(*reinterpret_cast<T*>(static_cast<void*>(voiddata.data())), index);
 			}
 
-			template <typename Fx, typename... Args>
-			static decltype(auto) eval(types<>, std::index_sequence<>, lua_State*, int, record&, Fx&& fx, Args&&... args) {
+			template <typename T>
+			inline std::pair<T, int> get_as_upvalues_using_function(lua_State* L, int function_index = -1) {
+				static const std::size_t data_t_count = (sizeof(T) + (sizeof(void*) - 1)) / sizeof(void*);
+				typedef std::array<void*, data_t_count> data_t;
+				function_index = lua_absindex(L, function_index);
+				int index = 0;
+				data_t voiddata { {} };
+				for (std::size_t d = 0; d < sizeof(T); d += sizeof(void*)) {
+					// first upvalue is nullptr to respect environment shenanigans
+					// So +2 instead of +1
+					const char* upvalue_name = lua_getupvalue(L, function_index, index + 2);
+					if (upvalue_name == nullptr) {
+						// We should freak out here...
+						break;
+					}
+					voiddata[index] = lua_touserdata(L, -1);
+					++index;
+				}
+				lua_pop(L, index);
+				return std::pair<T, int>(*reinterpret_cast<T*>(static_cast<void*>(voiddata.data())), index);
+			}
+
+			template <bool checked, typename Handler, typename Fx, typename... Args>
+			static decltype(auto) eval(types<>, std::index_sequence<>, lua_State*, int, Handler&&, record&, Fx&& fx, Args&&... args) {
 				return std::forward<Fx>(fx)(std::forward<Args>(args)...);
 			}
 
-			template <typename Fx, typename Arg, typename... Args, std::size_t I, std::size_t... Is, typename... FxArgs>
-			static decltype(auto) eval(types<Arg, Args...>, std::index_sequence<I, Is...>, lua_State* L, int start, record& tracking, Fx&& fx, FxArgs&&... fxargs) {
-				return eval(types<Args...>(), std::index_sequence<Is...>(), L, start, tracking, std::forward<Fx>(fx), std::forward<FxArgs>(fxargs)..., stack_detail::unchecked_get<Arg>(L, start + tracking.used, tracking));
+			template <bool checked, typename Arg, typename... Args, std::size_t I, std::size_t... Is, typename Handler, typename Fx, typename... FxArgs>
+			static decltype(auto) eval(types<Arg, Args...>, std::index_sequence<I, Is...>, lua_State* L_, int start_index_, Handler&& handler_,
+			     record& tracking_, Fx&& fx_, FxArgs&&... fxargs_) {
+#if 0 && SOL_IS_ON(SOL_PROPAGATE_EXCEPTIONS)
+				// NOTE: THIS IS TERMPORARILY TURNED OFF BECAUSE IT IMPACTS ACTUAL SEMANTICS W.R.T. THINGS LIKE LUAJIT,
+				// SO IT MUST REMAIN OFF UNTIL WE CAN ESTABLISH SIMILAR BEHAVIOR IN MODES WHERE `checked == false`!
+
+				// We can save performance/time by letting errors unwind produced arguments
+				// rather than checking everything once, and then potentially re-doing work
+				if constexpr (checked) {
+					return eval<checked>(types<Args...>(),
+					     std::index_sequence<Is...>(),
+					     L_,
+					     start_index_,
+					     std::forward<Handler>(handler_),
+					     tracking_,
+					     std::forward<Fx>(fx_),
+					     std::forward<FxArgs>(fxargs_)...,
+					     *stack_detail::check_get_arg<Arg>(L_, start_index_ + tracking_.used, handler_, tracking_));
+				}
+				else
+#endif
+				{
+					return eval<checked>(types<Args...>(),
+					     std::index_sequence<Is...>(),
+					     L_,
+					     start_index_,
+					     std::forward<Handler>(handler_),
+					     tracking_,
+					     std::forward<Fx>(fx_),
+					     std::forward<FxArgs>(fxargs_)...,
+					     stack_detail::unchecked_get_arg<Arg>(L_, start_index_ + tracking_.used, tracking_));
+				}
 			}
 
-			template <bool checkargs = detail::default_safe_function_calls , std::size_t... I, typename R, typename... Args, typename Fx, typename... FxArgs>
-			inline decltype(auto) call(types<R>, types<Args...> ta, std::index_sequence<I...> tai, lua_State* L, int start, Fx&& fx, FxArgs&&... args) {
-				static_assert(meta::all<meta::is_not_move_only<Args>...>::value, "One of the arguments being bound is a move-only type, and it is not being taken by reference: this will break your code. Please take a reference and std::move it manually if this was your intention.");
+			template <bool checkargs = detail::default_safe_function_calls, std::size_t... I, typename R, typename... Args, typename Fx, typename... FxArgs>
+			inline decltype(auto) call(types<R>, types<Args...> argument_types_, std::index_sequence<I...> argument_indices_, lua_State* L_,
+			     int start_index_, Fx&& fx_, FxArgs&&... args_) {
+				static_assert(meta::all_v<meta::is_not_move_only<Args>...>,
+				     "One of the arguments being bound is a move-only type, and it is not being taken by reference: this will break your code. Please take "
+				     "a reference and std::move it manually if this was your intention.");
+				argument_handler<types<R, Args...>> handler {};
+				record tracking {};
+#if SOL_IS_OFF(SOL_PROPAGATE_EXCEPTIONS)
 				if constexpr (checkargs) {
-					argument_handler<types<R, Args...>> handler{};
-					multi_check<Args...>(L, start, handler);
+					multi_check<Args...>(L_, start_index_, handler);
 				}
-				record tracking{};
+#endif
 				if constexpr (std::is_void_v<R>) {
-					eval(ta, tai, L, start, tracking, std::forward<Fx>(fx), std::forward<FxArgs>(args)...);
+					eval<checkargs>(
+					     argument_types_, argument_indices_, L_, start_index_, handler, tracking, std::forward<Fx>(fx_), std::forward<FxArgs>(args_)...);
 				}
 				else {
-					return eval(ta, tai, L, start, tracking, std::forward<Fx>(fx), std::forward<FxArgs>(args)...);
+					return eval<checkargs>(
+					     argument_types_, argument_indices_, L_, start_index_, handler, tracking, std::forward<Fx>(fx_), std::forward<FxArgs>(args_)...);
 				}
 			}
+
+			template <typename T>
+			void raw_table_set(lua_State* L, T&& arg, int tableindex = -2) {
+				int push_count = push(L, std::forward<T>(arg));
+				SOL_ASSERT(push_count == 1);
+				std::size_t unique_index = static_cast<std::size_t>(luaL_len(L, tableindex) + 1u);
+				lua_rawseti(L, tableindex, static_cast<int>(unique_index));
+			}
+
 		} // namespace stack_detail
 
 		template <typename T>
 		int set_ref(lua_State* L, T&& arg, int tableindex = -2) {
-			push(L, std::forward<T>(arg));
+			int push_count = push(L, std::forward<T>(arg));
+			SOL_ASSERT(push_count == 1);
 			return luaL_ref(L, tableindex);
 		}
 
@@ -163,7 +236,7 @@ namespace sol {
 
 		template <bool check_args = detail::default_safe_function_calls, typename R, typename... Args, typename Fx, typename... FxArgs>
 		inline decltype(auto) call(types<R> tr, types<Args...> ta, lua_State* L, Fx&& fx, FxArgs&&... args) {
-			if constexpr(std::is_void_v<R>) {
+			if constexpr (std::is_void_v<R>) {
 				call<check_args>(tr, ta, L, 1, std::forward<Fx>(fx), std::forward<FxArgs>(args)...);
 			}
 			else {
@@ -192,7 +265,8 @@ namespace sol {
 			}
 		}
 
-		template <bool check_args = detail::default_safe_function_calls, bool clean_stack = true, typename Ret0, typename... Ret, typename... Args, typename Fx, typename... FxArgs>
+		template <bool check_args = detail::default_safe_function_calls, bool clean_stack = true, typename Ret0, typename... Ret, typename... Args,
+		     typename Fx, typename... FxArgs>
 		inline int call_into_lua(types<Ret0, Ret...> tr, types<Args...> ta, lua_State* L, int start, Fx&& fx, FxArgs&&... fxargs) {
 			if constexpr (std::is_void_v<Ret0>) {
 				call<check_args>(tr, ta, L, start, std::forward<Fx>(fx), std::forward<FxArgs>(fxargs)...);
@@ -203,7 +277,8 @@ namespace sol {
 			}
 			else {
 				(void)tr;
-				decltype(auto) r = call<check_args>(types<meta::return_type_t<Ret0, Ret...>>(), ta, L, start, std::forward<Fx>(fx), std::forward<FxArgs>(fxargs)...);
+				decltype(auto) r
+				     = call<check_args>(types<meta::return_type_t<Ret0, Ret...>>(), ta, L, start, std::forward<Fx>(fx), std::forward<FxArgs>(fxargs)...);
 				using R = meta::unqualified_t<decltype(r)>;
 				using is_stack = meta::any<is_stack_based<R>, std::is_same<R, absolute_index>, std::is_same<R, ref_index>, std::is_same<R, raw_index>>;
 				if constexpr (clean_stack && !is_stack::value) {
@@ -233,7 +308,8 @@ namespace sol {
 			return call_syntax::colon;
 		}
 
-		inline void script(lua_State* L, lua_Reader reader, void* data, const std::string& chunkname = detail::default_chunk_name(), load_mode mode = load_mode::any) {
+		inline void script(
+		     lua_State* L, lua_Reader reader, void* data, const std::string& chunkname = detail::default_chunk_name(), load_mode mode = load_mode::any) {
 			detail::typical_chunk_name_t basechunkname = {};
 			const char* chunknametarget = detail::make_chunk_name("lua_Reader", chunkname, basechunkname);
 			if (lua_load(L, reader, data, chunknametarget, to_string(mode).c_str()) || lua_pcall(L, 0, LUA_MULTRET, 0)) {
@@ -241,7 +317,9 @@ namespace sol {
 			}
 		}
 
-		inline void script(lua_State* L, const string_view& code, const std::string& chunkname = detail::default_chunk_name(), load_mode mode = load_mode::any) {
+		inline void script(
+		     lua_State* L, const string_view& code, const std::string& chunkname = detail::default_chunk_name(), load_mode mode = load_mode::any) {
+
 			detail::typical_chunk_name_t basechunkname = {};
 			const char* chunknametarget = detail::make_chunk_name(code, chunkname, basechunkname);
 			if (luaL_loadbufferx(L, code.data(), code.size(), chunknametarget, to_string(mode).c_str()) || lua_pcall(L, 0, LUA_MULTRET, 0)) {
@@ -256,11 +334,11 @@ namespace sol {
 		}
 
 		inline void luajit_exception_handler(lua_State* L, int (*handler)(lua_State*, lua_CFunction) = detail::c_trampoline) {
-#if defined(SOL_LUAJIT) && (!defined(SOL_EXCEPTIONS_SAFE_PROPAGATION) || !(SOL_EXCEPTIONS_SAFE_PROPAGATION))
+#if SOL_IS_ON(SOL_USE_LUAJIT_EXCEPTION_TRAMPOLINE)
 			if (L == nullptr) {
 				return;
 			}
-#if defined(SOL_SAFE_STACK_CHECK) && SOL_SAFE_STACK_CHECK
+#if SOL_IS_ON(SOL_SAFE_STACK_CHECK)
 			luaL_checkstack(L, 1, detail::not_enough_stack_space_generic);
 #endif // make sure stack doesn't overflow
 			lua_pushlightuserdata(L, (void*)handler);
@@ -273,7 +351,7 @@ namespace sol {
 		}
 
 		inline void luajit_exception_off(lua_State* L) {
-#if defined(SOL_LUAJIT)
+#if SOL_IS_ON(SOL_USE_LUAJIT_EXCEPTION_TRAMPOLINE)
 			if (L == nullptr) {
 				return;
 			}
@@ -281,6 +359,24 @@ namespace sol {
 #else
 			(void)L;
 #endif
+		}
+
+		namespace stack_detail {
+			inline error get_error(lua_State* L, int target) {
+				auto maybe_exc = stack::check_get<error&>(L, target);
+				if (maybe_exc.has_value()) {
+					return maybe_exc.value();
+				}
+				return error(detail::direct_error, stack::get<std::string>(L, target));
+			}
+
+			inline detail::error_exception get_error_exception(lua_State* L, int target) {
+				auto maybe_exc = stack::check_get<detail::error_exception&>(L, target);
+				if (maybe_exc.has_value()) {
+					return maybe_exc.value();
+				}
+				return detail::error_exception(detail::direct_error, stack::get<std::string>(L, target));
+			}
 		}
 	} // namespace stack
 } // namespace sol

@@ -107,7 +107,7 @@ bool LDFFT::GetScalar(const ldAudioBuffer<float>& buffer, ldBuffer<float>& scala
     return true;
 }
 
-#ifdef Q_OS_MACOS
+#ifdef Q_OS_DARWIN
 #pragma mark - LDFFTr: Real FFT
 #endif
 

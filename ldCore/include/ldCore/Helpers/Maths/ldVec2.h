@@ -21,7 +21,9 @@
 #ifndef LDVEC2_H
 #define LDVEC2_H
 
-#include "ldCore/ldCore_global.h"
+#include <QtCore/QPointF>
+
+#include <ldCore/ldCore_global.h>
 
 class LDCORESHARED_EXPORT ldVec2 {
 public:
@@ -39,6 +41,7 @@ public:
     float y = 0.f;
 
     ldVec2();
+    ldVec2(const QPointF &pointF);
     ldVec2(float p_x, float p_y);
 
     bool isNull() const;
@@ -52,16 +55,24 @@ public:
     ldVec2& operator+= (const ldVec2& other);
     ldVec2 operator- (const ldVec2& other) const;
     ldVec2& operator-= (const ldVec2& other);
+    ldVec2 operator* (float s);
     ldVec2& operator*= (float s);
+    ldVec2 operator* (const ldVec2& other);
     ldVec2& operator*= (const ldVec2& other);
+    ldVec2 operator/ (float s);
     ldVec2& operator/= (float s);
+    ldVec2 operator/ (const ldVec2& other);
     ldVec2& operator/= (const ldVec2& other);
     bool operator == (const ldVec2& other) const;
     bool operator != (const ldVec2& other) const;
+
+    QPointF toPointF() const;
 };
 Q_DECLARE_METATYPE(ldVec2)
 
-QDebug operator << (QDebug debug, const ldVec2& v);
+LDCORESHARED_EXPORT QDebug operator << (QDebug debug, const ldVec2& v);
+LDCORESHARED_EXPORT QDataStream &operator<<(QDataStream &out, const ldVec2 &myObj);
+LDCORESHARED_EXPORT QDataStream &operator>>(QDataStream &in, ldVec2 &myObj);
 
 #endif // LDVEC2_H
 

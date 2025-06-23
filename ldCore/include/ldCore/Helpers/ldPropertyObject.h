@@ -17,6 +17,7 @@ public:
 
 public slots:
     bool setProperty(const QByteArray &name, const QVariant &value);
+    bool hasProperty(const QByteArray &name) const;
     QVariant property(const QByteArray &name) const;
 
     bool isRealProperty(const QByteArray &name) const;

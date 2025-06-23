@@ -32,6 +32,7 @@ class ldFilter;
 
 template <typename T, typename Total, size_t N>
 class Moving_Average;
+class ldLaserPowerLimiter;
 
 class LDCORESHARED_EXPORT ldHardwareFilter : public QObject
 {
@@ -48,6 +49,7 @@ public:
     ldDeadzoneFilter *deadzone() const;
     ldFlipFilter *flipFilter();
     ldPowerFilter *powerFilter() const;
+    ldRotateFilter *rotateFilter() const;
     ldScaleFilter *scaleFilter() const;
     ldShiftFilter *shiftFilter() const;
     ldTtlFilter *ttlFilter() const;
@@ -55,6 +57,18 @@ public:
     // keystone
     void setKeystoneX(float keystoneX);
     void setKeystoneY(float keystoneY);
+
+#ifdef LD_CORE_KEYSTONE_CORRECTION
+    void setTopLeftXKeystone(float topLeftXValue);
+    void setTopLeftYKeystone(float topLeftYValue);
+    void setTopRightXKeystone(float topRightXValue);
+    void setTopRightYKeystone(float topRightYValue);
+    void setBottomLeftXKeystone(float bottomLeftXValue);
+    void setBottomLeftYKeystone(float bottomLeftYValue);
+    void setBottomRightXKeystone(float bottomRightXValue);
+    void setBottomRightYKeystone(float bottomRightYValue);
+#endif
+
     void setOffset(int offset);
 
     void processSafeLaserOutput(ldVertex &v);
@@ -83,17 +97,25 @@ public:
     void resetFilter();
 
     ldVertexFrame &lastFrame();
+
+public slots:
+    void setActive(bool isActive);
+signals :
+
+    void frameProcessed(ldVertexFrame frame);
+    void deviceTemperatureUpdated(int tempDegC);
+
 protected:
 
 private:
     void processFrameV(ldVertex &v);
 
-    static const size_t num_samples = 1200;
+    static const size_t galvo_limiter_num_samples = 1200;
 
     ldVertexFrame m_lastFrame;
-    std::unique_ptr<Moving_Average<float,double,num_samples>> m_avg;
+    std::unique_ptr<Moving_Average<float,double,galvo_limiter_num_samples>> m_galvoAverager;
     float m_scalelimiter{1.0f};
-
+    bool m_isActive{false};
     std::unique_ptr<ldDeadzoneFilter> m_borderFilter;
     std::unique_ptr<ldColorFilter> m_colorFilter;
     std::unique_ptr<ldColorCurveFilter> m_colorCurveFilter;
@@ -101,10 +123,14 @@ private:
     std::unique_ptr<ldFlipFilter> m_flipFilter;
     std::unique_ptr<ldPowerFilter> m_powerFilter;
     std::unique_ptr<ldProjectionBasic> m_projectionBasic;
+    std::unique_ptr<ldRotateFilter> m_rotateFilter;
     std::unique_ptr<ldScaleFilter> m_scaleFilter;
     std::unique_ptr<ldShiftFilter> m_shiftFilter;
     std::unique_ptr<ldTtlFilter> m_ttlFilter;
+    std::unique_ptr<ldLaserPowerLimiter> m_laserPowerFilter;
 
+signals:
+    void activeChanged(bool isActive);
 };
 
 #endif // LDHARDWAREFILTER_H

@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,14 +24,14 @@
 #ifndef SOL_PROTECTED_FUNCTION_RESULT_HPP
 #define SOL_PROTECTED_FUNCTION_RESULT_HPP
 
-#include "reference.hpp"
-#include "tuple.hpp"
-#include "stack.hpp"
-#include "proxy_base.hpp"
-#include "stack_iterator.hpp"
-#include "stack_proxy.hpp"
-#include "error.hpp"
-#include "stack.hpp"
+#include <sol/reference.hpp>
+#include <sol/tuple.hpp>
+#include <sol/stack.hpp>
+#include <sol/proxy_base.hpp>
+#include <sol/stack_iterator.hpp>
+#include <sol/stack_proxy.hpp>
+#include <sol/error.hpp>
+#include <sol/stack.hpp>
 #include <cstdint>
 
 namespace sol {
@@ -54,12 +54,18 @@ namespace sol {
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
-		protected_function_result() = default;
+		protected_function_result() noexcept : protected_function_result(nullptr) {}
 		protected_function_result(lua_State* Ls, int idx = -1, int retnum = 0, int popped = 0, call_status pferr = call_status::ok) noexcept
 		: L(Ls), index(idx), returncount(retnum), popcount(popped), err(pferr) {
 		}
-		protected_function_result(const protected_function_result&) = default;
-		protected_function_result& operator=(const protected_function_result&) = default;
+
+		// We do not want anyone to copy these around willy-nilly
+		// Will likely break people, but also will probably get rid of quiet bugs that have
+		// been lurking. (E.g., Vanilla Lua will just quietly discard over-pops and under-pops:
+		// LuaJIT and other Lua engines will implode and segfault at random later times.)
+		protected_function_result(const protected_function_result&) = delete;
+		protected_function_result& operator=(const protected_function_result&) = delete;
+
 		protected_function_result(protected_function_result&& o) noexcept
 		: L(o.L), index(o.index), returncount(o.returncount), popcount(o.popcount), err(o.err) {
 			// Must be manual, otherwise destructor will screw us
@@ -93,6 +99,13 @@ namespace sol {
 			return status() == call_status::ok || status() == call_status::yielded;
 		}
 
+#if SOL_IS_ON(SOL_COMPILER_GCC)
+#pragma GCC diagnostic push
+#if !SOL_IS_ON(SOL_COMPILER_CLANG)
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+#endif
+
 		template <typename T>
 		decltype(auto) get(int index_offset = 0) const {
 			using UT = meta::unqualified_t<T>;
@@ -103,7 +116,7 @@ namespace sol {
 					if (valid()) {
 						return UT();
 					}
-					return UT(error(detail::direct_error, stack::get<std::string>(L, target)));
+					return UT(stack::stack_detail::get_error(L, target));
 				}
 				else {
 					if (!valid()) {
@@ -114,16 +127,16 @@ namespace sol {
 			}
 			else {
 				if constexpr (std::is_same_v<T, error>) {
-#if defined(SOL_SAFE_PROXIES) && SOL_SAFE_PROXIES
+#if SOL_IS_ON(SOL_SAFE_PROXIES)
 					if (valid()) {
 						type t = type_of(L, target);
 						type_panic_c_str(L, target, t, type::none, "bad get from protected_function_result (is an error)");
 					}
 #endif // Check Argument Safety
-					return error(detail::direct_error, stack::get<std::string>(L, target));
+					return stack::stack_detail::get_error(L, target);
 				}
 				else {
-#if defined(SOL_SAFE_PROXIES) && SOL_SAFE_PROXIES
+#if SOL_IS_ON(SOL_SAFE_PROXIES)
 					if (!valid()) {
 						type t = type_of(L, target);
 						type_panic_c_str(L, target, t, type::none, "bad get from protected_function_result (is not an error)");
@@ -133,6 +146,10 @@ namespace sol {
 				}
 			}
 		}
+
+#if SOL_IS_ON(SOL_COMPILER_GCC)
+#pragma GCC diagnostic pop
+#endif
 
 		type get_type(int index_offset = 0) const noexcept {
 			return type_of(L, index + static_cast<int>(index_offset));
@@ -200,6 +217,8 @@ namespace sol {
 			err = call_status::runtime;
 		}
 		~protected_function_result() {
+			if (L == nullptr)
+				return;
 			stack::remove(L, index, popcount);
 		}
 	};
@@ -208,7 +227,7 @@ namespace sol {
 		template <>
 		struct unqualified_pusher<protected_function_result> {
 			static int push(lua_State* L, const protected_function_result& pfr) {
-#if defined(SOL_SAFE_STACK_CHECK) && SOL_SAFE_STACK_CHECK
+#if SOL_IS_ON(SOL_SAFE_STACK_CHECK)
 				luaL_checkstack(L, static_cast<int>(pfr.pop_count()), detail::not_enough_stack_space_generic);
 #endif // make sure stack doesn't overflow
 				int p = 0;

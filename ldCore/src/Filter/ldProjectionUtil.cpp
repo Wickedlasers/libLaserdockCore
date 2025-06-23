@@ -66,6 +66,61 @@ float ldProjectionBasic::yaw() const
     return m_yaw;
 }
 
+#ifdef LD_CORE_KEYSTONE_CORRECTION
+void ldProjectionBasic::setTopLeftXKeystone(float topLeftXValue)
+{
+    if (topLeftXValue > m_topRightXKeystone) return;
+    m_topLeftXKeystone = topLeftXValue;
+    calcHomographyCache();
+}
+void ldProjectionBasic::setTopLeftYKeystone(float topLeftYValue)
+{
+    if (topLeftYValue < m_bottomLeftYKeystone) return;
+    m_topLeftYKeystone = topLeftYValue;
+    calcHomographyCache();
+}
+
+void ldProjectionBasic::setTopRightXKeystone(float topRightXValue)
+{
+    if (topRightXValue < m_topLeftXKeystone) return;
+    m_topRightXKeystone = topRightXValue;
+    calcHomographyCache();
+}
+void ldProjectionBasic::setTopRightYKeystone(float topRightYValue)
+{
+    if (topRightYValue < m_bottomRightYKeystone) return;
+    m_topRightYKeystone = topRightYValue;
+    calcHomographyCache();
+}
+
+void ldProjectionBasic::setBottomLeftXKeystone(float bottomLeftXValue)
+{
+    if (bottomLeftXValue > m_bottomRightXKeystone) return;
+    m_bottomLeftXKeystone = bottomLeftXValue;
+    calcHomographyCache();
+}
+void ldProjectionBasic::setBottomLeftYKeystone(float bottomLeftYValue)
+{
+    if (bottomLeftYValue > m_topLeftYKeystone) return;
+    m_bottomLeftYKeystone = bottomLeftYValue;
+    calcHomographyCache();
+}
+
+void ldProjectionBasic::setBottomRightXKeystone(float bottomRightXValue)
+{
+    if (bottomRightXValue < m_bottomLeftXKeystone) return;
+    m_bottomRightXKeystone = bottomRightXValue;
+    calcHomographyCache();
+}
+void ldProjectionBasic::setBottomRightYKeystone(float bottomRightYValue)
+{
+    if (bottomRightYValue > m_topRightYKeystone) return;
+    m_bottomRightYKeystone = bottomRightYValue;
+    calcHomographyCache();
+}
+
+#endif
+
 void ldProjectionBasic::transform (float &x, float &y) {
     ldVec3 v3 = m_v2;
     v3.x += x;
@@ -93,6 +148,16 @@ bool ldProjectionBasic::isNullTransform() const
 {
     return cmpf(m_yaw, 0) && cmpf(m_pitch, 0);
 }
+
+#ifdef LD_CORE_KEYSTONE_CORRECTION
+bool ldProjectionBasic::isNullKeystoneTransform() const
+{
+    return cmpf(m_topLeftXKeystone, 0) && cmpf(m_topLeftYKeystone, 1)
+             && cmpf(m_topRightXKeystone, 1) && cmpf(m_topRightYKeystone, 1)
+            && cmpf(m_bottomLeftXKeystone, 0) && cmpf(m_bottomLeftYKeystone, 0)
+            && cmpf(m_bottomRightXKeystone, 1) && cmpf(m_bottomRightYKeystone, 0);
+}
+#endif
 
 void ldProjectionBasic::calcPitchYawCache()
 {
@@ -148,3 +213,53 @@ void ldProjectionBasic::calcV2()
 
     m_v2 = v2;
 }
+
+#ifdef LD_CORE_KEYSTONE_CORRECTION
+//
+void ldProjectionBasic::calcHomographyCache()
+{
+    // from top left to bottom left, clockwise
+    std::vector<cv::Point2f> keyStonePoints;
+    keyStonePoints.push_back(cv::Point2f(m_topLeftXKeystone*2.0f - 1.0f, m_topLeftYKeystone*2.0f - 1.0f));
+    keyStonePoints.push_back(cv::Point2f(m_topRightXKeystone*2.0f - 1.0f, m_topRightYKeystone*2.0f - 1.0f));
+    keyStonePoints.push_back(cv::Point2f(m_bottomRightXKeystone*2.0f - 1.0f, m_bottomRightYKeystone*2.0f - 1.0f));
+    keyStonePoints.push_back(cv::Point2f(m_bottomLeftXKeystone*2.0f - 1.0f, m_bottomLeftYKeystone*2.0f - 1.0f));
+
+    //qDebug()<<"m_topLeftXKeystone*2.0f - 1.0f "<< (m_topLeftXKeystone*2.0f - 1.0f) << "  m_topLeftYKeystone*2.0f - 1.0f" << (m_topLeftYKeystone*2.0f - 1.0f);
+    //qDebug()<<"m_topRightXKeystone*2.0f - 1.0f "<< (m_topRightXKeystone*2.0f - 1.0f) << "  m_topRightYKeystone*2.0f - 1.0f" << (m_topRightYKeystone*2.0f - 1.0f);
+    //qDebug()<<"m_bottomRightXKeystone*2.0f - 1.0f "<< (m_bottomRightXKeystone*2.0f - 1.0f) << "  m_bottomRightYKeystone*2.0f - 1.0f" << ( m_bottomRightYKeystone*2.0f - 1.0f);
+    //qDebug()<<"m_bottomLeftXKeystone*2.0f - 1.0f "<< (m_bottomLeftXKeystone*2.0f - 1.0f) << "  m_bottomLeftYKeystone*2.0f - 1.0f" << (m_bottomLeftYKeystone*2.0f - 1.0f);
+    //
+    std::vector<cv::Point2f> corners_th;
+    corners_th.push_back(cv::Point2f(-1.0f, 1.0f));
+    corners_th.push_back(cv::Point2f(1.0f, 1.0f));
+    corners_th.push_back(cv::Point2f(1.0f, -1.0f));
+    corners_th.push_back(cv::Point2f(-1.0f, -1.0f));
+    //
+    QMutexLocker lock(&m_mutex);
+    m_homographyGrid = cv::findHomography(corners_th, keyStonePoints, cv::RANSAC);
+
+    //
+    //3   libsystem_malloc.dylib        	    0x7ff81eabd3e2 malloc_vreport + 548
+    //4   libsystem_malloc.dylib        	    0x7ff81eac05ed malloc_report + 151
+    //5   libopencv_core.3.4.18.dylib   	       0x1123f851e cv::StdMatAllocator::deallocate(cv::UMatData*) const + 46
+    //6   libopencv_core.3.4.18.dylib   	       0x1123f002e cv::Mat::~Mat() + 78
+}
+
+// applyCornerKeystone
+ldVec2 ldProjectionBasic::applyCornerKeystone(float x, float y)
+{
+    QMutexLocker lock(&m_mutex);
+
+    std::vector<cv::Point2f> fromPoint;
+    std::vector<cv::Point2f> toPoint;
+    //qDebug() << " m_homographyGrid rows" <<  m_homographyGrid.rows;
+    //qDebug() << " m_homographyGrid cols" <<  m_homographyGrid.cols;
+    if (m_homographyGrid.rows != 3 || m_homographyGrid.cols != 3) return ldVec2(x, y);
+    //
+    fromPoint.push_back(cv::Point2f(x, y));
+    cv::perspectiveTransform(fromPoint, toPoint, m_homographyGrid);
+    //qDebug() << " x" << x << "   --> " << toPoint[0].x;
+    return ldVec2(toPoint[0].x, toPoint[0].y);
+}
+#endif

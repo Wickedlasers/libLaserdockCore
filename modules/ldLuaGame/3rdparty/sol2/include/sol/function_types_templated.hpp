@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,7 +24,7 @@
 #ifndef SOL_FUNCTION_TYPES_TEMPLATED_HPP
 #define SOL_FUNCTION_TYPES_TEMPLATED_HPP
 
-#include "call.hpp"
+#include <sol/call.hpp>
 
 namespace sol {
 	namespace function_detail {
@@ -121,7 +121,7 @@ namespace sol {
 		typedef meta::unqualified_t<F> Fu;
 		typedef std::integral_constant<bool,
 		     std::is_same<Fu, lua_CFunction>::value
-#if defined(SOL_NOEXCEPT_FUNCTION_TYPE) && SOL_NOEXCEPT_FUNCTION_TYPE
+#if SOL_IS_ON(SOL_USE_NOEXCEPT_FUNCTION_TYPE)
 		          || std::is_same<Fu, detail::lua_CFunction_noexcept>::value
 #endif
 		     >
@@ -133,7 +133,7 @@ namespace sol {
 	struct wrap {
 		typedef F type;
 
-		static int call(lua_State* L) {
+		static int call(lua_State* L) noexcept(noexcept(c_call<type, f>(L))) {
 			return c_call<type, f>(L);
 		}
 	};

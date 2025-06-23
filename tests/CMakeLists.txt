@@ -15,8 +15,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     ldCore/Helpers/Maths/ldMathsTests.h
     )
 
-find_package(Qt5 CONFIG REQUIRED Core Test)
+find_package(Qt${QT_VERSION_MAJOR} CONFIG REQUIRED Core Test)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Test ldCore)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt::Core Qt::Test ldCore)
 
 add_test(${PROJECT_NAME} ${PROJECT_NAME})

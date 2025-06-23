@@ -34,7 +34,8 @@ class LDCORESHARED_EXPORT ldFilterProcessor : public ldPropertyObject
     Q_OBJECT
 public:
     ldFilterProcessor(QObject *parent = nullptr);
-    virtual void processFilter(ldFilter *filter, ldVertex &input);
+
+    virtual void processFilter(ldFilter *filter, ldVertex &input) = 0;
 };
 
 #endif // LDPROCESSORFILTER_H

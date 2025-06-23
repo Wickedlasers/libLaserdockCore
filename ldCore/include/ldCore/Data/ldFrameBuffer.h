@@ -27,6 +27,7 @@
 #include <ldCore/ldCore_global.h>
 #include <ldCore/Utilities/ldVertexFrame.h>
 
+class ldHardwareBatch;
 class ldVertexFrame;
 
 class LDCORESHARED_EXPORT ldFrameBuffer : public QObject
@@ -36,7 +37,7 @@ class LDCORESHARED_EXPORT ldFrameBuffer : public QObject
 public:
     static const int FRAMEBUFFER_CAPACITY = 4000;
 
-    explicit ldFrameBuffer(QObject *parent = 0);
+    explicit ldFrameBuffer(ldHardwareBatch *hardwareBatch, QObject *parent = 0);
     ~ldFrameBuffer();
 
     /** Add simulator value, the same value goes to output with minimal possible safety filters */
@@ -69,6 +70,7 @@ signals:
 
 private:
 //    QMutex m_mutex;
+    ldHardwareBatch *m_hardwareBatch;
 
     uint m_exhuasted_index = 0;
     uint m_fill = 0;

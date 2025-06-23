@@ -4,18 +4,16 @@
 
 #include "LaserdockAndroidUSBDevice.h"
 
-#include <QAndroidJniObject>
-#include <QAndroidJniEnvironment>
-
-#include <QtAndroid>
 #include <QtCore/qdebug.h>
+#include <QtCore/QThread>
+
 #include <linux/ioctl.h>
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <linux/usbdevice_fs.h>
 #include <string.h>
 #include "hexdump.h"
-#include <QThread>
+
 
 class LaserdockAndroidDevice;
 
@@ -72,14 +70,14 @@ class LaserdockAndroidDevice;
 struct LaserdockAndroidUSBDevicePrivate {
 
     LaserdockAndroidDevice * q;
-    QAndroidJniObject usbdevice;
+    QJniObject usbdevice;
     ldUsbConnection cmdConnection;
     ldUsbConnection dataConnection;
     unsigned char security_resp_buffer[64] = {};
     LaserdockDevice::Status status = LaserdockDevice::Status::UNKNOWN;
 
 
-    LaserdockAndroidUSBDevicePrivate(LaserdockAndroidDevice * qptr, QAndroidJniObject device) : q(qptr), usbdevice (device)
+    LaserdockAndroidUSBDevicePrivate(LaserdockAndroidDevice * qptr, QJniObject device) : q(qptr), usbdevice (device)
     {
         this->initialize();
     }
@@ -100,10 +98,10 @@ struct LaserdockAndroidUSBDevicePrivate {
             return;
         }
 
-        QAndroidJniObject cmd = ldUsbDeviceHelper::getInstance()->getCmdConnection();
+        QJniObject cmd = ldUsbDeviceHelper::getInstance()->getCmdConnection();
         cmdConnection = ldUsbConnection(cmd);
 
-        QAndroidJniObject data = ldUsbDeviceHelper::getInstance()->getDataConnection();
+        QJniObject data = ldUsbDeviceHelper::getInstance()->getDataConnection();
         dataConnection = ldUsbConnection(data);
 
         status = LaserdockDevice::Status::INITIALIZED;
@@ -115,7 +113,7 @@ struct LaserdockAndroidUSBDevicePrivate {
 
 
 
-LaserdockAndroidDevice::LaserdockAndroidDevice(QAndroidJniObject device) : LaserdockDevice(), d(new LaserdockAndroidUSBDevicePrivate(this, device)) {
+LaserdockAndroidDevice::LaserdockAndroidDevice(QJniObject device) : LaserdockDevice(), d(new LaserdockAndroidUSBDevicePrivate(this, device)) {
 
 }
 

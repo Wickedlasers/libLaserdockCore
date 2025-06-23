@@ -33,7 +33,8 @@ class ldFilterManager;
 class ldUSBHardware;
 struct ldCompressedSample;
 
-typedef bool (*ldAuthenticateCallbackFunc)(ldUSBHardware *device);
+typedef QByteArray (*ldGenerateSecurityRequestCallbackFunc)();
+typedef bool (*ldAuthenticateSecurityResponseCallbackFunc)(const QByteArray &resData);
 
 class LDCORESHARED_EXPORT ldUsbHardwareManager : public ldAbstractHardwareManager
 {
@@ -43,18 +44,8 @@ public:
     explicit ldUsbHardwareManager(ldFilterManager *filterManager, QObject *parent = 0);
     ~ldUsbHardwareManager();
 
+    virtual QString hwType() const override;
     virtual QString managerName() const override { return "USB Hardware Manager"; }
-
-    int getBufferFullCount() override;
-    int getSmallestBufferCount() override;
-    int getLargestBufferCount() override;
-
-    bool hasActiveDevices() const override;
-
-    bool isDeviceActive(int index) const;
-    void setDeviceActive(int index, bool active);
-
-    void sendData(uint startIndex, uint count) override;
 
     virtual void setConnectedDevicesActive(bool active) override;
 
@@ -64,27 +55,26 @@ public:
     virtual void debugAddDevice() override;
     virtual void debugRemoveDevice() override;
 
-    static void setAuthenticateFunc(ldAuthenticateCallbackFunc authenticateFunc);
+    virtual void deviceCheck() override;
+
+    static void setGenerateSecurityRequestCb(ldGenerateSecurityRequestCallbackFunc authenticateFunc);
+    static void setAuthenticateSecurityCb(ldAuthenticateSecurityResponseCallbackFunc checkFunc);
 
 public slots:
-
-    void setActiveTransfer(bool active) override;
-
-private slots:
-    void usbDeviceCheck();
+    virtual void removeDevice(const QString &hwId) override;
 
 private:
-    void updateCheckTimerState();
-
-    bool m_activeXfer{false};
     mutable QRecursiveMutex m_mutex;
 
-    QTimer m_checkTimer;
-
-    static ldAuthenticateCallbackFunc m_authenticateCb;
+    static ldGenerateSecurityRequestCallbackFunc m_genSecReqCb;
+    static ldAuthenticateSecurityResponseCallbackFunc m_authSecRespCb;
 
     std::vector<std::unique_ptr<ldUSBHardware> > m_usbHardwares;
     ldFilterManager *m_filterManager;
+
+private:
+    void removeDeviceImpl(uint index);
+
 };
 
 #endif // LDUSBHARDWAREMANAGER_H

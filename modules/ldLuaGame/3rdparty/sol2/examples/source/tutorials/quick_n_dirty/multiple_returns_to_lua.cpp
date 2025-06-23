@@ -1,32 +1,33 @@
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
-#include <assert.hpp>
 
-int main(int, char* []) {
+int main(int, char*[]) {
 	sol::state lua;
 	lua.open_libraries(sol::lib::base);
 
 	lua["f"] = [](int a, int b, sol::object c) {
-		// sol::object can be anything here: just pass it through
+		// sol::object can be anything here: just pass it
+		// through
 		return std::make_tuple(a, b, c);
 	};
 
 	std::tuple<int, int, int> result = lua["f"](100, 200, 300);
 	const std::tuple<int, int, int> expected(100, 200, 300);
-	c_assert(result == expected);
+	SOL_ASSERT(result == expected);
 
 	std::tuple<int, int, std::string> result2;
 	result2 = lua["f"](100, 200, "BARK BARK BARK!");
-	const std::tuple<int, int, std::string> expected2(100, 200, "BARK BARK BARK!");
-	c_assert(result2 == expected2);
+	const std::tuple<int, int, std::string> expected2(
+	     100, 200, "BARK BARK BARK!");
+	SOL_ASSERT(result2 == expected2);
 
 	int a, b;
 	std::string c;
 	sol::tie(a, b, c) = lua["f"](100, 200, "bark");
-	c_assert(a == 100);
-	c_assert(b == 200);
-	c_assert(c == "bark");
+	SOL_ASSERT(a == 100);
+	SOL_ASSERT(b == 200);
+	SOL_ASSERT(c == "bark");
 
 	lua.script(R"(
 		a, b, c = f(150, 250, "woofbark")

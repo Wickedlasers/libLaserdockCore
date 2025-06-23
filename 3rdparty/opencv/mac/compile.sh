@@ -1,10 +1,10 @@
-# opencv 3.4.8
+# opencv 3.4.18
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/CMake.app/Contents/bin"
 
 mkdir build
 cd build
 
-cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.12 \
+cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 \
         -DWITH_AVFOUNDATION=OFF \
         -DWITH_QT=OFF -DWITH_QTKIT=OFF \
         -DWITH_AVFOUNDATION=ON \
@@ -49,11 +49,12 @@ cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.12 \
         -DBUILD_opencv_xfeatures2d=OFF \
         -DBUILD_opencv_ximgproc=OFF \
         -DBUILD_opencv_xobjdetect=OFF \
-        -DCMAKE_INSTALL_PREFIX=/Users/ncuxer/work/wl/libs/opencv/bin/ \
-        ..
+        -DCMAKE_INSTALL_PREFIX=/Users/ncuxer/wl/libs/opencv/bin/ \
+        -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
+        ..  || exit 1
 
-make -j 7
+cmake --build . --parallel || exit 1
 
-make install
+cmake --install . || exit 1
 
 cd ..

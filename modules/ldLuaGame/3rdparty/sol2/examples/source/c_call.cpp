@@ -1,11 +1,13 @@
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
-#include "assert.hpp"
+int f1(int) {
+	return 32;
+}
 
-int f1(int) { return 32; }
-
-int f2(int, int) { return 1; }
+int f2(int, int) {
+	return 1;
+}
 
 struct fer {
 	double f3(int, int) {
@@ -13,12 +15,14 @@ struct fer {
 	}
 };
 
-
 int main() {
 
 	sol::state lua;
 	// overloaded function f
-	lua.set("f", sol::c_call<sol::wrap<decltype(&f1), &f1>, sol::wrap<decltype(&f2), &f2>, sol::wrap<decltype(&fer::f3), &fer::f3>>);
+	lua.set("f",
+	     sol::c_call<sol::wrap<decltype(&f1), &f1>,
+	          sol::wrap<decltype(&f2), &f2>,
+	          sol::wrap<decltype(&fer::f3), &fer::f3>>);
 	// singly-wrapped function
 	lua.set("g", sol::c_call<sol::wrap<decltype(&f1), &f1>>);
 	// without the 'sol::wrap' boilerplate
@@ -36,15 +40,15 @@ int main() {
 	// get the results and see
 	// if it worked out
 	int r1 = lua["r1"];
-	c_assert(r1 == 32);
+	SOL_ASSERT(r1 == 32);
 	int r2 = lua["r2"];
-	c_assert(r2 == 1);
+	SOL_ASSERT(r2 == 1);
 	double r3 = lua["r3"];
-	c_assert(r3 == 2.5);
+	SOL_ASSERT(r3 == 2.5);
 	int r4 = lua["r4"];
-	c_assert(r4 == 32);
+	SOL_ASSERT(r4 == 32);
 	int r5 = lua["r5"];
-	c_assert(r5 == 1);
+	SOL_ASSERT(r5 == 1);
 
 	return 0;
 }

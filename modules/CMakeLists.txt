@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 
 if(LD_CORE_ENABLE_BOX2D)
     add_subdirectory(Box2d)

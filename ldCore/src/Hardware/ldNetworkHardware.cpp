@@ -94,13 +94,27 @@ ldNetworkHardware::ldNetworkHardware(LaserdockNetworkDevice *device, QObject *pa
     connect(device,&LaserdockNetworkDevice::FWMajorRevisionUpdated,m_info,&ldHardwareInfo::update_fwMajor);
     connect(device,&LaserdockNetworkDevice::FWMinorRevisionUpdated,m_info,&ldHardwareInfo::update_fwMinor);
     connect(device,&LaserdockNetworkDevice::PacketErrorsUpdated,m_info,&ldHardwareInfo::update_packetErrors);
-    connect(device,&LaserdockNetworkDevice::OverTemperatureUpdated,m_info,&ldHardwareInfo::update_overTemperature);
-    connect(device,&LaserdockNetworkDevice::TemperatureWarningUpdated,m_info,&ldHardwareInfo::update_temperatureWarning);
-    connect(device,&LaserdockNetworkDevice::InterlockEnabledUpdated,m_info,&ldHardwareInfo::update_interlockEnabled);
+    connect(device,&LaserdockNetworkDevice::IPAddressUpdated,m_info,&ldHardwareInfo::update_address);
+    connect(device,&LaserdockNetworkDevice::OverTemperatureUpdated,m_info,[&](bool en){
+        m_info->update_overTemperature((en) ? 1 : 0);
+    });
+    connect(device,&LaserdockNetworkDevice::TemperatureWarningUpdated,m_info,[&](bool en){
+        m_info->update_temperatureWarning((en) ? 1 : 0);
+    });
+
+    connect(device,&LaserdockNetworkDevice::InterlockEnabledUpdated,m_info,[&](bool en){
+        m_info->update_interlockEnabled((en) ? 1 : 0);
+    });
 
     connect(device,&LaserdockNetworkDevice::ConnectionTypeUpdated,[&](LaserdockNetworkDevice::ConnectionType ct){
         m_info->update_connectionType(static_cast<int>(ct));
     });
+
+    // get initial state of device
+    m_info->update_interlockEnabled(device->get_interlock_enabled() ? 1 : 0);
+    m_info->update_temperatureWarning(device->get_temperature_warning() ? 1 : 0);
+    m_info->update_overTemperature(device->get_over_temperature() ? 1 : 0);
+    m_info->update_address(device->get_ip_address());
 
     m_info->update_hasValidInfo(true); // network device always has valid info available
 
@@ -126,6 +140,7 @@ void ldNetworkHardware::ResetStatus()
 {
     setStatus(Status::UNKNOWN);
     params().device->ResetStatus();
+    m_isActive = false;
 }
 
 void ldNetworkHardware::initialize()
@@ -209,4 +224,36 @@ int ldNetworkHardware::get_full_count() {
 const ldNetworkHardware::device_params &ldNetworkHardware::params() const{
     Q_D(const ldNetworkHardware);
     return d->params;
+}
+
+int ldNetworkHardware::getDacRate() const
+{
+   Q_D(const ldNetworkHardware);
+   uint32_t tmp = 0;
+   d->params.device->dac_rate(&tmp);
+   return static_cast<int>(tmp);
+}
+
+int ldNetworkHardware::getMaximumDacRate() const
+{
+    Q_D(const ldNetworkHardware);
+    uint32_t tmp = 0;
+    d->params.device->max_dac_rate(&tmp);
+    return static_cast<int>(tmp);
+}
+
+void ldNetworkHardware::setDacRate(int rate) const
+{
+    if (rate>0) {
+        Q_D(const ldNetworkHardware);
+        d->params.device->set_dac_rate(rate);
+    }
+}
+
+void ldNetworkHardware::setDacBufferTHold(int level) const
+{
+    if (level > 0) {
+        Q_D(const ldNetworkHardware);
+        d->params.device->set_dac_buffer_thold_lvl(level);
+    }
 }

@@ -32,9 +32,14 @@ class ldFilterProcessor;
 class LDCORESHARED_EXPORT ldFilter : public ldShader
 {
     Q_OBJECT
+    LD_WRITABLE_MIN_MAX_PROPERTY(float, intensity)
 public:
+    ~ldFilter();
+
     /** Apply this filter to Vertex data */
     void processFilter(ldVertex &input);
+    /** Apply this filter to Vertex data */
+    void processFilterWithoutProcessor(ldVertex &input);
 
     /** Set optional advanced filter processor  */
     void setProcessorFilter(ldFilterProcessor *processorFilter);
@@ -48,7 +53,10 @@ public:
     /** Optional flag. Can be set by developer explicitly if filter is reactive to music analyzer */
     virtual bool isMusicAware() const { return false; }
 
+    virtual bool isShowProperties() const { return true; }
 protected:
+    ldFilter();
+
     /** Filters implement this function to filter points.
         Input is the source vertex, processing is done in-place with a ref param */
     virtual void process(ldVertex &v) = 0;

@@ -7,7 +7,11 @@
 void ldMidiInfo::registerMetaType()
 {
     qRegisterMetaType<QList<ldMidiInfo>>("QList<ldMidiInfo>");
+#if QT_VERSION >= 0x060000
+    qRegisterMetaType<ldMidiInfo>("ldMidiInfo");
+#else
     qRegisterMetaTypeStreamOperators<ldMidiInfo>("ldMidiInfo");
+#endif
 }
 
 ldMidiInfo ldMidiInfo::fromSoundDeviceInfo(const ldSoundDeviceInfo &info)

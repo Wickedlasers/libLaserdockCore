@@ -18,11 +18,6 @@ void ldMidiInput::stop() {
 
 /////////////////
 
-QList<ldMidiInfo> ldMidiInput::getDevices()
-{
-    return m_infos;
-}
-
 void ldMidiInput::addDevice(const ldMidiInfo &info)
 {
     m_infos.push_back(info);

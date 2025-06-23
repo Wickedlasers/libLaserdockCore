@@ -49,9 +49,11 @@ undesired behavior.
 #ifndef LDRENDEREROPENLASE_H
 #define LDRENDEREROPENLASE_H
 
+#include <memory>
+
 #include <QtCore/QObject>
 
-#include <openlase/libol.h>
+#include <openlase/ldLibol.h>
 
 #include "ldCore/ldCore_global.h"
 #include "ldCore/Helpers/Maths/ldGlobals.h"
@@ -85,8 +87,10 @@ class ldFrameBuffer;
 class LDCORESHARED_EXPORT ldRendererOpenlase : public ldAbstractRenderer
 {
     Q_OBJECT
+
 public:
     explicit ldRendererOpenlase(QObject *parent = nullptr);
+    ~ldRendererOpenlase();
 
     /////////////////////////////////////////////////////////////////////////
     //                         Libol Module Functions
@@ -95,7 +99,8 @@ public:
     void setRenderParams(OLRenderParams * params);
     void getRenderParams(OLRenderParams *params);
     void setFrameModes(int flags);
-    float renderFrame(ldFrameBuffer * buffer, int max_fps, bool is3d);
+    void renderFrame(ldFrameBuffer * buffer, int max_fps, bool is3d, bool isVisPaused);
+    ldLibol* getLibol() const;
 
     /////////////////////////////////////////////////////////////////////////
     //                         Libol Graphic Operations
@@ -153,13 +158,13 @@ public:
     // lower - ?
     // bezier - for bezier lines
     // beam - optimized for beam vis
-    void setRenderParamsQuality();
-    void setRenderParamsSpeed();
+    void setRenderParamsQuality(int min_fps = 0);
+    void setRenderParamsSpeed(int min_fps = 0);
     void setRenderParamsRaw();
-    void setRenderParamsStandard();
-    void setRenderParamsLower();
-    void setRenderParamsBezier();
-    void setRenderParamsBeam();
+    void setRenderParamsStandard(int min_fps = 30);
+    void setRenderParamsLower(int min_fps = 30);
+    void setRenderParamsBezier(int min_fps = 30);
+    void setRenderParamsBeam(int min_fps = 0);
 
     // drawPoints draws a point multiple times, useful for beam and particle visualizers.
     // nPoints - number of samples to spend
@@ -186,9 +191,20 @@ public:
     // frame
     ldVertexFrame m_frame;
     const std::vector<ldVertex> &getCachedFrame() const;
+    size_t getCachedFrameSize() const;
+    void createNewFrame(int max_fps, bool is3d, bool skipFilters = false);
+
+    ldVertexFrame m_lastFrame;
+
+    bool isRendererPaused() const;
 
 private:
+
     ldFilterManager *m_filterManager = nullptr;
+
+    bool m_isRendererPaused = false;
+
+    std::unique_ptr<ldLibol> m_libol;
 };
 
 #endif // LDRENDEREROPENLASE_H

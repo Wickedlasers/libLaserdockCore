@@ -83,6 +83,11 @@ ldSoundData::~ldSoundData()
 
 }
 
+void ldSoundData::setVolumeCorrectionEnabled(bool enabled)
+{
+    volumeCorrectionEnabled = enabled;
+}
+
 /*
  * ldSoundData::Update
  * new version of update function
@@ -127,6 +132,10 @@ void ldSoundData::Update(const AudioBlock &block) {
     // Perform FFT, storing results in mFrequency
     m_fft->GetScalar(m_waveform, m_frequency);
 
+    volumeClipped = false;
+    powerCalculate();
+    if(volumeCorrectionEnabled)
+        volumeCorrectionCalculate();
     volumeCorrectionApply();
 }
 
@@ -154,9 +163,8 @@ void ldSoundData::volumeCorrectionInit() {
 }
 
 
-    void ldSoundData::volumeCorrectionApply()
+void ldSoundData::powerCalculate()
 {
-    
     // get current frame's power
     float currentpower = 0;
 
@@ -174,7 +182,7 @@ void ldSoundData::volumeCorrectionInit() {
     //    f = fabsf(m_waveform.GetRight()[i]);
     //    if (f > currentpower) currentpower = f;
     //}
-    
+
     //rms version
     currentpower = 0;
     uint size =  m_waveform.GetSize();
@@ -193,6 +201,11 @@ void ldSoundData::volumeCorrectionInit() {
     if (size == 0) currentpower = 0;
 
     volumePowerPre = currentpower;
+}
+
+void ldSoundData::volumeCorrectionCalculate()
+{
+    float currentpower = volumePowerPre;
     if (currentpower <= 0) currentpower = mindb; else currentpower = 10 * (logf(currentpower) / logf(10));
     if (currentpower<mindb) currentpower = mindb;
     if (currentpower>maxdb) currentpower = maxdb;
@@ -268,17 +281,20 @@ void ldSoundData::volumeCorrectionInit() {
     dbamp = (desiredpower-averagepower);    
 
     // don't allow a frame to be amplified above ceildb
-    bool clipped = false;
     float expectedpower = volumePowerPreDB + dbamp;
     if (expectedpower > ceildb) {
         dbamp = ceildb - volumePowerPreDB;
-        clipped = true;
+        volumeClipped = true;
     }    
     volumePowerAutoGainDBScaled = (dbamp - (targetdb-maxdb)) / ((targetdb-mindb) - (targetdb-maxdb));
 
 
     float s = 1*powf(10, dbamp/10);
-    volumePowerAutoGainFactor = s;    
+    volumePowerAutoGainFactor = s;
+}
+
+void ldSoundData::volumeCorrectionApply() {
+    float s = volumePowerAutoGainFactor;
 
     // apply
     float* left = m_waveform.GetLeft();
@@ -292,10 +308,10 @@ void ldSoundData::volumeCorrectionInit() {
         if (left[i]  >  1) left[i] =   1;
         if (right[i] >  1) right[i] =  1;
         if (left[i] * left[i] > 0.999f || right[i] * right[i] > 0.999f) {
-            clipped = true;
+            volumeClipped = true;
         }       
     }
-    if (clipped) {
+    if (volumeClipped) {
         volumePowerClipCount++;
     }
 
@@ -454,6 +470,16 @@ int ldSoundData::GetSoundLevel() const
 {
     int value = 100.0f * powf(volumePowerPost, 0.5);
     return std::min(std::max(value, 0), 100);
+}
+
+float ldSoundData::GetVolumePowerPre() const
+{
+    return volumePowerPre;
+}
+
+float ldSoundData::GetVolumePowerPost() const
+{
+    return volumePowerPost;
 }
 
 float ldSoundData::GetFFTValueForBlock(unsigned blockIndex, unsigned numBlocks) const {

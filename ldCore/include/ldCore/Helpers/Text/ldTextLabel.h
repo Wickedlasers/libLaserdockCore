@@ -34,6 +34,7 @@
 #include "ldAbstractText.h"
 
 class ldBezierCurveDrawer;
+class ldOLDrawer;
 
 class LDCORESHARED_EXPORT ldTextLabel : public ldAbstractText
 {
@@ -57,9 +58,11 @@ public:
      */
     void innerDraw(ldRendererOpenlase* p_renderer);
 
-    ldBezierCurveDrawer *drawer() const { return m_drawer.get(); }
+    ldOLDrawer *drawer() const { return m_drawer.get(); }
 
     std::vector<std::vector<OLPoint>> getDrawingData() const;
+
+    ldTextLabel* clone() const;
 
 protected:
     virtual void initTextFrame(const QString &word) override;
@@ -67,7 +70,8 @@ protected:
 private:
     uint32_t m_color = 0xFFFFFF;
 
-    std::unique_ptr<ldBezierCurveDrawer> m_drawer;
+    std::unique_ptr<ldBezierCurveDrawer> m_bezierDrawer;
+    std::unique_ptr<ldOLDrawer> m_drawer;
 };
 
 #endif // ldTextLabel_H

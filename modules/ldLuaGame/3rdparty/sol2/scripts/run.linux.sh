@@ -1,9 +1,9 @@
 #!/usr/bin/env zsh
 
-# # # # sol3
+# # # # sol2
 # The MIT License (MIT)
 # 
-# Copyright (c) 2013-2019 Rapptz, ThePhD, and contributors
+# Copyright (c) 2013-2022 Rapptz, ThePhD, and contributors
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -37,7 +37,7 @@ echo -e "travis_fold:start:build_preparation\r"
 
 	if [ -z "${SOL2_LUA_VERSION}" ]
 	then
-		export SOL2_LUA_VERSION=5.3.5
+		export SOL2_LUA_VERSION=5.4.4
 	fi
 
 	if [ -z "${SOL2_PLATFORM}" ]
@@ -79,11 +79,9 @@ echo -e "travis_fold:start:build_preparation\r"
 	SOL2_CMAKE_DEFINES+=('-DSOL2_TESTS_EXAMPLES=ON')
 	if [[ ! -z ${SOL2_TEST_SINGLE} ]]
 	then
-		SOL2_CMAKE_DEFINES+=('-DSOL2_GENERATE_SINGLE=ON')
-		SOL2_CMAKE_DEFINES+=('-DSOL2_EXAMPLES_SINGLE=ON')
-		SOL2_CMAKE_DEFINES+=('-DSOL2_EXAMPLES_SINGLE_GENERATED=ON')
+		SOL2_CMAKE_DEFINES+=('-DSOL2_SINGLE=ON')
 		SOL2_CMAKE_DEFINES+=('-DSOL2_TESTS_SINGLE=ON')
-		SOL2_CMAKE_DEFINES+=('-DSOL2_TESTS_SINGLE_GENERATED=ON')
+		SOL2_CMAKE_DEFINES+=('-DSOL2_EXAMPLES_SINGLE=ON')
 	fi
 	if [[ ! -z ${SOL2_TEST_INTEROP} ]]
 	then
@@ -94,9 +92,7 @@ echo -e "travis_fold:start:build_preparation\r"
 		if [[ ! -z ${SOL2_TEST_SINGLE} ]]
 		then
 			SOL2_CMAKE_DEFINES+=('-DSOL2_INTEROP_EXAMPLES_SINGLE=ON')
-			SOL2_CMAKE_DEFINES+=('-DSOL2_INTEROP_EXAMPLES_SINGLE_GENERATED=ON')
 			SOL2_CMAKE_DEFINES+=('-DSOL2_DYNAMIC_LOADING_EXAMPLES_SINGLE=ON')
-			SOL2_CMAKE_DEFINES+=('-DSOL2_DYNAMIC_LOADING_EXAMPLES_SINGLE_GENERATED=ON')
 		fi
 	fi
 

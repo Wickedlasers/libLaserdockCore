@@ -21,6 +21,8 @@
 #ifndef LDRECT_H
 #define LDRECT_H
 
+#include <QtCore/QRectF>
+
 #include "ldCore/ldCore_global.h"
 
 #include "ldVec2.h"
@@ -43,6 +45,8 @@ struct LDCORESHARED_EXPORT ldRect {
     ldVec2 center() const;
 
     ldVec2 size() const;
+
+    QRectF toRect() const;
 };
 
 #endif // LDRECT_H

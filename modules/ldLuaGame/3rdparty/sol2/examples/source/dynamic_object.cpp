@@ -2,7 +2,7 @@
 #include <sol/sol.hpp>
 
 #include <iostream>
-#include "assert.hpp"
+#include <unordered_map>
 
 // use as-is,
 // add as a member of your class,
@@ -13,10 +13,12 @@ struct dynamic_object {
 	void dynamic_set(std::string key, sol::stack_object value) {
 		auto it = entries.find(key);
 		if (it == entries.cend()) {
-			entries.insert(it, { std::move(key), std::move(value) });
+			entries.insert(
+			     it, { std::move(key), std::move(value) });
 		}
 		else {
-			std::pair<const std::string, sol::object>& kvp = *it;
+			std::pair<const std::string, sol::object>& kvp
+			     = *it;
 			sol::object& entry = kvp.second;
 			entry = sol::object(std::move(value));
 		}
@@ -39,12 +41,12 @@ int main() {
 	lua.open_libraries(sol::lib::base);
 
 	lua.new_usertype<dynamic_object>("dynamic_object",
-		sol::meta_function::index, &dynamic_object::dynamic_get,
-		sol::meta_function::new_index, &dynamic_object::dynamic_set,
-		sol::meta_function::length, [](dynamic_object& d) {
-		return d.entries.size();
-	}
-	);
+	     sol::meta_function::index,
+	     &dynamic_object::dynamic_get,
+	     sol::meta_function::new_index,
+	     &dynamic_object::dynamic_set,
+	     sol::meta_function::length,
+	     [](dynamic_object& d) { return d.entries.size(); });
 
 	lua.safe_script(R"(
 d1 = dynamic_object.new()
@@ -74,10 +76,12 @@ assert(value == 15)
 )");
 
 	// does not work on d1: 'run' wasn't added to d1, only d2
-	auto script_result = lua.safe_script("local value = d1:run(5)", sol::script_pass_on_error);
-	c_assert(!script_result.valid());
+	auto script_result = lua.safe_script(
+	     "local value = d1:run(5)", sol::script_pass_on_error);
+	SOL_ASSERT(!script_result.valid());
 	sol::error err = script_result;
-	std::cout << "received expected error: " << err.what() << std::endl;
+	std::cout << "received expected error: " << err.what()
+	          << std::endl;
 	std::cout << std::endl;
 
 	return 0;

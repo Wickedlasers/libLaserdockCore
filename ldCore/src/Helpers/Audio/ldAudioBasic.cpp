@@ -134,8 +134,8 @@ void ldAudioBasic::process(ldSoundData* pSoundData)
     
 
 
-    powerRaw = pSoundData->volumePowerPre;
-    powerNorm = pSoundData->volumePowerPost;
+    powerRaw = pSoundData->GetVolumePowerPre();
+    powerNorm = pSoundData->GetVolumePowerPost();
     
     //
 }

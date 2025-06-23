@@ -22,19 +22,23 @@
 #define LDHARDWAREMANAGER_H
 
 #include <QtCore/QObject>
+#include <QtCore/QTimer>
+
+#include <QQmlHelpers>
 
 #include "ldCore/ldCore_global.h"
 
 class ldAbstractHardwareManager;
-class ldFilterManager;
 class ldHardware;
 
 class LDCORESHARED_EXPORT ldHardwareManager : public QObject
 {
     Q_OBJECT
 
+    QML_WRITABLE_PROPERTY(bool, isActive)
+
 public:
-    explicit ldHardwareManager(ldFilterManager *filterManager, QObject *parent = nullptr);
+    explicit ldHardwareManager(QObject *parent = nullptr);
     ~ldHardwareManager();
 
     int getDeviceCount() const;
@@ -42,26 +46,34 @@ public:
 
     std::vector<ldAbstractHardwareManager*> hardwareManagers() const;
 
-    ldFilterManager *filterManager() const;
+    void setForcedDACRate(int rate);
+    int getForcedDACRate() const;
 
+    void checkDevices();
+    void initCheckTimer();
+
+    void removeDevice(ldHardware *hw);
 public slots:
     void addHardwareManager(ldAbstractHardwareManager *hardwareManager);
 
     void setConnectedDevicesActive(bool active);
-    void setExplicitActiveDevice(int index);
 
 signals:
     void deviceCountChanged(uint count);
+    void forcedDacRateChanged(int rate);
 
 private:
     void setDeviceCount(uint deviceCount);
     void updateDeviceCount();
+    void updateCheckTimerState();
 
-    uint m_deviceCount = 0;
+    uint m_deviceCount{0};
+
+    int m_forcedDACRate = -1;
 
     std::vector<ldAbstractHardwareManager*> m_hardwareManagers;
 
-    ldFilterManager *m_filterManager;
+    QTimer *m_deviceCheckTimer{nullptr};
 };
 
 #endif // LDHARDWAREMANAGER_H

@@ -32,14 +32,16 @@ public:
     virtual ~ldAbstractColorEffect();
 
     void setBaseColorDecay(int baseColorDecay);
+    void setManualColorIncValue(int val_ms);
 
     virtual uint32_t getColor(const ldVec2& p_point, const ldRect &p_dim) = 0;
     virtual void updateColor();
 
 protected:
-    float _millis = 0.0f;
-
-    int _baseColorDecay = 223;
+    float _millis {0.0f};
+    int _manual_inc_val {0};
+    int _second{0};
+    int _baseColorDecay {223};
 };
 
 class LDCORESHARED_EXPORT ldAbstractStepColorEffect : public ldAbstractColorEffect {

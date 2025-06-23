@@ -11,7 +11,9 @@
 #include <QtCore/QCoreApplication>
 
 #include <QtConcurrent/QtConcurrent>
+#if QT_VERSION < 0x060000
 #include <QtMultimedia/QAudioDeviceInfo>
+#endif
 
 #include <ldCore/Sound/ldSoundData.h>
 
@@ -70,10 +72,14 @@ QAudioFormat ldLoopbackAudioDevice::getAudioFormat() const
     QAudioFormat format;
     format.setSampleRate(SAMPLE_RATE); // 44100
     format.setChannelCount(1);
+#if QT_VERSION >= 0x060000
+    format.setSampleFormat(QAudioFormat::UInt8);
+#else
     format.setSampleSize(8);
     format.setSampleType(QAudioFormat::UnSignedInt);
     format.setByteOrder(QAudioFormat::LittleEndian);
     format.setCodec("audio/pcm");
+#endif
     return format;
 }
 

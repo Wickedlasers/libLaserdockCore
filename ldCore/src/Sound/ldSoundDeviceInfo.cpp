@@ -25,7 +25,11 @@
 void ldSoundDeviceInfo::registerMetaType()
 {
     qRegisterMetaType<QList<ldSoundDeviceInfo>>("QList<ldSoundDeviceInfo>");
+#if QT_VERSION >= 0x060000
+    qRegisterMetaType<ldSoundDeviceInfo>("ldSoundDeviceInfo");
+#else
     qRegisterMetaTypeStreamOperators<ldSoundDeviceInfo>("ldSoundDeviceInfo");
+#endif
 }
 
 ldSoundDeviceInfo::ldSoundDeviceInfo()

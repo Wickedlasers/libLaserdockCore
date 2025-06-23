@@ -26,7 +26,11 @@
 
 void ldVertex::registerMetaTypes()
 {
-    QMetaType::registerDebugStreamOperator<ldVertex>();
+#if QT_VERSION < 0x060000
+    if(!QMetaType::registerDebugStreamOperator<ldVertex>()) {
+        qWarning() << "Can't registerDebugStreamOperator ldVertex";
+    }
+#endif
 }
 
 float &ldVertex::x()
@@ -47,6 +51,16 @@ float &ldVertex::y()
 float ldVertex::y() const
 {
     return position[1];
+}
+
+float &ldVertex::z()
+{
+    return position[2];
+}
+
+float ldVertex::z() const
+{
+    return position[2];
 }
 
 float &ldVertex::r()
@@ -77,6 +91,16 @@ float &ldVertex::b()
 float ldVertex::b() const
 {
     return color[2];
+}
+
+float &ldVertex::a()
+{
+    return color[3];
+}
+
+float ldVertex::a() const
+{
+    return color[3];
 }
 
 bool ldVertex::isValid() const

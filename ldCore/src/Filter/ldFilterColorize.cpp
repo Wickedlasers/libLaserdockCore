@@ -35,9 +35,7 @@
 
 ldFilterColorFade::ldFilterColorFade(bool isProcessMusic)
     : ldFilter()
-    , m_colors(1)
-    , m_min_colors(1)
-    , m_max_colors(3)
+    , LD_INIT_MIN_MAX_PROPERTY(colors, 1, 1, 3)
     , m_isProcessMusic(isProcessMusic)
 {
 }
@@ -366,9 +364,7 @@ void FilterColorFreq::process(ldVertex &input) {
 
 ldShimmerFilter::ldShimmerFilter()
     : ldFilter()
-    , m_colors(1)
-    , m_min_colors(0.5f)
-    , m_max_colors(2.0f)
+    , LD_INIT_MIN_MAX_PROPERTY(colors, 1, 0.5f, 2.f)
 {
 }
 

@@ -1,8 +1,8 @@
-// sol3 
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,12 +24,12 @@
 #ifndef SOL_UNSAFE_FUNCTION_RESULT_HPP
 #define SOL_UNSAFE_FUNCTION_RESULT_HPP
 
-#include "reference.hpp"
-#include "tuple.hpp"
-#include "stack.hpp"
-#include "proxy_base.hpp"
-#include "stack_iterator.hpp"
-#include "stack_proxy.hpp"
+#include <sol/reference.hpp>
+#include <sol/tuple.hpp>
+#include <sol/stack.hpp>
+#include <sol/proxy_base.hpp>
+#include <sol/stack_iterator.hpp>
+#include <sol/stack_proxy.hpp>
 #include <cstdint>
 
 namespace sol {
@@ -50,20 +50,25 @@ namespace sol {
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
-		unsafe_function_result() = default;
-		unsafe_function_result(lua_State* Ls, int idx = -1, int retnum = 0)
-			: L(Ls), index(idx), returncount(retnum) {
+		unsafe_function_result() noexcept : unsafe_function_result(nullptr) {}
+		unsafe_function_result(lua_State* Ls, int idx = -1, int retnum = 0) noexcept : L(Ls), index(idx), returncount(retnum) {
 		}
-		unsafe_function_result(const unsafe_function_result&) = default;
-		unsafe_function_result& operator=(const unsafe_function_result&) = default;
-		unsafe_function_result(unsafe_function_result&& o)
-			: L(o.L), index(o.index), returncount(o.returncount) {
+
+
+		// We do not want anyone to copy these around willy-nilly
+		// Will likely break people, but also will probably get rid of quiet bugs that have
+		// been lurking. (E.g., Vanilla Lua will just quietly discard over-pops and under-pops:
+		// LuaJIT and other Lua engines will implode and segfault at random later times.)
+		unsafe_function_result(const unsafe_function_result&) = delete;
+		unsafe_function_result& operator=(const unsafe_function_result&) = delete;
+
+		unsafe_function_result(unsafe_function_result&& o) noexcept : L(o.L), index(o.index), returncount(o.returncount) {
 			// Must be manual, otherwise destructor will screw us
 			// return count being 0 is enough to keep things clean
 			// but will be thorough
 			o.abandon();
 		}
-		unsafe_function_result& operator=(unsafe_function_result&& o) {
+		unsafe_function_result& operator=(unsafe_function_result&& o) noexcept {
 			L = o.L;
 			index = o.index;
 			returncount = o.returncount;
@@ -148,12 +153,14 @@ namespace sol {
 			return returncount;
 		};
 		void abandon() noexcept {
-			//L = nullptr;
+			// L = nullptr;
 			index = 0;
 			returncount = 0;
 		}
 		~unsafe_function_result() {
-			lua_pop(L, returncount);
+			if (L != nullptr) {
+				lua_pop(L, returncount);
+			}
 		}
 	};
 

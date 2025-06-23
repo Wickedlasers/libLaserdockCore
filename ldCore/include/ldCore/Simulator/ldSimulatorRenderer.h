@@ -25,17 +25,27 @@
 #include <QtCore/QSize>
 #include <QtGui/QColor>
 #include <QtGui/QMatrix4x4>
+#ifdef LD_CORE_USE_OPENGL
 #include <QtGui/QOpenGLFunctions>
+#endif
 #include <QtGui/QQuaternion>
 
 #include "ldCore/ldCore_global.h"
 
+#ifdef LD_CORE_USE_OPENGL
 class QOpenGLShaderProgram;
+#endif
+#if QT_VERSION >= 0x060000
+class QQuickWindow;
+#endif
 
 class ldDataDispatcher;
 class ldSimulatorEngine;
 
-class LDCORESHARED_EXPORT ldSimulatorRenderer : public QObject, protected QOpenGLFunctions
+class LDCORESHARED_EXPORT ldSimulatorRenderer : public QObject
+        #ifdef LD_CORE_USE_OPENGL
+        , protected QOpenGLFunctions
+        #endif
 {
     Q_OBJECT
 public:
@@ -44,6 +54,9 @@ public:
 
     void setViewportPos(const QPoint &pos) { m_pos = pos; }
     void setViewportSize(const QSize &size) { m_viewportSize = size; }
+#if QT_VERSION >= 0x060000
+    void setWindow(QQuickWindow *window) { m_window = window; }
+#endif
 
 public slots:
     void setClearColor(const QColor &color);
@@ -56,17 +69,25 @@ public slots:
     void unloadEngine();
 
 private:
+    void disconnectEngine();
+
+#ifdef LD_CORE_USE_OPENGL
     void initShaders();
+#endif
 
     ldDataDispatcher *m_dataDispatcher;
 
     QColor m_clearColor = QColor(Qt::black);
     QPoint m_pos;
     QSize m_viewportSize;
+#ifdef LD_CORE_USE_OPENGL
     QOpenGLShaderProgram *m_program;
+#endif
+#if QT_VERSION >= 0x060000
+    QQuickWindow *m_window;
+#endif
 
     ldSimulatorEngine *m_engine = nullptr;
-    QQuaternion rotation;
 };
 
 

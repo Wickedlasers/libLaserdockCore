@@ -18,6 +18,50 @@
 
 //typealias MIDINotifyProc = (UnsafePointer<MIDINotification>, UnsafeMutableRawPointer?) -> Void
 
+namespace  {
+
+SInt32 getSourceId(MIDIEndpointRef source)
+{
+    SInt32 id = -1;
+    OSStatus status = MIDIObjectGetIntegerProperty(source, kMIDIPropertyUniqueID, &id);
+    if (status != noErr) {
+        id = -1;
+//        qDebug() << "MIDIObjectGetIntegerProperty kMIDIPropertyUniqueID" << status;
+    }
+    return id;
+}
+
+QString getSourceName(MIDIEndpointRef source)
+{
+    CFStringRef str = nil;
+    OSStatus status = MIDIObjectGetStringProperty(source, kMIDIPropertyName, &str);
+    if (status != noErr) {
+//        qDebug() << "MIDIObjectGetStringProperty kMIDIPropertyDisplayName" << status;
+        return QString();
+    }
+
+    QString res =  QString::fromCFString(str);
+    CFRelease(str);
+
+    return res;
+}
+
+ldMidiInfo getInfo(MIDIEndpointRef source)
+{
+    SInt32 id = getSourceId(source);
+    QString name = getSourceName(source);
+
+    if (id == -1 || name.isEmpty()) {
+        return ldMidiInfo();
+    }
+
+//    qDebug() << __FUNCTION__ << source << id << name;
+
+    return ldMidiInfo(id, name, source);
+}
+
+}
+
 void midiNotifyCallback(const MIDINotification *notification, void *context)
 {
     ldMidiInput *input = (ldMidiInput*) context;
@@ -27,8 +71,8 @@ void midiNotifyCallback(const MIDINotification *notification, void *context)
         MIDIObjectAddRemoveNotification *addRemoveNotification = (MIDIObjectAddRemoveNotification*) notification;
         if(addRemoveNotification->childType == kMIDIObjectType_Source) {
             MIDIEndpointRef sourceRef = (MIDIEndpointRef) addRemoveNotification->child;
-//            qDebug() << "add" << addRemoveNotification->child << ldMidiInput::getSourceId(sourceRef) << ldMidiInput::getSourceName(sourceRef);
-            ldMidiInfo info = ldMidiInput::getInfo(sourceRef);
+//            qDebug() << "add" << addRemoveNotification->child << getSourceId(sourceRef) << getSourceName(sourceRef);
+            ldMidiInfo info = getInfo(sourceRef);
             if(!info.isValid())
                 return;
 
@@ -42,20 +86,35 @@ void midiNotifyCallback(const MIDINotification *notification, void *context)
         MIDIObjectAddRemoveNotification *addRemoveNotification = (MIDIObjectAddRemoveNotification*) notification;
         if(addRemoveNotification->childType == kMIDIObjectType_Source) {
             MIDIEndpointRef sourceRef = (MIDIEndpointRef) addRemoveNotification->child;
-//            qDebug() << "remove" << addRemoveNotification->child << ldMidiInput::getSourceId(sourceRef) << ldMidiInput::getSourceName(sourceRef) ;
+//            qDebug() << "remove" << addRemoveNotification->child << addRemoveNotification->childType << getSourceId(sourceRef) << getSourceName(sourceRef) ;
 
-            ldMidiInfo info = ldMidiInput::getInfo(sourceRef);
-            if(!info.isValid())
-                return;
+            ldMidiInfo info = getInfo(sourceRef);
 
             if(input->getDevices().contains(info)) {
                 input->removeDevice(info);
+            } else {
+                for(const ldMidiInfo &eachInfo : input->getDevices()) {
+                    if(eachInfo.data() != sourceRef)
+                        continue;
+
+                    input->removeDevice(eachInfo);
+                    break;
+                }
             }
+
         }
     }
         break;
+    case kMIDIMsgPropertyChanged: {
+//        qDebug() << __FUNCTION__ << notification->messageID;
+//        MIDIObjectPropertyChangeNotification *propertyChangeNotification = (MIDIObjectPropertyChangeNotification*) notification;
+//        qDebug() << propertyChangeNotification->object << propertyChangeNotification->objectType << propertyChangeNotification->propertyName;
+
+    }
+        break;
+
     default:
-//        qDebug() << notification->messageID;
+//        qDebug() << __FUNCTION__ << notification->messageID;
         break;
     }
 
@@ -175,6 +234,7 @@ void midiInputCallback (const MIDIPacketList *list,
                         // fader on AKAI APC mini
                         message.faderNumber = packet->data[iByte + 1];
                         message.value = packet->data[iByte + 2];
+                        message.channel = status & 0x0f;
                         isValidMessage = true;
                         //NSLog(@"Control message: %d, %d", packet->data[iByte + 1], packet->data[iByte + 2]);
                         break;
@@ -251,38 +311,11 @@ void ldMidiInput::init()
     }
 }
 
-ldMidiInfo ldMidiInput::getInfo(MIDIEndpointRef source)
-{
-    SInt32 id = getSourceId(source);
-    QString name = getSourceName(source);
-
-    if (id == -1 || name.isEmpty()) {
-        return ldMidiInfo();
-    }
-
-    return ldMidiInfo(id, name);
-}
-
-
 bool ldMidiInput::openMidi(const ldMidiInfo &info) {
+//    qDebug() << __FUNCTION__ << info.id() << info.name() << info.data();
 
     if(!m_midiClient)
         return false;
-
-    int n = -1;
-    QList<ldMidiInfo> infos = ldMidiInput::getDevices();
-    for(int i = 0; i < infos.size(); i++) {
-        // id is unique on mac
-        if(infos[i].id() == info.id()) {
-            n = i;
-            break;
-        }
-    }
-    if(n == -1) {
-       qWarning() << "Can't find midi port" << info.id() << info.name();
-       return false;
-    }
-
 
     OSStatus result = MIDIInputPortCreate(m_midiClient, CFSTR("Input"), midiInputCallback, NULL, &m_inputPort);
     if (result != noErr) {
@@ -294,18 +327,12 @@ bool ldMidiInput::openMidi(const ldMidiInfo &info) {
 
     }
 
-
-    // get all midi sources
-    ItemCount sourceCount = MIDIGetNumberOfSources();
-    qDebug() << "midi devices ct is " << sourceCount;
-
    // specific one
-    m_sourceEndPoint = MIDIGetSource(n);
+    m_sourceEndPoint = info.data().toUInt();
     if (m_sourceEndPoint == 0) {
         qDebug() << "midi endpoint fail";
         return false;
     }
-
 
     result = MIDIPortConnectSource(m_inputPort, m_sourceEndPoint, this);
     if (noErr != result) {
@@ -339,11 +366,6 @@ void ldMidiInput::stop() {
 
 /////////////////
 
-QList<ldMidiInfo> ldMidiInput::getDevices()
-{
-    return m_infos;
-}
-
 void ldMidiInput::addDevice(const ldMidiInfo &info)
 {
 //    qDebug() << __FUNCTION__ << info.name();
@@ -362,33 +384,4 @@ void ldMidiInput::removeDevice(const ldMidiInfo &info)
     m_infos.removeAll(info);
     emit deviceRemoved(info);
 }
-
-SInt32 ldMidiInput::getSourceId(MIDIEndpointRef source)
-{
-    SInt32 id = -1;
-    OSStatus status = MIDIObjectGetIntegerProperty(source, kMIDIPropertyUniqueID, &id);
-    if (status != noErr) {
-        id = -1;
-        qWarning() << "MIDIObjectGetIntegerProperty kMIDIPropertyUniqueID" << status;
-//                continue;
-    }
-    return id;
-}
-
-QString ldMidiInput::getSourceName(MIDIEndpointRef source)
-{
-    CFStringRef str = nil;
-    OSStatus status = MIDIObjectGetStringProperty(source, kMIDIPropertyName, &str);
-    if (status != noErr) {
-        qWarning() << "MIDIObjectGetStringProperty kMIDIPropertyDisplayName" << status;
-        return QString();
-    }
-
-    QString res =  QString::fromCFString(str);
-    CFRelease(str);
-
-    return res;
-}
-
-
 

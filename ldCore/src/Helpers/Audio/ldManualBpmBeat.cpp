@@ -30,7 +30,7 @@ ldManualBpmBeat::ldManualBpmBeat(ldManualBpm *manualBpm, QObject *parent)
     , m_manualBpm(manualBpm)
 {
     connect(&m_updateTimer, &QTimer::timeout, this, &ldManualBpmBeat::updateCycleValue);
-    m_updateTimer.setInterval(1000 / 20); //  20 times per second
+    m_updateTimer.setInterval(1000 / 50); //  50 times per second
 }
 
 
@@ -59,8 +59,12 @@ void ldManualBpmBeat::updateCycleValue()
     if(!m_elapsedTimer.isValid() || cmpf(bpm, 0))
         return;
 
-    if(m_elapsedTimer.elapsed() / 1000.f >= (60.f / bpm)) {
+    float elapsed_secs = m_diff + (m_elapsedTimer.elapsed() / 1000.f);
+    float bps = (60.f / bpm);
+
+    if( elapsed_secs>= bps ) {
         emit beatDetected();
+        m_diff = elapsed_secs - bps;
         m_elapsedTimer.restart();
     }
 }

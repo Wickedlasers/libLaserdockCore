@@ -19,11 +19,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # ---------------------------- SOURCES  ----------------------
 
 # Executable
-if (ANDROID)
-    add_library(${PROJECT_NAME} SHARED )
-else()
-    add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32)
-endif()
+include(LdAddExecutable)
+ld_add_executable(${PROJECT_NAME})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES RESOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/resExt")
 
@@ -52,9 +49,6 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/Visualizations/Visualizers/Simple/ldSquareVisualizer.h
     src/Visualizations/Visualizers/Spectrum/ldSpectrumBandVisualizer.cpp
     src/Visualizations/Visualizers/Spectrum/ldSpectrumBandVisualizer.h
-    )
-
-target_sources(${PROJECT_NAME} PRIVATE
     res/qml.qrc
     )
 
@@ -63,13 +57,15 @@ target_sources(${PROJECT_NAME} PRIVATE
 
 # Qt
 set(CMAKE_PREFIX_PATH "${QTDIR}/lib/cmake")
-find_package(Qt5 CONFIG REQUIRED Core Gui Multimedia Qml)
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core  Qt5::Gui Qt5::Multimedia Qt5::Qml)
+find_package(Qt${QT_VERSION_MAJOR} CONFIG REQUIRED Core Gui Multimedia Qml QuickControls2)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt::Core  Qt::Gui Qt::Multimedia Qt::Qml  Qt::QuickControls2)
 
 if(ANDROID)
-    set(Qt5AndroidExtras_DIR "${QTDIR}/lib/cmake/Qt5AndroidExtras")
-    find_package(Qt5 ${QT5_MIN_VERSION} COMPONENTS AndroidExtras REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::AndroidExtras)
+    if(QT_VERSION_MAJOR EQUAL 5)
+        set(Qt5AndroidExtras_DIR "${QTDIR}/lib/cmake/Qt5AndroidExtras")
+        find_package(Qt5 ${QT_MIN_VERSION} COMPONENTS AndroidExtras REQUIRED)
+        target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::AndroidExtras)
+    endif()
 endif()
 
 
@@ -91,7 +87,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ldSpiralFighter)
 
 if(ANDROID)
     set(LD_EXAMPLE_PACKAGE_NAME "com.wickedlasers.example")
-    set(LD_EXAMPLE_RESOURCES_VERSION_CODE 2)
+    set(LD_EXAMPLE_RESOURCES_VERSION_CODE 1)
 
     target_compile_definitions(${PROJECT_NAME} PRIVATE LD_EXAMPLE_PACKAGE_NAME=\"${LD_EXAMPLE_PACKAGE_NAME}\")
     target_compile_definitions(${PROJECT_NAME} PRIVATE LD_EXAMPLE_RESOURCES_VERSION_CODE=${LD_EXAMPLE_RESOURCES_VERSION_CODE})
@@ -164,7 +160,7 @@ if(WIN32)
 endif()
 
 if(APPLE)
-    if(LD_IOS_BUILD)
+    if(IOS)
         set(BUNDLE_RESOURCES_PATH $<TARGET_FILE_DIR:ldCore_Example>/Res)
     else()
         # set correct bundle prefix for Xcode generator
@@ -195,11 +191,46 @@ if(CMAKE_GENERATOR STREQUAL "Visual Studio 14 2015" OR CMAKE_GENERATOR STREQUAL 
     configure_file(project.vcxproj.user.in ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.vcxproj.user @ONLY)
 endif()
 
-if(LD_IOS_BUILD)
+if(IOS)
+    set_property(GLOBAL PROPERTY XCODE_EMIT_EFFECTIVE_PLATFORM_NAME ON)
     set(MACOSX_BUNDLE_GUI_IDENTIFIER ldCoreExample)
+
+    # min iOS version depending on Qt support
+    if(QT_VERSION_MAJOR EQUAL 6)
+        set_target_properties(${PROJECT_NAME} PROPERTIES
+            XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "13.0"
+        )
+    else()
+        set_target_properties(${PROJECT_NAME} PROPERTIES
+            XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "12.0"
+        )
+    endif()
+
+
+    # iphone/ipad
+    set_target_properties(
+        ${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+    )
+
+    # Info plist is mandatory
+    SET(MACOSX_BUNDLE_BUNDLE_NAME "ldCore_Example")
     set_target_properties(${PROJECT_NAME} PROPERTIES
         MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/res/ios/Info.plist)
 
+    if(QT_VERSION_MAJOR EQUAL 6)
+        if(QT_VERSION_MINOR GREATER_EQUAL 8)
+            qt_add_ios_ffmpeg_libraries(${PROJECT_NAME})
+        endif()
+    endif()
+endif()
+
+if(IOS AND QT_VERSION_MAJOR EQUAL 5)
+    SET(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer")
+
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        XCODE_ATTRIBUTE_INSTALL_PATH "$(LOCAL_APPS_DIR)"
+        XCODE_ATTRIBUTE_SKIP_INSTALL "No"
+    )
 
     find_library(OQUARTZCORE_FRAMEWORK QuartzCore)
     find_library(IMAGEIO_FRAMEWORK ImageIO)
@@ -267,8 +298,8 @@ if(LD_IOS_BUILD)
 #        COMMAND ${CMAKE_COMMAND} -E copy_if_different
 #        ${OPENLASE_PATH} ${FRAMEWORKS_DIR}/)
 
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND
-        codesign --deep --timestamp=none -f -s ${LD_APPLE_DEVELOPMENT_ID} $<TARGET_FILE_DIR:${PROJECT_NAME}>
-        )
+    # add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        # COMMAND
+        # codesign --deep --timestamp=none -f -s ${LD_APPLE_DEVELOPMENT_ID} $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        # )
 endif()

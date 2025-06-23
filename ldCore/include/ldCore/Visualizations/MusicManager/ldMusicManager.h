@@ -137,18 +137,31 @@ class ldManualBpmBeat;
 class ldSpectrogram;
 class ldTempoAC;
 class ldTempoTracker;
+class ldAbletonLink;
 
 class LDCORESHARED_EXPORT ldMusicManager : public QObject
 {
     Q_OBJECT
 
 public:
+
+    enum bpmSource {
+        BpmSourceAudio = 0,
+        BpmSourceManual = 1,
+        BpmSourceAbletonLink = 2
+    } ;
+    Q_ENUM(bpmSource)
+
     // class stuff
     ldMusicManager(QObject* parent = nullptr);
     ~ldMusicManager();
 
+    static void registerMetaTypes();
+
     // update function
     void updateWith(std::shared_ptr<ldSoundData> psd, float delta);
+
+    bpmSource getBpmSource() const; // return source of bpm detection (manual,audio,ableton etc.)
 
     // beat variables
     // basic funcs
@@ -182,6 +195,10 @@ public:
     float slowBpm() const;
 
     void setBpmModifier(float bpmModifier);
+    void setAbletonLinkQuantum(double quantum);
+    void setAbletonLinkBeatOffsetMs(int offset);
+
+    void setBpmSource(bpmSource src);
 
     std::unique_ptr<ldTempoAC> tempoACSlower;
     std::unique_ptr<ldTempoAC> tempoACSlow;
@@ -206,15 +223,15 @@ public:
     std::unique_ptr<ldSpectAdvanced> spectAdvanced;
 
 
-	// onset
+    // onset
     float onsetLargeBeat1 = 0.f;
     float onsetLargeBeat2 = 0.f;
     float onsetBeatWarm = 0.f;
     float onsetBeatFresh = 0.f;
 
-	// pitch
+    // pitch
 //    PitchTracker* pitchTracker = nullptr; // deprecated?
-    
+
     // hybrids;
     std::unique_ptr<ldHybridAnima> hybridAnima;
     std::unique_ptr<ldHybridAutoColor2> hybridAutoColor2;
@@ -223,8 +240,15 @@ public:
 
 signals:
     void updated();
+    void beatDetected();
+    void barDetected();
+    void beatSourceChanged(bpmSource src);
+    void abletonParamsUpdated();
 
 private:
+
+    ldMusicManager::bpmSource m_bpmsource;
+
     std::shared_ptr<ldSoundData> m_psd;
 
     std::unique_ptr<ldSpectrogram> spectrogram;
@@ -235,11 +259,11 @@ private:
     std::unique_ptr<ldSoundGate> soundGate;
     std::unique_ptr<ldSilentThree> silentThree;
 
+    ldAbletonLink* m_abletonLink;
     ldManualBpm *m_manualBpm = nullptr;
     ldManualBpmBeat *m_manualBpmBeat = nullptr;
     std::unique_ptr<ldAppakBpmSelector> appakaBpmSelector;
     std::unique_ptr<ldAppakPeaks> m_peaks;
-
     std::shared_ptr<ldTempoTracker> m_tempoTrackerFast;
     std::unique_ptr<ldTempoTracker> m_tempoTrackerSlow;
 

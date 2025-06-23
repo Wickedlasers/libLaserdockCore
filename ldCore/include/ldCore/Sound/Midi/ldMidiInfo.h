@@ -32,12 +32,12 @@ private:
     QString m_name;
     QVariant m_data;
 
-    friend QDataStream &operator>>(QDataStream &in, ldMidiInfo &myObj);
+    friend LDCORESHARED_EXPORT QDataStream &operator>>(QDataStream &in, ldMidiInfo &myObj);
 };
 
 // required for QVariant conversion
-QDataStream &operator<<(QDataStream &out, const ldMidiInfo &myObj);
-QDataStream &operator>>(QDataStream &in, ldMidiInfo &myObj);
+LDCORESHARED_EXPORT QDataStream &operator<<(QDataStream &out, const ldMidiInfo &myObj);
+LDCORESHARED_EXPORT QDataStream &operator>>(QDataStream &in, ldMidiInfo &myObj);
 
 Q_DECLARE_METATYPE(ldMidiInfo)
 

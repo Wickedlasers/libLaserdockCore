@@ -27,7 +27,7 @@
 
 
 class ldAbstractTask;
-class ldBufferManager;
+class ldFrameBuffer;
 class ldTaskWorker;
 
 class LDCORESHARED_EXPORT ldTaskManager : public QObject
@@ -35,14 +35,14 @@ class LDCORESHARED_EXPORT ldTaskManager : public QObject
     Q_OBJECT
 
 public:
-    explicit ldTaskManager(ldBufferManager* bufferManager, QObject *parent = 0);
+    explicit ldTaskManager(QObject *parent = 0);
     virtual ~ldTaskManager();
 
-    ldTaskWorker *taskWorker() const;
+    ldTaskWorker *createTaskWorker(ldFrameBuffer *frameBuffer);
+    void deleteTaskWorker(ldTaskWorker *taskWorker);
 
 private:
-    QThread m_worker_thread;
-    QScopedPointer<ldTaskWorker> m_taskworker;
+    std::vector<ldTaskWorker*> m_taskWorkers;
 };
 
 #endif // LDTASKMANAGER_H

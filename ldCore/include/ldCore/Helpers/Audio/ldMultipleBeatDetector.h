@@ -22,9 +22,8 @@
 #define LDBEATDETECTORCOUNTER_H
 
 #include <memory>
-
+#include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
 #include <QQmlHelpers>
-
 #include <ldCore/Sound/ldSoundData.h>
 
 class ldBeatDetector;
@@ -45,6 +44,7 @@ public:
 
 signals:
     void beatDetected();
+    void isSyncing(bool syncing);
 
 private slots:
     void onActiveChanged(bool active);
@@ -52,6 +52,9 @@ private slots:
 
 private:
     const ldBeatDetector *m_beatDetector;
+    ldMusicManager::bpmSource m_src;
+    bool m_synced{false};
+    bool m_syncFlash{false};
     int m_detectedBeats = 0;
     int m_beatCount = 1;
 };

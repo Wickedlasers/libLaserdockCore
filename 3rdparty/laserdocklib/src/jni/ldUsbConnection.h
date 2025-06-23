@@ -1,7 +1,7 @@
 #ifndef LASERDOCKLIB_LDUSBCONNECTION
 #define LASERDOCKLIB_LDUSBCONNECTION
 
-#include <QAndroidJniObject>
+#include <laserdocklib/ldAndroidGlobals.h>
 
 struct usbdevfs_bulktransfer;
 
@@ -9,7 +9,7 @@ class ldUsbConnection
 {
 public:
     ldUsbConnection();
-    ldUsbConnection(QAndroidJniObject o);
+    ldUsbConnection(QJniObject o);
 
     void dumpbuffer();
     void prepare();
@@ -21,7 +21,7 @@ public:
 
 private:
     int m_fd = -1;
-    QAndroidJniObject m_connection;
+    QJniObject m_connection;
 };
 
 #endif //LASERDOCKLIB_LDUSBCONNECTION

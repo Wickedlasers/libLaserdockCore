@@ -27,19 +27,24 @@ public:
     virtual QString hwType() const override;
     virtual QString address() const override;
 
+    virtual int getDacRate() const override;
+    virtual int getMaximumDacRate() const override;
+    virtual void setDacRate(int rate) const override;
+    virtual void setDacBufferTHold(int level) const override;
+
     void send_security_request(QByteArray request);
     void get_security_response(QByteArray &response);
 
     const device_params &params() const;
 
-    bool send_samples(uint startIndex, uint count);
+    virtual bool send_samples(uint startIndex, uint count) override;
     bool send_samples(LaserdockSample *samples, unsigned int size);
 
-    int  get_full_count();
+    virtual int get_full_count() override;
     void initialize();
     void ResetStatus();
 
-    void setActive(bool active);
+    virtual void setActive(bool active) override;
 
 
 signals:

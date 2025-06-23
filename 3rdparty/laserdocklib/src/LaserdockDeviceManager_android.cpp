@@ -5,11 +5,9 @@
 
 #include <jni.h>
 
-#include <QtDebug>
-#include <QtAndroid>
-#include <QAndroidJniEnvironment>
-#include <QAndroidJniObject>
+#include <QtCore/QtDebug>
 
+#include <laserdocklib/ldAndroidGlobals.h>
 #include <laserdocklib/LaserdockDevice.h>
 
 #include "LaserdockAndroidUSBDevice.h"
@@ -24,16 +22,16 @@ std::vector<std::unique_ptr<LaserdockDevice> > LaserdockDeviceManagerPrivate::ge
 
 
     // get laserdock devices
-    QAndroidJniObject usbDevicesJni = ldUsbDeviceHelper::getInstance()->getLaserdockDevices();
+    QJniObject usbDevicesJni = ldUsbDeviceHelper::getInstance()->getLaserdockDevices();
     jobjectArray objectArray = usbDevicesJni.object<jobjectArray>();
 
-    QAndroidJniEnvironment qjniEnv;
+    QJniEnvironment qjniEnv;
     int length = qjniEnv->GetArrayLength(objectArray);
     for(int i = 0; i < length; i++) {
         jobject jobj = qjniEnv->GetObjectArrayElement(objectArray, i);
         // get device name
-        QAndroidJniObject qObj(jobj);
-        QAndroidJniObject jDeviceName = qObj.callObjectMethod("getDeviceName", "()Ljava/lang/String;");
+        QJniObject qObj(jobj);
+        QJniObject jDeviceName = qObj.callObjectMethod("getDeviceName", "()Ljava/lang/String;");
         std::string devicename = jDeviceName.toString().toStdString();
 
 //        qDebug() << QString::fromStdString(devicename);

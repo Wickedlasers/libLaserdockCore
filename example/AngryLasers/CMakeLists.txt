@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.0)
 
 add_library(ldAngryLasers)
 
-find_package(Qt5 COMPONENTS Core REQUIRED)
-target_link_libraries(ldAngryLasers PUBLIC Qt5::Core)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core REQUIRED)
+target_link_libraries(ldAngryLasers PUBLIC Qt::Core)
 
 target_include_directories(ldAngryLasers PUBLIC ${CMAKE_CURRENT_LIST_DIR}/src)
 target_link_libraries(ldAngryLasers PRIVATE ldCore ldCore::Box2D)

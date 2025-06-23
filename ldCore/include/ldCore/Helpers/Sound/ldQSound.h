@@ -75,7 +75,7 @@ private:
     qreal m_volumeCoeff = 1;
     int m_volumeLevel = 100;
 
-    std::vector<std::unique_ptr<QSoundEffect>> m_sounds;
+    std::vector<QSoundEffect*> m_sounds;
 };
 
 

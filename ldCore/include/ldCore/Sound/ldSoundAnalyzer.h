@@ -24,6 +24,9 @@
 #include <memory>
 
 #include <QtCore/QObject>
+#if QT_VERSION >= 0x060000
+#include <QtMultimedia/QAudioFormat>
+#endif
 
 #include <ldCore/ldCore_global.h>
 #include <ldCore/Sound/ldSoundData.h>
@@ -42,6 +45,8 @@ public:
 public slots:
     void handleSoundUpdated(const char * data, qint64 len);
     void processAudioBuffer(float *convertedBuffer, int frames, int sampleRate);
+
+    void reset();
 
 signals:
     void audioBlockUpdated(const AudioBlock &block);

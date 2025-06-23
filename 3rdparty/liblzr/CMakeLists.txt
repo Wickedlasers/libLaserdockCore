@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # library
-if(LD_IOS_BUILD)
+if(IOS)
     add_library(liblzr)
 else()
     add_library(liblzr SHARED)

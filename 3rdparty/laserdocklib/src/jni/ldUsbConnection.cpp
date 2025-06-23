@@ -1,7 +1,6 @@
 #include "ldUsbConnection.h"
 
 #include <QtCore/QtDebug>
-#include <QtAndroidExtras/QAndroidJniEnvironment>
 
 #include <sys/ioctl.h>
 #include <linux/usbdevice_fs.h>
@@ -12,12 +11,12 @@ ldUsbConnection::ldUsbConnection()
 {
 }
 
-ldUsbConnection::ldUsbConnection(QAndroidJniObject o)
+ldUsbConnection::ldUsbConnection(QJniObject o)
     : m_connection(o)
 {
-    QAndroidJniObject bufferObject = o.getObjectField("mbuffer", "Ljava/nio/ByteBuffer;");
+    QJniObject bufferObject = o.getObjectField("mbuffer", "Ljava/nio/ByteBuffer;");
     //            qDebug() << "bufferObject valid? " << bufferObject.isValid();
-    QAndroidJniEnvironment env;
+    QJniEnvironment env;
     buffer = (char *)env->GetDirectBufferAddress(bufferObject.object());
     m_fd = m_connection.callMethod<jint>("fd");
     qDebug() << "fd = " << m_fd;

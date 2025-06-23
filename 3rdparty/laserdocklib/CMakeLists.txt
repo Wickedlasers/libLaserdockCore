@@ -8,24 +8,25 @@ if((EXISTS $ENV{QTDIR}) AND (NOT DEFINED QTDIR))
     set(QTDIR $ENV{QTDIR} CACHE STRING "Path to Qt dir")
 endif()
 
+
+if(NOT DEFINED ANDROID_NDK)
+    set(ANDROID_NDK $ENV{ANDROID_NDK_ROOT} CACHE STRING "Path to Android NDK")
+endif()
+if(NOT DEFINED ANDROID_ABI)
+    set(ANDROID_ABI "arm64-v8a" CACHE STRING "Android ABI version")  # "arm64-v8a" and "armeabi-v7a" values are supported
+endif()
+if(NOT DEFINED ANDROID_NATIVE_API_LEVEL)
+    set(ANDROID_NATIVE_API_LEVEL 24 CACHE STRING "Android native API level")
+endif()
+
+set(ANDROID_TOOLCHAIN clang)
+set(ANDROID_STL c++_shared)
+
 if(LD_ANDROID_BUILD)
-    if(NOT DEFINED ANDROID_NDK)
-        set(ANDROID_NDK $ENV{ANDROID_NDK_ROOT} CACHE STRING "Path to Android NDK")
-    endif()
-    if(NOT DEFINED ANDROID_ABI)
-        set(ANDROID_ABI "arm64-v8a" CACHE STRING "Android ABI version")  # "arm64-v8a" and "armeabi-v7a" values are supported
-    endif()
-    if(NOT DEFINED ANDROID_NATIVE_API_LEVEL)
-        set(ANDROID_NATIVE_API_LEVEL 24 CACHE STRING "Android native API level")
-    endif()
-
-    set(ANDROID_TOOLCHAIN clang)
-    set(ANDROID_STL c++_shared)
-
     set(CMAKE_TOOLCHAIN_FILE ${ANDROID_NDK}/build/cmake/android.toolchain.cmake)
 endif()
 
-if(LD_IOS_BUILD)
+if(IOS)
     add_library(laserdocklib)
 else()
     add_library(laserdocklib SHARED)
@@ -50,16 +51,33 @@ if(ANDROID)
 endif()
 
 # Qt
-set(QT5_MIN_VERSION 5.14)
-set(Qt5_DIR "${QTDIR}/lib/cmake/Qt5")
-set(Qt5Core_DIR "${QTDIR}/lib/cmake/Qt5Core")
-find_package(Qt5 ${QT5_MIN_VERSION} COMPONENTS Core Network REQUIRED)
-target_link_libraries(laserdocklib PRIVATE Qt5::Core Qt5::Network)
+if(QT_VERSION_MAJOR EQUAL 6)
+    set(QT_MIN_VERSION 6.6)
+else()
+    set(QT_MIN_VERSION 5.15)
+endif()
+
+set(Qt${QT_VERSION_MAJOR}_DIR "${QTDIR}/lib/cmake/Qt${QT_VERSION_MAJOR}")
+set(Qt${QT_VERSION_MAJOR}Core_DIR "${QTDIR}/lib/cmake/Qt${QT_VERSION_MAJOR}Core")
+find_package(Qt${QT_VERSION_MAJOR} ${QT_MIN_VERSION} COMPONENTS Core Network REQUIRED)
+target_link_libraries(laserdocklib PRIVATE Qt::Core Qt::Network)
 
 if(ANDROID)
-    set(Qt5AndroidExtras_DIR "${QTDIR}/lib/cmake/Qt5AndroidExtras")
-    find_package(Qt5 ${QT5_MIN_VERSION} COMPONENTS AndroidExtras REQUIRED)
-    target_link_libraries(laserdocklib PRIVATE Qt5::AndroidExtras log)
+
+    target_sources(laserdocklib PRIVATE
+        ${INCDIR}/ldAndroidGlobals.h
+        )
+
+    if(QT_VERSION_MAJOR EQUAL 6)
+        target_link_libraries(laserdocklib PRIVATE Qt6::CorePrivate)
+    else()
+        set(Qt5AndroidExtras_DIR "${QTDIR}/lib/cmake/Qt${QT_VERSION_MAJOR}AndroidExtras")
+        find_package(Qt5 ${QT_MIN_VERSION} COMPONENTS AndroidExtras REQUIRED)
+        target_link_libraries(laserdocklib PRIVATE Qt::AndroidExtras)
+    endif()
+
+    target_link_libraries(laserdocklib PRIVATE log)
+
 endif()
 
 if(WIN32)
@@ -67,7 +85,7 @@ if(WIN32)
     target_compile_options(laserdocklib PRIVATE /wd4251)
 endif()
 
-if(LD_IOS_BUILD)
+if(QT_VERSION_MAJOR EQUAL 5 AND IOS)
     target_link_libraries(laserdocklib PRIVATE z)
 endif()
 

@@ -25,10 +25,10 @@
 #      - OpenCV_INCLUDE_DIRS             : The OpenCV include directories.
 #      - OpenCV_COMPUTE_CAPABILITIES     : The version of compute capability.
 #      - OpenCV_ANDROID_NATIVE_API_LEVEL : Minimum required level of Android API.
-#      - OpenCV_VERSION                  : The version of this OpenCV build: "3.4.15"
+#      - OpenCV_VERSION                  : The version of this OpenCV build: "3.4.20"
 #      - OpenCV_VERSION_MAJOR            : Major version part of OpenCV_VERSION: "3"
 #      - OpenCV_VERSION_MINOR            : Minor version part of OpenCV_VERSION: "4"
-#      - OpenCV_VERSION_PATCH            : Patch version part of OpenCV_VERSION: "15"
+#      - OpenCV_VERSION_PATCH            : Patch version part of OpenCV_VERSION: "20"
 #      - OpenCV_VERSION_STATUS           : Development status of this build: ""
 #
 #    Advanced variables:
@@ -45,10 +45,10 @@
 # ======================================================
 #  Version variables:
 # ======================================================
-SET(OpenCV_VERSION 3.4.15)
+SET(OpenCV_VERSION 3.4.20)
 SET(OpenCV_VERSION_MAJOR  3)
 SET(OpenCV_VERSION_MINOR  4)
-SET(OpenCV_VERSION_PATCH  15)
+SET(OpenCV_VERSION_PATCH  20)
 SET(OpenCV_VERSION_TWEAK  0)
 SET(OpenCV_VERSION_STATUS "")
 

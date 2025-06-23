@@ -13,23 +13,28 @@ bool ldPropertyObject::setProperty(const QByteArray &name, const QVariant &value
     // check if property exists
     int propertyIndex = metaObject()->indexOfProperty(name);
     if(propertyIndex == -1) {
-        qWarning() << __FUNCTION__ << "Invalid property!" << name << this;
+        qWarning() << __FUNCTION__ << "Invalid property!" << name << this << propertyIndex;
         return false;
     }
 
     // check if property is writable
     bool isWritable = metaObject()->property(propertyIndex).isWritable();
     if(!isWritable) {
-        qWarning() << __FUNCTION__ << "Invalid property!" << name << this;
+        qWarning() << __FUNCTION__ << "Invalid property!" << name << this << "isWritable";
         return false;
     }
 
     return QObject::setProperty(name.constData(), value);
 }
 
+bool ldPropertyObject::hasProperty(const QByteArray &name) const
+{
+    return QObject::property(name.constData()).isValid();
+}
+
 QVariant ldPropertyObject::property(const QByteArray &name) const
 {
-    if(!QObject::property(name.constData()).isValid()) {
+    if(!hasProperty(name)) {
         qWarning() << __FUNCTION__ << "Invalid property!" << name << this;
     }
 
@@ -43,7 +48,12 @@ bool ldPropertyObject::isRealProperty(const QByteArray &name) const
         return false;
 
     // it's QMetaType::Type under the hood
+
+#if QT_VERSION >= 0x060000
+    QMetaType::Type type = static_cast<QMetaType::Type> (metaObject()->property(propertyIndex).metaType().id());
+#else
     QMetaType::Type type = static_cast<QMetaType::Type> (metaObject()->property(propertyIndex).type());
+#endif
 
     return type == QMetaType::Double || type == QMetaType::Float;
 }

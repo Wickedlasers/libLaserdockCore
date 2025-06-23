@@ -1,7 +1,6 @@
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
-#include <assert.hpp>
 
 int main(int, char*[]) {
 	sol::state lua;
@@ -13,7 +12,8 @@ int main(int, char*[]) {
 	lua["number2"] = 24.5;
 	// string types
 	lua["important_string"] = "woof woof";
-	// is callable, therefore gets stored as a function that can be called
+	// is callable, therefore gets stored as a function that can
+	// be called
 	lua["a_function"] = []() { return 100; };
 	// make a table
 	lua["some_table"] = lua.create_table_with("value", 24);
@@ -44,40 +44,40 @@ int main(int, char*[]) {
 
 	// implicit conversion
 	int number = lua["number"];
-	c_assert(number == 24);
+	SOL_ASSERT(number == 24);
 	// explicit get
 	auto number2 = lua.get<double>("number2");
-	c_assert(number2 == 24.5);
+	SOL_ASSERT(number2 == 24.5);
 	// strings too
 	std::string important_string = lua["important_string"];
-	c_assert(important_string == "woof woof");
+	SOL_ASSERT(important_string == "woof woof");
 	// dig into a table
 	int value = lua["some_table"]["value"];
-	c_assert(value == 24);
+	SOL_ASSERT(value == 24);
 	// get a function
 	sol::function a_function = lua["a_function"];
 	int value_is_100 = a_function();
 	// convertible to std::function
 	std::function<int()> a_std_function = a_function;
 	int value_is_still_100 = a_std_function();
-	c_assert(value_is_100 == 100);
-	c_assert(value_is_still_100 == 100);
+	SOL_ASSERT(value_is_100 == 100);
+	SOL_ASSERT(value_is_still_100 == 100);
 
 	sol::object number_obj = lua.get<sol::object>("number");
 	// sol::type::number
 	sol::type t1 = number_obj.get_type();
-	c_assert(t1 == sol::type::number);
+	SOL_ASSERT(t1 == sol::type::number);
 
 	sol::object function_obj = lua["a_function"];
 	// sol::type::function
 	sol::type t2 = function_obj.get_type();
-	c_assert(t2 == sol::type::function);
+	SOL_ASSERT(t2 == sol::type::function);
 	bool is_it_really = function_obj.is<std::function<int()>>();
-	c_assert(is_it_really);
+	SOL_ASSERT(is_it_really);
 
 	// will not contain data
 	sol::optional<int> check_for_me = lua["a_function"];
-	c_assert(check_for_me == sol::nullopt);
+	SOL_ASSERT(check_for_me == sol::nullopt);
 
 	return 0;
 }

@@ -1,8 +1,8 @@
-// sol3 
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,8 +24,8 @@
 #ifndef SOL_RESOLVE_HPP
 #define SOL_RESOLVE_HPP
 
-#include "traits.hpp"
-#include "tuple.hpp"
+#include <sol/traits.hpp>
+#include <sol/tuple.hpp>
 
 namespace sol {
 
@@ -33,8 +33,8 @@ namespace sol {
 	// constexpr is fine for not-clang
 
 	namespace detail {
-		template <typename R, typename... Args, typename F, typename = std::result_of_t<meta::unqualified_t<F>(Args...)>>
-		inline constexpr auto resolve_i(types<R(Args...)>, F &&) -> R (meta::unqualified_t<F>::*)(Args...) {
+		template <typename R, typename... Args, typename F, typename = std::invoke_result_t<meta::unqualified_t<F>, Args...>>
+		inline constexpr auto resolve_i(types<R(Args...)>, F&&) -> R (meta::unqualified_t<F>::*)(Args...) {
 			using Sig = R(Args...);
 			typedef meta::unqualified_t<F> Fu;
 			return static_cast<Sig Fu::*>(&Fu::operator());
@@ -42,22 +42,21 @@ namespace sol {
 
 		template <typename F, typename U = meta::unqualified_t<F>>
 		inline constexpr auto resolve_f(std::true_type, F&& f)
-			-> decltype(resolve_i(types<meta::function_signature_t<decltype(&U::operator())>>(), std::forward<F>(f))) {
+		     -> decltype(resolve_i(types<meta::function_signature_t<decltype(&U::operator())>>(), std::forward<F>(f))) {
 			return resolve_i(types<meta::function_signature_t<decltype(&U::operator())>>(), std::forward<F>(f));
 		}
 
 		template <typename F>
 		inline constexpr void resolve_f(std::false_type, F&&) {
-			static_assert(meta::has_deducible_signature<F>::value,
-				"Cannot use no-template-parameter call with an overloaded functor: specify the signature");
+			static_assert(meta::call_operator_deducible_v<F>, "Cannot use no-template-parameter call with an overloaded functor: specify the signature");
 		}
 
 		template <typename F, typename U = meta::unqualified_t<F>>
-		inline constexpr auto resolve_i(types<>, F&& f) -> decltype(resolve_f(meta::has_deducible_signature<U>(), std::forward<F>(f))) {
-			return resolve_f(meta::has_deducible_signature<U>{}, std::forward<F>(f));
+		inline constexpr auto resolve_i(types<>, F&& f) -> decltype(resolve_f(meta::call_operator_deducible<U>(), std::forward<F>(f))) {
+			return resolve_f(meta::call_operator_deducible<U> {}, std::forward<F>(f));
 		}
 
-		template <typename... Args, typename F, typename R = std::result_of_t<F&(Args...)>>
+		template <typename... Args, typename F, typename R = std::invoke_result_t<F&, Args...>>
 		inline constexpr auto resolve_i(types<Args...>, F&& f) -> decltype(resolve_i(types<R(Args...)>(), std::forward<F>(f))) {
 			return resolve_i(types<R(Args...)>(), std::forward<F>(f));
 		}
@@ -103,8 +102,8 @@ namespace sol {
 	// so don't use the constexpr versions inside of clang.
 
 	namespace detail {
-		template <typename R, typename... Args, typename F, typename = std::result_of_t<meta::unqualified_t<F>(Args...)>>
-		inline auto resolve_i(types<R(Args...)>, F &&) -> R (meta::unqualified_t<F>::*)(Args...) {
+		template <typename R, typename... Args, typename F, typename = std::invoke_result_t<meta::unqualified_t<F>, Args...>>
+		inline auto resolve_i(types<R(Args...)>, F&&) -> R (meta::unqualified_t<F>::*)(Args...) {
 			using Sig = R(Args...);
 			typedef meta::unqualified_t<F> Fu;
 			return static_cast<Sig Fu::*>(&Fu::operator());
@@ -112,22 +111,21 @@ namespace sol {
 
 		template <typename F, typename U = meta::unqualified_t<F>>
 		inline auto resolve_f(std::true_type, F&& f)
-			-> decltype(resolve_i(types<meta::function_signature_t<decltype(&U::operator())>>(), std::forward<F>(f))) {
+		     -> decltype(resolve_i(types<meta::function_signature_t<decltype(&U::operator())>>(), std::forward<F>(f))) {
 			return resolve_i(types<meta::function_signature_t<decltype(&U::operator())>>(), std::forward<F>(f));
 		}
 
 		template <typename F>
 		inline void resolve_f(std::false_type, F&&) {
-			static_assert(meta::has_deducible_signature<F>::value,
-				"Cannot use no-template-parameter call with an overloaded functor: specify the signature");
+			static_assert(meta::call_operator_deducible_v<F>, "Cannot use no-template-parameter call with an overloaded functor: specify the signature");
 		}
 
 		template <typename F, typename U = meta::unqualified_t<F>>
-		inline auto resolve_i(types<>, F&& f) -> decltype(resolve_f(meta::has_deducible_signature<U>(), std::forward<F>(f))) {
-			return resolve_f(meta::has_deducible_signature<U>{}, std::forward<F>(f));
+		inline auto resolve_i(types<>, F&& f) -> decltype(resolve_f(meta::call_operator_deducible<U>(), std::forward<F>(f))) {
+			return resolve_f(meta::call_operator_deducible<U> {}, std::forward<F>(f));
 		}
 
-		template <typename... Args, typename F, typename R = std::result_of_t<F&(Args...)>>
+		template <typename... Args, typename F, typename R = std::invoke_result_t<F&, Args...>>
 		inline auto resolve_i(types<Args...>, F&& f) -> decltype(resolve_i(types<R(Args...)>(), std::forward<F>(f))) {
 			return resolve_i(types<R(Args...)>(), std::forward<F>(f));
 		}

@@ -44,35 +44,27 @@
 
 class QMediaPlayer;
 
-class ldAudioFileDecoderThread;
+class ldAudioFileDecoderWorker;
 
 class LDCORESHARED_EXPORT ldAudioFileDecoder : public QObject
 {
     Q_OBJECT
 
-    QML_READONLY_PROPERTY(bool, isActive)
-
 public:
     explicit ldAudioFileDecoder(QObject *parent = nullptr);
     ~ldAudioFileDecoder();
-
-    qint64 duration() const;
 
 public slots:
     void start(const QString &filePath);
     void reset();
 
 signals:
+    void progress(float value);
     void finished(const std::vector<float> &data);
 
-private slots:
-    void onThreadFinished();
-
 private:
-    qint64 m_duration = -1;
-    QMutex m_mutex;
-
-    ldAudioFileDecoderThread *m_currentThread = nullptr;
+    QThread *m_workerThread = nullptr;
+    ldAudioFileDecoderWorker *m_worker = nullptr;
 };
 
 #endif //LDAUDIOFILEDECODER_H

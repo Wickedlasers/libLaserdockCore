@@ -24,7 +24,6 @@
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
 
-#include "ldCore/Data/ldBufferManager.h"
 #include "ldCore/Task/ldAbstractTask.h"
 #include "ldCore/Task/ldTaskManager.h"
 #include "ldCore/ldCore.h"
@@ -44,15 +43,23 @@
 
 */
 
-ldTaskWorker::ldTaskWorker(ldBufferManager *bufferManager, QObject *parent) :
-    QObject(parent)
+ldTaskWorker::ldTaskWorker(ldFrameBuffer *frameBuffer) :
+    QObject()
 {
-    connect(bufferManager, &ldBufferManager::bufferNeedsContent, this, &ldTaskWorker::update, Qt::ConnectionType::BlockingQueuedConnection);
+    connect(frameBuffer, &ldFrameBuffer::isCleaned, this, [&,frameBuffer]() {
+            update(frameBuffer);
+        }, Qt::BlockingQueuedConnection);
 }
 
 ldTaskWorker::~ldTaskWorker()
 {
-    delete m_task;
+    taskStop();
+
+    if(m_task)
+        delete m_task;
+
+    if(m_taskToSet)
+        delete m_taskToSet;
 }
 
 bool ldTaskWorker::isRunning() const

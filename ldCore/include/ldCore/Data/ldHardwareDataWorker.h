@@ -22,35 +22,31 @@
 #define ldHardwareDataWorker_H
 
 #include <QtCore/QThread>
+#include <QtCore/QEventLoop>
 
 #include "ldAbstractDataWorker.h"
 
-class ldBufferManager;
-class ldHardwareManager;
+class ldFrameBuffer;
+class ldAbstractHardwareManager;
+class ldHardwareBatch;
 class ldSimulatorEngine;
 class ldThreadedDataWorker;
-class ldUsbHardwareManager;
-class ldAbstractHardwareManager;
 
 /** USB data worker */
 class LDCORESHARED_EXPORT ldHardwareDataWorker : public ldAbstractDataWorker
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
     /** Constructor/destructor */
-    explicit ldHardwareDataWorker(ldBufferManager *bufferManager,
-                              ldHardwareManager *hardwareManager,
-                              std::vector<ldAbstractHardwareManager*> deviceHardwareManagers,
+    explicit ldHardwareDataWorker(ldFrameBuffer *frameBuffer,
+                              ldHardwareBatch *hardwareBatch,
                               ldSimulatorEngine *simulatorEngine,
                               QObject *parent = nullptr);
     ~ldHardwareDataWorker();
 
     /** ldAbstractDataWorker implementations */
+    virtual bool isActive() const override;
     virtual bool isActiveTransfer() const override;
-    virtual bool hasActiveDevices() const override;
-
-    /** USB device manager */
-    ldAbstractHardwareManager *deviceManager() const;
 
 public slots:
     /** ldAbstractDataWorker implementations */
@@ -61,6 +57,7 @@ public slots:
     void setSimulatorEnabled(bool enabled);
 
 private slots:
+    void stop();
 
 private:
     bool m_isActive = false;
@@ -68,11 +65,8 @@ private:
     QScopedPointer<ldThreadedDataWorker> m_thread_worker;
     QThread m_worker_thread;
 
-    ldBufferManager* m_bufferManager;
-    ldHardwareManager* m_hardwareManager;
+    ldHardwareBatch *m_hwBatch;
     ldSimulatorEngine* m_simulatorEngine;
-
-    std::vector<ldAbstractHardwareManager*> m_deviceHardwareManagers;
 };
 
 #endif /* ldHardwareDataWorker_H */

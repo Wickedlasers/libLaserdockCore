@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2019 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -24,17 +24,18 @@
 #ifndef SOL_STACK_CHECK_UNQUALIFIED_GET_HPP
 #define SOL_STACK_CHECK_UNQUALIFIED_GET_HPP
 
-#include "stack_core.hpp"
-#include "stack_get.hpp"
-#include "stack_check.hpp"
-#include "optional.hpp"
+#include <sol/stack_core.hpp>
+#include <sol/stack_get.hpp>
+#include <sol/stack_check.hpp>
+#include <sol/optional.hpp>
 
 #include <cstdlib>
 #include <cmath>
 #include <optional>
-#if defined(SOL_STD_VARIANT) && SOL_STD_VARIANT
+#if SOL_IS_ON(SOL_STD_VARIANT)
 #include <variant>
-#endif // variant
+#endif // variant shenanigans (thanks, Mac OSX)
+
 
 namespace sol { namespace stack {
 	template <typename T, typename>
@@ -45,19 +46,28 @@ namespace sol { namespace stack {
 		static Optional get_using(lua_State* L, int index, Handler&& handler, record& tracking) {
 			if constexpr (!meta::meta_detail::is_adl_sol_lua_check_v<T> && !meta::meta_detail::is_adl_sol_lua_get_v<T>) {
 				if constexpr (is_lua_reference_v<T>) {
-					// actually check if it's none here, otherwise
-					// we'll have a none object inside an optional!
-					bool success = lua_isnoneornil(L, index) == 0 && stack::check<T>(L, index, no_panic);
-					if (!success) {
-						// expected type, actual type
-						tracking.use(static_cast<int>(success));
-						handler(L, index, type::poly, type_of(L, index), "");
-						return std::nullopt;
+					if constexpr (is_global_table_v<T>) {
+						(void)L;
+						(void)index;
+						(void)handler;
+						tracking.use(1);
+						return true;
 					}
-					return stack_detail::unchecked_get<T>(L, index, tracking);
+					else {
+						// actually check if it's none here, otherwise
+						// we'll have a none object inside an optional!
+						bool success = lua_isnoneornil(L, index) == 0 && stack::check<T>(L, index, &no_panic);
+						if (!success) {
+							// expected type, actual type
+							tracking.use(static_cast<int>(success));
+							handler(L, index, type::poly, type_of(L, index), "");
+							return detail::associated_nullopt_v<Optional>;
+						}
+						return stack_detail::unchecked_get<T>(L, index, tracking);
+					}
 				}
 				else if constexpr ((std::is_integral_v<T> || std::is_same_v<T, lua_Integer>)&&!std::is_same_v<T, bool>) {
-#if SOL_LUA_VERSION >= 503
+#if SOL_LUA_VERSION_I_ >= 503
 					if (lua_isinteger(L, index) != 0) {
 						tracking.use(1);
 						return static_cast<T>(lua_tointeger(L, index));
@@ -66,7 +76,7 @@ namespace sol { namespace stack {
 					int isnum = 0;
 					const lua_Number value = lua_tonumberx(L, index, &isnum);
 					if (isnum != 0) {
-#if (defined(SOL_SAFE_NUMERICS) && SOL_SAFE_NUMERICS) && !(defined(SOL_NO_CHECK_NUMBER_PRECISION) && SOL_NO_CHECK_NUMBER_PRECISION)
+#if SOL_IS_ON(SOL_NUMBER_PRECISION_CHECKS)
 						const auto integer_value = llround(value);
 						if (static_cast<lua_Number>(integer_value) == value) {
 							tracking.use(1);
@@ -80,7 +90,7 @@ namespace sol { namespace stack {
 					const type t = type_of(L, index);
 					tracking.use(static_cast<int>(t != type::none));
 					handler(L, index, type::number, t, "not an integer");
-					return std::nullopt;
+					return detail::associated_nullopt_v<Optional>;
 				}
 				else if constexpr (std::is_floating_point_v<T> || std::is_same_v<T, lua_Number>) {
 					int isnum = 0;
@@ -89,7 +99,7 @@ namespace sol { namespace stack {
 						type t = type_of(L, index);
 						tracking.use(static_cast<int>(t != type::none));
 						handler(L, index, type::number, t, "not a valid floating point number");
-						return std::nullopt;
+						return detail::associated_nullopt_v<Optional>;
 					}
 					tracking.use(1);
 					return static_cast<T>(value);
@@ -101,7 +111,7 @@ namespace sol { namespace stack {
 						type t = type_of(L, index);
 						tracking.use(static_cast<int>(t != type::none));
 						handler(L, index, type::number, t, "not a valid enumeration value");
-						return std::nullopt;
+						return detail::associated_nullopt_v<Optional>;
 					}
 					tracking.use(1);
 					return static_cast<T>(value);
@@ -109,7 +119,7 @@ namespace sol { namespace stack {
 				else {
 					if (!unqualified_check<T>(L, index, std::forward<Handler>(handler))) {
 						tracking.use(static_cast<int>(!lua_isnone(L, index)));
-						return std::nullopt;
+						return detail::associated_nullopt_v<Optional>;
 					}
 					return stack_detail::unchecked_unqualified_get<T>(L, index, tracking);
 				}
@@ -117,7 +127,7 @@ namespace sol { namespace stack {
 			else {
 				if (!unqualified_check<T>(L, index, std::forward<Handler>(handler))) {
 					tracking.use(static_cast<int>(!lua_isnone(L, index)));
-					return std::nullopt;
+					return detail::associated_nullopt_v<Optional>;
 				}
 				return stack_detail::unchecked_unqualified_get<T>(L, index, tracking);
 			}
@@ -129,7 +139,7 @@ namespace sol { namespace stack {
 		}
 	};
 
-#if defined(SOL_STD_VARIANT) && SOL_STD_VARIANT
+#if SOL_IS_ON(SOL_STD_VARIANT)
 	template <typename... Tn, typename C>
 	struct unqualified_check_getter<std::variant<Tn...>, C> {
 		typedef std::variant<Tn...> V;
@@ -159,7 +169,7 @@ namespace sol { namespace stack {
 		template <std::size_t I, typename Handler>
 		static optional<V> get_one(std::integral_constant<std::size_t, I>, lua_State* L, int index, Handler&& handler, record& tracking) {
 			typedef std::variant_alternative_t<I - 1, V> T;
-			if (stack::check<T>(L, index, no_panic, tracking)) {
+			if (stack::check<T>(L, index, &no_panic, tracking)) {
 				return V(std::in_place_index<I - 1>, stack::get<T>(L, index));
 			}
 			return get_one(std::integral_constant<std::size_t, I - 1>(), L, index, std::forward<Handler>(handler), tracking);
@@ -170,7 +180,7 @@ namespace sol { namespace stack {
 			return get_one(std::integral_constant<std::size_t, V_size::value>(), L, index, std::forward<Handler>(handler), tracking);
 		}
 	};
-#endif // SOL_STD_VARIANT
+#endif // standard variant
 }}     // namespace sol::stack
 
 #endif // SOL_STACK_CHECK_UNQUALIFIED_GET_HPP

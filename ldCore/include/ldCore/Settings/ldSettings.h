@@ -23,6 +23,7 @@
 
 #include <memory>
 
+#include <QtCore/QHash>
 #include <QtCore/QSettings>
 
 #include <ldCore/ldCore_global.h>
@@ -36,15 +37,42 @@ public:
 
     QSettings *settings();
 
-private:
+    // QSettings
+    void setValue(const QString &key, const QVariant &value);
+    QVariant value(const QString &key, const QVariant &defaultValue = QVariant()) const;
+    bool contains(const QString &key) const;
+    void remove(const QString &key);
+
+    int beginReadArray(const QString &prefix);
+    void beginWriteArray(const QString &prefix, int size = -1);
+    void setArrayIndex(int i);
+    void endArray();
+
+    void beginGroup(const QString &prefix);
+    void endGroup();
+
+    QStringList allKeys() const;
+    QStringList childGroups() const;
+
+    void sync();
+
+    // rename some inner group preserving all it's childer groups and values
+    void renameGroup(const QStringList &pathToGroup,
+                     const QString &newGroupName);
+
+private:    
     ldSettingsWrapper();
+    QString getAbsoluteKey(const QString &key) const;
 
     std::unique_ptr<QSettings> m_settings;
+    mutable QHash<QString, QVariant> m_dirtyCache;
+    mutable QHash<QString, QVariant> m_cache;
+    bool m_isArrayReadWriting = false;
 };
 
 
-inline LDCORESHARED_EXPORT QSettings* ldSettings() {
-    return ldSettingsWrapper::instance()->settings();
+inline LDCORESHARED_EXPORT auto ldSettings() {
+    return ldSettingsWrapper::instance();
 }
 
 #endif // LDSETTINGS_H

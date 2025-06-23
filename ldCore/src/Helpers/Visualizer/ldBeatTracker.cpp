@@ -80,7 +80,11 @@ void ldBeatTracker::add(float f) {
     uint bestPhase = 0;
 
     for (uint stride = m_filterstart; stride < m_filterend; stride+=STRIDE_SKIP) {
+        if (stride >= m_apriori.size()) continue;
+
         for (uint phase = 0; phase < stride; phase++) {
+            if (phase + 2 * stride >= m_history.size()) continue;
+
             float sum = 3*m_history[phase];
             sum += 2*m_history[phase+stride];
             sum += 1*m_history[phase+2*stride];

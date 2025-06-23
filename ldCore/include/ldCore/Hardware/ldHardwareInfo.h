@@ -42,10 +42,11 @@ class LDCORESHARED_EXPORT ldHardwareInfo : public ldPropertyObject
     QML_READONLY_PROPERTY(int, connectionType)
     QML_READONLY_PROPERTY(int, bufferSize)
     QML_READONLY_PROPERTY(int, bufferFree)
-    QML_READONLY_PROPERTY(bool, overTemperature)
-    QML_READONLY_PROPERTY(bool, temperatureWarning)
-    QML_READONLY_PROPERTY(bool, interlockEnabled)
+    QML_READONLY_PROPERTY(int, overTemperature)
+    QML_READONLY_PROPERTY(int, temperatureWarning)
+    QML_READONLY_PROPERTY(int, interlockEnabled)
     QML_READONLY_PROPERTY(int, packetErrors)
+    QML_READONLY_PROPERTY(QString, address)
 
 public:
     ldHardwareInfo(QObject *parent = nullptr);

@@ -54,6 +54,8 @@ private:
     std::unordered_map<int, std::unique_ptr<ldQSound>> m_soundMap;
 
     bool m_enabled = true;
+
+    std::unique_ptr<QThread> m_thread;
 };
 
 #endif // LDSOUNDEFFECTS_H

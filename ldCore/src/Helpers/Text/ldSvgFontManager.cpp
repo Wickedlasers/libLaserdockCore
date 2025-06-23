@@ -18,9 +18,10 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
-#include <ldCore/Helpers/Text/ldSvgFontManager.h>
+#include <QtCore/QtDebug>
 
 #include <ldCore/Helpers/ldEnumHelper.h>
+#include <ldCore/Helpers/Text/ldSvgFontManager.h>
 
 ldSvgFontManager::ldSvgFontManager(QObject *parent)
     : QObject(parent)
@@ -31,9 +32,15 @@ ldSvgFontManager::~ldSvgFontManager()
 {
 }
 
-void ldSvgFontManager::addFont(const ldSvgFont &font)
+void ldSvgFontManager::addFont(const ldSvgFont &font, bool isDefaultFont)
 {
+    if (isDefaultFont) m_defaultFont = font.title();
     m_fonts.push_back(font);
+}
+
+void ldSvgFontManager::insertFont(const ldSvgFont &font, int index)
+{
+    m_fonts.insert(m_fonts.begin() + index, font);
 }
 
 const std::vector<ldSvgFont> &ldSvgFontManager::fonts() const
@@ -44,6 +51,25 @@ const std::vector<ldSvgFont> &ldSvgFontManager::fonts() const
 const ldSvgFont &ldSvgFontManager::font(int index) const
 {
     return m_fonts[index];
+}
+
+ldSvgFont ldSvgFontManager::font(const QString &fontFamily) const
+{
+    auto it = std::find_if(m_fonts.begin(), m_fonts.end(), [fontFamily](const ldSvgFont &font) {
+       return font.title() == fontFamily;
+    });
+
+    if(it != m_fonts.end()) {
+        return *it;
+    } else {
+        qWarning() << __FUNCTION__ << fontFamily << "not found";
+        return ldSvgFont("");
+    }
+}
+
+ldSvgFont ldSvgFontManager::defaultFont() const
+{
+    return (m_fonts.size()==0) ? ldSvgFont("") : m_defaultFont.isEmpty() ? m_fonts[0] : font(m_defaultFont);
 }
 
 QStringList ldSvgFontManager::titles(bool excludeCounter)
@@ -70,6 +96,16 @@ int ldSvgFontManager::counterFontIndex() const
         return it - m_fonts.begin();
     else
         return -1;
+}
+
+size_t ldSvgFontManager::internalFontsCount()
+{
+    return m_internalFontsCount;
+}
+
+void ldSvgFontManager::endInternalFonts()
+{
+    m_internalFontsCount = m_fonts.size();
 }
 
 

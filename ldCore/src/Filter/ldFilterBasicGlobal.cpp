@@ -37,6 +37,7 @@ ldFilterBasicGlobal::ldFilterBasicGlobal()
     , m_soundLevelFilter(new ldSoundLevelFilter())
     , m_tracerFilter(new ldTracerFilter())
 {
+    m_strobeFilter->set_enabled(false);
 }
 
 ldFilterBasicGlobal::~ldFilterBasicGlobal()
@@ -65,7 +66,7 @@ void ldFilterBasicGlobal::process(ldVertex &v)
 
     m_colorFaderFilter->processFilter(v);
 
-    if (m_strobeFilter->m_enabled) m_strobeFilter->processFilter(v);
+    if (m_strobeFilter->get_enabled()) m_strobeFilter->processFilter(v);
 }
 
 ldColorCurveFilter *ldFilterBasicGlobal::colorCurveFilter() const

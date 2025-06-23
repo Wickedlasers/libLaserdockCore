@@ -39,7 +39,6 @@ public:
 
 signals:
     // 2 options to process buffer further. Device should send only one of them
-    void bufferUpdated(float *convertedBuffer, int framesm, int sampleRate);
     void soundUpdated(const char * data, qint64 len);
 };
 

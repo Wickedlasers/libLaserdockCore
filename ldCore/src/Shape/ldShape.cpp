@@ -54,6 +54,8 @@ ldShape::ldShape(void)
 
     updateMatrix();
     Q_ASSERT_X(m_renderer != NULL,"ldShape", "You must set a global renderer of ldShape class before build of ldShape");
+
+    m_pShaderManager->setLibol(m_renderer->getLibol()); // needed for shader config
 }
 
 /*!
@@ -70,9 +72,12 @@ void ldShape::setGlobalRenderer(ldRendererOpenlase *renderer)
 
 void ldShape::setRenderer(ldRendererOpenlase *renderer)
 {
-    Q_ASSERT_X(renderer != NULL,"ldShape", "You can't set NULL to a renderer of ldShape.");
+    if(renderer == nullptr) {
+        renderer = s_globalRender;
+    }
 
     m_renderer = renderer;
+    m_pShaderManager->setLibol(m_renderer->getLibol()); // needed for shader config
 }
 
 ldRendererOpenlase* ldShape::getRenderer()
@@ -355,7 +360,7 @@ void ldShape::visit()
 /*!
  * \brief Gets current VertexPreShader.
  */
-ldShader* ldShape::getVertexPreShader()
+ldShader* ldShape::getVertexPreShader() const
 {
     return m_pVertexPreShader;
 }
@@ -371,7 +376,7 @@ void ldShape::setVertexPreShader(ldShader *pShader)
 /*!
  * \brief Gets current VertextShader
  */
-ldShader* ldShape::getVertextShader()
+ldShader* ldShape::getVertextShader() const
 {
     return m_pVertextShader;
 }
@@ -387,7 +392,7 @@ void ldShape::setVertextShader(ldShader *pShader)
 /*!
  * \brief Gets current PixelShader
  */
-ldShader* ldShape::getPixelShader()
+ldShader* ldShape::getPixelShader() const
 {
     return m_pPixelShader;
 }

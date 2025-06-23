@@ -18,11 +18,20 @@
     along with libLaserdockCore.  If not, see <https://www.gnu.org/licenses/>.
 **/
 
+#include <QtCore/QLoggingCategory>
+
 #include "ldCore/Visualizations/ldVisualizer.h"
 
 #include "ldCore/ldCore.h"
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
 #include "ldCore/Visualizations/ldVisualizationTask.h"
+
+namespace {
+    Q_LOGGING_CATEGORY(visD, "ld.vis")
+}
+
+#define LD_CONDITIONAL_MUTEX_LOCKER \
+    QMutexLocker lock(m_isUseMutex ? &m_mutex : nullptr)
 
 /*!
  * \class ldVisualizer
@@ -36,6 +45,9 @@
  */
 ldVisualizer::ldVisualizer(QObject *parent)
     : QObject(parent)
+    , m_isVisActive(false)
+    , m_isVisPaused(false)
+    , m_isVisRefreshRequired(false)
 {
     m_musicManager = ldCore::instance()->musicManager();
 
@@ -62,7 +74,22 @@ QString ldVisualizer::visualizerName() const
     return "";
 }
 
+ldVisualizer *ldVisualizer::clone() const
+{
+    qWarning() << "Clone is not implemented for " << this;
+    return new ldVisualizer();
+}
+
+void ldVisualizer::setHwBatch(ldHardwareBatch *hwBatch)
+{
+    m_hwBatch = hwBatch;
+}
+
 void ldVisualizer::start() {
+    LD_CONDITIONAL_MUTEX_LOCKER;
+
+    qCDebug(visD) << this << visualizerName() << __FUNCTION__;
+
     // set local rate if available
     if(m_rate != 0) {
         m_renderer->setRate(m_rate);
@@ -73,28 +100,76 @@ void ldVisualizer::start() {
          m_renderer->setRate(ldAbstractRenderer::DEFAULT_RATE);
     }
 
-    // set default quality values because some old visualizers don't do it
-    // good practice is to set quality params in onShouldStart()
-    m_renderer->setRenderParamsQuality();
+    if(!get_isVisPaused()) {
+        // set default quality values because some old visualizers don't do it
+        // good practice is to set quality params in onShouldStart()
+        m_renderer->setRenderParamsQuality();
+    }
 
     onShouldStart();
 
-    m_isVisActive = true;
-    m_isVisPaused = false;
+    update_isVisActive(true);
+    update_isVisPaused(false);
+}
+
+void ldVisualizer::start(double offset, quint64 durationMs) {
+    LD_CONDITIONAL_MUTEX_LOCKER;
+
+    qCDebug(visD) << this << visualizerName() << "offset =" << offset << __FUNCTION__;
+
+    // set local rate if available
+    if(m_rate != 0) {
+        m_renderer->setRate(m_rate);
+    } else {
+        // having this will prevent renderer rate being out of sync if a user
+        // creates a visualizer and incorrectly uses m_renderer->setRate() instead of correctly
+        // setting m_rate in the class init.
+        m_renderer->setRate(ldAbstractRenderer::DEFAULT_RATE);
+    }
+
+    if(!get_isVisPaused()) {
+        // set default quality values because some old visualizers don't do it
+        // good practice is to set quality params in onShouldStart()
+        m_renderer->setRenderParamsQuality();
+    }
+
+    onShouldStart(offset,durationMs);
+
+    update_isVisActive(true);
+    update_isVisPaused(false);
 }
 
 void ldVisualizer::pause()
 {
+    LD_CONDITIONAL_MUTEX_LOCKER;
+
+    qCDebug(visD) << this << visualizerName() << __FUNCTION__;
+
     onShouldPause();
 
-    m_isVisPaused = true;
+    update_isVisPaused(true);
+}
+
+void ldVisualizer::pause(double offset, quint64 durationMs)
+{
+    LD_CONDITIONAL_MUTEX_LOCKER;
+
+    qCDebug(visD) << this << visualizerName() << "offset =" << offset  << __FUNCTION__;
+
+    onShouldPause(offset,durationMs);
+
+    update_isVisPaused(true);
 }
 
 void ldVisualizer::stop() {
+    LD_CONDITIONAL_MUTEX_LOCKER;
+
+    qCDebug(visD) << this << visualizerName() << __FUNCTION__;
+
     onShouldStop();
 
-    m_isVisActive = false;
-    m_isVisPaused = false;
+    update_isVisActive(false);
+    update_isVisPaused(false);
 
     // restore global rate
     if(m_rate != 0) {
@@ -134,6 +209,8 @@ void ldVisualizer::onShouldStop()
  */
 void ldVisualizer::updateWith(ldSoundData *pSoundData, float delta)
 {
+    LD_CONDITIONAL_MUTEX_LOCKER;
+
     if (pSoundData == NULL)
     {
         clearBuffer();
@@ -141,16 +218,6 @@ void ldVisualizer::updateWith(ldSoundData *pSoundData, float delta)
     }
 
     onUpdate(pSoundData, delta);
-}
-
-bool ldVisualizer::isVisActive() const
-{
-    return m_isVisActive;
-}
-
-bool ldVisualizer::isVisPaused() const
-{
-    return m_isVisPaused;
 }
 
 void ldVisualizer::draw()

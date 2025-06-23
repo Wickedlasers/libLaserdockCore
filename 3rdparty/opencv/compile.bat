@@ -1,0 +1,3 @@
+@rem set PATH=%PATH%;d:\Dev\Qt\5.13.2\msvc2017\bin
+
+C:\Qt\Tools\CMake_64\bin\cmake.exe -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=Release -DWITH_QT=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=c\wl\libs\opencv\install_2019_x64 -DBUILD_opencv_dnn=OFF  -DBUILD_opencv_ffmpeg=OFF  -DBUILD_opencv_flann=OFF -DBUILD_opencv_java_bindings_generator=OFF -DBUILD_opencv_python_bindings_generator=OFF -DBUILD_opencv_gapi=OFF -DBUILD_opencv_ml=OFF -DBUILD_opencv_objdetect=OFF -DBUILD_opencv_photo=OFF -DBUILD_opencv_ts=OFF -DBUILD_opencv_stitching=OFF -DBUILD_opencv_video=OFF -DWITH_FFMPEG=OFF ..

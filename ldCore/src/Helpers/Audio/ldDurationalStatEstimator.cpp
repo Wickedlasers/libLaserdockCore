@@ -102,11 +102,11 @@ void ldPitchTracker::update(ldSoundData* psd, float factor, bool transition, flo
     for (int i = 0; i < n24; i++) s[i] /= sum2;
 
     int maxi = 0;
-    float sum = 0, total = 0;
+    float sum = 0/*, total = 0*/;
     for (int i = 0; i < n24; i++) {
         if (s[i] > s[maxi]) maxi = i;
         sum += s[i];
-        total += 1;
+//        total += 1;
     }
     maxChroma = (float) maxi/n24;
 

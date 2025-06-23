@@ -28,6 +28,7 @@
 #include <ldCore/Utilities/ldCompressedSample.h>
 #include <ldCore/Utilities/ldVertexFrame.h>
 
+class ldHardwareBatch;
 class ldHardwareFilter;
 class ldHardwareInfo;
 
@@ -45,13 +46,20 @@ public:
     virtual QString id() const = 0;
     virtual QString hwType() const = 0;
     virtual QString address() const = 0;
-    Status status();
+
+    virtual int get_full_count() = 0;
+    virtual int getDacRate() const = 0;
+    virtual int getMaximumDacRate() const = 0;
+    virtual void setDacRate(int rate) const = 0;
+    virtual void setDacBufferTHold(int level) const = 0;
+
+    Status status() const;
 
     bool isEnabled() const;
     void setEnabled(bool en);
 
     bool isActive() const;
-    void setActive(bool active);
+    virtual void setActive(bool active);
 
     void setFrame(uint index, size_t count);
     void setSample(uint index, const ldVertex &sample);
@@ -59,23 +67,33 @@ public:
     void setFilter(ldHardwareFilter *filter);
     ldHardwareFilter *filter() const;
 
+    void setBatch(ldHardwareBatch *batch);
+    ldHardwareBatch *batch() const;
+
     ldHardwareInfo* info() const;
 
+    bool isActiveAndInitialized() const;
+
+    virtual bool send_samples(uint startIndex, uint count) = 0;
+
 signals:
+    void batchChanged(ldHardwareBatch *batch);
     void statusChanged(ldHardware::Status status);
+    void enabledChanged(bool en);
 
 protected:
     explicit ldHardware(QObject *parent = nullptr);
 
     void setStatus(Status status);
 
-    bool m_enabled {true};
+    std::atomic<bool> m_enabled {true};
     bool m_isActive {false};
     ldHardwareInfo *m_info{nullptr};
 
     std::vector<ldCompressedSample> m_compressed_buffer;
 
 private:
+    ldHardwareBatch *m_batch{nullptr};
     ldHardwareFilter *m_filter{nullptr};
     Status m_status{Status::UNKNOWN};
 

@@ -56,13 +56,18 @@ public:
     virtual QString hwType() const override;
     virtual QString address() const override;
 
-    void send_security_requst(QByteArray request);
-    void get_security_response(QByteArray &response);
+    virtual int getDacRate() const override;
+    virtual int getMaximumDacRate() const override;
+    virtual void setDacRate(int rate) const override;
+    virtual void setDacBufferTHold(int level) const override;
+
+    bool send_security_requst(QByteArray request);
+    bool get_security_response(QByteArray &response);
     
     struct device_params & params();
     
-    bool send_samples(uint startIndex, uint count);
-	int get_full_count();
+    virtual bool send_samples(uint startIndex, uint count) override;
+    virtual int get_full_count() override;
         
 private:
     QScopedPointer<ldUSBHardwarePrivate> d_ptr;

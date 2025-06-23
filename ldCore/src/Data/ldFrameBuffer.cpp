@@ -27,11 +27,13 @@
 #include <ldCore/Filter/ldFilterManager.h>
 #include <ldCore/Filter/ldHardwareFilter.h>
 #include <ldCore/Hardware/ldHardware.h>
+#include <ldCore/Hardware/ldHardwareBatch.h>
 #include <ldCore/Hardware/ldHardwareManager.h>
 #include <ldCore/Utilities/ldVertexFrame.h>
 
-ldFrameBuffer::ldFrameBuffer(QObject *parent)
+ldFrameBuffer::ldFrameBuffer(ldHardwareBatch *hardwareBatch, QObject *parent)
     : QObject(parent)
+    , m_hardwareBatch(hardwareBatch)
 {
     m_buffer.resize(FRAMEBUFFER_CAPACITY);
 }
@@ -48,7 +50,7 @@ void ldFrameBuffer::push(const ldVertex& val)
 
     m_buffer[m_fill] = val;
 
-    for(ldHardware *hardware : ldCore::instance()->hardwareManager()->devices()) {
+    for(ldHardware *hardware : m_hardwareBatch->devices()) {
         ldHardwareFilter *hwFilter = hardware->filter();
         if (hwFilter) {
             ldVertex dataVal = val;
@@ -69,7 +71,7 @@ void ldFrameBuffer::pushFrame(ldVertexFrame &frame)
     // frame size could be different on each device so we should make all buffers the same after processing
     size_t maxFrameSize = 0;
 
-    for(ldHardware *hardware : ldCore::instance()->hardwareManager()->devices()) {
+    for(ldHardware *hardware : m_hardwareBatch->devices()) {
         ldHardwareFilter *hwFilter = hardware->filter();
         if (hwFilter) {
             hwFilter->processFrame(frame);
@@ -77,7 +79,7 @@ void ldFrameBuffer::pushFrame(ldVertexFrame &frame)
         }
     }
     // resize all buffers to the biggest one
-    for(ldHardware *hardware : ldCore::instance()->hardwareManager()->devices()) {
+    for(ldHardware *hardware : m_hardwareBatch->devices()) {
         ldHardwareFilter *hwFilter = hardware->filter();
         if (hwFilter) hwFilter->lastFrame().resizeSmart(maxFrameSize);
     }
@@ -101,7 +103,7 @@ void ldFrameBuffer::pushFrame(ldVertexFrame &frame)
     // memcpy for faster processing
     memcpy(&m_buffer[m_fill], &(frame[0]), sizeToPush * sizeof (ldVertex));
 
-    for(ldHardware *hardware : ldCore::instance()->hardwareManager()->devices())
+    for(ldHardware *hardware : m_hardwareBatch->devices())
         hardware->setFrame(m_fill, sizeToPush);
 
 

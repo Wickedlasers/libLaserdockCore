@@ -31,10 +31,11 @@ class ldSimulatorRenderer;
 class LDCORESHARED_EXPORT ldSimulatorItem : public QQuickItem
 {
     Q_OBJECT
-    QML_WRITABLE_PROPERTY(bool, autostart)
     QML_WRITABLE_PROPERTY(QColor, clearColor)
 
-    QML_READONLY_PROPERTY(bool, isActive)
+    QML_WRITABLE_PROPERTY(bool, isActive)
+
+    QML_WRITABLE_PROPERTY(bool, isActiveRendering)
 
 public:
     static void registerMetatypes();
@@ -46,21 +47,27 @@ public slots:
     void start();
     void stop();
 
+#if QT_VERSION < 0x060000
     void paint();
     void update();
+#endif
 
     void sync();
+#if QT_VERSION < 0x060000
     void init();
+#endif
     void cleanup();
 
 private slots:
     void handleWindowChanged(QQuickWindow *win);
-    void onVisibleChanged();
-
+    void onActiveRenderingChanged(bool isActiveRendering);
+    void onIsActiveChanged(bool isActive);
 private:
-    QScopedPointer<ldSimulatorRenderer> m_renderer;
+    void activateRendering();
+    void deactivateRendering();
+    void setGlViewport();
 
-    qreal m_devicePixelRatio = 1;
+    QScopedPointer<ldSimulatorRenderer> m_renderer;
 };
 
 #endif // LDSIMULATORITEM_H

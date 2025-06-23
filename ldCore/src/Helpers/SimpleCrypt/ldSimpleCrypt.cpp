@@ -16,6 +16,31 @@ ldSimpleCrypt *ldSimpleCrypt::instance()
     return &instance;
 }
 
+QString ldSimpleCrypt::completeBaseName(const QString &path)
+{
+    QString fileName = path;
+    if(fileName.endsWith(LDS_EXTENSION, Qt::CaseInsensitive)) {
+        // trim security extension
+        fileName = fileName.left(fileName.length() - LDS_EXTENSION.length());
+    }
+
+    QFileInfo newFileInfo(fileName);
+    return newFileInfo.completeBaseName();
+}
+
+QString ldSimpleCrypt::suffix(const QString &path)
+{
+    QString fileName = path;
+    if(fileName.endsWith(LDS_EXTENSION, Qt::CaseInsensitive)) {
+        // trim security extension
+        fileName = fileName.left(fileName.length() - LDS_EXTENSION.length());
+    }
+
+    QFileInfo newFileInfo(fileName);
+    return newFileInfo.suffix();
+
+}
+
 void ldSimpleCrypt::setKey(quint64 key)
 {
     m_crypto->setKey(key);
