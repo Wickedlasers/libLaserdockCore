@@ -71,8 +71,6 @@ public:
     void drawLaserGeometry(QOpenGLShaderProgram *program);
 #endif
 
-    void fillGeometry(QSGGeometry *geometry, const QSizeF &itemSize) const;
-
     /** Add simulator data */
     void pushVertexData(ldVertex * data, unsigned int size, bool isLastPortion);
     /** inform simulator frame has completed */
@@ -83,6 +81,11 @@ public:
 
     const std::vector<ldVertex> &buffer() const;
     uint bufferSize() const;
+
+    void set3dMode(bool is3dMode);
+
+    int currentFps() const;
+    void setCurrentFps(int fps);
 
 signals:
     void bufferUpdated();
@@ -106,6 +109,8 @@ private:
     std::unique_ptr<ldSimulatorGrid> m_grid;
 
     bool m_is3dMode{false};
+
+    int m_currentFps = -1;
 };
 
 Q_DECLARE_METATYPE(ldSimulatorEngine*)

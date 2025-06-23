@@ -241,12 +241,6 @@ void ldDeadzoneFilter::resetToDefault()
     m_selectedIndex = 0;
 }
 
-void ldDeadzoneFilter::setReverse(bool reverse)
-{
-    QMutexLocker lock(&m_mutex);
-    m_reverse = reverse;
-}
-
 void ldDeadzoneFilter::setEnabled(bool enabled)
 {
     QMutexLocker lock(&m_mutex);
@@ -278,23 +272,34 @@ void ldDeadzoneFilter::attenuate(ldVertex& v) const {
 
 bool ldDeadzoneFilter::isOn(float x, float y) const
 {
-    bool isOut = true;
+    // we now allow red and green zones at the same time (inverted bool)
+    // so we need to check first if there is any red or green zone for a minimal configuration
+    // ie
+    // if there are only red zones, we consider the complementary as green
+    // if there are only green zones, we consider the complementary as red
+    // if there is at least one green and one red we stick to these zones, and if two zones overlap, red is a priority
+    int green_zone_count = 0;
     for(const Deadzone &dz : m_deadzones) {
-        if (dz.shapeIndex() == 0) {
-            // could call dz.contains but surely a bit quicker like this
-            if(dz.visRect().contains(x, y)) {
-                isOut = false;
-                break;
-            }
-        } else {
-            if(dz.contains(x, y)) {
-                isOut = false;
-                break;
-            }
+        if (!dz.inverted()) {
+            green_zone_count++;
         }
     }
-    if(m_reverse) isOut = !isOut;
-    return isOut;
+    //
+    bool isLaserOn = false;
+    // if only red zones..
+    if(green_zone_count == 0) isLaserOn = true;
+    //
+    for(const Deadzone &dz : m_deadzones) {
+        // rectangle case
+        // could call dz.contains but surely a bit quicker like this
+        if ((dz.shapeIndex() == 0 && dz.visRect().contains(x, y))
+            // other shapes
+            || dz.contains(x, y) ) {
+            isLaserOn = !dz.inverted();
+            if(!isLaserOn) break;
+        }
+    }
+    return isLaserOn;
 }
 
 ldVec2 ldDeadzoneFilter::getBorderPoint(const ldVertex &lastV, const ldVertex &v, bool isLastOn) const
@@ -363,8 +368,9 @@ void ldDeadzoneFilter::pinToBorder(ldVertex &v)
     }
 }
 
-ldDeadzoneFilter::Deadzone::Deadzone(QRectF rect, float attenuation, int shapeIndex)
-    : m_attenuation(attenuation)
+ldDeadzoneFilter::Deadzone::Deadzone(QRectF rect, float attenuation, int shapeIndex, bool inverted)
+    : m_inverted(inverted)
+    , m_attenuation(attenuation)
     , m_shapeIndex(shapeIndex)
     , m_rect(rect)
 {
@@ -427,10 +433,19 @@ void ldDeadzoneFilter::Deadzone::setShapeIndex(int shapeIndex)
     updateVisRect();
 }
 
-
 int ldDeadzoneFilter::Deadzone::shapeIndex() const
 {
     return m_shapeIndex;
+}
+
+void ldDeadzoneFilter::Deadzone::setInverted(bool value)
+{
+    m_inverted = value;
+}
+
+bool ldDeadzoneFilter::Deadzone::inverted() const
+{
+    return m_inverted;
 }
 
 void ldDeadzoneFilter::Deadzone::updateVisRect()

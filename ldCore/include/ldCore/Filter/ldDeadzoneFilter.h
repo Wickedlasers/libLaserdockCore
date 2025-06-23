@@ -61,7 +61,7 @@ public:
     {
     public:
 
-        Deadzone(QRectF rect = QRectF(), float attenuation = 1.f, int shapeIndex = 0);
+        Deadzone(QRectF rect = QRectF(), float attenuation = 1.f, int shapeIndex = 0, bool inverted = false);
 
         QRectF rect() const;
         /** Get rect in Vertex coordinates */
@@ -81,6 +81,9 @@ public:
         void setShapeIndex(int shapeIndex);
         int shapeIndex() const;
 
+        void setInverted(bool value);
+        bool inverted() const;
+
     private:
         void updateVisRect();
         void updateShapeRectangle();
@@ -89,6 +92,7 @@ public:
         void updateShapeCorner(int p_cornerCase);
         void updateShapeDiamond();
 
+        bool m_inverted = false;
         float m_attenuation = 1.0f; // 1 - full block, 0 - no block
         int m_shapeIndex = 0; // 0 rectangle 1 circle
         QRectF m_rect; // pos -1..1, size 0..1
@@ -126,9 +130,6 @@ public:
     /** Creates default deadzone in the middle of screen */
     void resetToDefault();
 
-    /** in/out zone switch */
-    void setReverse(bool reverse);
-
     /** Enable filter flag */
     void setEnabled(bool enabled);
     void setBlocked(bool blocked);
@@ -149,7 +150,6 @@ private:
     int m_selectedIndex = 0;
 
     /** in/out filter control */
-    bool m_reverse = false;
     bool m_enabled = false;
     bool m_blocked = false;
 

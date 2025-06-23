@@ -52,6 +52,9 @@ class LDCORESHARED_EXPORT ldDataDispatcherManager : public ldPropertyObject
     Q_OBJECT
 
     QML_READONLY_PROPERTY(int, count)
+
+    QML_READONLY_PROPERTY(QList<int>, fpsList)
+
 public:
     explicit ldDataDispatcherManager(QObject *parent = nullptr);
 
@@ -73,10 +76,11 @@ signals:
     void dataDispatcherCreated(int index);
     void dataDispatcherAboutToDelete(int index);
 
-signals:
     void requestDdActivation(int index);
 
 private:
+    void updateFpsList();
+
     std::vector<ldDataDispatcherInstance*> m_dataDispatcherInstances;
 };
 

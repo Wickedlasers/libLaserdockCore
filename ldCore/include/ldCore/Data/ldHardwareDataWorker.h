@@ -53,7 +53,7 @@ public slots:
     virtual void setActive(bool active) override;
     virtual void setActiveTransfer(bool active) override;
 
-    /** Flag to use this worker to fill sumulator buffer */
+    /** Flag to use this worker to fill simulator buffer */
     void setSimulatorEnabled(bool enabled);
 
 private slots:

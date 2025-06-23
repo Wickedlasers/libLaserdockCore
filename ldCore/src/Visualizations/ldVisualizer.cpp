@@ -74,6 +74,11 @@ QString ldVisualizer::visualizerName() const
     return "";
 }
 
+QString ldVisualizer::info() const
+{
+    return "";
+}
+
 ldVisualizer *ldVisualizer::clone() const
 {
     qWarning() << "Clone is not implemented for " << this;

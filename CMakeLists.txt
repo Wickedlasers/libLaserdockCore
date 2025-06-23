@@ -10,11 +10,13 @@ option(LD_ANDROID_BUILD "Build for Android" OFF)
 
 # @deprecated Qt5 flag, Qt6 don't need it
 option(LD_IOS_BUILD "Build for iOS" OFF)
+option(LD_ENABLE_QT5COMPAT "Enable Qt5Compat module" ON)
 
 # main app configuration
 option(LD_CORE_BUILD_EXAMPLE "Build Example" ON)
 option(LD_CORE_BUILD_TESTS "Build Tests" OFF)
 # library flags
+option(LD_CORE_ENABLE_GAMES "Enable Games" OFF)
 option(LD_CORE_ENABLE_BOX2D "Enable Box2D" OFF)
 option(LD_CORE_ENABLE_LIBLZR "Enable liblzr" OFF)
 option(LD_CORE_ENABLE_LUAGAME "Enable lua game module" OFF)
@@ -24,8 +26,12 @@ option(LD_CORE_ENABLE_QUAZIP "Support of resources extraction (android)" OFF)
 # Android resources extraction
 option(LD_CORE_RESOURCES_EXTRACTOR "Support of resources extraction (android)" OFF)
 
-message(STATUS "LD_CORE_BUILD_EXAMPLE ${LD_CORE_BUILD_EXAMPLE}")
-message(STATUS "LD_CORE_FORCE_QGAMEPAD ${LD_CORE_FORCE_QGAMEPAD}")
+message(STATUS "LD_CORE_BUILD_EXAMPLE ${LD_CORE_ENABLE_GAMES}")
+message(STATUS "LD_CORE_ENABLE_GAMES ${LD_CORE_BUILD_EXAMPLE}")
+
+if(LD_CORE_ENABLE_GAMES)
+    message(STATUS "LD_CORE_FORCE_QGAMEPAD ${LD_CORE_FORCE_QGAMEPAD}")
+endif()
 
 include(CMakeDependentOption)
 

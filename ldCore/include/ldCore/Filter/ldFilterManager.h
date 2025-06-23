@@ -57,7 +57,8 @@ public:
 
     void setFrameModes(int frameModes);
 
-    void processFrame(ldVertexFrame &frame);
+    void processFrame1(ldVertexFrame &frame);
+    void processFrame2(ldVertexFrame &frame);
 
     void resetFilters();
 

@@ -91,20 +91,11 @@ void ldSimulatorEngine::drawLaserGeometry(QOpenGLShaderProgram *program)
 {
     QMutexLocker lock(&m_mutex);
     drawBuffer(program, vbuffer,vbuffer_size);
-    if(m_grid->isEnabled())
-            drawBuffer(program, m_grid->buffer(), m_grid->buffer().size());
-
+    // if(m_grid->isEnabled())
+    //     drawBuffer(program, m_grid->buffer(), m_grid->buffer().size());
 }
 
 #endif
-
-void ldSimulatorEngine::fillGeometry(QSGGeometry *geometry, const QSizeF &itemSize) const
-{
-    QMutexLocker lock(&m_mutex);
-    fillGeometryFromVertex(geometry, itemSize, vbuffer,vbuffer_size);
-    if(m_grid->isEnabled())
-            fillGeometryFromVertex(geometry, itemSize, m_grid->buffer(), m_grid->buffer().size());
-}
 
 void ldSimulatorEngine::pushVertexData(ldVertex * data, unsigned int size, bool isLastPortion) {
 
@@ -152,6 +143,24 @@ const std::vector<ldVertex> &ldSimulatorEngine::buffer() const
 uint ldSimulatorEngine::bufferSize() const
 {
     return vbuffer_size;
+}
+
+void ldSimulatorEngine::set3dMode(bool is3dMode)
+{
+    if(is3dMode)
+        m_processor->setMinDistance(0.02f);
+    else
+        m_processor->setMinDistance(0.01f);
+}
+
+int ldSimulatorEngine::currentFps() const
+{
+    return m_currentFps;
+}
+
+void ldSimulatorEngine::setCurrentFps(int fps)
+{
+    m_currentFps = fps;
 }
 
 #ifdef LD_CORE_USE_OPENGL

@@ -99,6 +99,16 @@ bool ldRendererOpenlase::isRendererPaused() const
     return m_isRendererPaused;
 }
 
+ldFilter *ldRendererOpenlase::filter() const
+{
+    return m_filter;
+}
+
+void ldRendererOpenlase::setFilter(ldFilter *filter)
+{
+    m_filter = filter;
+}
+
 void ldRendererOpenlase::renderFrame(ldFrameBuffer * buffer, int max_fps, bool is3d, bool isVisPaused)
 {
     ldCore::instance()->filterManager()->lock();
@@ -475,6 +485,8 @@ void ldRendererOpenlase::createNewFrame(int max_fps, bool is3d,bool skipFilters)
     if (!skipFilters) {
         // filter openlase result
         m_filterManager->resetFilters();
+        if(m_filter)
+            m_filter->resetFilter();
         m_filterManager->setFrameModes(m_frameModes);
 
         bool mode_disable_rotate = m_filterManager->dataFilter()->frameModes & FRAME_MODE_DISABLE_ROTATION;
@@ -483,6 +495,12 @@ void ldRendererOpenlase::createNewFrame(int max_fps, bool is3d,bool skipFilters)
                 m_filterManager->rotate3dFilter()->processFilter(frameV);
         }
 
-        m_filterManager->processFrame(m_frame);
+        m_filterManager->processFrame1(m_frame);
+
+        if(m_filter)
+            for(uint i = 0; i < m_frame.size(); i++)
+                m_filter->processFilter(m_frame[i]);
+
+        m_filterManager->processFrame2(m_frame);
     }
 }

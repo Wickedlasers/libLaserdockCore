@@ -453,6 +453,39 @@ void ldShiftFilter::process(ldVertex &v)
     v.y() += fsy;
 }
 
+// ---------- ldZoomFilter ----------
+
+ldZoomFilter::ldZoomFilter()
+    : ldFilter()
+    , LD_INIT_MIN_MAX_PROPERTY(xScale, 1, 0.01f, 10.f)
+    , LD_INIT_MIN_MAX_PROPERTY(yScale, 1, 0.01f, 10.f)
+{
+
+}
+
+void ldZoomFilter::process(ldVertex &v)
+{
+    v.x() *= m_xScale;
+    v.y() *= m_yScale;
+}
+
+// ---------- ldPosFilter ----------
+
+ldPosFilter::ldPosFilter()
+    : ldFilter()
+    , LD_INIT_MIN_MAX_PROPERTY(x, 0, -1.f, 1.f)
+    , LD_INIT_MIN_MAX_PROPERTY(y, 0, -1.f, 1.f)
+{
+
+}
+
+void ldPosFilter::process(ldVertex &v)
+{
+    v.x() += m_x*2.f;
+    v.y() += m_y*2.f;
+}
+
+
 // ---------- ldTtlFilter ----------
 
 void ldTtlFilter::process(ldVertex &v)

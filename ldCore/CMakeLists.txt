@@ -95,13 +95,6 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Filter/ldProjectionUtil.h
         ${SRCDIR}/Filter/ldSoundLevelFilter.cpp
         ${INCDIR}/Filter/ldSoundLevelFilter.h
-        #Games
-        ${SRCDIR}/Games/ldAbstractGame.cpp
-        ${INCDIR}/Games/ldAbstractGame.h
-        ${SRCDIR}/Games/ldGamepad.cpp
-        ${INCDIR}/Games/ldGamepad.h
-        ${SRCDIR}/Games/ldGamepadCtrl.cpp
-        ${INCDIR}/Games/ldGamepadCtrl.h
         #Hardware
         ${SRCDIR}/Hardware/ldAbstractHardwareManager.cpp
         ${INCDIR}/Hardware/ldAbstractHardwareManager.h
@@ -355,18 +348,6 @@ target_sources(${PROJECT_NAME} PRIVATE
         ${INCDIR}/Helpers/Visualizer/ldLineGraph.h
         ${SRCDIR}/Helpers/Visualizer/ldVisualizerHelper.cpp
         ${INCDIR}/Helpers/Visualizer/ldVisualizerHelper.h
-        ${SRCDIR}/Visualizations/Visualizers/Games/ldAbstractGameVisualizer.cpp
-        ${INCDIR}/Visualizations/Visualizers/Games/ldAbstractGameVisualizer.h
-        ${SRCDIR}/Visualizations/Visualizers/Games/Core/ldGameObject.cpp
-        ${INCDIR}/Visualizations/Visualizers/Games/Core/ldGameObject.h
-        ${SRCDIR}/Visualizations/Visualizers/Games/Core/ldGameExplosion.cpp
-        ${INCDIR}/Visualizations/Visualizers/Games/Core/ldGameExplosion.h
-        ${SRCDIR}/Visualizations/Visualizers/Games/Core/ldGameFirework.cpp
-        ${INCDIR}/Visualizations/Visualizers/Games/Core/ldGameFirework.h
-        ${SRCDIR}/Visualizations/Visualizers/Games/Core/ldGameSmoke.cpp
-        ${INCDIR}/Visualizations/Visualizers/Games/Core/ldGameSmoke.h
-        ${SRCDIR}/Visualizations/Visualizers/Games/Core/ldGameSparkle.cpp
-        ${INCDIR}/Visualizations/Visualizers/Games/Core/ldGameSparkle.h
         #Resources
         res/laserdock.qrc
         )
@@ -426,40 +407,6 @@ if(LD_CORE_USE_OPENGL)
     target_compile_definitions(${PROJECT_NAME} PUBLIC LD_CORE_USE_OPENGL)
 endif()
 
-set(QT_GAMEPAD_MODULE_NAME Gamepad)
-if(QT_VERSION_MAJOR EQUAL 6)
-    set(QT_GAMEPAD_MODULE_NAME GamepadLegacy)
-endif()
-
-find_package(Qt${QT_VERSION_MAJOR} ${QT_MIN_VERSION} QUIET COMPONENTS ${QT_GAMEPAD_MODULE_NAME})
-if(Qt${QT_VERSION_MAJOR}_FOUND)
-    target_link_libraries(${PROJECT_NAME} PUBLIC Qt${QT_VERSION_MAJOR}::${QT_GAMEPAD_MODULE_NAME}) # should be private but otherwise androiddeployqt doesn't work propely
-    target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_ENABLE_QGAMEPAD)
-    message(STATUS "LD_CORE_ENABLE_QGAMEPAD: ${LD_CORE_ENABLE_QGAMEPAD}")
-
-    # for Qt6 on mac we need to link SDL2 is loaded for prod builds
-    if(QT_VERSION_MAJOR EQUAL 6)
-        if(APPLE AND NOT LD_IOS_BUILD)
-            if(LD_CORE_FORCE_QGAMEPAD)
-                set(SDL2_FIND_PARAMS REQUIRED)
-            else()
-                set(SDL2_FIND_PARAMS QUIET)
-            endif()
-
-            find_package(SDL2 ${SDL2_FIND_PARAMS})
-            if(SDL2_FOUND)
-                message(STATUS "SDL2_FOUND: ${SDL2_LIBRARIES}")
-                target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
-            endif()
-        endif()
-    endif()
-elseif(LD_CORE_FORCE_QGAMEPAD)
-    message(FATAL_ERROR "LaserOS is a public build and no QtGamepad moduse is found ${QT_VERSION_MAJOR} ${QT_MIN_VERSION} ${QT_GAMEPAD_MODULE_NAME}")
-else()
-    message(WARNING "QGamepad support is disabled ${QT_VERSION_MAJOR} ${QT_MIN_VERSION} ${QT_GAMEPAD_MODULE_NAME}")
-endif()
-
-
 # -------------  3RDPARTY -----------
 
 # public
@@ -488,6 +435,69 @@ if(LASERDOCKLIB_USB_SUPPORT)
         )
 
  endif()
+
+
+# ------------  LD_CORE_ENABLE_GAMES -------------
+
+if(LD_CORE_ENABLE_GAMES)
+    target_sources(${PROJECT_NAME} PRIVATE
+        ${SRCDIR}/Games/ldAbstractGame.cpp
+        ${INCDIR}/Games/ldAbstractGame.h
+        ${SRCDIR}/Games/ldGamepad.cpp
+        ${INCDIR}/Games/ldGamepad.h
+        ${SRCDIR}/Games/ldGamepadCtrl.cpp
+        ${INCDIR}/Games/ldGamepadCtrl.h
+        ${SRCDIR}/Visualizations/Visualizers/Games/ldAbstractGameVisualizer.cpp
+        ${INCDIR}/Visualizations/Visualizers/Games/ldAbstractGameVisualizer.h
+        ${SRCDIR}/Visualizations/Visualizers/Games/Core/ldGameObject.cpp
+        ${INCDIR}/Visualizations/Visualizers/Games/Core/ldGameObject.h
+        ${SRCDIR}/Visualizations/Visualizers/Games/Core/ldGameExplosion.cpp
+        ${INCDIR}/Visualizations/Visualizers/Games/Core/ldGameExplosion.h
+        ${SRCDIR}/Visualizations/Visualizers/Games/Core/ldGameFirework.cpp
+        ${INCDIR}/Visualizations/Visualizers/Games/Core/ldGameFirework.h
+        ${SRCDIR}/Visualizations/Visualizers/Games/Core/ldGameSmoke.cpp
+        ${INCDIR}/Visualizations/Visualizers/Games/Core/ldGameSmoke.h
+        ${SRCDIR}/Visualizations/Visualizers/Games/Core/ldGameSparkle.cpp
+        ${INCDIR}/Visualizations/Visualizers/Games/Core/ldGameSparkle.h
+        )
+
+    target_compile_definitions(${PROJECT_NAME} PUBLIC LD_CORE_ENABLE_GAMES)
+
+    # Gamepad module
+    set(QT_GAMEPAD_MODULE_NAME Gamepad)
+    if(QT_VERSION_MAJOR EQUAL 6)
+        set(QT_GAMEPAD_MODULE_NAME GamepadLegacy)
+    endif()
+
+    find_package(Qt${QT_VERSION_MAJOR} ${QT_MIN_VERSION} QUIET COMPONENTS ${QT_GAMEPAD_MODULE_NAME})
+    if(Qt${QT_VERSION_MAJOR}_FOUND)
+        target_link_libraries(${PROJECT_NAME} PUBLIC Qt${QT_VERSION_MAJOR}::${QT_GAMEPAD_MODULE_NAME}) # should be private but otherwise androiddeployqt doesn't work propely
+        target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_ENABLE_QGAMEPAD)
+        message(STATUS "LD_CORE_ENABLE_QGAMEPAD: ${LD_CORE_ENABLE_QGAMEPAD}")
+
+        # for Qt6 on mac we need to link SDL2 is loaded for prod builds
+        if(QT_VERSION_MAJOR EQUAL 6)
+            if(APPLE AND NOT LD_IOS_BUILD)
+                if(LD_CORE_FORCE_QGAMEPAD)
+                    set(SDL2_FIND_PARAMS REQUIRED)
+                else()
+                    set(SDL2_FIND_PARAMS QUIET)
+                endif()
+
+                find_package(SDL2 ${SDL2_FIND_PARAMS})
+                if(SDL2_FOUND)
+                    message(STATUS "SDL2_FOUND: ${SDL2_LIBRARIES}")
+                    target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
+                endif()
+            endif()
+        endif()
+    elseif(LD_CORE_FORCE_QGAMEPAD)
+        message(FATAL_ERROR "LaserOS is a public build and no QtGamepad moduse is found ${QT_VERSION_MAJOR} ${QT_MIN_VERSION} ${QT_GAMEPAD_MODULE_NAME}")
+    else()
+        message(WARNING "QGamepad support is disabled ${QT_VERSION_MAJOR} ${QT_MIN_VERSION} ${QT_GAMEPAD_MODULE_NAME}")
+    endif()
+
+endif()
 
 # ------------  LD_CORE_ENABLE_LIBLZR -------------
 
@@ -586,8 +596,10 @@ if(LD_CORE_ENABLE_QUAZIP)
     target_compile_definitions(${PROJECT_NAME} PRIVATE LD_CORE_ENABLE_QUAZIP)
 
     if(QT_VERSION_MAJOR EQUAL 6)
-        find_package(Qt${QT_VERSION_MAJOR} ${QT_MIN_VERSION} COMPONENTS Core5Compat REQUIRED)
-        target_link_libraries(${PROJECT_NAME} PUBLIC Qt6::Core5Compat)
+        if(LD_ENABLE_QT5COMPAT)
+            find_package(Qt${QT_VERSION_MAJOR} ${QT_MIN_VERSION} COMPONENTS Core5Compat REQUIRED)
+            target_link_libraries(${PROJECT_NAME} PUBLIC Qt6::Core5Compat)
+        endif()
     endif()
 
     target_link_libraries(${PROJECT_NAME} PRIVATE 3rdparty::quazip)

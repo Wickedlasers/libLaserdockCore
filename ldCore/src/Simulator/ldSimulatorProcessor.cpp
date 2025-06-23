@@ -35,8 +35,6 @@ ldSimulatorProcessor::~ldSimulatorProcessor()
 
 void ldSimulatorProcessor::bigger_dots(ldVertex* inData, ldVertex* outData, unsigned int size, bool isLastPortion) {
 
-    const float mindist = 0.01f; // force lines to have this min length
-
     for (uint i = 0; i < size; i++) {
 
         outData[i] = inData[i]; // initial value
@@ -54,10 +52,10 @@ void ldSimulatorProcessor::bigger_dots(ldVertex* inData, ldVertex* outData, unsi
             float delta2 = dx*dx + dy*dy;
             float delta = sqrtf(delta2);
             m_moveDist += delta;
-            if (delta >= mindist) {
-                // get a vector of length mindist, pointed in last direction laser moved
-                m_lastDeltaX = dx * mindist / delta;
-                m_lastDeltaY = dy * mindist / delta;
+            if (delta >= m_minDist) {
+                // get a vector of length m_mindist, pointed in last direction laser moved
+                m_lastDeltaX = dx * m_minDist / delta;
+                m_lastDeltaY = dy * m_minDist / delta;
             }
         }
 
@@ -71,10 +69,10 @@ void ldSimulatorProcessor::bigger_dots(ldVertex* inData, ldVertex* outData, unsi
             outData[i].b() = m_lastOn.b();
 
             // force line length to be a minimum
-            if (m_moveDist < mindist) {
+            if (m_moveDist < m_minDist) {
                 // if it's the first dot and there is no more content we should move it at least a bit
                 if(m_lastDeltaX == 0 && m_lastDeltaY == 0)
-                    m_lastDeltaX = mindist;
+                    m_lastDeltaX = m_minDist;
 
                 outData[i].x() += m_lastDeltaX;
                 outData[i].y() += m_lastDeltaY;
@@ -96,12 +94,12 @@ void ldSimulatorProcessor::bigger_dots(ldVertex* inData, ldVertex* outData, unsi
     // in the end of frame if the last is on we should make it visible anyway
     if(isLastPortion
         && m_wasOn
-        && m_moveDist < mindist
+        && m_moveDist < m_minDist
         && size > 0
         ) {
         // check just in case, should never happen, see the previous similar block
         if(m_lastDeltaX == 0 && m_lastDeltaY == 0)
-            m_lastDeltaX = mindist;
+            m_lastDeltaX = m_minDist;
 
         // ok, make last point big dot
         uint i = size - 1;
@@ -118,5 +116,10 @@ void ldSimulatorProcessor::clear()
     m_lastDeltaY = 0;
     m_wasOn = false;
     m_moveDist = 0;
+}
+
+void ldSimulatorProcessor::setMinDistance(float minDistance)
+{
+    m_minDist = minDistance;
 }
 

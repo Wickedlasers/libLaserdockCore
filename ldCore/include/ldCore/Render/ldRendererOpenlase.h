@@ -69,6 +69,7 @@ undesired behavior.
 #define C_DARK_BLUE 0x000066
 #define C_LIGHT_BLUE 0x4444FF
 
+class ldFilter;
 class ldFilterManager;
 
 inline bool operator==(const OLPoint &e1, const OLPoint &e2)
@@ -198,9 +199,13 @@ public:
 
     bool isRendererPaused() const;
 
+    ldFilter *filter() const;
+    void setFilter(ldFilter *filter);
+
 private:
 
     ldFilterManager *m_filterManager = nullptr;
+    ldFilter *m_filter = nullptr;
 
     bool m_isRendererPaused = false;
 

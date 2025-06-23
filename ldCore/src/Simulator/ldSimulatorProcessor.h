@@ -34,7 +34,13 @@ public:
 
     void clear();
 
+    // force lines to have this min length
+    // 0.01 b default
+    void setMinDistance(float minDistance);
+
 private:
+    float m_minDist = 0.01f;
+
     ldVertex m_last;
     ldVertex m_lastOn;
     float m_lastDeltaX = 0;

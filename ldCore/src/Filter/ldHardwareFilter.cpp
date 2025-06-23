@@ -181,9 +181,9 @@ ldHardwareFilter::ldHardwareFilter(ldScaleFilter *globalScaleFilter, QObject *pa
     deadzone.setHeight(1.01f);
     deadzone.moveLeft(0);
     deadzone.moveTop(0);
+    deadzone.setInverted(false);
     m_borderFilter->add(deadzone);
     m_borderFilter->setEnabled(true);
-    m_borderFilter->setReverse(true);
 
     // data for offset correction
     // init old[] buffer with zeroes

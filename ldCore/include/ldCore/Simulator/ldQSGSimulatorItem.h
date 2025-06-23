@@ -32,13 +32,13 @@ class LDCORESHARED_EXPORT ldQSGSimulatorItem : public QQuickItem
 {
     Q_OBJECT
     QML_WRITABLE_PROPERTY(bool, isActive)
-    QML_WRITABLE_PROPERTY(int, simulatorIndex)
 
     QML_WRITABLE_PROPERTY(bool, isWindow)
     QML_WRITABLE_PROPERTY(int, windowX)
     QML_WRITABLE_PROPERTY(int, windowY)
     QML_WRITABLE_PROPERTY(int, windowW)
     QML_WRITABLE_PROPERTY(int, windowH)
+
 public:
     static void registerMetatypes();
 
@@ -54,7 +54,7 @@ public slots:
 private:
     void loadEngine();
     void unloadEngine();
-    void disconnectEngine();
+    void disconnectEngine(QObject *obj);
 
     void startRendering();
     void stopRendering();
@@ -64,7 +64,7 @@ private:
     void updateSimulatorWindowGeometry();
     void handleWindowChanged(QQuickWindow *win);
 
-    ldSimulatorEngine *m_engine = nullptr;
+    std::vector<ldSimulatorEngine*> m_engines;
 };
 
 #endif // ldQSGSimulatorItem_H

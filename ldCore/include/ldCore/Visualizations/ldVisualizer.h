@@ -98,6 +98,11 @@ public:
      */
     virtual QString visualizerName() const;
     /*!
+     * \brief info - some general short info that you want to show about this vis
+     * \return
+     */
+    virtual QString info() const;
+    /*!
      * \brief targetFPS - FPS that renderer will use
      * \return
      */
@@ -143,6 +148,9 @@ public slots:
     void stop();
 
     void updateWith(ldSoundData *pSoundData, float delta);
+
+signals:
+    void changed();
 
 protected:
     /*!

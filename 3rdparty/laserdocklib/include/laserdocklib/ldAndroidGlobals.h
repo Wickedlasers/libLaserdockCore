@@ -22,7 +22,7 @@
 #define ldAndroidPermissionResultMap QtAndroid::PermissionResult::Granted
 #else
 #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
-#define ldAndroidActivityObject QNativeInterface::QAndroidApplication::context().object();
+#define ldAndroidActivityObject QNativeInterface::QAndroidApplication::context().object()
 #else
 #define ldAndroidActivityObject QNativeInterface::QAndroidApplication::context()
 #endif

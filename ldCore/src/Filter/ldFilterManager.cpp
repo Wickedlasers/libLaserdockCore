@@ -109,7 +109,7 @@ void ldFilterManager::setFrameModes(int frameModes)
     m_dataFilter.frameModes = frameModes;
 }
 
-void ldFilterManager::processFrame(ldVertexFrame &frame)
+void ldFilterManager::processFrame1(ldVertexFrame &frame)
 {
     for(uint i = 0; i < frame.size(); i++) {
         if(m_preGlobalFilter)
@@ -119,7 +119,12 @@ void ldFilterManager::processFrame(ldVertexFrame &frame)
 
         if (m_globalFilter)
             m_globalFilter->processFilter(frame[i]);
+    }
+}
 
+void ldFilterManager::processFrame2(ldVertexFrame &frame)
+{
+    for(uint i = 0; i < frame.size(); i++) {
         m_basicGlobalFilter.processFilter(frame[i]);
     }
 }
@@ -127,8 +132,6 @@ void ldFilterManager::processFrame(ldVertexFrame &frame)
 void ldFilterManager::resetFilters()
 {
     m_basicGlobalFilter.resetFilter();
-    if (m_globalFilter)
-        m_globalFilter->resetFilter();
     m_dataFilter.resetFilter();
 }
 

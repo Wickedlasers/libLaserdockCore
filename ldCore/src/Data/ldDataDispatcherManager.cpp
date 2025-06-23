@@ -29,6 +29,7 @@
 #include <ldCore/Hardware/ldHardwareManager.h>
 #include <ldCore/Helpers/ldLaserController.h>
 #include <ldCore/Shape/ldShape.h>
+#include <ldCore/Simulator/ldSimulatorEngine.h>
 #include <ldCore/Task/ldTaskManager.h>
 #include <ldCore/Task/ldTaskWorker.h>
 #include <ldCore/Visualizations/ldVisualizationTask.h>
@@ -46,6 +47,8 @@ ldDataDispatcherManager::ldDataDispatcherManager(QObject *parent)
             setActiveTransfer(false);
         }
     });
+
+    QTimer::singleShot(1000, this, &ldDataDispatcherManager::updateFpsList);
 }
 
 ldDataDispatcherInstance* ldDataDispatcherManager::createNew(const QStringList &ids)
@@ -62,6 +65,7 @@ ldDataDispatcherInstance* ldDataDispatcherManager::createNew(const QStringList &
 
     // load task
     ldVisualizationTask* task = new ldVisualizationTask(ldCore::instance()->soundDataProvider(), hwBatch);
+    connect(task, &ldVisualizationTask::currentFpsChanged, dataDispatcher->simulatorEngine(), &ldSimulatorEngine::setCurrentFps);
     // it's the first instance, set openlase as a global one
     if(m_dataDispatcherInstances.empty())
         ldShape::setGlobalRenderer(task->get_openlase());
@@ -87,9 +91,9 @@ ldDataDispatcherInstance* ldDataDispatcherManager::createNew(const QStringList &
         emit activeChanged(active);
     });
 
-    emit dataDispatcherCreated(m_dataDispatcherInstances.size()-1);
-
     update_count(m_count+1);
+
+    emit dataDispatcherCreated(m_dataDispatcherInstances.size()-1);
 
     return ddi;
 }
@@ -161,5 +165,17 @@ ldDataDispatcherInstance *ldDataDispatcherManager::get(int index) const
         return nullptr;
 
     return m_dataDispatcherInstances[index];
+}
+
+void ldDataDispatcherManager::updateFpsList()
+{
+    QList<int> current_fps;
+    for(ldDataDispatcherInstance *ddi : m_dataDispatcherInstances) {
+        int ddFps = ddi->dataDispatcher->simulatorEngine()->currentFps();
+        current_fps.push_back(ddFps);
+    }
+    update_fpsList(current_fps);
+
+    QTimer::singleShot(100, this, &ldDataDispatcherManager::updateFpsList);
 }
 

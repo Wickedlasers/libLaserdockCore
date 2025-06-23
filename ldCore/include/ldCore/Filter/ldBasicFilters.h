@@ -301,6 +301,37 @@ public:
 private:
     std::vector<ldScaleFilter*> m_scaleFilters;
 };
+
+// ---------- ldZoomFilter ----------
+
+class LDCORESHARED_EXPORT ldZoomFilter : public ldFilter
+{
+    Q_OBJECT
+    LD_WRITABLE_MIN_MAX_PROPERTY(float, xScale)
+    LD_WRITABLE_MIN_MAX_PROPERTY(float, yScale)
+public:
+    ldZoomFilter();
+
+    virtual QString name() override { return "Zoom"; }
+    virtual void process(ldVertex &v) override;
+};
+
+
+
+// ---------- ldPosFilter ----------
+
+class LDCORESHARED_EXPORT ldPosFilter : public ldFilter
+{
+    Q_OBJECT
+    LD_WRITABLE_MIN_MAX_PROPERTY(float, x)
+    LD_WRITABLE_MIN_MAX_PROPERTY(float, y)
+public:
+    ldPosFilter();
+
+    virtual QString name() override { return "Position"; }
+    virtual void process(ldVertex &v) override;
+};
+
 // ---------- ldTtlFilter ----------
 
 class LDCORESHARED_EXPORT ldTtlFilter : public ldFilter

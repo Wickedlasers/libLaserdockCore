@@ -27,7 +27,6 @@
 #include "ldCore/Data/ldDataDispatcherManager.h"
 #include <ldCore/Data/ldFrameBuffer.h>
 #include "ldCore/Filter/ldFilterManager.h"
-#include <ldCore/Games/ldAbstractGame.h>
 #include "ldCore/Hardware/ldHardwareBatch.h"
 #include "ldCore/Hardware/ldHardwareManager.h"
 #include "ldCore/Hardware/ldNetworkHardwareManager.h"
@@ -45,6 +44,10 @@
 #include "ldCore/Task/ldAbstractTask.h"
 #include "ldCore/Visualizations/ldVisualizationTask.h"
 #include "ldCore/Visualizations/MusicManager/ldMusicManager.h"
+
+#ifdef LD_CORE_ENABLE_GAMES
+#include <ldCore/Games/ldAbstractGame.h>
+#endif
 
 #ifdef LD_CORE_ENABLE_QT_QUICK
 #include <ldCore/Simulator/ldQSGSimulatorItem.h>
@@ -126,7 +129,9 @@ void ldCore::initResources()
     qRegisterMetaType<ldAbstractTask*>();
     qRegisterMetaType<ldSimulatorEngine*>();
 
+#ifdef LD_CORE_ENABLE_GAMES
     ldAbstractGame::registerMetaTypes();
+#endif
     ldVec2::registerMetaTypes();
     ldVertex::registerMetaTypes();
     ldMusicManager::registerMetaTypes();
