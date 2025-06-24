@@ -15,7 +15,7 @@ for:
   build_script:
   - set CL=/MP # parallel build
   - mkdir build && cd build
-  - cmake .. -G "Visual Studio 16 2019" -A Win32 -DQTDIR="C:\Qt\6.5.3\msvc2019"
+  - cmake .. -G "Visual Studio 16 2019" -A Win32 -DQTDIR="C:\Qt\6.5.3\msvc2019_64"
   - cmake --build . --config Release
 -
   matrix:
@@ -31,5 +31,5 @@ for:
       - image: Ubuntu2204
   build_script:
   - mkdir build && cd build
-  - cmake .. -DQTDIR="/home/appveyor/Qt/6.7.2/gcc_64"
+  - cmake .. -DQTDIR="/home/appveyor/Qt/6.5.3/gcc_64"
   - cmake --build . -- -j4
