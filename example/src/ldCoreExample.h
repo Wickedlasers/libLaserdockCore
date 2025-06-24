@@ -29,6 +29,7 @@
 
 #include "ldAngryLasers.h"
 #include "ldArrow.h"
+#include "ldPong.h"
 #include "ldSerpent.h"
 #include "ldSpiralFighterGame.h"
 
@@ -74,6 +75,7 @@ private:
 
     ldAngryLasers* m_angryLasersGame = nullptr;
     ldArrow* m_arrowGame = nullptr;
+    ldPong* m_pongGame = nullptr;
     ldSerpent* m_serpentGame = nullptr;
     ldSpiralFighterGame* m_spiralFigtherGame = nullptr;
 };

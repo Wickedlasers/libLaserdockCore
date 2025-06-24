@@ -61,6 +61,9 @@ Window {
                     ListElement {
                         text: "Snake (ldRazer)"
                     }
+                    ListElement {
+                        text: "Pong"
+                    }
                 }
 
                 onActivated: activateVis(currentIndex)

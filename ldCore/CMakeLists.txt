@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.11)
 # enable features
 option(LD_CORE_ENABLE_MIDI "Enable midi" OFF)
 option(LD_CORE_ENABLE_OPENCV "Enable opencv support" OFF)
-option(LD_CORE_USE_OPENGL "Enable OpenGL support" ON)
+option(LD_CORE_USE_OPENGL "Enable OpenGL support" OFF)
 option(LD_CORE_ENABLE_QT_QUICK "Enable Qt Quick module" OFF) # required for example
 # some helpful flags
 option(LD_CORE_GAMES_ALWAYS_PLAY_STATE "Games play after pause automatically" OFF)

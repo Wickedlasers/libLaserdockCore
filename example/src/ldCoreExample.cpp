@@ -115,6 +115,8 @@ void ldCoreExample::activateVis(int index)
         update_game(m_arrowGame);
     } else if(index == 8) {
         update_game(m_serpentGame);
+    }else if(index == 9) {
+        update_game(m_pongGame);
     }
 }
 
@@ -133,12 +135,15 @@ void ldCoreExample::startApp()
 
     m_angryLasersGame = new ldAngryLasers(this);
     m_arrowGame = new ldArrow(this);
+    m_pongGame = new ldPong(this);
     m_serpentGame = new ldSerpent(this);
     m_spiralFigtherGame = new ldSpiralFighterGame(this);
 
     connect(this, &ldCoreExample::gameChanged, this, [&](ldAbstractGame *game) {
         m_angryLasersGame->set_isActive(false);
         m_arrowGame->set_isActive(false);
+        m_pongGame->set_isActive(false);
+        m_serpentGame->set_isActive(false);
         m_spiralFigtherGame->set_isActive(false);
         if(game)
             game->set_isActive(true);
